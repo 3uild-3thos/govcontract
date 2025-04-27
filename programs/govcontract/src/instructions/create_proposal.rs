@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::epoch_stake::{get_epoch_stake_for_vote_account, get_epoch_total_stake};
 
 use crate::{error::GovernanceError, stake_weight_bp, state::Proposal};
 
@@ -33,13 +34,11 @@ impl<'info> CreateProposal<'info> {
             GovernanceError::DescriptionTooLong
         );
 
-        // Get cluster stake syscall will return a u64
-        let cluster_stake = 380_000_000u64;
-        // let cluster_stake = get_epoch_total_stake();
+        // Get cluster stake syscall 
+        let cluster_stake = get_epoch_total_stake();
         
         // Get proposal creator stake
-        let proposer_stake = 40_001u64;
-        // let proposer_stake = get_epoch_stake_for_vote_account(self.signer.key());
+        let proposer_stake = get_epoch_stake_for_vote_account(self.signer.key);
 
         // RFP:Only staked validators with at least 40k can submit a proposal to be considered for voting
         require!(proposer_stake > 40_000u64, GovernanceError::NotEnoughStake);

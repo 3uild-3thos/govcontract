@@ -3,7 +3,7 @@ use crate::{
     stake_weight_bp,
     state::{Proposal, Vote},
 };
-use anchor_lang::prelude::*;
+use anchor_lang::{prelude::*, solana_program::epoch_stake::{get_epoch_stake_for_vote_account, get_epoch_total_stake}};
 
 #[derive(Accounts)]
 pub struct TallyVotes<'info> {
@@ -27,8 +27,8 @@ impl<'info> TallyVotes<'info> {
         self.proposal.closed = true;
         require!(!self.proposal.finalized, GovernanceError::ProposalFinalized);
 
-        // Hardcoded cluster stake for example
-        let cluster_stake = 380_000_000u64;
+        // Get cluster stake
+        let cluster_stake = get_epoch_total_stake();
 
         for account in remaining {
             // Deserialize the Vote account
@@ -40,8 +40,8 @@ impl<'info> TallyVotes<'info> {
                 GovernanceError::InvalidVoteAccount
             );
 
-            // Hardcoded validator stake (replace with actual stake fetching)
-            let validator_stake = 50_000u64; // Example stake, should be fetched dynamically
+            // Validator stake
+            let validator_stake = get_epoch_stake_for_vote_account(account.key);
 
             // Calculate the validator's stake weight in basis points relative to cluster stake
             let validator_weight_bp = stake_weight_bp!(validator_stake, cluster_stake)?;

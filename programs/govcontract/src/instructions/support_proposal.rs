@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::epoch_stake::{get_epoch_stake_for_vote_account, get_epoch_total_stake};
 
 use crate::{
     error::GovernanceError,
@@ -29,10 +30,10 @@ impl<'info> SupportProposal<'info> {
         require!(!self.proposal.finalized, GovernanceError::ProposalFinalized);
 
         // Get cluster stake
-        let cluster_stake = 380_000_000u64; // Hardcoded example
+        let cluster_stake = get_epoch_total_stake();
 
         // Get supporter stake
-        let supporter_stake = 50_000u64; // Hardcoded example
+        let supporter_stake = get_epoch_stake_for_vote_account(self.signer.key);
 
         // Maybe ensure the supporter has some stake
         require!(supporter_stake > 0, GovernanceError::NotEnoughStake);
