@@ -36,7 +36,7 @@ impl<'info> SupportProposal<'info> {
         let supporter_stake = get_epoch_stake_for_vote_account(self.signer.key);
 
         // Maybe ensure the supporter has some stake
-        require!(supporter_stake > 0, GovernanceError::NotEnoughStake);
+        // crequire!(supporter_stake > 0, GovernanceError::NotEnoughStake); To be implemented
 
         // Calculate the stake weight of this supporter in basis points
         let supporter_weight_bp = stake_weight_bp!(supporter_stake, cluster_stake)?;

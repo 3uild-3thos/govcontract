@@ -1,5 +1,5 @@
-import {toBufferLE} from 'bigint-buffer';
 import * as BufferLayout from '@solana/buffer-layout';
+import {getU64Encoder} from '@solana/codecs-numbers';
 
 import * as Layout from '../../layout';
 import {PublicKey} from '../../publickey';
@@ -272,7 +272,10 @@ export class AddressLookupTableProgram {
 
   static createLookupTable(params: CreateLookupTableParams) {
     const [lookupTableAddress, bumpSeed] = PublicKey.findProgramAddressSync(
-      [params.authority.toBuffer(), toBufferLE(BigInt(params.recentSlot), 8)],
+      [
+        params.authority.toBuffer(),
+        getU64Encoder().encode(params.recentSlot) as Uint8Array,
+      ],
       this.programId,
     );
 
