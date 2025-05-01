@@ -26,7 +26,7 @@ pub struct SupportProposal<'info> {
 
 impl<'info> SupportProposal<'info> {
     pub fn support_proposal(&mut self, bumps: &SupportProposalBumps) -> Result<()> {
-        require!(!self.proposal.closed, GovernanceError::ProposalClosed);
+        require!(!self.proposal.voting, GovernanceError::ProposalClosed);
         require!(!self.proposal.finalized, GovernanceError::ProposalFinalized);
 
         // Get cluster stake
@@ -58,7 +58,7 @@ impl<'info> SupportProposal<'info> {
         // Check if cluster support reaches 5% (500 basis points)
         if self.proposal.cluster_support_bp >= 500 {
             // Set proposal.closed to false, indicating it’s active and can be voted on
-            self.proposal.closed = false;
+            self.proposal.voting = true;
         }
         Ok(())
     }

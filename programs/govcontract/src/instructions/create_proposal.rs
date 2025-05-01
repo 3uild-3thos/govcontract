@@ -4,14 +4,14 @@ use anchor_lang::solana_program::epoch_stake::{get_epoch_stake_for_vote_account,
 use crate::{error::GovernanceError, stake_weight_bp, state::Proposal};
 
 #[derive(Accounts)]
-#[instruction(seed: u64)]
+#[instruction(_seed: u64)]
 pub struct CreateProposal<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
     #[account(
         init,
         payer = signer,
-        seeds = [b"proposal", seed.to_le_bytes().as_ref(), &signer.key.to_bytes()],
+        seeds = [b"proposal", _seed.to_le_bytes().as_ref(), &signer.key.to_bytes()],
         bump,
         space = Proposal::INIT_SPACE,
     )]
@@ -52,8 +52,8 @@ impl<'info> CreateProposal<'info> {
 
         self.proposal.set_inner(Proposal {
             author: *self.signer.key,
-            title: title,
-            description: description,
+            title,
+            description,
             creation_epoch: current_epoch,
             start_epoch,
             end_epoch,
@@ -62,7 +62,7 @@ impl<'info> CreateProposal<'info> {
             for_votes_bp: 0,
             against_votes_bp: 0,
             abstain_votes_bp: 0,
-            closed: true,
+            voting: false,
             finalized: false,
             proposal_bump: bumps.proposal,
         });

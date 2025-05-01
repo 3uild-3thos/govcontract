@@ -28,7 +28,7 @@ impl<'info> ModifyVote<'info> {
         abstain_votes_bp: u64,
     ) -> Result<()> {
         // Check that the proposal is open for voting
-        require!(!self.proposal.closed, GovernanceError::ProposalClosed);
+        require!(!self.proposal.voting, GovernanceError::ProposalClosed);
         require!(!self.proposal.finalized, GovernanceError::ProposalFinalized);
 
         // Validate that the basis points sum to 10,000 (100%)

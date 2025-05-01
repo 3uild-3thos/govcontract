@@ -24,7 +24,7 @@ impl<'info> TallyVotes<'info> {
             clock.epoch >= self.proposal.end_epoch,
             GovernanceError::VotingPeriodNotEnded
         );
-        self.proposal.closed = true;
+        self.proposal.voting = false;
         require!(!self.proposal.finalized, GovernanceError::ProposalFinalized);
 
         // Get cluster stake
@@ -93,7 +93,7 @@ impl<'info> TallyVotes<'info> {
         
 
         // Mark the proposal as finalized
-        // self.proposal.finalized = true;
+        self.proposal.finalized = true;
 
         Ok(())
     }

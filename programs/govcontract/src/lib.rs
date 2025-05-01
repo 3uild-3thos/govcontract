@@ -14,6 +14,7 @@ pub mod govcontract {
 
     pub fn create_proposal(
         ctx: Context<CreateProposal>,
+        _seed: u64,
         title: String,
         description: String,
         start_epoch: u64,

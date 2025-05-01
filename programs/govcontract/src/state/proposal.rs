@@ -18,7 +18,7 @@ pub struct Proposal {
     pub for_votes_bp: u64,
     pub against_votes_bp: u64,
     pub abstain_votes_bp: u64,
-    pub closed: bool,
+    pub voting: bool,
     pub finalized: bool,
     pub proposal_bump: u8,
 }
