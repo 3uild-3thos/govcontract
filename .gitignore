@@ -16,3 +16,8 @@ target/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 /.anchor
+<<<<<<< Updated upstream
+=======
+/node_modules
+/node_modules
+>>>>>>> Stashed changes
