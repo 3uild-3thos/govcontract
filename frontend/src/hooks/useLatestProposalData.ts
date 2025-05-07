@@ -1,8 +1,5 @@
-import { Program } from "@coral-xyz/anchor";
-import { Connection } from "@solana/web3.js";
 import { useQuery } from "@tanstack/react-query";
 
-import { Govcontract } from "@/chain";
 import { getAllProposals } from "@/data";
 
 export const useLatestProposalData = () => {
