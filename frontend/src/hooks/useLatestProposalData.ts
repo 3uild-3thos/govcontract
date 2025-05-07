@@ -30,29 +30,29 @@ const getData = async () => {
   };
 };
 
-type ProposalAccountData = Awaited<
-  ReturnType<Program<Govcontract>["account"]["proposal"]["fetch"]>
->;
+// type ProposalAccountData = Awaited<
+//   ReturnType<Program<Govcontract>["account"]["proposal"]["fetch"]>
+// >;
 
-async function isVotingActive(
-  connection: Connection,
-  proposal: ProposalAccountData
-): Promise<boolean> {
-  const { epoch } = await connection.getEpochInfo();
+// async function isVotingActive(
+//   connection: Connection,
+//   proposal: ProposalAccountData
+// ): Promise<boolean> {
+//   const { epoch } = await connection.getEpochInfo();
 
-  return (
-    proposal.voting &&
-    epoch >= Number(proposal.startEpoch) &&
-    epoch < Number(proposal.endEpoch) &&
-    !proposal.finalized
-  );
-}
+//   return (
+//     proposal.voting &&
+//     epoch >= Number(proposal.startEpoch) &&
+//     epoch < Number(proposal.endEpoch) &&
+//     !proposal.finalized
+//   );
+// }
 
-async function canTallyProposal(
-  connection: Connection,
-  proposal: ProposalAccountData
-): Promise<boolean> {
-  const { epoch } = await connection.getEpochInfo();
+// async function canTallyProposal(
+//   connection: Connection,
+//   proposal: ProposalAccountData
+// ): Promise<boolean> {
+//   const { epoch } = await connection.getEpochInfo();
 
-  return !proposal.finalized && epoch >= Number(proposal.endEpoch);
-}
+//   return !proposal.finalized && epoch >= Number(proposal.endEpoch);
+// }

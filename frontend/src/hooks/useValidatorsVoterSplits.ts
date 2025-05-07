@@ -41,11 +41,11 @@ export const useValidatorsVoterSplits = () => {
 
         let matchedValidator = false;
 
-        console.log("checking for votePda:", votePda.toBase58());
+        // console.log("checking for votePda:", votePda.toBase58());
 
         for (const validator of validators) {
           const validatorPubkey = new PublicKey(validator.vote_identity);
-          console.log("checking validator_identity:", validator.vote_identity);
+          // console.log("checking validator_identity:", validator.vote_identity);
           const [expectedVotePda] = PublicKey.findProgramAddressSync(
             [
               Buffer.from("vote"),
@@ -55,15 +55,15 @@ export const useValidatorsVoterSplits = () => {
             program.programId
           );
 
-          console.log("expectedVotePda:", expectedVotePda.toBase58());
+          // console.log("expectedVotePda:", expectedVotePda.toBase58());
           if (expectedVotePda.equals(votePda)) {
             matchedValidator = true;
 
             // calculate here??
-            console.log(
-              `Vote by: ${validator.name} (${validator.vote_identity})`
-            );
-            console.log("Vote data:", vote.account);
+            // console.log(
+            //   `Vote by: ${validator.name} (${validator.vote_identity})`
+            // );
+            // console.log("Vote data:", vote.account);
 
             const data = vote.account;
             const vote_identity = validator.vote_identity;

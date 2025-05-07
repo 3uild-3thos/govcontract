@@ -28,7 +28,7 @@ export const Footer = () => {
           Stay up to date
         </h2>
         <p className="text-gray-400 mb-8">
-          We'll send you the latest proposals and keep you in the loop for
+          We&apos;ll send you the latest proposals and keep you in the loop for
           important updates
         </p>
 

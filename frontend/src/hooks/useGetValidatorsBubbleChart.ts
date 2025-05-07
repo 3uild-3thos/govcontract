@@ -26,18 +26,22 @@ export const useGetValidatorsBubbleChart = () => {
   const voterSplitsReady =
     !isLoadingSplits && voterSplits && Object.keys(voterSplits).length > 0;
   const enabled = !!(validatorsReady && voterSplitsReady);
-
+  console.log("validatorsReady:", validatorsReady);
+  console.log("voterSplitsReady:", voterSplitsReady);
+  console.log("enabled:", enabled);
   const isLoadingSubqueries = isLoadingSplits || isLoadingValidators;
 
   const query = useQuery({
     staleTime: 1000 * 120, // 2 minutes
     queryKey: ["validatorsVotesBubbleChart"],
     enabled,
+    initialData: [],
     queryFn: () => {
+      console.error("here!!!!");
       // for each validator, get its voters splits
       const data: Vote[] = [];
       if (voterSplits) {
-        validators?.forEach((validator) => {
+        validators?.slice(0, 10)?.forEach((validator) => {
           const validatorVoterSplits = voterSplits[validator.vote_identity];
           if (validatorVoterSplits !== undefined) {
             VOTE_TYPES.forEach((type) =>

@@ -157,8 +157,8 @@ export function TopVoters() {
                 <TableCell className="py-4">
                   <div className="flex items-center gap-3">
                     <div className="p-[2px] w-10 h-10 rounded-lg overflow-hidden bg-gradient-to-b from-[#4A4A4A] to-[#232323]">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       {validator.image && (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={validator.image}
                           alt={validator.name}

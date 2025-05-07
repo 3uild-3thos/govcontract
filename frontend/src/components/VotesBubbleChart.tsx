@@ -2,86 +2,86 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
-import { Vote } from "@/hooks";
+import { useGetValidatorsBubbleChart, Vote } from "@/hooks";
 
-const votes: Vote[] = [
-  {
-    address: "address0",
-    type: "yes",
-    value: 300,
-    image:
-      "https://media.stakewiz.com/he1iusunGwqrNtafDtLdhsUQDFvo13z9sUa36PauBtk-orange360x360.png",
-  },
-  {
-    address: "address1",
-    type: "yes",
-    value: 200,
-    image:
-      "https://media.stakewiz.com/CvSb7wdQAFpHuSpTYTJnX5SYH4hCfQ9VuGnqrKaKwycB-.png",
-  },
-  { address: "address2", type: "yes", value: 100 },
-  { address: "address3", type: "yes", value: 90 },
-  { address: "address4", type: "yes", value: 20 },
-  { address: "address5", type: "yes", value: 20 },
-  { address: "address6", type: "yes", value: 20 },
-  { address: "address7", type: "yes", value: 20 },
-  { address: "address8", type: "yes", value: 20 },
-  {
-    address: "address0",
-    type: "no",
-    value: 500,
-    image:
-      "https://media.stakewiz.com/he1iusunGwqrNtafDtLdhsUQDFvo13z9sUa36PauBtk-orange360x360.png",
-  },
-  {
-    address: "address1",
-    type: "no",
-    value: 200,
-    image:
-      "https://media.stakewiz.com/CvSb7wdQAFpHuSpTYTJnX5SYH4hCfQ9VuGnqrKaKwycB-.png",
-  },
-  { address: "address11", type: "no", value: 100 },
-  { address: "address12", type: "no", value: 10 },
-  { address: "address13", type: "no", value: 10 },
-  { address: "address14", type: "no", value: 10 },
-  { address: "address15", type: "no", value: 10 },
-  { address: "address16", type: "no", value: 10 },
-  { address: "address17", type: "no", value: 10 },
-  {
-    address: "address0",
-    type: "abstain",
-    value: 100,
-    image:
-      "https://media.stakewiz.com/he1iusunGwqrNtafDtLdhsUQDFvo13z9sUa36PauBtk-orange360x360.png",
-  },
-  {
-    address: "address1",
-    type: "abstain",
-    value: 1000,
-    image:
-      "https://media.stakewiz.com/CvSb7wdQAFpHuSpTYTJnX5SYH4hCfQ9VuGnqrKaKwycB-.png",
-  },
-  { address: "address20", type: "abstain", value: 10 },
-  { address: "address21", type: "abstain", value: 10 },
-  { address: "address22", type: "abstain", value: 10 },
-  {
-    address: "address0",
-    type: "undecided",
-    value: 150,
-    image:
-      "https://media.stakewiz.com/he1iusunGwqrNtafDtLdhsUQDFvo13z9sUa36PauBtk-orange360x360.png",
-  },
-  {
-    address: "address1",
-    type: "undecided",
-    value: 20,
-    image:
-      "https://media.stakewiz.com/CvSb7wdQAFpHuSpTYTJnX5SYH4hCfQ9VuGnqrKaKwycB-.png",
-  },
-  { address: "address25", type: "undecided", value: 20 },
-  { address: "address26", type: "undecided", value: 20 },
-  { address: "address27", type: "undecided", value: 20 },
-];
+// const votes: Vote[] = [
+//   {
+//     address: "address0",
+//     type: "yes",
+//     value: 300,
+//     image:
+//       "https://media.stakewiz.com/he1iusunGwqrNtafDtLdhsUQDFvo13z9sUa36PauBtk-orange360x360.png",
+//   },
+//   {
+//     address: "address1",
+//     type: "yes",
+//     value: 200,
+//     image:
+//       "https://media.stakewiz.com/CvSb7wdQAFpHuSpTYTJnX5SYH4hCfQ9VuGnqrKaKwycB-.png",
+//   },
+//   { address: "address2", type: "yes", value: 100 },
+//   { address: "address3", type: "yes", value: 90 },
+//   { address: "address4", type: "yes", value: 20 },
+//   { address: "address5", type: "yes", value: 20 },
+//   { address: "address6", type: "yes", value: 20 },
+//   { address: "address7", type: "yes", value: 20 },
+//   { address: "address8", type: "yes", value: 20 },
+//   {
+//     address: "address0",
+//     type: "no",
+//     value: 500,
+//     image:
+//       "https://media.stakewiz.com/he1iusunGwqrNtafDtLdhsUQDFvo13z9sUa36PauBtk-orange360x360.png",
+//   },
+//   {
+//     address: "address1",
+//     type: "no",
+//     value: 200,
+//     image:
+//       "https://media.stakewiz.com/CvSb7wdQAFpHuSpTYTJnX5SYH4hCfQ9VuGnqrKaKwycB-.png",
+//   },
+//   { address: "address11", type: "no", value: 100 },
+//   { address: "address12", type: "no", value: 10 },
+//   { address: "address13", type: "no", value: 10 },
+//   { address: "address14", type: "no", value: 10 },
+//   { address: "address15", type: "no", value: 10 },
+//   { address: "address16", type: "no", value: 10 },
+//   { address: "address17", type: "no", value: 10 },
+//   {
+//     address: "address0",
+//     type: "abstain",
+//     value: 100,
+//     image:
+//       "https://media.stakewiz.com/he1iusunGwqrNtafDtLdhsUQDFvo13z9sUa36PauBtk-orange360x360.png",
+//   },
+//   {
+//     address: "address1",
+//     type: "abstain",
+//     value: 1000,
+//     image:
+//       "https://media.stakewiz.com/CvSb7wdQAFpHuSpTYTJnX5SYH4hCfQ9VuGnqrKaKwycB-.png",
+//   },
+//   { address: "address20", type: "abstain", value: 10 },
+//   { address: "address21", type: "abstain", value: 10 },
+//   { address: "address22", type: "abstain", value: 10 },
+//   {
+//     address: "address0",
+//     type: "undecided",
+//     value: 150,
+//     image:
+//       "https://media.stakewiz.com/he1iusunGwqrNtafDtLdhsUQDFvo13z9sUa36PauBtk-orange360x360.png",
+//   },
+//   {
+//     address: "address1",
+//     type: "undecided",
+//     value: 20,
+//     image:
+//       "https://media.stakewiz.com/CvSb7wdQAFpHuSpTYTJnX5SYH4hCfQ9VuGnqrKaKwycB-.png",
+//   },
+//   { address: "address25", type: "undecided", value: 20 },
+//   { address: "address26", type: "undecided", value: 20 },
+//   { address: "address27", type: "undecided", value: 20 },
+// ];
 
 const gradientMap: Record<Vote["type"], string> = {
   yes: "grad-yes",
@@ -103,8 +103,12 @@ export function VotesBubbleChart() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
 
+  const { data: votes } = useGetValidatorsBubbleChart();
+
   const [nodes, setNodes] = useState<Vote[]>([]);
-  const [selectedNode, setSelectedNode] = useState<string>(votes[0].address);
+  const [selectedNode, setSelectedNode] = useState<string | undefined>(
+    votes.length > 0 ? votes[0].address : undefined
+  );
   const [hoveredNode, setHoveredNode] = useState<string | undefined>(undefined);
 
   useEffect(() => {
@@ -122,7 +126,7 @@ export function VotesBubbleChart() {
 
     return () => resizeObserver.disconnect();
   }, []);
-
+  console.log("votes:", votes);
   useEffect(() => {
     if (width === 0) return;
 
@@ -191,7 +195,7 @@ export function VotesBubbleChart() {
     for (let i = 0; i < 300; ++i) simulation.tick();
 
     setNodes([...initialNodes]);
-  }, [width]);
+  }, [votes, width]);
 
   const WIDTH = width;
   const HEIGHT = width;

@@ -5,8 +5,6 @@ import {
   Card,
   CurrentPhase,
   GradientBox,
-  LiveProposal,
-  LiveResults,
   ProposalDetails,
   Quorum,
   RealmsIcon,
