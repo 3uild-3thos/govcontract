@@ -36,7 +36,7 @@ impl<'info> SupportProposal<'info> {
         let supporter_stake = get_epoch_stake_for_vote_account(self.signer.key);
 
         // Maybe ensure the supporter has some stake
-        // crequire!(supporter_stake > 0, GovernanceError::NotEnoughStake); To be implemented
+        require!(supporter_stake > 0, GovernanceError::NotEnoughStake);
 
         // Calculate the stake weight of this supporter in basis points
         let supporter_weight_bp = stake_weight_bp!(supporter_stake, cluster_stake)?;
@@ -57,7 +57,7 @@ impl<'info> SupportProposal<'info> {
 
         // Check if cluster support reaches 5% (500 basis points)
         if self.proposal.cluster_support_bp >= 500 {
-            // Set proposal.closed to false, indicating it’s active and can be voted on
+            // Set proposal.voting to true, indicating it’s active and can be voted on
             self.proposal.voting = true;
         }
         Ok(())

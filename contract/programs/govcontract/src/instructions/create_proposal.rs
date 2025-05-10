@@ -41,7 +41,7 @@ impl<'info> CreateProposal<'info> {
         let proposer_stake = get_epoch_stake_for_vote_account(self.signer.key);
 
         // RFP:Only staked validators with at least 40k can submit a proposal to be considered for voting
-        // require!(proposer_stake > 40_000u64, GovernanceError::NotEnoughStake); To be implemented
+        require!(proposer_stake > 40_000u64, GovernanceError::NotEnoughStake);
 
         // Get the current epoch from the Clock sysvar
         let clock = Clock::get()?;
