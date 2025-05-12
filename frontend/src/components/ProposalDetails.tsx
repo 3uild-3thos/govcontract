@@ -31,6 +31,10 @@ export const ProposalDetails = () => {
     abstainStake,
     undecidedStake,
     votesCount,
+    endDate,
+    currentEpoch,
+    requiredQuorum,
+    currentQuorumPct,
   } = data;
 
   console.log("data:", data);
@@ -41,6 +45,10 @@ export const ProposalDetails = () => {
         title={title}
         description={description}
         votesCount={votesCount}
+        endDate={endDate}
+        currentEpoch={currentEpoch}
+        requiredQuorum={requiredQuorum}
+        currentQuorumPct={currentQuorumPct}
       />
 
       {/* Right Column - Live Results */}

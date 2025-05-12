@@ -5,9 +5,22 @@ interface Props {
   title: string;
   description: string;
   votesCount: number;
+  endDate: Date | undefined;
+  currentEpoch: number | undefined;
+  requiredQuorum: number;
+  currentQuorumPct: number;
 }
 
-export const LiveProposal = ({ title, description, votesCount }: Props) => {
+export const LiveProposal = ({
+  title,
+  description,
+  votesCount,
+  endDate,
+  currentEpoch,
+  requiredQuorum,
+  currentQuorumPct,
+}: Props) => {
+  const timeRemaining = endDate?.toLocaleDateString() || "-";
   return (
     <div>
       <div className="text-xs font-medium tracking-wider text-dao-text-secondary uppercase mb-3">
@@ -23,10 +36,10 @@ export const LiveProposal = ({ title, description, votesCount }: Props) => {
       </p>
 
       <div className="flex flex-wrap gap-2 mb-6 max-md:hidden">
-        <Pill>20% Quorum</Pill>
+        <Pill>{currentQuorumPct}% Quorum</Pill>
         <Pill>
           <Clock className="h-3.5 w-3.5" />
-          <span>3 Days left</span>
+          <span>{endDate?.toLocaleDateString() || "-"} Days left</span>
         </Pill>
         <Pill>
           <VoteIcon className="h-3.5 w-3.5" />
@@ -47,17 +60,17 @@ export const LiveProposal = ({ title, description, votesCount }: Props) => {
         </Cell>
         <hr className="h-[1px] border-dao-border" />
         <Cell>
-          <Cell.Title>36hrs</Cell.Title>
+          <Cell.Title>{timeRemaining}</Cell.Title>
           <Cell.Description>Time Remaining</Cell.Description>
         </Cell>
         <hr className="h-[1px] border-dao-border" />
         <Cell>
-          <Cell.Title>752</Cell.Title>
+          <Cell.Title>{currentEpoch || "-"}</Cell.Title>
           <Cell.Description>Current Epoch</Cell.Description>
         </Cell>
         <hr className="h-[1px] border-dao-border" />
         <Cell>
-          <Cell.Title>3,053,636 SOL</Cell.Title>
+          <Cell.Title>{requiredQuorum} SOL</Cell.Title>
           <Cell.Description>Quorum Required</Cell.Description>
         </Cell>
       </div>

@@ -4,16 +4,16 @@ interface VotingRateProps {
   yesPercentage: number;
   noPercentage: number;
   abstainPercentage: number;
-  requiredAmount: string;
-  currentPosition?: number; // Position of the indicator as percentage (0-100)
+  requiredAmount: number;
+  currentPosition: number; // Position of the indicator as percentage (0-100)
 }
 
 export const VotingRateChart = ({
   yesPercentage,
   noPercentage,
   abstainPercentage,
-  requiredAmount = "2,334,363 SOL",
-  currentPosition = 75,
+  requiredAmount,
+  currentPosition,
 }: VotingRateProps) => {
   return (
     <>
@@ -22,7 +22,7 @@ export const VotingRateChart = ({
         <div className="absolute w-full h-full overflow-hidden flex">
           {/* To Pass section - Black - it just fills 100%, but behind the 3 other sections of yes/no/abstain */}
           <div className="absolute w-full h-full rounded-sm bg-gradient-to-b from-[#323232] to-[#0C0C0C] border-[1px] flex justify-end items-center text-right text-dao-text-secondary text-xs border-[#252525] z-0">
-            <span className="mr-2">{requiredAmount} REQUIRED</span>
+            <span className="mr-2">{requiredAmount} SOL REQUIRED</span>
           </div>
 
           {/* Yes section - Green gradient */}

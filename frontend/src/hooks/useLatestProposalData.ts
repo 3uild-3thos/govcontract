@@ -8,6 +8,8 @@ import {
   useVoteAccountsWithValidators,
   VoteAccountsWithValidators,
 } from "./useVoteAccountsWithValidators";
+import { connection } from "@/chain/helpers";
+import { REQUIRED_QUORUM_PCT } from "@/chain";
 
 interface LatestProposal {
   title: string;
@@ -23,6 +25,10 @@ interface LatestProposal {
   abstainStake: number;
   undecidedStake: number;
   votesCount: number;
+  endDate: Date | undefined;
+  currentEpoch: number | undefined;
+  requiredQuorum: number;
+  currentQuorumPct: number;
 }
 
 export const useLatestProposalData = () => {
@@ -104,7 +110,7 @@ const getData = async (
   }
 
   // undecided stake = total validator's stake - voted stake
-  const { title, description, voting, finalized } = latest.account;
+  const { title, description, voting, finalized, endEpoch } = latest.account;
 
   const votedStake = forStakeSum + againstStakeSum + abstainStakeSum;
   const undecidedStakeSum = totalStake - votedStake;
@@ -120,6 +126,27 @@ const getData = async (
     (undecidedStakeSum / totalStake) * 100
   );
 
+  const requiredQuorum = Math.round(totalStake * REQUIRED_QUORUM_PCT);
+  const currentQuorumPct = Math.round((votedStake * 100) / totalStake);
+
+  let endDate: Date | undefined = undefined;
+  try {
+    const epochSchedule = await connection.getEpochSchedule();
+    const endEpochFirstSlot = epochSchedule.getSlotsInEpoch(
+      endEpoch.toNumber()
+    );
+    const endDateBlockTime = await connection.getBlockTime(endEpochFirstSlot);
+    endDate = endDateBlockTime ? new Date(endDateBlockTime * 1000) : undefined;
+  } catch (error) {
+    console.error("error getting end epoch to date:", error);
+  }
+  let currentEpoch: number | undefined = undefined;
+  try {
+    currentEpoch = (await connection.getEpochInfo()).epoch;
+  } catch (error) {
+    console.error("error getting currentEpoch:", error);
+  }
+
   const latestProposalData: LatestProposal = {
     title,
     description,
@@ -134,6 +161,10 @@ const getData = async (
     abstainStake: Math.round(abstainStakeSum),
     undecidedStake: Math.round(undecidedStakeSum),
     votesCount,
+    endDate,
+    currentEpoch,
+    requiredQuorum,
+    currentQuorumPct,
   };
   console.log("latestProposalData:", latestProposalData);
 

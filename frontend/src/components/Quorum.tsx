@@ -1,3 +1,4 @@
+import { REQUIRED_QUORUM_PCT } from "@/chain";
 import { VotingRateChart } from "./ui";
 import { useLatestProposalData } from "@/hooks";
 
@@ -8,8 +9,12 @@ export const Quorum = () => {
     return <div className="grid md:grid-cols-12 gap-14">loading...</div>;
   }
 
-  const { forVotesPercentage, againstVotesPercentage, abstainVotesPercentage } =
-    data;
+  const {
+    forVotesPercentage,
+    againstVotesPercentage,
+    abstainVotesPercentage,
+    requiredQuorum,
+  } = data;
 
   return (
     <div className="grid md:grid-cols-12 gap-14">
@@ -41,8 +46,8 @@ export const Quorum = () => {
           yesPercentage={forVotesPercentage}
           noPercentage={againstVotesPercentage}
           abstainPercentage={abstainVotesPercentage}
-          requiredAmount="2,334,363 SOL"
-          currentPosition={70}
+          requiredAmount={requiredQuorum}
+          currentPosition={REQUIRED_QUORUM_PCT * 100}
         />
       </div>
     </div>
