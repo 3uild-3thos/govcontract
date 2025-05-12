@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Aperture, MessageSquareText } from "lucide-react";
+import { Vote, PenLine, MessageSquareText } from "lucide-react";
 
 interface Props {
   currentPhase: "Support" | "Voting" | "Finished" | undefined;
@@ -40,7 +40,7 @@ export const PhaseTimeline = ({ currentPhase }: Props) => {
         {/* phase 2 */}
         <div className="flex items-center relative w-[33%]">
           <div className="w-10.5 h-10.5 bg-green-dark rounded-full border-green-secondary border-[1px] z-1 flex items-center justify-center">
-            <MessageSquareText
+            <PenLine
               size={18}
               className={
                 isVoting ? "text-green-icon-active" : "text-green-icon"
@@ -63,7 +63,7 @@ export const PhaseTimeline = ({ currentPhase }: Props) => {
         {/* phase 3 */}
         <div className="flex items-center relative">
           <div className="w-10.5 h-10.5 bg-green-dark rounded-full border-green-secondary border-[1px] z-1 flex items-center justify-center">
-            <Aperture
+            <Vote
               size={18}
               className={
                 isFinished ? "text-green-icon-active" : "text-green-icon"
