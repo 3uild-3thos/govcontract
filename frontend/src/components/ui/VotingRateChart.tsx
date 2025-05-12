@@ -9,9 +9,9 @@ interface VotingRateProps {
 }
 
 export const VotingRateChart = ({
-  yesPercentage = 40,
-  noPercentage = 15,
-  abstainPercentage = 15,
+  yesPercentage,
+  noPercentage,
+  abstainPercentage,
   requiredAmount = "2,334,363 SOL",
   currentPosition = 75,
 }: VotingRateProps) => {
@@ -21,7 +21,9 @@ export const VotingRateChart = ({
         {/* Main progress bar container */}
         <div className="absolute w-full h-full overflow-hidden flex">
           {/* To Pass section - Black - it just fills 100%, but behind the 3 other sections of yes/no/abstain */}
-          <div className="absolute w-full h-full rounded-sm bg-gradient-to-b from-[#323232] to-[#0C0C0C] border-[1px] border-[#252525] z-0" />
+          <div className="absolute w-full h-full rounded-sm bg-gradient-to-b from-[#323232] to-[#0C0C0C] border-[1px] flex justify-end items-center text-right text-dao-text-secondary text-xs border-[#252525] z-0">
+            <span className="mr-2">{requiredAmount} REQUIRED</span>
+          </div>
 
           {/* Yes section - Green gradient */}
           <div
@@ -44,7 +46,7 @@ export const VotingRateChart = ({
 
         {/* Indicator triangle */}
         <div
-          className="absolute -top-5"
+          className="absolute -top-5 z-2"
           style={{
             left: `${currentPosition - 0.5}%`,
             transform: `translateX(${-currentPosition}%)`,
@@ -54,9 +56,9 @@ export const VotingRateChart = ({
         </div>
 
         {/* Required amount text */}
-        <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-dao-text-secondary text-xs z-2">
+        {/* <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-dao-text-secondary text-xs z-2">
           {requiredAmount} REQUIRED
-        </div>
+        </div> */}
       </div>
 
       {/* Labels */}

@@ -1,19 +1,34 @@
 import { useQuery } from "@tanstack/react-query";
 import { useGetValidatorsTable } from "./useGetValidatorsTable";
-import { useValidatorsVoterSplits, VoteType } from "./useValidatorsVoterSplits";
-import { shortenPublicKey } from "@/helpers";
+import {
+  useValidatorsVoterSplits,
+  VoteSplitAnalytics,
+  VoteType,
+} from "./useValidatorsVoterSplits";
 
 const VOTE_TYPES: VoteType[] = ["yes", "no", "abstain", "undecided"];
 
-export interface Vote {
+export interface BubbleVote {
   type: VoteType;
-  address: string;
+  voteIdentity: string;
   value: number;
   image: string | null;
   r?: number;
   x?: number;
   y?: number;
 }
+
+export interface ValidatorInfo {
+  voteIdentity: string;
+  name: string;
+  description: string;
+  commission: number;
+  asn: string;
+  staked: number;
+  voterSplit: VoteSplitAnalytics;
+}
+
+export type BubbleValidatorInfoMap = Record<string, ValidatorInfo>;
 
 export const useGetValidatorsBubbleChart = () => {
   const { data: validators, isLoading: isLoadingValidators } =
@@ -26,37 +41,61 @@ export const useGetValidatorsBubbleChart = () => {
   const voterSplitsReady =
     !isLoadingSplits && voterSplits && Object.keys(voterSplits).length > 0;
   const enabled = !!(validatorsReady && voterSplitsReady);
-  console.log("validatorsReady:", validatorsReady);
-  console.log("voterSplitsReady:", voterSplitsReady);
-  console.log("enabled:", enabled);
+
   const isLoadingSubqueries = isLoadingSplits || isLoadingValidators;
 
   const query = useQuery({
-    staleTime: 1000 * 120, // 2 minutes
+    staleTime: 0, // no need to stale/cache this query
     queryKey: ["validatorsVotesBubbleChart"],
     enabled,
-    initialData: [],
+    initialData: { votes: [], validatorsInfo: {} },
     queryFn: () => {
-      console.error("here!!!!");
       // for each validator, get its voters splits
-      const data: Vote[] = [];
+      const rawData: BubbleVote[] = [];
+
+      const validatorsInfo: BubbleValidatorInfoMap = {};
+
+      let maxValue = 0;
       if (voterSplits) {
         validators?.slice(0, 10)?.forEach((validator) => {
           const validatorVoterSplits = voterSplits[validator.vote_identity];
+          console.log("validatorVoterSplits:", validatorVoterSplits);
           if (validatorVoterSplits !== undefined) {
-            VOTE_TYPES.forEach((type) =>
-              data.push({
-                address: shortenPublicKey(validator.vote_identity),
+            validatorsInfo[validator.vote_identity] = {
+              voteIdentity: validator.vote_identity,
+              name: validator.name,
+              description: validator.description,
+              commission: validator.commission,
+              asn: validator.asn,
+              staked: validator.activated_stake,
+              voterSplit: validatorVoterSplits,
+            };
+            VOTE_TYPES.forEach((type) => {
+              // scale it by validators stake
+              const value =
+                (validatorVoterSplits[type] * 100) / validator.activated_stake;
+              if (value > maxValue) maxValue = value;
+              rawData.push({
+                voteIdentity: validator.vote_identity,
                 type,
-                value: validatorVoterSplits[type],
+                value,
                 image: validator.image,
-              })
-            );
+              });
+            });
           }
         });
       }
+      // TODO: max value is suspiciously low (because im dividing it by validator.activated_stake)
+      // check if % scaling outputs reasonable values
 
-      return data;
+      // biggest value should be converted to 100% (to avoid having small bubbles)
+      // even if the biggest value is only 10%, it should show as a big bubble
+      const data = rawData.map((d) => ({
+        ...d,
+        value: (d.value / maxValue) * 100,
+      }));
+
+      return { votes: data, validatorsInfo };
     },
   });
 

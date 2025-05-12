@@ -1,26 +1,11 @@
 import { RealmsLink } from "./ui";
 
-interface Props {
-  forVotes: number;
-  againstVotes: number;
-  abstainVotes: number;
-  undecidedVotes: number;
-  forStake: number;
-  againstStake: number;
-  abstainStake: number;
-  undecidedStake: number;
-}
+export const LiveResultsLoadingSkeleton = () => {
+  const forVotes = 40;
+  const againstVotes = 30;
+  const abstainVotes = 20;
+  const undecidedVotes = 10;
 
-export const LiveResults = ({
-  forVotes,
-  againstVotes,
-  abstainVotes,
-  undecidedVotes,
-  forStake,
-  againstStake,
-  abstainStake,
-  undecidedStake,
-}: Props) => {
   return (
     <div>
       <div className="text-xs font-medium tracking-wider text-dao-text-secondary uppercase mb-3">
@@ -33,15 +18,17 @@ export const LiveResults = ({
           {/* progress */}
           <div
             style={{ width: `${forVotes}%` }}
-            className={`bg-green-dark absolute left-0 h-full z-0 border-r-[1px] border-r-green-secondary`}
+            className="bg-green-dark absolute left-0 h-full z-0 border-r-[1px] border-r-green-secondary animate-pulse"
           />
           <div className="flex flex-col md:flex-row justify-between md:items-center w-full gap-y-1.5">
-            <div className="font-semibold text-xl text-dao-text-primary z-1 space-x-2">
+            <div className="flex font-semibold text-xl text-dao-text-primary z-1 space-x-2">
               <span className="text-green">Yes</span>
-              <span>{forVotes}%</span>
+              <span className="flex items-center gap-1 text-gray animate-pulse">
+                <div className="h-4 w-8 bg-gray rounded-full" />%
+              </span>
             </div>
-            <div className="text-dao-text-label text-sm z-1">
-              {forStake} SOL
+            <div className="flex items-center gap-2 text-dao-text-label text-sm z-1">
+              <div className="h-3 w-6 bg-gray animate-pulse rounded-full" />
             </div>
           </div>
         </div>
@@ -51,15 +38,17 @@ export const LiveResults = ({
           {/* progress */}
           <div
             style={{ width: `${againstVotes}%` }}
-            className={`bg-red-dark absolute left-0 h-full z-0 border-r-[1px] border-r-red-secondary`}
+            className="bg-red-dark absolute left-0 h-full z-0 border-r-[1px] border-r-red-secondary animate-pulse"
           />
           <div className="flex flex-col md:flex-row justify-between md:items-center w-full gap-y-1.5">
-            <div className="font-semibold text-xl text-dao-text-primary z-1 space-x-2">
+            <div className="flex font-semibold text-xl text-dao-text-primary z-1 space-x-2">
               <span className="text-red">No</span>
-              <span>{againstVotes}%</span>
+              <span className="flex items-center gap-1 text-gray animate-pulse">
+                <div className="h-4 w-8 bg-gray rounded-full" />%
+              </span>
             </div>
-            <div className="text-dao-text-label text-sm z-1">
-              {againstStake} SOL
+            <div className="flex items-center gap-2 text-dao-text-label text-sm z-1">
+              <div className="h-3 w-6 bg-gray animate-pulse rounded-full" />
             </div>
           </div>
         </div>
@@ -69,15 +58,17 @@ export const LiveResults = ({
           {/* progress */}
           <div
             style={{ width: `${abstainVotes}%` }}
-            className={`bg-orange-dark absolute left-0 h-full z-0 border-r-[1px] border-r-orange-secondary`}
+            className="bg-orange-dark absolute left-0 h-full z-0 border-r-[1px] border-r-orange-secondary animate-pulse"
           />
           <div className="flex flex-col md:flex-row justify-between md:items-center w-full gap-y-1.5">
-            <div className="font-semibold text-xl text-dao-text-primary z-1 space-x-2">
+            <div className="flex font-semibold text-xl text-dao-text-primary z-1 space-x-2">
               <span className="text-orange">Abstain</span>
-              <span>{abstainVotes}%</span>
+              <span className="flex items-center gap-1 text-gray animate-pulse">
+                <div className="h-4 w-8 bg-gray rounded-full" />%
+              </span>
             </div>
-            <div className="text-dao-text-label text-sm z-1">
-              {abstainStake} SOL
+            <div className="flex items-center gap-2 text-dao-text-label text-sm z-1">
+              <div className="h-3 w-6 bg-gray animate-pulse rounded-full" />
             </div>
           </div>
         </div>
@@ -87,15 +78,17 @@ export const LiveResults = ({
           {/* progress */}
           <div
             style={{ width: `${undecidedVotes}%` }}
-            className={`bg-gray-dark absolute left-0 h-full z-0 border-r-[1px] border-r-gray-secondary`}
+            className="bg-gray-dark absolute left-0 h-full z-0 border-r-[1px] border-r-gray-secondary animate-pulse"
           />
           <div className="flex flex-col md:flex-row justify-between md:items-center w-full gap-y-1.5">
-            <div className="font-semibold text-xl text-dao-text-primary z-1 space-x-2">
+            <div className="flex font-semibold text-xl text-dao-text-primary z-1 space-x-2">
               <span className="text-gray">Undecided</span>
-              <span>{undecidedVotes}%</span>
+              <span className="flex items-center gap-1 text-gray animate-pulse">
+                <div className="h-4 w-8 bg-gray rounded-full" />%
+              </span>
             </div>
-            <div className="text-dao-text-label text-sm z-1">
-              {undecidedStake} SOL
+            <div className="flex items-center gap-2 text-dao-text-label text-sm z-1">
+              <div className="h-3 w-6 bg-gray animate-pulse rounded-full" />
             </div>
           </div>
         </div>

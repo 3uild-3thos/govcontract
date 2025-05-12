@@ -11,7 +11,11 @@ import {
   VotesBubbleChart,
 } from "@/components";
 
-import { useGetValidatorsTableMobile, type VoteTypeText } from "@/hooks";
+import {
+  useGetValidatorsBubbleChart,
+  useGetValidatorsTableMobile,
+  type VoteTypeText,
+} from "@/hooks";
 import { useMemo, useState } from "react";
 
 const voteColorMap: Record<string, string> = {
@@ -22,6 +26,8 @@ const voteColorMap: Record<string, string> = {
 };
 
 export function TopVotersMobile() {
+  const { data } = useGetValidatorsBubbleChart();
+
   const [filterBy, setFilterBy] = useState<VoteTypeText[]>([]);
 
   const { data: validators, isLoading } = useGetValidatorsTableMobile();
@@ -149,7 +155,7 @@ export function TopVotersMobile() {
       </div>
 
       <div className="flex items-center justify-center mt-10">
-        <VotesBubbleChart />
+        <VotesBubbleChart votes={data.votes} isLoading={isLoading} />
       </div>
     </div>
   );

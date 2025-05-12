@@ -1,6 +1,16 @@
 import { VotingRateChart } from "./ui";
+import { useLatestProposalData } from "@/hooks";
 
 export const Quorum = () => {
+  const { data, isLoading } = useLatestProposalData();
+
+  if (data === undefined || isLoading) {
+    return <div className="grid md:grid-cols-12 gap-14">loading...</div>;
+  }
+
+  const { forVotesPercentage, againstVotesPercentage, abstainVotesPercentage } =
+    data;
+
   return (
     <div className="grid md:grid-cols-12 gap-14">
       {/* Left Column - Quorum */}
@@ -28,11 +38,11 @@ export const Quorum = () => {
 
         {/* Stacked Bar Chart */}
         <VotingRateChart
-          yesPercentage={30}
-          noPercentage={10}
-          abstainPercentage={10}
+          yesPercentage={forVotesPercentage}
+          noPercentage={againstVotesPercentage}
+          abstainPercentage={abstainVotesPercentage}
           requiredAmount="2,334,363 SOL"
-          currentPosition={60}
+          currentPosition={70}
         />
       </div>
     </div>

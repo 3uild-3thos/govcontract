@@ -6,3 +6,4 @@ export * from "./useGetValidatorsTable";
 export * from "./useValidatorsVoterSplits";
 export * from "./useGetValidatorsTableMobile";
 export * from "./useGetValidatorsBubbleChart";
+export * from "./useVoteAccountsWithValidators";

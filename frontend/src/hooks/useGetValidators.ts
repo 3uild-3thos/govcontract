@@ -43,12 +43,14 @@ export const useGetValidators = () => {
         name: "vote account 1",
         vote_identity: "AHYic562KhgtAEkb1rSesqS87dFYRcfXb4WwWus3Zc9C", // dummy pk,
         image: "https://www.svgrepo.com/show/340131/debug.svg",
+        activated_stake: mockValidatorData.activated_stake * 2,
       },
       {
         ...mockValidatorData,
         name: "vote account 2",
         vote_identity: "5WYbFiL3p2vDmFq299Lf236zkUb7VfJafXuaoS5YfV1p", // dummy pk
         image: "https://www.svgrepo.com/show/340131/debug.svg",
+        activated_stake: mockValidatorData.activated_stake / 2,
       },
       {
         ...mockValidatorData,
@@ -56,7 +58,7 @@ export const useGetValidators = () => {
         vote_identity: "E5bjdQKxNBLo6DkyDFzD3xCEyF7ZYiXq5YFHuKbo7APu", // dummy pk
         image: "https://www.svgrepo.com/show/340131/debug.svg",
       },
-      ...data,
+      ...data.slice(0, 1), // TODO: remove this slice
     ],
   });
 };

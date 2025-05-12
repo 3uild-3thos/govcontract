@@ -8,7 +8,7 @@ type ValidatorVoteIdentity = string;
 
 export type VoteType = "yes" | "no" | "abstain" | "undecided";
 
-type Analytics = Record<VoteType, number>;
+export type VoteSplitAnalytics = Record<VoteType, number>;
 
 export const useValidatorsVoterSplits = () => {
   const { data: validators, isLoading: isLoadingValidators } =
@@ -39,7 +39,7 @@ export const useValidatorsVoterSplits = () => {
         const votePda = vote.publicKey;
         const proposal = vote.account.proposalId;
 
-        let matchedValidator = false;
+        // let matchedValidator = false;
 
         // console.log("checking for votePda:", votePda.toBase58());
 
@@ -57,7 +57,7 @@ export const useValidatorsVoterSplits = () => {
 
           // console.log("expectedVotePda:", expectedVotePda.toBase58());
           if (expectedVotePda.equals(votePda)) {
-            matchedValidator = true;
+            // matchedValidator = true;
 
             // calculate here??
             // console.log(
@@ -76,19 +76,19 @@ export const useValidatorsVoterSplits = () => {
               };
             }
 
-            voteSums[vote_identity].for += data.forVotesBp;
-            voteSums[vote_identity].against += data.againstVotesBp;
-            voteSums[vote_identity].abstain += data.abstainVotesBp;
+            voteSums[vote_identity].for += data.forVotesBp.toNumber();
+            voteSums[vote_identity].against += data.againstVotesBp.toNumber();
+            voteSums[vote_identity].abstain += data.abstainVotesBp.toNumber();
             voteSums[vote_identity].count += 1;
 
             break;
           }
         }
-        if (!matchedValidator)
-          console.error("found no validator for this vote", vote);
+        // if (!matchedValidator)
+        // console.error("found no validator for this vote", vote);
       }
 
-      const result: Record<string, Analytics> = {};
+      const result: Record<string, VoteSplitAnalytics> = {};
 
       for (const [
         vote_identity,
@@ -106,7 +106,7 @@ export const useValidatorsVoterSplits = () => {
           undecided: undecided / 100,
         };
       }
-      console.log("result:", result);
+
       return result;
     },
   });
