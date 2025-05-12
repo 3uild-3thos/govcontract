@@ -1,0 +1,20 @@
+[package]
+name = "svmgov"
+version = "0.1.0"
+edition = "2024"
+authors = ["bergabman", "berg@turbin3.com"]
+
+[dependencies]
+clap = { version = "4.5.37", features = ["derive"] }
+anyhow = "1.0.98"
+serde = "1.0.219"
+serde_json = "1.0.140"
+tokio = { version = "1.44.2", features = ["full"] }
+anchor-client = { version = "0.31.1", features = ["async"]}
+anchor-lang = "0.31.1"
+rand = { version = "0.9.1", features = ["thread_rng"]}
+log = "0.4.27"
+env_logger = "0.11.8"
+
+[dev-dependencies]
+tempfile = "3.0"
