@@ -55,7 +55,7 @@ impl<'info> CastVote<'info> {
             for_votes_bp,
             against_votes_bp,
             abstain_votes_bp,
-            vote_epoch: current_epoch,
+            vote_timestamp: Clock::get()?.unix_timestamp,
             bump: bumps.vote,
         });
 

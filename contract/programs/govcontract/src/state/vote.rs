@@ -7,6 +7,6 @@ pub struct Vote {
     pub for_votes_bp: u64,
     pub against_votes_bp: u64,
     pub abstain_votes_bp: u64,
-    pub vote_epoch: u64,
+    pub vote_timestamp: i64,
     pub bump: u8,
 }
