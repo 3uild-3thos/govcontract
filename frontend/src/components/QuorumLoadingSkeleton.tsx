@@ -1,22 +1,7 @@
 import { REQUIRED_QUORUM_PCT } from "@/chain";
-import { VotingRateChart } from "./ui";
-import { useLatestProposalData } from "@/hooks";
-import { QuorumLoadingSkeleton } from "./QuorumLoadingSkeleton";
+import { VotingRateChartLoadingSkeleton } from "./ui/VotingRateChartLoadingSkeleton";
 
-export const Quorum = () => {
-  const { data, isLoading } = useLatestProposalData();
-
-  if (data === undefined || isLoading) {
-    return <QuorumLoadingSkeleton />;
-  }
-
-  const {
-    forVotesPercentage,
-    againstVotesPercentage,
-    abstainVotesPercentage,
-    requiredQuorum,
-  } = data;
-
+export const QuorumLoadingSkeleton = () => {
   return (
     <div className="grid md:grid-cols-12 gap-14">
       {/* Left Column - Quorum */}
@@ -29,13 +14,18 @@ export const Quorum = () => {
           <div className="text-xl font-bold text-dao-text-primary">
             {REQUIRED_QUORUM_PCT * 100}%
           </div>
-          <div className="text-dao-text-secondary text-sm">2,115,564 SOL</div>
+          <div className="h-3 w-24 bg-gray animate-pulse rounded-full" />
         </div>
 
-        <p className="text-sm text-dao-text-muted leading-relaxed md:max-w-80">
+        {/* <p className="text-sm text-dao-text-muted leading-relaxed md:max-w-80">
           Quorum in DAO voting is the minimum percentage of members or tokens
           required to validate a proposal.
-        </p>
+        </p> */}
+        <div className="md:max-w-80 mt-3 mb-1">
+          <div className="h-3 w-60 bg-gray animate-pulse rounded-full" />
+          <div className="h-3 w-70 bg-gray animate-pulse rounded-full mt-2.5" />
+          <div className="h-3 w-32 bg-gray animate-pulse rounded-full mt-2.5" />
+        </div>
       </div>
 
       {/* Right Column - Voting Rate */}
@@ -45,13 +35,7 @@ export const Quorum = () => {
         </div>
 
         {/* Stacked Bar Chart */}
-        <VotingRateChart
-          yesPercentage={forVotesPercentage}
-          noPercentage={againstVotesPercentage}
-          abstainPercentage={abstainVotesPercentage}
-          requiredAmount={requiredQuorum}
-          currentPosition={REQUIRED_QUORUM_PCT * 100}
-        />
+        <VotingRateChartLoadingSkeleton />
       </div>
     </div>
   );

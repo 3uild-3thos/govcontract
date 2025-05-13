@@ -1,15 +1,12 @@
 import { useLatestProposalData } from "@/hooks";
 import { PhaseTimeline } from "./ui";
-
-// support
-// voting
-// finished
+import { CurrentPhaseLoadingSkeleton } from "./CurrentPhaseLoadingSkeleton";
 
 export const CurrentPhase = () => {
   const { data, isLoading } = useLatestProposalData();
 
   if (isLoading || !data) {
-    return <div>isLoading</div>;
+    return <CurrentPhaseLoadingSkeleton />;
   }
 
   const { voting, finalized } = data;

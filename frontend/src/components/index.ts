@@ -8,3 +8,4 @@ export * from "./Quorum";
 export * from "./TopVoters";
 export * from "./ValidatorDetail";
 export * from "./VotesBubbleChart";
+export * from "./Footer";

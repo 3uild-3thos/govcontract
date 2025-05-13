@@ -1,39 +1,32 @@
-import { Github, Twitter } from "lucide-react";
 import Link from "next/link";
 import React from "react";
+import { DiscordIcon, GithubIcon, TwitterIcon } from "./icons";
+import Image from "next/image";
 
 export const Footer = () => {
   return (
-    <footer className="bg-black text-gray-300 py-16 relative overflow-hidden">
-      {/* Subtle curved lines in background */}
-      <div className="absolute inset-0 opacity-10">
-        <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M0,100 C150,200 350,0 500,100 C650,200 850,0 1000,100 C1150,200 1350,0 1500,100"
-            stroke="white"
-            strokeWidth="2"
-            fill="none"
-          />
-          <path
-            d="M0,200 C150,300 350,100 500,200 C650,300 850,100 1000,200 C1150,300 1350,100 1500,200"
-            stroke="white"
-            strokeWidth="2"
-            fill="none"
-          />
-        </svg>
+    <div className="bg-black text-gray-300 py-16 relative">
+      <div className="absolute top-0 inset-0">
+        <Image
+          src="/assets/footer-image.jpg"
+          alt="Footer Background"
+          fill
+          className="object-cover w-auto h-full max-h-[140px] md:max-h-full min-w-full"
+          priority
+        />
       </div>
 
       <div className="max-w-3xl mx-auto px-4 text-center relative z-10">
-        <h2 className="text-white text-3xl font-medium mb-3">
+        {/* <h2 className="text-white text-3xl font-medium mb-3">
           Stay up to date
         </h2>
         <p className="text-gray-400 mb-8">
           We&apos;ll send you the latest proposals and keep you in the loop for
           important updates
-        </p>
+        </p> */}
 
         {/* Email subscription form */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-12 max-w-xl mx-auto">
+        {/* <div className="flex flex-col sm:flex-row gap-3 mb-12 max-w-xl mx-auto">
           <input
             type="email"
             placeholder="Email Address"
@@ -48,7 +41,7 @@ export const Footer = () => {
           >
             Submit
           </button>
-        </div>
+        </div> */}
 
         {/* Social media icons */}
         <div className="flex justify-center gap-6 mb-8">
@@ -56,38 +49,38 @@ export const Footer = () => {
             href="#"
             className="text-gray-400 hover:text-white transition-colors"
           >
-            <Github size={24} />
+            <GithubIcon />
             <span className="sr-only">GitHub</span>
           </Link>
           <Link
             href="#"
             className="text-gray-400 hover:text-white transition-colors"
           >
-            <Twitter size={24} />
+            <TwitterIcon />
             <span className="sr-only">Twitter</span>
           </Link>
           <Link
             href="#"
             className="text-gray-400 hover:text-white transition-colors"
           >
-            {/* <DiscordIcon size={24} /> */}
+            <DiscordIcon />
             <span className="sr-only">Discord</span>
           </Link>
         </div>
 
         {/* Copyright and links */}
-        <div className="text-sm text-gray-500 mb-4">
+        <div className="text-sm text-dao-text-secondary mb-4">
           © 2025 Realms.Today LLC |{" "}
           <Link
             href="#"
-            className="text-gray-400 hover:text-white transition-colors"
+            className="hover:text-white transition-colors underline"
           >
             Terms
           </Link>{" "}
           |{" "}
           <Link
             href="#"
-            className="text-gray-400 hover:text-white transition-colors"
+            className="hover:text-white transition-colors underline"
           >
             Privacy Policy
           </Link>
@@ -95,21 +88,21 @@ export const Footer = () => {
 
         <Link
           href="#"
-          className="text-gray-400 hover:text-white transition-colors text-sm block mb-4"
+          className="hover:text-white transition-colors text-dao-text-secondary text-sm block mb-4"
         >
           Read the Docs
         </Link>
 
-        <div className="text-gray-500 text-sm">
+        <div className="text-dao-text-secondary text-md">
           Powered by{" "}
           <Link
             href="#"
-            className="text-white font-medium hover:text-gray-200 transition-colors"
+            className="text-white font-bold hover:text-gray-200 transition-colors"
           >
             Realms.Today
           </Link>
         </div>
       </div>
-    </footer>
+    </div>
   );
 };

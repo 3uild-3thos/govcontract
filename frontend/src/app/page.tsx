@@ -4,6 +4,7 @@ import Image from "next/image";
 import {
   Card,
   CurrentPhase,
+  Footer,
   GradientBox,
   ProposalDetails,
   Quorum,
@@ -79,6 +80,9 @@ export default function Home() {
           </Card>
         )}
       </main>
+      <footer>
+        <Footer />
+      </footer>
     </div>
   );
 }
