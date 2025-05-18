@@ -12,12 +12,10 @@ pub struct TallyVotes<'info> {
     #[account(mut)]
     pub proposal: Account<'info, Proposal>,
     pub system_program: Program<'info, System>,
-    // /// CHECK: Vote accounts will be validated in the instruction logic
-    // pub remaining_accounts: Vec<Account<'info, Vote>>, // All Vote accounts for this proposal
 }
 
 impl<'info> TallyVotes<'info> {
-    pub fn tally_votes(&mut self, remaining: &'info[AccountInfo<'info>]) -> Result<()> {
+    pub fn tally_votes(&mut self, remaining: &'info[AccountInfo<'info>], finalize: bool) -> Result<()> {
         // Check if the voting period has ended
         let clock = Clock::get()?;
         require!(
@@ -36,7 +34,7 @@ impl<'info> TallyVotes<'info> {
 
             // Validate the Vote account belongs to this proposal
             require!(
-                vote.proposal_id == self.proposal.key(),
+                vote.proposal == self.proposal.key(),
                 GovernanceError::InvalidVoteAccount
             );
 
@@ -93,7 +91,9 @@ impl<'info> TallyVotes<'info> {
         
 
         // Mark the proposal as finalized
-        self.proposal.finalized = true;
+        if finalize {
+            self.proposal.finalized = true;
+        }
 
         Ok(())
     }

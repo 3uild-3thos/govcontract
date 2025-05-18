@@ -63,14 +63,10 @@ pub mod govcontract {
     //     Ok(())
     // }
 
-    pub fn tally_votes<'info>(ctx: Context<'_, '_, 'info, 'info, TallyVotes<'info>>) -> Result<()> {
-        // let remaining_accounts = ctx.remaining_accounts;
-        ctx.accounts.tally_votes(ctx.remaining_accounts)?;
-        // for account in remaining_accounts.iter() {
-        //     let vote: Account<Vote> = Account::try_from(account)?;
-        //     ctx.accounts.tally_votes(&vote)?
-        // }
-        // Must validate current stake weight on votes querying the sysvar for all stake and validator stake
+    pub fn tally_votes<'info>(ctx: Context<'_, '_, 'info, 'info, TallyVotes<'info>>, finalize: bool) -> Result<()> {
+
+        ctx.accounts.tally_votes(ctx.remaining_accounts, finalize)?;
+       
         Ok(())
     }
 }

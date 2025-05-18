@@ -51,7 +51,7 @@ impl<'info> CreateProposal<'info> {
         let proposer_stake_weight_bp = stake_weight_bp!(proposer_stake, cluster_stake)?;
 
         self.proposal.set_inner(Proposal {
-            author: *self.signer.key,
+            author: self.signer.key(),
             title,
             description,
             creation_epoch: current_epoch,

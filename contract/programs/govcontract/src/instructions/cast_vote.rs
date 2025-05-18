@@ -51,7 +51,8 @@ impl<'info> CastVote<'info> {
 
         // Store the vote distribution in the Vote PDA
         self.vote.set_inner(Vote {
-            proposal_id: self.proposal.key(),
+            validator: self.signer.key(),
+            proposal: self.proposal.key(),
             for_votes_bp,
             against_votes_bp,
             abstain_votes_bp,
