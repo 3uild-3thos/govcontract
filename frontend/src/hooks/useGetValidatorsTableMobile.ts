@@ -36,7 +36,8 @@ export const useGetValidatorsTableMobile = () => {
       const data: ValidatorVote[] = [];
       if (voterSplits) {
         validators?.forEach((validator) => {
-          const validatorVoterSplits = voterSplits[validator.vote_identity];
+          const validatorVoterSplits =
+            voterSplits.voterSplits[validator.vote_identity];
           if (validatorVoterSplits !== undefined) {
             VOTE_TYPES.forEach((voteType) =>
               data.push({
