@@ -1,27 +1,63 @@
 import { useQuery } from "@tanstack/react-query";
 import { useGetValidators } from "./useGetValidators";
+import { useValidatorsVoterSplits } from "./useValidatorsVoterSplits";
 
-export const useGetValidatorsTable = () => {
+export type SortBy = "weight" | "name" | "percentage" | "date";
+
+export const useGetValidatorsTable = (sortBy: SortBy) => {
   const { data: validators, isLoading: isLoadingValidators } =
     useGetValidators();
 
+  const { data, isLoading: isLoadingVoterSplits } = useValidatorsVoterSplits();
+
+  const voterSplits = data?.voterSplits;
+  const votesLatestTimestamp = data?.votesLatestTimestamp;
+
   const validatorsReady =
-    !isLoadingValidators && validators && validators.length > 0;
+    !isLoadingValidators &&
+    validators &&
+    validators.length > 0 &&
+    !isLoadingVoterSplits;
   const enabled = validatorsReady;
 
   return useQuery({
     staleTime: 1000 * 120, // 2 minutes
-    queryKey: ["validatorsTable"],
+    queryKey: ["validatorsTable", sortBy],
     enabled,
     queryFn: async () => {
       if (!validators) return null;
 
+      let sortByProp: keyof (typeof validators)[0] | "voteDate" =
+        "activated_stake";
+      if (sortBy === "weight") sortByProp = "activated_stake";
+      else if (sortBy === "name") sortByProp = "name";
+      // else if (sortBy === "percentage") sortByProp = "percentage";
+      else if (sortBy === "date") sortByProp = "voteDate";
+
       return (
-        validators?.map((d) => ({
-          ...d,
-          percentage: d.vote_success,
+        validators?.map((v) => ({
+          ...v,
+          percentage: 0,
+          a: v.activated_stake,
+          voterSplits: {
+            yes: voterSplits?.[v.vote_identity]
+              ? voterSplits[v.vote_identity]?.yes
+              : "-",
+            no: voterSplits?.[v.vote_identity]
+              ? voterSplits[v.vote_identity]?.no
+              : "-",
+            abstain: voterSplits?.[v.vote_identity]
+              ? voterSplits[v.vote_identity]?.abstain
+              : "-",
+            undecided: voterSplits?.[v.vote_identity]
+              ? voterSplits[v.vote_identity]?.undecided
+              : "-",
+          },
+          voteDate: votesLatestTimestamp?.[v.vote_identity]
+            ? new Date(votesLatestTimestamp?.[v.vote_identity]).toLocaleString()
+            : "-",
         })) || []
-      );
+      ).sort((a, b) => +b[sortByProp] - +a[sortByProp]);
     },
   });
 };

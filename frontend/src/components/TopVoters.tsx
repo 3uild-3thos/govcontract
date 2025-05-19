@@ -17,23 +17,18 @@ import {
   Button,
 } from "@/components";
 import { ChevronLeft, ChevronRight, Download, Search } from "lucide-react";
-import { useGetValidatorsTable, useValidatorsVoterSplits } from "@/hooks";
+import { SortBy, useGetValidatorsTable } from "@/hooks";
 import { useDebounceCallback } from "usehooks-ts";
 
 export function TopVoters() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [sortBy, setSortBy] = useState("weight");
+  const [sortBy, setSortBy] = useState<SortBy>("weight");
 
-  const { data: validatorsData, isLoading } = useGetValidatorsTable();
-  const { data, isLoading: isLoadingSplits } = useValidatorsVoterSplits();
+  const { data: validatorsData, isLoading } = useGetValidatorsTable(sortBy);
 
-  const voterSplits = data?.voterSplits;
-  const votesLatestTimestamp = data?.votesLatestTimestamp;
-
-  console.log("isLoadingSplits:", isLoadingSplits);
-  console.log("voterSplits:", voterSplits);
+  console.log("isLoading:", isLoading);
 
   // first, apply search term
   const searchedData = useMemo(() => {
@@ -105,7 +100,7 @@ export function TopVoters() {
           </Button>
 
           <div className="flex items-center gap-2">
-            <Select value={sortBy} onValueChange={setSortBy}>
+            <Select value={sortBy} onValueChange={(v: SortBy) => setSortBy(v)}>
               <SelectTrigger className="text-white w-45">
                 <div className="flex gap-1">
                   <span className="text-dao-text-secondary">Sort by:</span>
@@ -183,10 +178,7 @@ export function TopVoters() {
                   <div className="flex gap-x-6">
                     <div className="flex flex-col">
                       <div className="font-medium">
-                        {voterSplits?.[validator.vote_identity]
-                          ? voterSplits[validator.vote_identity]?.yes
-                          : "-"}
-                        %
+                        {validator.voterSplits.yes}%
                       </div>
                       <div className="flex items-center text-sm gap-x-1">
                         <div className="w-2 h-2 rounded-full bg-green-500"></div>
@@ -195,10 +187,7 @@ export function TopVoters() {
                     </div>
                     <div className="flex flex-col">
                       <div className="font-medium">
-                        {voterSplits?.[validator.vote_identity]
-                          ? voterSplits[validator.vote_identity]?.no
-                          : "-"}
-                        %
+                        {validator.voterSplits.no}%
                       </div>
                       <div className="flex items-center text-sm gap-x-1">
                         <div className="w-2 h-2 rounded-full bg-red-500"></div>
@@ -207,10 +196,7 @@ export function TopVoters() {
                     </div>
                     <div className="flex flex-col">
                       <div className="font-medium">
-                        {voterSplits?.[validator.vote_identity]
-                          ? voterSplits[validator.vote_identity]?.abstain
-                          : "-"}
-                        %
+                        {validator.voterSplits.abstain}%
                       </div>
                       <div className="flex items-center text-sm gap-x-1">
                         <div className="w-2 h-2 rounded-full bg-orange-500"></div>
@@ -219,10 +205,7 @@ export function TopVoters() {
                     </div>
                     <div className="flex flex-col">
                       <div className="font-medium">
-                        {voterSplits?.[validator.vote_identity]
-                          ? voterSplits[validator.vote_identity]?.undecided
-                          : "-"}
-                        %
+                        {validator.voterSplits.undecided}%
                       </div>
                       <div className="flex items-center text-sm gap-x-1">
                         <div className="w-2 h-2 rounded-full bg-gray-500"></div>
@@ -234,14 +217,7 @@ export function TopVoters() {
                   </div>
                 </TableCell>
                 <TableCell className="">{validator.percentage}%</TableCell>
-                <TableCell className="">
-                  {" "}
-                  {votesLatestTimestamp?.[validator.vote_identity]
-                    ? new Date(
-                        votesLatestTimestamp[validator.vote_identity]
-                      ).toLocaleString()
-                    : "-"}
-                </TableCell>
+                <TableCell className="">{validator.voteDate}</TableCell>
               </TableRow>
             ))}
           </TableBody>
