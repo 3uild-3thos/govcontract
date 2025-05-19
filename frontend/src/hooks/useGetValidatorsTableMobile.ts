@@ -15,7 +15,7 @@ interface ValidatorVote {
 
 export const useGetValidatorsTableMobile = () => {
   const { data: validators, isLoading: isLoadingValidators } =
-    useGetValidatorsTable();
+    useGetValidatorsTable("weight");
   const { data: voterSplits, isLoading: isLoadingSplits } =
     useValidatorsVoterSplits();
 
