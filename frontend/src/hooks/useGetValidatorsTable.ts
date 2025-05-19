@@ -19,8 +19,7 @@ export const useGetValidatorsTable = () => {
       return (
         validators?.map((d) => ({
           ...d,
-          percentage: 0,
-          voteDate: "03/26/25 12:15pm",
+          percentage: d.vote_success,
         })) || []
       );
     },

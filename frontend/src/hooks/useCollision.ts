@@ -25,12 +25,13 @@ export function useLabelCollisions(count: number): CollisionResult {
         const el = ref.current;
         if (!el) return;
         const rect = el.getBoundingClientRect();
+        const BUFFER = 2;
 
         const isOverlapping = !(
-          rect.right < fixedRect.left ||
-          rect.left > fixedRect.right ||
-          rect.bottom < fixedRect.top ||
-          rect.top > fixedRect.bottom
+          rect.right < fixedRect.left - BUFFER ||
+          rect.left > fixedRect.right + BUFFER ||
+          rect.bottom < fixedRect.top - BUFFER ||
+          rect.top > fixedRect.bottom + BUFFER
         );
 
         if (isOverlapping) {
@@ -48,11 +49,11 @@ export function useLabelCollisions(count: number): CollisionResult {
     };
 
     window.addEventListener("resize", handleUpdate);
-    window.addEventListener("scroll", handleUpdate);
+    // window.addEventListener("scroll", handleScroll);
 
     return () => {
       window.removeEventListener("resize", handleUpdate);
-      window.removeEventListener("scroll", handleUpdate);
+      // window.removeEventListener("scroll", handleScroll);
     };
   }, []);
 
