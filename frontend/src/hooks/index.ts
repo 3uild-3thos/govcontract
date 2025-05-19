@@ -7,3 +7,4 @@ export * from "./useValidatorsVoterSplits";
 export * from "./useGetValidatorsTableMobile";
 export * from "./useGetValidatorsBubbleChart";
 export * from "./useVoteAccountsWithValidators";
+export * from "./useCollision";

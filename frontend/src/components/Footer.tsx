@@ -46,22 +46,25 @@ export const Footer = () => {
         {/* Social media icons */}
         <div className="flex justify-center gap-6 mb-8">
           <Link
-            href="#"
             className="text-gray-400 hover:text-white transition-colors"
+            href="https://github.com/"
+            target="_blank"
           >
             <GithubIcon />
             <span className="sr-only">GitHub</span>
           </Link>
           <Link
-            href="#"
             className="text-gray-400 hover:text-white transition-colors"
+            href="https://x.com/realmsdaos"
+            target="_blank"
           >
             <TwitterIcon />
-            <span className="sr-only">Twitter</span>
+            <span className="sr-only">X</span>
           </Link>
           <Link
-            href="#"
             className="text-gray-400 hover:text-white transition-colors"
+            href="https://discord.com/channels/910194960941338677/910197899420397588"
+            target="_blank"
           >
             <DiscordIcon />
             <span className="sr-only">Discord</span>

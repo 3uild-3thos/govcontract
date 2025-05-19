@@ -1,3 +1,6 @@
+"use client";
+
+import { useLabelCollisions } from "@/hooks";
 import { ToPassIcon } from "./ToPassIcon";
 
 interface VotingRateProps {
@@ -15,6 +18,7 @@ export const VotingRateChart = ({
   requiredAmount,
   currentPosition,
 }: VotingRateProps) => {
+  const { fixedRef, movingRefs, isColliding } = useLabelCollisions(3);
   return (
     <>
       <div className="relative w-full h-8">
@@ -64,7 +68,7 @@ export const VotingRateChart = ({
       {/* Labels */}
       <div className="relative w-full mt-2.5">
         {/* Yes label - positioned at start of Yes section */}
-        <div className="absolute left-0">
+        <div ref={movingRefs[0]} className="absolute left-0">
           <div className="flex flex-col">
             <span className="">{yesPercentage}%</span>
           </div>
@@ -74,7 +78,11 @@ export const VotingRateChart = ({
           </div>
         </div>
         {/* No label - positioned at start of No section */}
-        <div className="absolute" style={{ left: `${yesPercentage}%` }}>
+        <div
+          ref={movingRefs[1]}
+          className="absolute"
+          style={{ left: `${yesPercentage}%` }}
+        >
           <div className="flex flex-col">
             <span className="">{noPercentage}%</span>
           </div>
@@ -86,6 +94,7 @@ export const VotingRateChart = ({
 
         {/* Abstain label - positioned at start of Abstain section */}
         <div
+          ref={movingRefs[2]}
           className="absolute "
           style={{ left: `${yesPercentage + noPercentage}%` }}
         >
@@ -101,9 +110,11 @@ export const VotingRateChart = ({
 
         {/* To Pass label - positioned at start of To Pass section */}
         <div
+          ref={fixedRef}
           className="absolute flex flex-col items-center"
           style={{
             left: `${currentPosition}%`,
+            top: isColliding ? "-102px" : "0px",
             transform: `translateX(${-currentPosition}%)`,
           }}
         >
