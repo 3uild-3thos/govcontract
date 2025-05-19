@@ -58,8 +58,8 @@ export const useGetValidatorsBubbleChart = () => {
       let maxValue = 0;
       if (voterSplits) {
         validators?.slice(0, 10)?.forEach((validator) => {
-          const validatorVoterSplits = voterSplits[validator.vote_identity];
-          console.log("validatorVoterSplits:", validatorVoterSplits);
+          const validatorVoterSplits =
+            voterSplits.voterSplits[validator.vote_identity];
           if (validatorVoterSplits !== undefined) {
             validatorsInfo[validator.vote_identity] = {
               voteIdentity: validator.vote_identity,

@@ -8,36 +8,6 @@ export const useGetValidators = () => {
     queryKey: ["validators"],
     queryFn: getValidators,
     select: ({ data }): Validators => [
-      // {
-      //   ...mockValidatorData,
-      //   name: "vote account 4",
-      //   vote_identity: "9wjMBVeCd75CrWS1VXqWmcndBSagVx8tGrX1kWdbLQRW", // dummy pk,
-      // },
-      // {
-      //   ...mockValidatorData,
-      //   name: "vote account 5",
-      //   vote_identity: "9oNFascoZqtPYhtAfnYTXCdbNUZUEtkrCuDuDpKaAqv", // dummy pk
-      // },
-      // {
-      //   ...mockValidatorData,
-      //   name: "vote account 6",
-      //   vote_identity: "FkfmXCyGwRfNpaTVYixwssGphP6PnRBDZJWHWurLTvMy", // dummy pk
-      // },
-      // {
-      //   ...mockValidatorData,
-      //   name: "vote account 7",
-      //   vote_identity: "9QikEprykgKPwB7BenieDYLaeH4iUzfrWooykNBGyDxt", // dummy pk,
-      // },
-      // {
-      //   ...mockValidatorData,
-      //   name: "vote account 8",
-      //   vote_identity: "8ciJasgK6WvB5qH8eV8Zg8TqgcbfpXwdzfcgbrE9WNGr", // dummy pk
-      // },
-      // {
-      //   ...mockValidatorData,
-      //   name: "vote account 9",
-      //   vote_identity: "AfWJMp8XcvpWdZ73w7nWiCdZGfpTSBg9UGEGbTy7k8Z1", // dummy pk
-      // },
       {
         ...mockValidatorData,
         name: "vote account 1",
@@ -48,14 +18,14 @@ export const useGetValidators = () => {
       {
         ...mockValidatorData,
         name: "vote account 2",
-        vote_identity: "5WYbFiL3p2vDmFq299Lf236zkUb7VfJafXuaoS5YfV1p", // dummy pk
+        vote_identity: "CuNSEWbYCD6GqR5Jr4PHvdt4Jniv78gxtMukiSgg5TSq", // dummy pk
         image: "https://www.svgrepo.com/show/340131/debug.svg",
         activated_stake: mockValidatorData.activated_stake / 2,
       },
       {
         ...mockValidatorData,
         name: "vote account 3",
-        vote_identity: "E5bjdQKxNBLo6DkyDFzD3xCEyF7ZYiXq5YFHuKbo7APu", // dummy pk
+        vote_identity: "4QfaUKZ94xfHQF78XCWE39mi2z1x5B7G5dWAvkKySczx", // dummy pk
         image: "https://www.svgrepo.com/show/340131/debug.svg",
       },
       ...data.slice(0, 1), // TODO: remove this slice

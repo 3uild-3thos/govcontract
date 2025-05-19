@@ -76,10 +76,16 @@ const getData = async (
   }, 0);
 
   console.log("proposals:", proposals);
-  // TODO: grabbing index 3 because it has useful data...
-  const latest = proposals.sort(
-    (a, b) => Number(b.account.creationEpoch) + Number(a.account.creationEpoch)
-  )[3];
+
+  // filter out finished
+  // sort bt creationEpoch
+  // grab the first one
+  const latest = proposals
+    .filter((p) => !p.account.finalized)
+    .sort(
+      (a, b) =>
+        Number(b.account.creationEpoch) - Number(a.account.creationEpoch)
+    )[0];
 
   const votes = Object.values(votesHashMap.voteMap);
 

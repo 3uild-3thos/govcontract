@@ -34,6 +34,7 @@ export const useValidatorsVoterSplits = () => {
         ValidatorVoteIdentity,
         { for: number; against: number; abstain: number; count: number }
       > = {};
+      const votesLatestTimestamp: Record<ValidatorVoteIdentity, number> = {};
 
       for (const vote of votes) {
         const votePda = vote.publicKey;
@@ -66,7 +67,20 @@ export const useValidatorsVoterSplits = () => {
             // console.log("Vote data:", vote.account);
 
             const data = vote.account;
+            console.log("data:", data);
             const vote_identity = validator.vote_identity;
+
+            // compute latest timestamp for this validator and vote
+            const { voteTimestamp } = data;
+            if (
+              !votesLatestTimestamp[vote_identity] ||
+              voteTimestamp.toNumber() > votesLatestTimestamp[vote_identity]
+            ) {
+              votesLatestTimestamp[vote_identity] = voteTimestamp.toNumber();
+            }
+
+            // sum votes
+
             if (!voteSums[vote_identity]) {
               voteSums[vote_identity] = {
                 for: 0,
@@ -107,7 +121,7 @@ export const useValidatorsVoterSplits = () => {
         };
       }
 
-      return result;
+      return { voterSplits: result, votesLatestTimestamp };
     },
   });
 

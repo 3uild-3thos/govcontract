@@ -27,8 +27,10 @@ export function TopVoters() {
   const [sortBy, setSortBy] = useState("weight");
 
   const { data: validatorsData, isLoading } = useGetValidatorsTable();
-  const { data: voterSplits, isLoading: isLoadingSplits } =
-    useValidatorsVoterSplits();
+  const { data, isLoading: isLoadingSplits } = useValidatorsVoterSplits();
+
+  const voterSplits = data?.voterSplits;
+  const votesLatestTimestamp = data?.votesLatestTimestamp;
 
   console.log("isLoadingSplits:", isLoadingSplits);
   console.log("voterSplits:", voterSplits);
@@ -232,7 +234,14 @@ export function TopVoters() {
                   </div>
                 </TableCell>
                 <TableCell className="">{validator.percentage}%</TableCell>
-                <TableCell className="">{validator.voteDate}</TableCell>
+                <TableCell className="">
+                  {" "}
+                  {votesLatestTimestamp?.[validator.vote_identity]
+                    ? new Date(
+                        votesLatestTimestamp[validator.vote_identity]
+                      ).toLocaleString()
+                    : "-"}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

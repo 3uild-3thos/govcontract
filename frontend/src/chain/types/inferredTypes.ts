@@ -33,7 +33,7 @@ interface RawVote {
   forVotesBp: BN;
   againstVotesBp: BN;
   abstainVotesBp: BN;
-  voteEpoch: BN;
+  voteTimestamp: BN;
   bump: number;
 }
 

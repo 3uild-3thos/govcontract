@@ -1,5 +1,5 @@
 {
-  "address": "GGSqoEMCboY4opLrT2Ni4b7AiUFErouWmh76E3tPjzzG",
+  "address": "3mkuhB2crh6BE5zg2wN5JufDXviVv2Vsia9yjCEg7MiH",
   "metadata": {
     "name": "govcontract",
     "version": "0.1.0",
@@ -9,16 +9,7 @@
   "instructions": [
     {
       "name": "cast_vote",
-      "discriminator": [
-        20,
-        212,
-        15,
-        189,
-        69,
-        180,
-        69,
-        151
-      ],
+      "discriminator": [20, 212, 15, 189, 69, 180, 69, 151],
       "accounts": [
         {
           "name": "signer",
@@ -36,12 +27,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  118,
-                  111,
-                  116,
-                  101
-                ]
+                "value": [118, 111, 116, 101]
               },
               {
                 "kind": "account",
@@ -76,16 +62,7 @@
     },
     {
       "name": "create_proposal",
-      "discriminator": [
-        132,
-        116,
-        68,
-        174,
-        216,
-        160,
-        198,
-        22
-      ],
+      "discriminator": [132, 116, 68, 174, 216, 160, 198, 22],
       "accounts": [
         {
           "name": "signer",
@@ -99,16 +76,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  112,
-                  114,
-                  111,
-                  112,
-                  111,
-                  115,
-                  97,
-                  108
-                ]
+                "value": [112, 114, 111, 112, 111, 115, 97, 108]
               },
               {
                 "kind": "arg",
@@ -151,16 +119,7 @@
     },
     {
       "name": "modify_vote",
-      "discriminator": [
-        116,
-        52,
-        102,
-        0,
-        121,
-        145,
-        27,
-        139
-      ],
+      "discriminator": [116, 52, 102, 0, 121, 145, 27, 139],
       "accounts": [
         {
           "name": "signer",
@@ -177,12 +136,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  118,
-                  111,
-                  116,
-                  101
-                ]
+                "value": [118, 111, 116, 101]
               },
               {
                 "kind": "account",
@@ -217,16 +171,7 @@
     },
     {
       "name": "support_proposal",
-      "discriminator": [
-        95,
-        239,
-        233,
-        199,
-        201,
-        62,
-        90,
-        27
-      ],
+      "discriminator": [95, 239, 233, 199, 201, 62, 90, 27],
       "accounts": [
         {
           "name": "signer",
@@ -244,15 +189,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  115,
-                  117,
-                  112,
-                  112,
-                  111,
-                  114,
-                  116
-                ]
+                "value": [115, 117, 112, 112, 111, 114, 116]
               },
               {
                 "kind": "account",
@@ -274,16 +211,7 @@
     },
     {
       "name": "tally_votes",
-      "discriminator": [
-        144,
-        82,
-        0,
-        72,
-        160,
-        132,
-        35,
-        121
-      ],
+      "discriminator": [144, 82, 0, 72, 160, 132, 35, 121],
       "accounts": [
         {
           "name": "signer",
@@ -305,42 +233,15 @@
   "accounts": [
     {
       "name": "Proposal",
-      "discriminator": [
-        26,
-        94,
-        189,
-        187,
-        116,
-        136,
-        53,
-        33
-      ]
+      "discriminator": [26, 94, 189, 187, 116, 136, 53, 33]
     },
     {
       "name": "Support",
-      "discriminator": [
-        247,
-        108,
-        3,
-        111,
-        84,
-        51,
-        217,
-        107
-      ]
+      "discriminator": [247, 108, 3, 111, 84, 51, 217, 107]
     },
     {
       "name": "Vote",
-      "discriminator": [
-        96,
-        91,
-        104,
-        57,
-        145,
-        35,
-        172,
-        155
-      ]
+      "discriminator": [96, 91, 104, 57, 145, 35, 172, 155]
     }
   ],
   "errors": [
@@ -502,8 +403,8 @@
             "type": "u64"
           },
           {
-            "name": "vote_epoch",
-            "type": "u64"
+            "name": "vote_timestamp",
+            "type": "i64"
           },
           {
             "name": "bump",
