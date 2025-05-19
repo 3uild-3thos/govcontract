@@ -1,8 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
 import { useGetValidators } from "./useGetValidators";
 import { useValidatorsVoterSplits } from "./useValidatorsVoterSplits";
+import { Validator } from "@/types";
 
 export type SortBy = "weight" | "name" | "percentage" | "date";
+
+export interface ValidatorsTableRow extends Validator {
+  voterSplits: {
+    yes: string | number;
+    no: string | number;
+    abstain: string | number;
+    undecided: string | number;
+  };
+  percentage: number;
+  voteDate: string;
+}
 
 export const useGetValidatorsTable = (sortBy: SortBy) => {
   const { data: validators, isLoading: isLoadingValidators } =
@@ -24,7 +36,7 @@ export const useGetValidatorsTable = (sortBy: SortBy) => {
     staleTime: 1000 * 120, // 2 minutes
     queryKey: ["validatorsTable", sortBy],
     enabled,
-    queryFn: async () => {
+    queryFn: async (): Promise<ValidatorsTableRow[] | null> => {
       if (!validators) return null;
 
       let sortByProp: keyof (typeof validators)[0] | "voteDate" =
@@ -38,7 +50,6 @@ export const useGetValidatorsTable = (sortBy: SortBy) => {
         validators?.map((v) => ({
           ...v,
           percentage: 0,
-          a: v.activated_stake,
           voterSplits: {
             yes: voterSplits?.[v.vote_identity]
               ? voterSplits[v.vote_identity]?.yes

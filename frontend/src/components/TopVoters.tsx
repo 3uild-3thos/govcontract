@@ -17,8 +17,51 @@ import {
   Button,
 } from "@/components";
 import { ChevronLeft, ChevronRight, Download, Search } from "lucide-react";
-import { SortBy, useGetValidatorsTable } from "@/hooks";
+import { SortBy, useGetValidatorsTable, ValidatorsTableRow } from "@/hooks";
 import { useDebounceCallback } from "usehooks-ts";
+
+const downloadCsvData = (rawData: ValidatorsTableRow[]) => {
+  const data = rawData.map(
+    ({ voteDate, voterSplits, name, percentage, activated_stake }) => ({
+      name,
+      activated_stake,
+      yes: voterSplits.yes,
+      no: voterSplits.no,
+      abstain: voterSplits.abstain,
+      undecided: voterSplits.undecided,
+      percentage,
+      voteDate,
+    })
+  );
+  if (!data || data.length === 0) return;
+
+  const headers = Object.keys(data[0]) as (keyof (typeof data)[0])[];
+  const csvRows = [
+    headers.join(","), // header row
+    ...data.map((row) =>
+      headers
+        .map((field) => {
+          const value = row[field];
+          if (typeof value === "string") {
+            // Escape quotes
+            return `"${value.replace(/"/g, '""')}"`;
+          }
+          return value;
+        })
+        .join(",")
+    ),
+  ];
+
+  const csvContent = csvRows.join("\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.setAttribute("download", "top-voters.csv");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
 
 export function TopVoters() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -62,6 +105,7 @@ export function TopVoters() {
   const downloadCSV = () => {
     // Implementation for CSV download would go here
     console.log("Downloading CSV...");
+    downloadCsvData(validators || []);
   };
 
   const formatNumber = (num: number) => {
@@ -94,7 +138,7 @@ export function TopVoters() {
             />
           </div>
 
-          <Button onClick={downloadCSV}>
+          <Button onClick={downloadCSV} disabled={isLoading}>
             <Download className="mr-2" size={18} />
             Download CSV
           </Button>
