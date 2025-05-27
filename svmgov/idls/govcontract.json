@@ -112,7 +112,7 @@
               },
               {
                 "kind": "arg",
-                "path": "_seed"
+                "path": "seed"
               },
               {
                 "kind": "account",
@@ -128,7 +128,7 @@
       ],
       "args": [
         {
-          "name": "_seed",
+          "name": "seed",
           "type": "u64"
         },
         {

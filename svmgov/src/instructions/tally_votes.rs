@@ -42,8 +42,18 @@ pub async fn tally_votes(
 
     let vote_accounts = program.accounts::<Vote>(vec![filter]).await?;
 
+    let mut batches = vote_accounts.len() / 10;
+
+    if (vote_accounts.len() % 10) > 0 {
+        batches += 1;
+    }
+    let mut finalize = false;
+
     // Tally the votes, 10 at a time
-    for votes_chunk in vote_accounts.chunks(10) {
+    for (index, votes_chunk) in vote_accounts.chunks(10).enumerate() {
+        if index == (batches - 1) {
+            finalize = true
+        }
         let mut votes = vec![];
         for vote in votes_chunk {
             votes.push(AccountMeta {
@@ -55,7 +65,7 @@ pub async fn tally_votes(
 
         let sig = program
             .request()
-            .args(args::TallyVotes {finalize:true})
+            .args(args::TallyVotes {finalize})
             .accounts(accounts::TallyVotes {
                 signer: program.payer(),
                 proposal: proposal_pubkey,
