@@ -1,5 +1,5 @@
 {
-  "address": "HasiPgvSr2wU7AunhR4Cz96W1QSHRag7K8qha8ZpFKjX",
+  "address": "3mkuhB2crh6BE5zg2wN5JufDXviVv2Vsia9yjCEg7MiH",
   "metadata": {
     "name": "govcontract",
     "version": "0.1.0",
@@ -112,7 +112,7 @@
               },
               {
                 "kind": "arg",
-                "path": "seed"
+                "path": "_seed"
               },
               {
                 "kind": "account",
@@ -128,7 +128,7 @@
       ],
       "args": [
         {
-          "name": "seed",
+          "name": "_seed",
           "type": "u64"
         },
         {
@@ -299,7 +299,12 @@
           "address": "11111111111111111111111111111111"
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "finalize",
+          "type": "bool"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -486,11 +491,11 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "proposal",
+            "name": "validator",
             "type": "pubkey"
           },
           {
-            "name": "validator",
+            "name": "proposal",
             "type": "pubkey"
           },
           {
@@ -506,8 +511,8 @@
             "type": "u64"
           },
           {
-            "name": "vote_epoch",
-            "type": "u64"
+            "name": "vote_timestamp",
+            "type": "i64"
           },
           {
             "name": "bump",

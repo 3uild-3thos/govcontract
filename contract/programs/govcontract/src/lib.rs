@@ -1,4 +1,4 @@
-#![allow(unexpected_cfgs)]
+#![allow(unexpected_cfgs, unused_variables)]
 mod error;
 mod instructions;
 mod state;
@@ -14,7 +14,7 @@ pub mod govcontract {
 
     pub fn create_proposal(
         ctx: Context<CreateProposal>,
-        _seed: u64,
+        seed: u64,
         title: String,
         description: String,
         start_epoch: u64,
