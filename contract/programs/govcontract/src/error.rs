@@ -8,6 +8,8 @@ pub enum GovernanceError {
     TitleTooLong,
     #[msg("The description of the proposal is too long, max 250 char")]
     DescriptionTooLong,
+    #[msg("The description of the proposal must point to a github link")]
+    DescriptionInvalid,
     #[msg("Invalid proposal ID")]
     InvalidProposalId,
     #[msg("Voting on proposal not yet started")]

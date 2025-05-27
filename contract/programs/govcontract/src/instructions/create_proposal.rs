@@ -29,9 +29,15 @@ impl<'info> CreateProposal<'info> {
         bumps: &CreateProposalBumps,
     ) -> Result<()> {
         require!(title.len() <= 50, GovernanceError::TitleTooLong);
+        
         require!(
             description.len() <= 250,
             GovernanceError::DescriptionTooLong
+        );
+
+        require!(
+            description.starts_with("https://github.com"),
+            GovernanceError::DescriptionInvalid
         );
 
         // Get cluster stake syscall 
