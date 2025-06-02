@@ -8,8 +8,8 @@ To get started with svmgov, follow these steps:
 Prerequisites: Ensure you have Rust installed on your system.
 Clone the Repository:
 ```sh
-git clone https://github.com/your-repo/svmgov.git
-cd svmgov
+git clone https://github.com/3uild-3thos/govcontract.git
+cd govcontract/svmgov
 ```
 
 Build the Project:
@@ -24,121 +24,121 @@ Run the CLI:
 ### Usage
 svmgov provides a set of commands to manage governance proposals and voting on the Solana blockchain:
 
-**create-proposal**: Create a new governance proposal.
+ - **create-proposal**: Create a new governance proposal.
 
-**support-proposal**: Support an existing proposal to make it available for voting.
+ - **support-proposal**: Support an existing proposal to make it available for voting.
 
-**cast-vote**: Cast a vote on a live proposal.
+ - **cast-vote**: Cast a vote on a live proposal.
 
-**tally-votes**: Tally the votes for a specified proposal.
+ - **tally-votes**: Tally the votes for a specified proposal.
 
-**list-proposals**: List all governance proposals, with optional status filtering.
+ - **list-proposals**: List all governance proposals, with optional status filtering.
 
-**list-votes**: List all votes for a specified proposal, with optional status filtering.
+ - **list-votes**: List all votes for a specified proposal, with optional status filtering.
 
 Run any subcommand with the --help flag for detailed usage information, e.g., svmgov create-proposal --help.
 
 ### Global Arguments
-These arguments can be used with any command:
-```sh
---identity_keypair <PATH>: Path to the identity keypair JSON file (required for most commands).
---rpc_url <URL>: Custom RPC URL to connect to the Solana network (optional; defaults to https://api.mainnet-beta.solana.com).
-``` 
+    These arguments can be used with any command:
+
+    --identity_keypair <PATH>: Path to the identity keypair JSON file (required for most commands).
+    --rpc_url <URL>: Custom RPC URL to connect to the Solana network (optional; defaults to https://api.mainnet-beta.solana.com).
+
 
 ### Commands
-**create-proposal**
+### **create-proposal**
 Create a new governance proposal.
 
-Arguments:
-```sh
---seed <SEED>: Optional unique seed for the proposal (used to derive the PDA).
+    Arguments:
 
---title <TITLE>: Title of the proposal (required).
+    --seed <SEED>: Optional unique seed for the proposal (used to derive the PDA).
 
---description <DESCRIPTION>: Description of the proposal (required).
-```
-Example:
-```sh
-svmgov create-proposal --title "New Governance Rule" --description "This proposal suggests a new rule." --identity_keypair /path/to/key.json
-```
+    --title <TITLE>: Title of the proposal (required).
 
-**support-proposal**
+    --description <DESCRIPTION>: Description of the proposal (required).
 
-Support an existing proposal to make it available for voting.
+    Example:
+    ```sh
+    svmgov create-proposal --title "New Governance Rule" --description "This proposal suggests a new rule." --identity_keypair /path/to/key.json
+    ```
 
-Arguments:
-```sh
---proposal_id <ID>: The ID of the proposal to support (required).
-```
-Example:
-```sh
-svmgov support-proposal --proposal_id "123" --identity_keypair /path/to/key.json
-```
+### **support-proposal**
 
-**cast-vote**
+    Support an existing proposal to make it available for voting.
 
-Cast a vote on a live proposal. Votes are allocated using basis points for 'For', 'Against', and 'Abstain', which must sum to 10,000 (representing 100% of the voter’s stake).
+    Arguments:
 
-Arguments:
-```sh
---proposal_id <ID>: The ID of the proposal to vote on (required).
+    --proposal_id <ID>: The ID of the proposal to support (required).
 
---for_votes <BASIS_POINTS>: Basis points for 'For' (required).
+    Example:
+    ```sh
+    svmgov support-proposal --proposal_id "123" --identity_keypair /path/to/key.json
+    ```
 
---against_votes <BASIS_POINTS>: Basis points for 'Against' (required).
+### **cast-vote**
 
---abstain_votes <BASIS_POINTS>: Basis points for 'Abstain' (required).
-```
-Example:
-```sh
-svmgov cast-vote --proposal_id 123 --for_votes 6000 --against_votes 3000 --abstain_votes 1000 --identity_keypair /path/to/key.json
-```
+    Cast a vote on a live proposal. Votes are allocated using basis points for 'For', 'Against', and 'Abstain', which must sum to 10,000 (representing 100% of the voter’s stake).
 
-**tally-votes**
+    Arguments:
 
-Tally the votes for a specified proposal. Only the author of the proposal can start the tally process.
+    --proposal_id <ID>: The ID of the proposal to vote on (required).
 
-Arguments:
-```sh
---proposal_id <ID>: The ID of the proposal to tally (required).
-```
-Example:
-```sh
-svmgov tally-votes --proposal_id "123" --identity_keypair /path/to/key.json
-```
+    --for_votes <BASIS_POINTS>: Basis points for 'For' (required).
 
-**list-proposals**
+    --against_votes <BASIS_POINTS>: Basis points for 'Against' (required).
 
-List all governance proposals, optionally filtered by status.
+    --abstain_votes <BASIS_POINTS>: Basis points for 'Abstain' (required).
 
-Arguments:
-```sh
---status <STATUS>: Optional filter for proposal status (e.g., "active").
-```
-Example:
+    Example:
+    ```sh
+    svmgov cast-vote --proposal_id 123 --for_votes 6000 --against_votes 3000 --abstain_votes 1000 --identity_keypair /path/to/key.json
+    ```
 
-```sh
-svmgov list-proposals --rpc_url https://api.mainnet-beta.solana.com
-```
-**list-votes**
+### **tally-votes**
 
-List all votes for a specified proposal, optionally filtered by status.
+    Tally the votes for a specified proposal. Only the author of the proposal can start the tally process.
 
-Arguments:
-```sh
---proposal_id <ID>: The ID of the proposal (required).
+    Arguments:
 
---status <STATUS>: Optional filter for vote status (e.g., "active").
-```
-Example:
+    --proposal_id <ID>: The ID of the proposal to tally (required).
 
-```sh
-svmgov list-votes --proposal_id "123" --rpc_url https://api.mainnet-beta.solana.com
-```
+    Example:
+    ```sh
+    svmgov tally-votes --proposal_id "123" --identity_keypair /path/to/key.json
+    ```
+
+### **list-proposals**
+
+    List all governance proposals, optionally filtered by status.
+
+    Arguments:
+
+    --status <STATUS>: Optional filter for proposal status (e.g., "active").
+
+    Example:
+
+    ```sh
+    svmgov list-proposals --rpc_url https://api.mainnet-beta.solana.com
+    ```
+
+### **list-votes**
+
+    List all votes for a specified proposal, optionally filtered by status.
+
+    Arguments:
+
+    --proposal_id <ID>: The ID of the proposal (required).
+
+    --status <STATUS>: Optional filter for vote status (e.g., "active").
+
+    Example:
+
+    ```sh
+    svmgov list-votes --proposal_id "123" --rpc_url https://api.mainnet-beta.solana.com
+    ```
 
 ### Notes
 
 **Identity Keypair**: Ensure the provided keypair has the necessary permissions and funds to perform actions like creating proposals or casting votes.
 
 **Vote Allocation**: For the cast-vote subcommand, the basis points (--for_votes, --against_votes, --abstain_votes) must sum to 10,000. For example, 60% 'For' (6000), 30% 'Against' (3000), and 10% 'Abstain' (1000).
-
