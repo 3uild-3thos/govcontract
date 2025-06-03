@@ -1,144 +1,157 @@
-# Solana Validator Governance CLI (svmgov)
-`svmgov` is a command-line tool for interacting with the Solana Validator Governance program. It enables validators to create governance proposals, support proposals, cast votes, tally votes, and list proposals and votes—all from their local machine by communicating with the Solana blockchain.
+# Solana Validator Governance CLI (`svmgov`)
+
+`svmgov` is a command-line interface (CLI) tool designed for Solana validators to interact with the Solana Validator Governance program. It enables validators to create governance proposals, support proposals, cast votes, tally votes, and list proposals and votes directly from their local machine by interfacing with the Solana blockchain.
 
 ---
 
 ## Installation
-To get started with svmgov, follow these steps:
-Prerequisites: Ensure you have Rust installed on your system.
-Clone the Repository:
-```sh
-git clone https://github.com/3uild-3thos/govcontract.git
-cd govcontract/svmgov
-```
 
-Build the Project:
-```sh
-cargo build --release
-```
-Run the CLI:
-```sh
-./target/release/svmgov
-```
+To use `svmgov`, follow these steps:
 
-### Usage
-svmgov provides a set of commands to manage governance proposals and voting on the Solana blockchain:
+1. **Clone the Repository**:
+   ```sh
+   git clone https://github.com/3uild-3thos/govcontract.git
+   cd govcontract/svmgov
+   ```
 
- - **create-proposal**: Create a new governance proposal.
+2. **Build the Project**:
+   ```sh
+   cargo build --release
+   ```
 
- - **support-proposal**: Support an existing proposal to make it available for voting.
+3. **Run the CLI**:
+   ```sh
+   ./target/release/svmgov
+   ```
 
- - **cast-vote**: Cast a vote on a live proposal.
+---
 
- - **tally-votes**: Tally the votes for a specified proposal.
+## Usage
 
- - **list-proposals**: List all governance proposals, with optional status filtering.
-
- - **list-votes**: List all votes for a specified proposal, with optional status filtering.
-
-Run any subcommand with the --help flag for detailed usage information, e.g., svmgov create-proposal --help.
+`svmgov` offers a set of commands to manage governance proposals and voting. Most commands require the `--identity_keypair` flag to specify the validator’s identity keypair for signing transactions.
 
 ### Global Arguments
-    These arguments can be used with any command:
 
-    --identity_keypair <PATH>: Path to the identity keypair JSON file (required for most commands).
-    --rpc_url <URL>: Custom RPC URL to connect to the Solana network (optional; defaults to https://api.mainnet-beta.solana.com).
+- `--identity_keypair <PATH>`: Path to the validator’s identity keypair JSON file (required for most commands).
+- `--rpc_url <URL>`: Custom RPC URL for the Solana network (optional; defaults to `https://api.mainnet-beta.solana.com`).
 
+### Available Commands
 
-### Commands
-### **create-proposal**
+- `create-proposal`: Create a new governance proposal.
+- `support-proposal`: Support an existing proposal to help it reach the voting threshold.
+- `cast-vote`: Cast a vote on an active proposal.
+- `tally-votes`: Tally votes for a proposal after the voting period ends.
+- `list-proposals`: List all governance proposals, with optional status filtering.
+- `list-votes`: List votes for a specific proposal, with optional status filtering.
+
+Run any command with `--help` for detailed usage, e.g., `svmgov create-proposal --help`.
+
+---
+
+## Governance Mechanics
+
+The Solana Validator Governance program enforces the following rules, which impact CLI usage:
+
+- **Minimum Stake for Proposal Creation**: A validator must have at least **40,000 SOL** staked to create a proposal. If this requirement isn’t met, the `create-proposal` command will fail with a `NotEnoughStake` error.
+- **Cluster Support Threshold**: A proposal requires **500 basis points (5%) of total cluster support** to activate voting. Validators contribute to this using the `support-proposal` command. The smart contract calculates and enforces this threshold.
+
+The CLI does not perform local validation of these conditions; the smart contract handles enforcement, and the CLI relays any resulting errors.
+
+---
+
+## Commands in Detail
+
+### `create-proposal`
+
 Create a new governance proposal.
 
-    Arguments:
+**Arguments**:
+- `--seed <SEED>`: Optional unique seed for the proposal (used to derive the PDA).
+- `--title <TITLE>`: Proposal title (required).
+- `--description <DESCRIPTION>`: Proposal description (required).
 
-    --seed <SEED>: Optional unique seed for the proposal (used to derive the PDA).
+**Requirements**:
+- The validator’s identity keypair must have at least **40,000 SOL** staked. Insufficient stake results in a `NotEnoughStake` error.
 
-    --title <TITLE>: Title of the proposal (required).
+**Example**:
+```sh
+svmgov create-proposal --title "Update Fee Structure" --description "Adjust validator fees." --identity_keypair /path/to/key.json
+```
 
-    --description <DESCRIPTION>: Description of the proposal (required).
+### `support-proposal`
 
-    Example:
-    ```sh
-    svmgov create-proposal --title "New Governance Rule" --description "This proposal suggests a new rule." --identity_keypair /path/to/key.json
-    ```
+Support an existing proposal to help it reach the 5% cluster support threshold.
 
-### **support-proposal**
+**Arguments**:
+- `--proposal_id <ID>`: The proposal’s ID (PDA) to support (required).
 
-    Support an existing proposal to make it available for voting.
+**Notes**:
+- Each validator’s support contributes to the proposal’s `cluster_support_bp`. Voting activates only when this reaches **500 basis points (5%)**.
 
-    Arguments:
+**Example**:
+```sh
+svmgov support-proposal --proposal_id "123" --identity_keypair /path/to/key.json
+```
 
-    --proposal_id <ID>: The ID of the proposal to support (required).
+### `cast-vote`
 
-    Example:
-    ```sh
-    svmgov support-proposal --proposal_id "123" --identity_keypair /path/to/key.json
-    ```
+Cast a vote on an active governance proposal.
 
-### **cast-vote**
+**Arguments**:
+- `--proposal_id <ID>`: The proposal’s ID (PDA) (required).
+- `--for_votes <BASIS_POINTS>`: Basis points for ‘For’ (required).
+- `--against_votes <BASIS_POINTS>`: Basis points for ‘Against’ (required).
+- `--abstain_votes <BASIS_POINTS>`: Basis points for ‘Abstain’ (required).
 
-    Cast a vote on a live proposal. Votes are allocated using basis points for 'For', 'Against', and 'Abstain', which must sum to 10,000 (representing 100% of the voter’s stake).
 
-    Arguments:
+**Example**:
+```sh
+svmgov cast-vote --proposal_id "123" --for_votes 7000 --against_votes 2000 --abstain_votes 1000 --identity_keypair /path/to/key.json
+```
 
-    --proposal_id <ID>: The ID of the proposal to vote on (required).
+### `tally-votes`
 
-    --for_votes <BASIS_POINTS>: Basis points for 'For' (required).
+Tally votes for a proposal after its voting period ends.
 
-    --against_votes <BASIS_POINTS>: Basis points for 'Against' (required).
+**Arguments**:
+- `--proposal_id <ID>`: The proposal’s ID (PDA) (required).
 
-    --abstain_votes <BASIS_POINTS>: Basis points for 'Abstain' (required).
+**Requirements**:
+- The voting period must have ended. Attempting to tally earlier fails with `VotingPeriodNotEnded`.
 
-    Example:
-    ```sh
-    svmgov cast-vote --proposal_id 123 --for_votes 6000 --against_votes 3000 --abstain_votes 1000 --identity_keypair /path/to/key.json
-    ```
+**Example**:
+```sh
+svmgov tally-votes --proposal_id "123" --identity_keypair /path/to/key.json
+```
 
-### **tally-votes**
+### `list-proposals`
 
-    Tally the votes for a specified proposal. Only the author of the proposal can start the tally process.
+List all governance proposals, optionally filtered by status.
 
-    Arguments:
+**Arguments**:
+- `--status <STATUS>`: Optional filter (e.g., "active").
 
-    --proposal_id <ID>: The ID of the proposal to tally (required).
+**Example**:
+```sh
+svmgov list-proposals --rpc_url https://api.mainnet-beta.solana.com
+```
 
-    Example:
-    ```sh
-    svmgov tally-votes --proposal_id "123" --identity_keypair /path/to/key.json
-    ```
+### `list-votes`
 
-### **list-proposals**
+List votes for a specific proposal, optionally filtered by status.
 
-    List all governance proposals, optionally filtered by status.
+**Arguments**:
+- `--proposal_id <ID>`: The proposal’s ID (PDA) (required).
+- `--status <STATUS>`: Optional filter (e.g., "active").
 
-    Arguments:
+**Example**:
+```sh
+svmgov list-votes --proposal_id "123" --rpc_url https://api.mainnet-beta.solana.com
+```
 
-    --status <STATUS>: Optional filter for proposal status (e.g., "active").
+---
 
-    Example:
+## Additional Notes
 
-    ```sh
-    svmgov list-proposals --rpc_url https://api.mainnet-beta.solana.com
-    ```
-
-### **list-votes**
-
-    List all votes for a specified proposal, optionally filtered by status.
-
-    Arguments:
-
-    --proposal_id <ID>: The ID of the proposal (required).
-
-    --status <STATUS>: Optional filter for vote status (e.g., "active").
-
-    Example:
-
-    ```sh
-    svmgov list-votes --proposal_id "123" --rpc_url https://api.mainnet-beta.solana.com
-    ```
-
-### Notes
-
-**Identity Keypair**: Ensure the provided keypair has the necessary permissions and funds to perform actions like creating proposals or casting votes.
-
-**Vote Allocation**: For the cast-vote subcommand, the basis points (--for_votes, --against_votes, --abstain_votes) must sum to 10,000. For example, 60% 'For' (6000), 30% 'Against' (3000), and 10% 'Abstain' (1000).
+- **Identity Keypair**: Must have sufficient stake and permissions for actions like creating proposals or voting.
+- **Vote Allocation**: In `cast-vote`, basis points (`--for_votes`, `--against_votes`, `--abstain_votes`) must sum to 10,000 (100%). E.g., 70% ‘For’ (7000), 20% ‘Against’ (2000), 10% ‘Abstain’ (1000).
