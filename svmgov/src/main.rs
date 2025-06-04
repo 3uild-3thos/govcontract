@@ -18,7 +18,7 @@ declare_program!(govcontract);
                     To get started, use one of the subcommands below. For example, to list all proposals:\n\
                     $ svmgov list-proposals --rpc_url https://api.mainnet-beta.solana.com\n\n\
                     For more information on each subcommand, use --help, e.g., `svmgov create-proposal --help`."
-    )]
+)]
 struct Cli {
     /// Path to the identity keypair JSON file.
     /// This argument is global, meaning it can be used with any subcommand.
@@ -108,7 +108,7 @@ enum Commands {
         abstain_votes: u64,
     },
 
-     ModifyVote {
+    ModifyVote {
         /// Proposal ID for which the vote is being modified (proposal Pubkey).
         #[arg(long, help = "Proposal ID")]
         proposal_id: String,
@@ -140,7 +140,7 @@ enum Commands {
         #[arg(long, help = "Proposal ID")]
         proposal_id: String,
     },
-        
+
     #[command(
         about = "List all governance proposals",
         long_about = "This command retrieves and displays a list of all governance proposals from the Solana Validator Governance program. \
@@ -155,23 +155,19 @@ enum Commands {
         #[arg(long, help = "Status of proposal")]
         status: Option<String>,
     },
-        
+
     #[command(
         about = "List all votes for a specified proposal",
         long_about = "This command retrieves and displays all votes cast on a specified governance proposal. \
                       It requires the proposal ID and allows an optional status filter (e.g., 'active') using the --status flag. \
                       An optional RPC URL can be provided to connect to the chain; otherwise, a default URL is used.\n\n\
                       Examples:\n\
-                      $ svmgov list-votes --proposal_id \"123\" --rpc_url https://api.mainnet-beta.solana.com\n\
-                      $ svmgov list-votes --proposal_id \"123\" --status \"active\" --rpc_url https://api.mainnet-beta.solana.com"
+                      $ svmgov list-votes --proposal_id \"123\" --rpc_url https://api.mainnet-beta.solana.com\n"
     )]
     ListVotes {
         /// Proposal id to get votes for.
         #[arg(long, help = "Proposal ID")]
         proposal_id: String,
-        /// Filter on status of the proposal <active>.
-        #[arg(long, help = "Status of proposal")]
-        status: Option<String>,
     },
 }
 
@@ -244,11 +240,8 @@ async fn handle_command(cli: Cli) -> Result<()> {
             commands::list_proposals(cli.rpc_url, status.clone()).await?;
         }
 
-        Commands::ListVotes {
-            proposal_id,
-            status,
-        } => {
-            commands::list_votes(cli.rpc_url, status.clone(), proposal_id).await?;
+        Commands::ListVotes { proposal_id } => {
+            commands::list_votes(cli.rpc_url, proposal_id).await?;
         }
     }
 

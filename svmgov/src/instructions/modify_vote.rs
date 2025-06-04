@@ -57,6 +57,9 @@ pub async fn modify_vote(
         .send()
         .await?;
 
-    info!("Vote modified successfully. https://explorer.solana.com/tx/{}", sig);
+    info!(
+        "Vote modified successfully. https://explorer.solana.com/tx/{}",
+        sig
+    );
     Ok(())
 }

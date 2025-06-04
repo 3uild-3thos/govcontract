@@ -20,17 +20,18 @@ pub fn load_identity_keypair(keypair_path: Option<String>) -> Result<Keypair> {
     };
 
     // Read the file content, handling specific errors like file not found
-    let file_content = fs::read_to_string(&identity_keypair_path).map_err(|e| {
-        match e.kind() {
-            std::io::ErrorKind::NotFound => {
-                anyhow!("The specified keypair file does not exist: {}", identity_keypair_path)
-            }
-            _ => anyhow!(
-                "Failed to read keypair file {}: {}",
-                identity_keypair_path,
-                e
-            ),
+    let file_content = fs::read_to_string(&identity_keypair_path).map_err(|e| match e.kind() {
+        std::io::ErrorKind::NotFound => {
+            anyhow!(
+                "The specified keypair file does not exist: {}",
+                identity_keypair_path
+            )
         }
+        _ => anyhow!(
+            "Failed to read keypair file {}: {}",
+            identity_keypair_path,
+            e
+        ),
     })?;
 
     // Parse the JSON content into a vector of bytes
@@ -41,7 +42,6 @@ pub fn load_identity_keypair(keypair_path: Option<String>) -> Result<Keypair> {
             e
         )
     })?;
-
 
     // Create the Keypair from the bytes
     let identity_keypair = Keypair::from_bytes(&keypair_bytes).map_err(|e| {

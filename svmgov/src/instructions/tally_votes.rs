@@ -65,7 +65,7 @@ pub async fn tally_votes(
 
         let sig = program
             .request()
-            .args(args::TallyVotes {finalize})
+            .args(args::TallyVotes { finalize })
             .accounts(accounts::TallyVotes {
                 signer: program.payer(),
                 proposal: proposal_pubkey,

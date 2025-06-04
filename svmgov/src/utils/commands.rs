@@ -23,34 +23,26 @@ pub async fn list_proposals(
     // Create the Anchor client
     let program = anchor_client_setup(rpc_url, mock_payer)?;
 
-    // Rpc filter to get Proposal accounts
-    let filter = if let Some(proposal_filter) = proposal_filter {
-        if proposal_filter == "active" {
-            vec![RpcFilterType::Memcmp(Memcmp::new(
-                412,
-                MemcmpEncodedBytes::Bytes(vec![1u8]),
-            ))]
+    let proposals = program.accounts::<Proposal>(vec![]).await?;
+
+    let filtered_proposals = if let Some(filter) = proposal_filter {
+        if filter == "active" {
+            proposals.into_iter().filter(|p| p.1.voting).collect()
         } else {
-            vec![]
+            proposals
         }
     } else {
-        vec![]
+        proposals
     };
 
-    let proposals = program.accounts::<Proposal>(filter).await?;
-
-    for proposal in proposals {
+    for proposal in filtered_proposals {
         info!("Proposal: {:#?}", proposal.1);
     }
 
     Ok(())
 }
 
-pub async fn list_votes(
-    rpc_url: Option<String>,
-    proposal_filter: Option<String>,
-    proposal_id: &String,
-) -> Result<()> {
+pub async fn list_votes(rpc_url: Option<String>, proposal_id: &String) -> Result<()> {
     // Parse the proposal ID into a Pubkey
     let proposal_pubkey = Pubkey::from_str(&proposal_id)
         .map_err(|_| anyhow!("Invalid proposal ID: {}", proposal_id))?;
@@ -60,27 +52,16 @@ pub async fn list_votes(
     // Create the Anchor client
     let program = anchor_client_setup(rpc_url, mock_payer)?;
 
-    // Rpc filter to get Vote accounts
-    let filter = if let Some(proposal_filter) = proposal_filter {
-        if proposal_filter == "active" {
-            vec![RpcFilterType::Memcmp(Memcmp::new(
-                412,
-                MemcmpEncodedBytes::Bytes(vec![1u8]),
-            ))]
-        } else {
-            vec![]
-        }
-    } else {
-        vec![RpcFilterType::Memcmp(Memcmp::new(
-            8,
-            MemcmpEncodedBytes::Bytes(proposal_pubkey.to_bytes().to_vec()),
-        ))]
-    };
+    // Rpc filter to get Vote accounts for this proposal
+    let filter = vec![RpcFilterType::Memcmp(Memcmp::new(
+        40,
+        MemcmpEncodedBytes::Bytes(proposal_pubkey.to_bytes().to_vec()),
+    ))];
 
     let votes = program.accounts::<Vote>(filter).await?;
 
     for vote in votes {
-        info!("Votes for proposal: {:#?}", vote.1);
+        info!("Vote for proposal {}: {:#?}", proposal_id, vote.1);
     }
 
     Ok(())
