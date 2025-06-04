@@ -9,11 +9,6 @@ use std::{fs, sync::Arc};
 
 use crate::govcontract::program::Govcontract;
 
-// use std::fs;
-// use anchor_client::solana_sdk::signature::Keypair;
-// use anyhow::{Result, anyhow};
-// use serde_json;
-
 pub fn load_identity_keypair(keypair_path: Option<String>) -> Result<Keypair> {
     // Check if the keypair path is provided
     let identity_keypair_path = if let Some(path) = keypair_path {
@@ -47,13 +42,6 @@ pub fn load_identity_keypair(keypair_path: Option<String>) -> Result<Keypair> {
         )
     })?;
 
-    // Check if the byte array has the correct length (64 bytes for Solana keypairs)
-    if keypair_bytes.len() != 64 {
-        return Err(anyhow!(
-            "The keypair file must contain exactly 64 bytes, but found {} bytes.",
-            keypair_bytes.len()
-        ));
-    }
 
     // Create the Keypair from the bytes
     let identity_keypair = Keypair::from_bytes(&keypair_bytes).map_err(|e| {
@@ -63,7 +51,6 @@ pub fn load_identity_keypair(keypair_path: Option<String>) -> Result<Keypair> {
         )
     })?;
 
-    // Print success message with the public key
     println!(
         "Loaded identity keypair address -> {:?}",
         identity_keypair.pubkey()

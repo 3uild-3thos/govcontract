@@ -52,7 +52,7 @@ pub async fn create_proposal(
         .send()
         .await?;
 
-    info!("Proposal created with transaction signature: {}", sig);
+    info!("Proposal created. https://explorer.solana.com/tx/{}", sig);
 
     Ok(())
 }

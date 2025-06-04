@@ -42,7 +42,7 @@ pub async fn support_proposal(
         .send()
         .await?;
 
-    info!("Proposal supported with transaction signature: {}", sig);
+    info!("Proposal supported. https://explorer.solana.com/tx/{}", sig);
 
     Ok(())
 }

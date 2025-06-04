@@ -57,6 +57,6 @@ pub async fn cast_vote(
         .send()
         .await?;
 
-    info!("Vote cast successfully with transaction signature: {}", sig);
+    info!("Vote cast successfully. https://explorer.solana.com/tx/{}", sig);
     Ok(())
 }

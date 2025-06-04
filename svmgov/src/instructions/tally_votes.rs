@@ -76,7 +76,7 @@ pub async fn tally_votes(
             .send()
             .await?;
 
-        info!("Tally votes: {}", sig);
+        info!("Tally votes: https://explorer.solana.com/tx/{}", sig);
     }
     let proposal = program.account::<Proposal>(proposal_pubkey).await?;
 
