@@ -108,6 +108,24 @@ enum Commands {
         abstain_votes: u64,
     },
 
+     ModifyVote {
+        /// Proposal ID for which the vote is being modified (proposal Pubkey).
+        #[arg(long, help = "Proposal ID")]
+        proposal_id: String,
+
+        /// Basis points for 'For' vote.
+        #[arg(long, help = "Basis points for 'For'")]
+        for_votes: u64,
+
+        /// Basis points for 'Against' vote.
+        #[arg(long, help = "Basis points for 'Against'")]
+        against_votes: u64,
+
+        /// Basis points for 'Abstain' vote.
+        #[arg(long, help = "Basis points for 'Abstain'")]
+        abstain_votes: u64,
+    },
+
     #[command(
         about = "Tally votes for a specified proposal",
         long_about = "This command sends a transaction to tally all votes cast on a specified governance proposal, providing a summary of the voting results. \
@@ -190,6 +208,23 @@ async fn handle_command(cli: Cli) -> Result<()> {
             abstain_votes,
         } => {
             instructions::cast_vote(
+                proposal_id.to_string(),
+                *for_votes,
+                *against_votes,
+                *abstain_votes,
+                cli.identity_keypair,
+                cli.rpc_url,
+            )
+            .await?;
+        }
+
+        Commands::ModifyVote {
+            proposal_id,
+            for_votes,
+            against_votes,
+            abstain_votes,
+        } => {
+            instructions::modify_vote(
                 proposal_id.to_string(),
                 *for_votes,
                 *against_votes,
