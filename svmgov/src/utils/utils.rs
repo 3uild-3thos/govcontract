@@ -9,19 +9,61 @@ use std::{fs, sync::Arc};
 
 use crate::govcontract::program::Govcontract;
 
+// use std::fs;
+// use anchor_client::solana_sdk::signature::Keypair;
+// use anyhow::{Result, anyhow};
+// use serde_json;
+
 pub fn load_identity_keypair(keypair_path: Option<String>) -> Result<Keypair> {
+    // Check if the keypair path is provided
     let identity_keypair_path = if let Some(path) = keypair_path {
         path
     } else {
-        return Err(anyhow!("Idenity Keypair path is required"));
+        return Err(anyhow!(
+            "No identity keypair path provided. Please specify the path using the --identity_keypair flag."
+        ));
     };
 
-    let keypair_bytes = fs::read_to_string(identity_keypair_path).and_then(|file_content| {
-        Ok(serde_json::from_str::<Vec<u8>>(&file_content)
-            .map_err(|e| anyhow!(" Failed to deserialize keypair json. {}", e)))
-    })??;
+    // Read the file content, handling specific errors like file not found
+    let file_content = fs::read_to_string(&identity_keypair_path).map_err(|e| {
+        match e.kind() {
+            std::io::ErrorKind::NotFound => {
+                anyhow!("The specified keypair file does not exist: {}", identity_keypair_path)
+            }
+            _ => anyhow!(
+                "Failed to read keypair file {}: {}",
+                identity_keypair_path,
+                e
+            ),
+        }
+    })?;
 
-    let identity_keypair = Keypair::from_bytes(&keypair_bytes)?;
+    // Parse the JSON content into a vector of bytes
+    let keypair_bytes: Vec<u8> = serde_json::from_str(&file_content).map_err(|e| {
+        anyhow!(
+            "The keypair file is not a valid JSON array of bytes: {}. Error: {}",
+            identity_keypair_path,
+            e
+        )
+    })?;
+
+    // Check if the byte array has the correct length (64 bytes for Solana keypairs)
+    if keypair_bytes.len() != 64 {
+        return Err(anyhow!(
+            "The keypair file must contain exactly 64 bytes, but found {} bytes.",
+            keypair_bytes.len()
+        ));
+    }
+
+    // Create the Keypair from the bytes
+    let identity_keypair = Keypair::from_bytes(&keypair_bytes).map_err(|e| {
+        anyhow!(
+            "The provided bytes do not form a valid Solana keypair: {}. This might be due to invalid key data.",
+            e
+        )
+    })?;
+
+    // Print success message with the public key
     println!(
         "Loaded identity keypair address -> {:?}",
         identity_keypair.pubkey()
