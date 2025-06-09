@@ -13,6 +13,7 @@ use crate::{
     anchor_client_setup,
     govcontract::accounts::{Proposal, Vote},
 };
+
 pub async fn list_proposals(
     rpc_url: Option<String>,
     proposal_filter: Option<String>,
@@ -42,7 +43,7 @@ pub async fn list_proposals(
     Ok(())
 }
 
-pub async fn list_votes(rpc_url: Option<String>, proposal_id: &String) -> Result<()> {
+pub async fn list_votes(rpc_url: Option<String>, proposal_id: &String, verbose: bool) -> Result<()> {
     // Parse the proposal ID into a Pubkey
     let proposal_pubkey = Pubkey::from_str(&proposal_id)
         .map_err(|_| anyhow!("Invalid proposal ID: {}", proposal_id))?;
@@ -60,9 +61,32 @@ pub async fn list_votes(rpc_url: Option<String>, proposal_id: &String) -> Result
 
     let votes = program.accounts::<Vote>(filter).await?;
 
-    for vote in votes {
-        info!("Vote for proposal {}: {:#?}", proposal_id, vote.1);
+    if verbose {
+        for vote in votes {
+            info!("Vote for proposal {}: {:#?} \n {:#?}", proposal_id, vote.0, vote.1);
+        }
+    } else {
+        for vote in votes {
+            info!("Vote for proposal {}: {:#?}", proposal_id, vote.0);
+        }
     }
+
+    Ok(())
+}
+
+pub async fn get_proposal(rpc_url: Option<String>, proposal_id: &String) -> Result<()> {
+    // Parse the proposal ID into a Pubkey
+    let proposal_pubkey = Pubkey::from_str(&proposal_id)
+        .map_err(|_| anyhow!("Invalid proposal ID: {}", proposal_id))?;
+    // Create a mock Payer
+    let mock_payer = Arc::new(Keypair::new());
+
+    // Create the Anchor client
+    let program = anchor_client_setup(rpc_url, mock_payer)?;
+
+    let proposal_acc = program.account::<Proposal>(proposal_pubkey).await?;
+
+    info!("Proposal {} \n {:#?}", proposal_id, proposal_acc);
 
     Ok(())
 }

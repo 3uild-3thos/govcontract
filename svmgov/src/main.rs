@@ -142,6 +142,19 @@ enum Commands {
     },
 
     #[command(
+        about = "Display a proposal",
+        long_about = "This command retrieves and displays a governance proposal from the Solana Validator Governance program. \
+                      An optional RPC URL can be provided to connect to the chain; otherwise, a default URL is used.\n\n\
+                      Examples:\n\
+                      $ svmgov get-proposal --proposal_id \"123\" --rpc_url https://api.mainnet-beta.solana.com"
+    )]
+    GetProposal {
+        /// Proposal id to display.
+        #[arg(long, help = "Proposal ID")]
+        proposal_id: String,
+    },
+
+    #[command(
         about = "List all governance proposals",
         long_about = "This command retrieves and displays a list of all governance proposals from the Solana Validator Governance program. \
                       You can optionally filter proposals by their status (e.g., 'active') using the --status flag. \
@@ -159,15 +172,19 @@ enum Commands {
     #[command(
         about = "List all votes for a specified proposal",
         long_about = "This command retrieves and displays all votes cast on a specified governance proposal. \
-                      It requires the proposal ID and allows an optional status filter (e.g., 'active') using the --status flag. \
+                      It requires the proposal ID, and use the --verbose flag for detailed outout. \
                       An optional RPC URL can be provided to connect to the chain; otherwise, a default URL is used.\n\n\
                       Examples:\n\
-                      $ svmgov list-votes --proposal_id \"123\" --rpc_url https://api.mainnet-beta.solana.com\n"
+                      $ svmgov list-votes --proposal_id \"123\" --rpc_url https://api.mainnet-beta.solana.com\n
+                      $ svmgov list-votes --proposal_id \"123\" --verbose true"
     )]
     ListVotes {
         /// Proposal id to get votes for.
         #[arg(long, help = "Proposal ID")]
         proposal_id: String,
+        /// Verbose vote list
+        #[arg(long, help = "List votes verbose", default_value_t = false)]
+        verbose: bool,
     },
 }
 
@@ -239,9 +256,13 @@ async fn handle_command(cli: Cli) -> Result<()> {
         Commands::ListProposals { status } => {
             commands::list_proposals(cli.rpc_url, status.clone()).await?;
         }
+        
+        Commands::GetProposal { proposal_id } => {
+            commands::get_proposal(cli.rpc_url, proposal_id).await?;
+        }
 
-        Commands::ListVotes { proposal_id } => {
-            commands::list_votes(cli.rpc_url, proposal_id).await?;
+        Commands::ListVotes { proposal_id, verbose } => {
+            commands::list_votes(cli.rpc_url, proposal_id, *verbose).await?;
         }
     }
 
