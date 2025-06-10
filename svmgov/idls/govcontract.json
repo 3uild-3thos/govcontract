@@ -144,7 +144,7 @@
           "type": "u64"
         },
         {
-          "name": "end_epoch",
+          "name": "voting_length_epochs",
           "type": "u64"
         }
       ]
@@ -366,36 +366,41 @@
     },
     {
       "code": 6003,
+      "name": "DescriptionInvalid",
+      "msg": "The description of the proposal must point to a github link"
+    },
+    {
+      "code": 6004,
       "name": "InvalidProposalId",
       "msg": "Invalid proposal ID"
     },
     {
-      "code": 6004,
+      "code": 6005,
       "name": "VotingNotStarted",
       "msg": "Voting on proposal not yet started"
     },
     {
-      "code": 6005,
+      "code": 6006,
       "name": "ProposalClosed",
       "msg": "Proposal closed"
     },
     {
-      "code": 6006,
+      "code": 6007,
       "name": "ProposalFinalized",
       "msg": "Proposal finalized"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "InvalidVoteDistribution",
       "msg": "Vote distribution must add up to 100% in Basis Points"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "VotingPeriodNotEnded",
       "msg": "Voting period not yet ended"
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "InvalidVoteAccount",
       "msg": "Invalid vote account, proposal id mismatch"
     }

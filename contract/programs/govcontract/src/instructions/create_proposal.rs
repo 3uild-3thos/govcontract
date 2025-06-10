@@ -25,7 +25,7 @@ impl<'info> CreateProposal<'info> {
         title: String,
         description: String,
         start_epoch: u64,
-        end_epoch: u64,
+        voting_length_epochs: u64,
         bumps: &CreateProposalBumps,
     ) -> Result<()> {
         require!(title.len() <= 50, GovernanceError::TitleTooLong);
@@ -62,7 +62,7 @@ impl<'info> CreateProposal<'info> {
             description,
             creation_epoch: current_epoch,
             start_epoch,
-            end_epoch,
+            end_epoch: start_epoch.checked_add(voting_length_epochs).ok_or(ProgramError::ArithmeticOverflow)?,
             proposer_stake_weight_bp,
             cluster_support_bp: 0,
             for_votes_bp: 0,

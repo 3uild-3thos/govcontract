@@ -18,10 +18,10 @@ pub mod govcontract {
         title: String,
         description: String,
         start_epoch: u64,
-        end_epoch: u64,
+        voting_length_epochs: u64,
     ) -> Result<()> {
         ctx.accounts
-            .create_proposal(title, description, start_epoch, end_epoch, &ctx.bumps)?;
+            .create_proposal(title, description, start_epoch, voting_length_epochs, &ctx.bumps)?;
         Ok(())
     }
 

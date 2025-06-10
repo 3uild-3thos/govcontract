@@ -69,6 +69,8 @@ Create a new governance proposal.
 - `--seed <SEED>`: Optional unique seed for the proposal (used to derive the PDA).
 - `--title <TITLE>`: Proposal title (required).
 - `--description <DESCRIPTION>`: Proposal description (required).
+- `--start_epoch`: Epoch the proposal should go active.
+- `--length`: Epochs the proposal should be open for.
 
 **Requirements**:
 - The validator’s identity keypair must have at least **40,000 SOL** staked. Insufficient stake results in a `NotEnoughStake` error.

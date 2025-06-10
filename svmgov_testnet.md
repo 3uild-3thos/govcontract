@@ -84,6 +84,8 @@ This guide provides detailed instructions for compiling, deploying, and testing 
        --title "Test Governance Proposal" \
        --description "https://github.com/repo/test-proposal" \
        --seed 12345 \
+       --start_epoch 820\
+       --length 20\
        --identity_keypair /path/to/keypair.json \
        --rpc_url https://api.testnet.solana.com
    ```
@@ -92,6 +94,8 @@ This guide provides detailed instructions for compiling, deploying, and testing 
      - `--title`: Proposal title (max 50 chars, per error code 6001).
      - `--description`: GitHub link (must start with `https://github.com`, per contract validation; max 250 chars, per error code 6002).
      - `--seed`: Unique seed for PDA derivation (optional, defaults to random).
+     - `--start_epoch`: Epoch the proposal should go active.
+     - `--length`: Epochs the proposal should be open for.
      - `--identity_keypair`: Path to your testnet keypair with sufficient stake (>40k SOL, per error code 6000).
      - `--rpc_url`: Testnet RPC URL.
    - **Output**: Logs a Solana Explorer link (e.g., `info: Proposal created. https://explorer.solana.com/tx/<signature>`).
@@ -119,8 +123,8 @@ This guide provides detailed instructions for compiling, deploying, and testing 
      - `author`: Your signer pubkey.
      - `title`: "Test Governance Proposal".
      - `description`: "https://github.com/repo/test-proposal".
-     - `start_epoch`: 0.
-     - `end_epoch`: 10.
+     - `start_epoch`: 820.
+     - `end_epoch`: 840.
      - `proposer_stake_weight_bp`: Reflects your stake weight in basis points.
      - `voting`: `false` (requires support to activate).
      - `finalized`: `false`.

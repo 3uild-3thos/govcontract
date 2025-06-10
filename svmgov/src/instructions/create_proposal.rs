@@ -16,6 +16,8 @@ pub async fn create_proposal(
     seed: Option<u64>,
     identity_keypair: Option<String>,
     rpc_url: Option<String>,
+    start_epoch: u64,
+    length: u64
 ) -> Result<()> {
     let keypair = load_identity_keypair(identity_keypair)?;
     let payer = Arc::new(keypair);
@@ -40,8 +42,8 @@ pub async fn create_proposal(
         .args(args::CreateProposal {
             title: proposal_title,
             description: proposal_description,
-            start_epoch: 0,
-            end_epoch: 10,
+            start_epoch,
+            voting_length_epochs: length,
             seed: seed_value,
         })
         .accounts(accounts::CreateProposal {
@@ -52,7 +54,7 @@ pub async fn create_proposal(
         .send()
         .await?;
 
-    info!("Proposal created. https://explorer.solana.com/tx/{}", sig);
+    info!("Proposal {} created. https://explorer.solana.com/tx/{}", proposal_pda, sig);
 
     Ok(())
 }
