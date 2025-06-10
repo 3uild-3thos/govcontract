@@ -77,7 +77,7 @@ Create a new governance proposal.
 
 **Example**:
 ```sh
-svmgov create-proposal --title "Update Fee Structure" --description "Adjust validator fees." --identity_keypair /path/to/key.json
+svmgov create-proposal --title "Update Fee Structure" --description "https://github.com/repo/test-proposal" --start_epoch 820 --length 20 --identity_keypair /path/to/key.json
 ```
 
 ### `support-proposal`
