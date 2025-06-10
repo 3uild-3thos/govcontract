@@ -44,11 +44,11 @@ enum Commands {
     #[command(
         about = "Create a proposal to vote on",
         long_about = "This command creates a new governance proposal with the help of the Solana Validator Governance program. \
-                      It requires a title and description for the proposal, and optionally a unique seed to derive the proposal's address (PDA). \
+                      It requires a title and a GitHub link for the proposal description, and optionally a unique seed to derive the proposal's address (PDA). \
                       The identity keypair is required to sign the transaction, and an optional RPC URL can be provided to connect to the chain.\n\n\
                       Examples:\n\
-                      $ svmgov create-proposal --title \"New Governance Rule\" --description \"This proposal suggests a new rule.\" --identity_keypair /path/to/key.json\n\
-                      $ svmgov create-proposal --seed 42 --title \"New Governance Rule\" --description \"This proposal suggests a new rule.\" --identity_keypair /path/to/key.json --rpc_url https://api.mainnet-beta.solana.com"
+                      $ svmgov create-proposal --title \"New Governance Rule\" --description \"https://github.com/repo/proposal\" --identity_keypair /path/to/key.json\n\
+                      $ svmgov create-proposal --seed 42 --title \"New Governance Rule\" --description \"https://github.com/repo/proposal\" --identity_keypair /path/to/key.json --rpc_url https://api.mainnet-beta.solana.com"
     )]
     CreateProposal {
         /// Optional unique seed for the proposal (used to derive the PDA).
@@ -59,8 +59,8 @@ enum Commands {
         #[arg(long, help = "Proposal title")]
         title: String,
 
-        /// Description of the proposal.
-        #[arg(long, help = "Proposal description")]
+        /// GitHub link for the proposal description.
+        #[arg(long, help = "GitHub link for the proposal description")]
         description: String,
     },
 
