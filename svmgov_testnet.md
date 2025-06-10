@@ -115,7 +115,7 @@ This guide provides detailed instructions for compiling, deploying, and testing 
 
    - **Note**: Use the `<PROPOSAL_PDA>` from the `list-proposals` output.
    - **Output**: Displays the proposal details, including PDA, title, description, and status.
-   - **Expected State** (from `Proposal` struct in `govcontract.json`):
+   - **Expected State**:
      - `author`: Your signer pubkey.
      - `title`: "Test Governance Proposal".
      - `description`: "https://github.com/repo/test-proposal".
