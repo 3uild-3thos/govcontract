@@ -45,7 +45,7 @@ This guide provides detailed instructions for compiling, deploying, and testing 
 
    - **Output**: Deploys the program and returns the program ID (e.g., `3mkuhB2crh6BE5zg2wN5JufDXviVv2Vsia9yjC7fMiH`). The IDL (`target/idl/govcontract.json`) is updated with the deployed program ID under the `"address"` field.
    - **Verify**: Open `target/idl/govcontract.json` and confirm the `"address"` field contains the deployed program ID.
-   - **Note**: Ensure your keypair (configured in Anchor’s provider) has sufficient SOL for deployment. If needed, request SOL via an external testnet faucet.
+   - **Note**: Ensure your keypair (configured in Anchor’s provider) has sufficient SOL for deployment.
 
 4. **Copy the IDL to the CLI**:
 
