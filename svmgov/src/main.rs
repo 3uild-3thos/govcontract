@@ -211,8 +211,8 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 *seed,
                 cli.identity_keypair,
                 cli.rpc_url,
-                * start_epoch,
-                * length,
+                *start_epoch,
+                *length,
             )
             .await?;
         }

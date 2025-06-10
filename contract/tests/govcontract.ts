@@ -67,7 +67,7 @@ describe("govcontract", () => {
   });
 
   it("Create Proposal!", async () => {
-    const tx = await program.methods.createProposal(seed, "Proposal1", "Description1", new anchor.BN(0), new anchor.BN(1))
+    const tx = await program.methods.createProposal(seed, "Proposal1", "https://github.com/repo/test-proposal", new anchor.BN(0), new anchor.BN(1))
     .accountsPartial({
       signer: provider.publicKey,
       proposal: proposalAccount,
