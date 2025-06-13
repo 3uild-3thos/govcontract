@@ -18,6 +18,7 @@ pub async fn modify_vote(
     abstain_votes: u64,
     identity_keypair: Option<String>,
     rpc_url: Option<String>,
+    validator: Pubkey,
 ) -> Result<()> {
     // Validate that the total basis points sum to 10,000
     if for_votes + against_votes + abstain_votes != 10_000 {
@@ -37,7 +38,7 @@ pub async fn modify_vote(
     let program = anchor_client_setup(rpc_url, payer)?;
 
     // Derive the vote PDA using the seeds ["vote", proposal, signer]
-    let vote_seeds = &[b"vote", proposal_pubkey.as_ref(), payer_pubkey.as_ref()];
+    let vote_seeds = &[b"vote", proposal_pubkey.as_ref(), validator.as_ref()];
     let (vote_pda, _bump) = Pubkey::find_program_address(vote_seeds, &program.id());
 
     // Build and send the transaction
@@ -50,6 +51,7 @@ pub async fn modify_vote(
         })
         .accounts(accounts::ModifyVote {
             signer: payer_pubkey,
+            validator,
             proposal: proposal_pubkey,
             vote: vote_pda,
             system_program: system_program::ID,

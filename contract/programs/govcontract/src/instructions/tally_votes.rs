@@ -9,6 +9,8 @@ use anchor_lang::{prelude::*, solana_program::epoch_stake::{get_epoch_stake_for_
 pub struct TallyVotes<'info> {
     #[account(mut)]
     pub signer: Signer<'info>, // Authority to trigger the tally (e.g., governance admin)
+    /// CHECK:
+    pub validator: AccountInfo<'info>,
     #[account(mut)]
     pub proposal: Account<'info, Proposal>,
     pub system_program: Program<'info, System>,

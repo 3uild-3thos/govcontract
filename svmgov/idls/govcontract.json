@@ -1,5 +1,5 @@
 {
-  "address": "3mkuhB2crh6BE5zg2wN5JufDXviVv2Vsia9yjCEg7MiH",
+  "address": "AXnkQnEEMBsKcJ1gSXP1aW6tZMGWodzEaoB6b3bRib2r",
   "metadata": {
     "name": "govcontract",
     "version": "0.1.0",
@@ -26,6 +26,9 @@
           "signer": true
         },
         {
+          "name": "validator"
+        },
+        {
           "name": "proposal",
           "writable": true
         },
@@ -49,7 +52,7 @@
               },
               {
                 "kind": "account",
-                "path": "signer"
+                "path": "validator"
               }
             ]
           }
@@ -93,6 +96,9 @@
           "signer": true
         },
         {
+          "name": "validator"
+        },
+        {
           "name": "proposal",
           "writable": true,
           "pda": {
@@ -116,7 +122,7 @@
               },
               {
                 "kind": "account",
-                "path": "signer"
+                "path": "validator"
               }
             ]
           }
@@ -168,6 +174,9 @@
           "signer": true
         },
         {
+          "name": "validator"
+        },
+        {
           "name": "proposal",
           "writable": true
         },
@@ -190,7 +199,7 @@
               },
               {
                 "kind": "account",
-                "path": "signer"
+                "path": "validator"
               }
             ]
           }
@@ -234,6 +243,9 @@
           "signer": true
         },
         {
+          "name": "validator"
+        },
+        {
           "name": "proposal",
           "writable": true
         },
@@ -260,7 +272,7 @@
               },
               {
                 "kind": "account",
-                "path": "signer"
+                "path": "validator"
               }
             ]
           }
@@ -289,6 +301,9 @@
           "name": "signer",
           "writable": true,
           "signer": true
+        },
+        {
+          "name": "validator"
         },
         {
           "name": "proposal",

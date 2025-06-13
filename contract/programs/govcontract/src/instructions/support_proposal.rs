@@ -11,13 +11,15 @@ use crate::{
 pub struct SupportProposal<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
+    /// CHECK:
+    pub validator: AccountInfo<'info>,
     #[account(mut)]
     pub proposal: Account<'info, Proposal>,
     #[account(
         init,
         payer = signer,
         space = 8 + Support::INIT_SPACE,
-        seeds = [b"support", proposal.key().as_ref(), signer.key().as_ref()],
+        seeds = [b"support", proposal.key().as_ref(), validator.key().as_ref()],
         bump
     )]
     pub support: Account<'info, Support>,
@@ -33,7 +35,7 @@ impl<'info> SupportProposal<'info> {
         let cluster_stake = get_epoch_total_stake();
 
         // Get supporter stake
-        let supporter_stake = get_epoch_stake_for_vote_account(self.signer.key);
+        let supporter_stake = get_epoch_stake_for_vote_account(self.validator.key);
 
         // Maybe ensure the supporter has some stake
         require!(supporter_stake > 0, GovernanceError::NotEnoughStake);

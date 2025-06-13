@@ -10,10 +10,12 @@ use crate::{
 pub struct ModifyVote<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
+    /// CHECK:
+    pub validator: AccountInfo<'info>,
     #[account(mut)]
     pub proposal: Account<'info, Proposal>,
     #[account(
-        seeds = [b"vote", proposal.key().as_ref(), signer.key().as_ref()],
+        seeds = [b"vote", proposal.key().as_ref(), validator.key().as_ref()],
         bump = vote.bump,
     )]
     pub vote: Account<'info, Vote>,

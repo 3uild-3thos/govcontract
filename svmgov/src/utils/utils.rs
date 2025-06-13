@@ -1,11 +1,10 @@
 use anchor_client::{
-    Client, Cluster, Program,
-    solana_sdk::{signature::Keypair, signer::Signer},
+    solana_account_decoder::UiAccountEncoding, solana_client::{nonblocking::rpc_client::RpcClient, rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig}, rpc_filter::{Memcmp, MemcmpEncodedBytes, RpcFilterType}}, solana_sdk::{commitment_config::CommitmentConfig, signature::Keypair, signer::Signer, vote}, Client, Cluster, Program
 };
-use anchor_lang::Id;
+use anchor_lang::{prelude::Pubkey, Id};
 use anyhow::{Result, anyhow};
 
-use std::{fs, sync::Arc};
+use std::{fs, str::FromStr, sync::Arc};
 
 use crate::govcontract::program::Govcontract;
 
@@ -59,6 +58,39 @@ pub fn load_identity_keypair(keypair_path: Option<String>) -> Result<Keypair> {
     Ok(identity_keypair)
 }
 
+pub async fn find_vote_account(validator_identity: &Pubkey, rpc_client: &RpcClient) -> Result<Pubkey> {
+
+    // Rpc filter to get Vote accounts for this identity
+    let filter = RpcFilterType::Memcmp(Memcmp::new(
+        0,
+        MemcmpEncodedBytes::Bytes(validator_identity.to_bytes().to_vec()),
+    ));
+
+    let config = RpcProgramAccountsConfig {
+        filters: Some(vec![
+            filter,
+        ]),
+        account_config: RpcAccountInfoConfig {
+            encoding: Some(UiAccountEncoding::Base64),
+            data_slice: None,
+            commitment: Some(CommitmentConfig::processed()),
+            min_context_slot: None,
+        },
+        with_context: Some(false),
+        sort_results: Some(true),
+    };
+
+
+    // let vote_account = rpc_client.get_program_accounts_with_config(&Pubkey::from_str("Vote111111111111111111111111111111111111111")?, config).await?;
+    let vote_accounts = rpc_client.get_vote_accounts().await?;
+    // let vote_account = rpc_client.get_vote_accounts_with_commitment().await?;
+    // let vote_accounts = rpc_client.get_vote_accounts_with_config(&Pubkey::from_str("Vote111111111111111111111111111111111111111")?, config).await?;
+
+    let vote_account = vote_accounts.current.iter().find(|vote_acc| vote_acc.node_pubkey == validator_identity.to_string());
+    println!("{vote_account:#?}");
+
+    Ok(Pubkey::default())
+}
 fn set_cluster(rpc_url: Option<String>) -> Cluster {
     if let Some(rpc_url) = rpc_url {
         let wss_url = rpc_url.replace("https://", "wss://");

@@ -1,4 +1,5 @@
 use anchor_client::anchor_lang::declare_program;
+use anchor_lang::prelude::Pubkey;
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use env_logger;
@@ -33,6 +34,10 @@ struct Cli {
     /// Custom rpc url. This argument is also global and can be used with any subcommand.
     #[arg(short, long, help = "Custom rpc url", global = true)]
     rpc_url: Option<String>,
+
+    /// ONLY FOR TESTING
+    #[arg(short, long, help = "Validator key for testing only", global = true)]
+    validator: Pubkey,
 
     /// Subcommands for the CLI
     #[command(subcommand)]
@@ -213,6 +218,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 cli.rpc_url,
                 *start_epoch,
                 *length,
+                cli.validator,
             )
             .await?;
         }
@@ -222,6 +228,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 proposal_id.to_string(),
                 cli.identity_keypair,
                 cli.rpc_url,
+                cli.validator,
             )
             .await?;
         }
@@ -239,6 +246,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 *abstain_votes,
                 cli.identity_keypair,
                 cli.rpc_url,
+                cli.validator,
             )
             .await?;
         }
@@ -256,12 +264,13 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 *abstain_votes,
                 cli.identity_keypair,
                 cli.rpc_url,
+                cli.validator,
             )
             .await?;
         }
 
         Commands::TallyVotes { proposal_id } => {
-            instructions::tally_votes(proposal_id.to_string(), cli.identity_keypair, cli.rpc_url)
+            instructions::tally_votes(proposal_id.to_string(), cli.identity_keypair, cli.rpc_url, cli.validator)
                 .await?;
         }
 
