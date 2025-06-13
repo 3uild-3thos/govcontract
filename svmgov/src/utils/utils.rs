@@ -2,10 +2,8 @@ use anchor_client::{
     Client, Cluster, Program,
     solana_client::{
         nonblocking::rpc_client::RpcClient,
-        rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig},
-        rpc_filter::{Memcmp, MemcmpEncodedBytes, RpcFilterType},
     },
-    solana_sdk::{commitment_config::CommitmentConfig, signature::Keypair, signer::Signer, vote},
+    solana_sdk::{signature::Keypair, signer::Signer},
 };
 use anchor_lang::{Id, prelude::Pubkey};
 use anyhow::{Result, anyhow};
