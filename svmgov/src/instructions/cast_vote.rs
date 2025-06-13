@@ -1,11 +1,10 @@
 use std::str::FromStr;
-use std::sync::Arc;
 
 use crate::{
     govcontract::client::{accounts, args},
     setup_all,
 };
-use anchor_client::solana_sdk::{pubkey::Pubkey, serde_varint::VarInt, signer::Signer};
+use anchor_client::solana_sdk::{pubkey::Pubkey, signer::Signer};
 use anchor_lang::system_program;
 use anyhow::{Result, anyhow};
 use log::info;

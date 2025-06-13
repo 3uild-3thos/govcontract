@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use crate::{
     govcontract::client::{accounts, args},
     setup_all,

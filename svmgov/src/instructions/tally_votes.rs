@@ -1,9 +1,8 @@
 use std::str::FromStr;
-use std::sync::Arc;
 
 use anchor_client::{
     solana_client::rpc_filter::{Memcmp, MemcmpEncodedBytes, RpcFilterType},
-    solana_sdk::pubkey::Pubkey,
+    solana_sdk::{pubkey::Pubkey, signer::Signer},
 };
 use anchor_lang::prelude::AccountMeta;
 use anchor_lang::system_program;
@@ -87,7 +86,7 @@ pub async fn tally_votes(
             .request()
             .args(args::TallyVotes { finalize })
             .accounts(accounts::TallyVotes {
-                signer: program.payer(),
+                signer: payer.pubkey(),
                 validator,
                 vote_account,
                 proposal: proposal_pubkey,

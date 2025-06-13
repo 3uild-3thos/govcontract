@@ -1,6 +1,5 @@
 use anchor_client::{
     Client, Cluster, Program,
-    solana_account_decoder::UiAccountEncoding,
     solana_client::{
         nonblocking::rpc_client::RpcClient,
         rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig},
@@ -119,12 +118,11 @@ pub async fn find_spl_vote_accounts(
         .iter()
         .filter_map(|vote_acc| {
             if validator_identities.contains(&&Pubkey::from_str(&vote_acc.node_pubkey).ok()?) {
-                Some([Pubkey::from_str(&vote_acc.vote_pubkey).ok()?])
+                Some(Pubkey::from_str(&vote_acc.vote_pubkey).ok()?)
             } else {
                 None
             }
         })
-        .flatten()
         .collect::<Vec<Pubkey>>();
 
     Ok(spl_vote_pubkeys)
