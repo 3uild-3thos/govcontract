@@ -43,7 +43,11 @@ pub async fn list_proposals(
     Ok(())
 }
 
-pub async fn list_votes(rpc_url: Option<String>, proposal_id: &String, verbose: bool) -> Result<()> {
+pub async fn list_votes(
+    rpc_url: Option<String>,
+    proposal_id: &String,
+    verbose: bool,
+) -> Result<()> {
     // Parse the proposal ID into a Pubkey
     let proposal_pubkey = Pubkey::from_str(&proposal_id)
         .map_err(|_| anyhow!("Invalid proposal ID: {}", proposal_id))?;
@@ -63,7 +67,10 @@ pub async fn list_votes(rpc_url: Option<String>, proposal_id: &String, verbose: 
 
     if verbose {
         for vote in votes {
-            info!("Vote for proposal {}: {:#?} \n {:#?}", proposal_id, vote.0, vote.1);
+            info!(
+                "Vote for proposal {}: {:#?} \n {:#?}",
+                proposal_id, vote.0, vote.1
+            );
         }
     } else {
         for vote in votes {

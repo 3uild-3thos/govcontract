@@ -1,5 +1,8 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::epoch_stake::{get_epoch_stake_for_vote_account, get_epoch_total_stake};
+use anchor_lang::solana_program::epoch_stake::{
+    get_epoch_stake_for_vote_account, get_epoch_total_stake,
+};
+use anchor_lang::solana_program::vote::{program as vote_program, state::VoteState};
 
 use crate::{
     error::GovernanceError,
@@ -13,6 +16,12 @@ pub struct SupportProposal<'info> {
     pub signer: Signer<'info>,
     /// CHECK:
     pub validator: AccountInfo<'info>,
+    /// CHECK: Vote account is too big to deserialize, so we check on owner and size, then compare node_pubkey with signer
+    #[account(
+        constraint = spl_vote_account.owner == &vote_program::ID,
+        constraint = spl_vote_account.data_len() >= VoteState::size_of()
+    )]
+    pub spl_vote_account: AccountInfo<'info>,
     #[account(mut)]
     pub proposal: Account<'info, Proposal>,
     #[account(
@@ -31,11 +40,23 @@ impl<'info> SupportProposal<'info> {
         require!(!self.proposal.voting, GovernanceError::ProposalClosed);
         require!(!self.proposal.finalized, GovernanceError::ProposalFinalized);
 
+        let vote_account_data = &self.spl_vote_account.data.borrow();
+        // 4 bytes discriminant, 32 bytes node_pubkey
+        let node_pubkey = Pubkey::try_from(&vote_account_data[4..36])
+            .map_err(|_| GovernanceError::InvalidVoteAccount)?;
+
+        // Validator identity must be part of the Vote account
+        require_keys_eq!(
+            node_pubkey,
+            self.validator.key(),
+            GovernanceError::InvalidVoteAccount
+        );
+
         // Get cluster stake
         let cluster_stake = get_epoch_total_stake();
 
         // Get supporter stake
-        let supporter_stake = get_epoch_stake_for_vote_account(self.validator.key);
+        let supporter_stake = get_epoch_stake_for_vote_account(self.spl_vote_account.key);
 
         // Maybe ensure the supporter has some stake
         require!(supporter_stake > 0, GovernanceError::NotEnoughStake);

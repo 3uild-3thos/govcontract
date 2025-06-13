@@ -73,7 +73,10 @@ enum Commands {
         start_epoch: u64,
 
         /// Length in epochs for the proposal to go active for support and eventually voting.
-        #[arg(long, help = "The length of the voting period for the proposal in epochs")]
+        #[arg(
+            long,
+            help = "The length of the voting period for the proposal in epochs"
+        )]
         length: u64,
     },
 
@@ -208,7 +211,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
             title,
             description,
             start_epoch,
-            length
+            length,
         } => {
             instructions::create_proposal(
                 title.to_string(),
@@ -270,19 +273,27 @@ async fn handle_command(cli: Cli) -> Result<()> {
         }
 
         Commands::TallyVotes { proposal_id } => {
-            instructions::tally_votes(proposal_id.to_string(), cli.identity_keypair, cli.rpc_url, cli.validator)
-                .await?;
+            instructions::tally_votes(
+                proposal_id.to_string(),
+                cli.identity_keypair,
+                cli.rpc_url,
+                cli.validator,
+            )
+            .await?;
         }
 
         Commands::ListProposals { status } => {
             commands::list_proposals(cli.rpc_url, status.clone()).await?;
         }
-        
+
         Commands::GetProposal { proposal_id } => {
             commands::get_proposal(cli.rpc_url, proposal_id).await?;
         }
 
-        Commands::ListVotes { proposal_id, verbose } => {
+        Commands::ListVotes {
+            proposal_id,
+            verbose,
+        } => {
             commands::list_votes(cli.rpc_url, proposal_id, *verbose).await?;
         }
     }

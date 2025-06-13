@@ -20,8 +20,13 @@ pub mod govcontract {
         start_epoch: u64,
         voting_length_epochs: u64,
     ) -> Result<()> {
-        ctx.accounts
-            .create_proposal(title, description, start_epoch, voting_length_epochs, &ctx.bumps)?;
+        ctx.accounts.create_proposal(
+            title,
+            description,
+            start_epoch,
+            voting_length_epochs,
+            &ctx.bumps,
+        )?;
         Ok(())
     }
 
@@ -63,10 +68,12 @@ pub mod govcontract {
     //     Ok(())
     // }
 
-    pub fn tally_votes<'info>(ctx: Context<'_, '_, 'info, 'info, TallyVotes<'info>>, finalize: bool) -> Result<()> {
-
+    pub fn tally_votes<'info>(
+        ctx: Context<'_, '_, 'info, 'info, TallyVotes<'info>>,
+        finalize: bool,
+    ) -> Result<()> {
         ctx.accounts.tally_votes(ctx.remaining_accounts, finalize)?;
-       
+
         Ok(())
     }
 }

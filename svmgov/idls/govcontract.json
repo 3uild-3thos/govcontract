@@ -29,6 +29,9 @@
           "name": "validator"
         },
         {
+          "name": "vote_account"
+        },
+        {
           "name": "proposal",
           "writable": true
         },
@@ -97,6 +100,9 @@
         },
         {
           "name": "validator"
+        },
+        {
+          "name": "vote_account"
         },
         {
           "name": "proposal",
@@ -177,6 +183,9 @@
           "name": "validator"
         },
         {
+          "name": "vote_account"
+        },
+        {
           "name": "proposal",
           "writable": true
         },
@@ -246,6 +255,9 @@
           "name": "validator"
         },
         {
+          "name": "vote_account"
+        },
+        {
           "name": "proposal",
           "writable": true
         },
@@ -304,6 +316,9 @@
         },
         {
           "name": "validator"
+        },
+        {
+          "name": "vote_account"
         },
         {
           "name": "proposal",
