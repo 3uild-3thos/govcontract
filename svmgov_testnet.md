@@ -80,30 +80,23 @@ This guide provides detailed instructions for compiling, deploying, and testing 
 1. **Run the `create-proposal` Command**:
 
    ```bash
-   ./target/release/svmgov create-proposal \
-       --title "Test Governance Proposal" \
-       --description "https://github.com/repo/test-proposal" \
-       --seed 12345 \
-       --start_epoch 820\
-       --length 20\
-       --identity_keypair /path/to/keypair.json \
-       --rpc_url https://api.testnet.solana.com
+   ./target/release/svmgov --identity-keypair /path/to/keypair.json --rpc-url https://api.testnet.solana.com create-proposal --title "Test Governance Proposal" --description "https://github.com/repo/test-proposal" --seed 12345 --start-epoch 820 --length 20
    ```
 
    - **Arguments**:
      - `--title`: Proposal title (max 50 chars, per error code 6001).
      - `--description`: GitHub link (must start with `https://github.com`, per contract validation; max 250 chars, per error code 6002).
      - `--seed`: Unique seed for PDA derivation (optional, defaults to random).
-     - `--start_epoch`: Epoch the proposal should go active.
+     - `--start-epoch`: Epoch the proposal should go active.
      - `--length`: Epochs the proposal should be open for.
-     - `--identity_keypair`: Path to your testnet keypair with sufficient stake (>40k SOL, per error code 6000).
-     - `--rpc_url`: Testnet RPC URL.
+     - `--identity-keypair`: Path to your testnet keypair with sufficient stake (>40k SOL, per error code 6000).
+     - `--rpc-url`: Testnet RPC URL.
    - **Output**: Logs a Solana Explorer link (e.g., `info: Proposal created. https://explorer.solana.com/tx/<signature>`).
 
 2. **List Proposals**:
 
    ```bash
-   ./target/release/svmgov list-proposals --rpc_url https://api.testnet.solana.com
+   ./target/release/svmgov --rpc-url https://api.testnet.solana.com list-proposals 
    ```
 
    - **Output**: Lists all proposal pubkeys, including the new proposal’s PDA.
@@ -112,9 +105,7 @@ This guide provides detailed instructions for compiling, deploying, and testing 
 3. **Display the Proposal**:
 
    ```bash
-   ./target/release/svmgov get-proposal \
-       --proposal_id <PROPOSAL_PDA> \
-       --rpc_url https://api.testnet.solana.com
+   ./target/release/svmgov --rpc-url https://api.testnet.solana.com get-proposal --proposal-id <PROPOSAL_PDA>
    ```
 
    - **Note**: Use the `<PROPOSAL_PDA>` from the `list-proposals` output.
@@ -134,30 +125,25 @@ This guide provides detailed instructions for compiling, deploying, and testing 
 1. **Run the `support-proposal` Command**:
 
    ```bash
-   ./target/release/svmgov support-proposal \
-       --proposal_id <PROPOSAL_PDA> \
-       --identity_keypair /path/to/keypair.json \
-       --rpc_url https://api.testnet.solana.com
+   ./target/release/svmgov --identity-keypair /path/to/keypair.json --rpc-url https://api.testnet.solana.com support-proposal --proposal-id <PROPOSAL_PDA> 
    ```
 
    - **Arguments**:
-     - `--proposal_id`: The proposal PDA from Step 4.
-     - `--identity_keypair`: Keypair with sufficient stake (>5% of testnet stake) to support the proposal.
+     - `--proposal-id`: The proposal PDA from Step 4.
+     - `--identity-keypair`: Keypair with sufficient stake (>5% of testnet stake) to support the proposal.
    - **Output**: Logs a Solana Explorer link (e.g., `info: Proposal supported. https://explorer.solana.com/tx/<signature>`).
    - **Verify**:
      - Open the Solana Explorer link to confirm the transaction succeeded.
      - Refetch the proposal:
        ```bash
-       ./target/release/svmgov get-proposal \
-           --proposal_id <PROPOSAL_PDA> \
-           --rpc_url https://api.testnet.solana.com
+       ./target/release/svmgov get-proposal --proposal-id <PROPOSAL_PDA> --rpc-url https://api.testnet.solana.com
        ```
      - **Expected Change**: `cluster_support_bp` increases based on your stake, and `voting` may become `true` if sufficient support is reached (depends on program logic).
 
 2. **List Proposals**:
 
    ```bash
-   ./target/release/svmgov list-proposals --rpc_url https://api.testnet.solana.com
+   ./target/release/svmgov --rpc-url https://api.testnet.solana.com list-proposals 
    ```
 
    - **Output**: Lists all proposal pubkeys, including the supported proposal’s PDA.
@@ -166,9 +152,7 @@ This guide provides detailed instructions for compiling, deploying, and testing 
 3. **Display the Proposal**:
 
    ```bash
-   ./target/release/svmgov get-proposal \
-       --proposal_id <PROPOSAL_PDA> \
-       --rpc_url https://api.testnet.solana.com
+   ./target/release/svmgov get-proposal --proposal-id <PROPOSAL_PDA> --rpc-url https://api.testnet.solana.com
    ```
 
    - **Output**: Displays the updated proposal details.
@@ -179,28 +163,19 @@ This guide provides detailed instructions for compiling, deploying, and testing 
 1. **Run the `cast-vote` Command**:
 
    ```bash
-   ./target/release/svmgov cast-vote \
-       --proposal_id <PROPOSAL_PDA> \
-       --for_votes 6000 \
-       --against_votes 3000 \
-       --abstain_votes 1000 \
-       --identity_keypair /path/to/keypair.json \
-       --rpc_url https://api.testnet.solana.com
+   ./target/release/svmgov --identity-keypair /path/to/keypair.json --rpc-url https://api.testnet.solana.com cast-vote --proposal-id <PROPOSAL_PDA> --for_votes 6000 --against_votes 3000 --abstain_votes 1000 
    ```
 
    - **Arguments**:
-     - `--proposal_id`: Proposal PDA from Step 4.
+     - `--proposal-id`: Proposal PDA from Step 4.
      - `--for_votes`, `--against_votes`, `--abstain_votes`: Basis points summing to 10,000 (6000 + 3000 + 1000 = 10,000).
-     - `--identity_keypair`: Keypair with voting stake (>5% of testnet stake).
+     - `--identity-keypair`: Keypair with voting stake (>5% of testnet stake).
    - **Output**: Logs a Solana Explorer link (e.g., `info: Vote cast successfully. https://explorer.solana.com/tx/<signature>`).
    - **Verify**:
      - Open the Solana Explorer link to confirm the transaction succeeded.
      - List votes to verify the vote account and deserialized data:
        ```bash
-       ./target/release/svmgov list-votes \
-           --proposal_id <PROPOSAL_PDA> \
-           --verbose true \
-           --rpc_url https://api.testnet.solana.com
+       ./target/release/svmgov --rpc-url https://api.testnet.solana.com list-votes --proposal-id <PROPOSAL_PDA> --verbose true 
        ```
        - **Output**: Displays the vote account PDA and details (e.g., `validator`, `for_votes_bp: 6000`, `against_votes_bp: 3000`, `abstain_votes_bp: 1000`, `vote_timestamp`).
        - **Expected State** (from `Vote` struct in `govcontract.json`):
@@ -212,9 +187,7 @@ This guide provides detailed instructions for compiling, deploying, and testing 
          - `vote_timestamp`: Current timestamp.
      - Refetch the proposal to check for updates:
        ```bash
-       ./target/release/svmgov get-proposal \
-           --proposal_id <PROPOSAL_PDA> \
-           --rpc_url https://api.testnet.solana.com
+       ./target/release/svmgov get-proposal --proposal-id <PROPOSAL_PDA> --rpc-url https://api.testnet.solana.com
        ```
        - **Expected Change**: `for_votes_bp`, `against_votes_bp`, and `abstain_votes_bp` may reflect the new vote, depending on program logic for vote aggregation.
 
@@ -227,22 +200,17 @@ This guide provides detailed instructions for compiling, deploying, and testing 
 2. **Run the `tally-votes` Command**:
 
    ```bash
-   ./target/release/svmgov tally-votes \
-       --proposal_id <PROPOSAL_PDA> \
-       --identity_keypair /path/to/keypair.json \
-       --rpc_url https://api.testnet.solana.com
+   ./target/release/svmgov --identity-keypair /path/to/keypair.json --rpc-url https://api.testnet.solana.com tally-votes --proposal-id <PROPOSAL_PDA> 
    ```
 
    - **Arguments**:
-     - `--proposal_id`: Proposal PDA from Step 4.
-     - `--identity_keypair`: Keypair of the proposal author (or authorized account).
+     - `--proposal-id`: Proposal PDA from Step 4.
+     - `--identity-keypair`: Keypair of the proposal author (or authorized account).
    - **Output**: Logs Solana Explorer links for each batch (e.g., `info: Tally votes: https://explorer.solana.com/tx/<signature>`) and the final proposal state (e.g., `info: Tally finished: {Proposal { ... }}`).
    - **Verify**:
      - Refetch the proposal to verify values:
        ```bash
-       ./target/release/svmgov get-proposal \
-           --proposal_id <PROPOSAL_PDA> \
-           --rpc_url https://api.testnet.solana.com
+       ./target/release/svmgov get-proposal --proposal-id <PROPOSAL_PDA> --rpc-url https://api.testnet.solana.com
        ```
        - **Expected State**:
          - `for_votes_bp`, `against_votes_bp`, `abstain_votes_bp`: Updated to aggregate all votes (weighted by stake).
@@ -258,22 +226,14 @@ This guide provides detailed instructions for compiling, deploying, and testing 
 - **Modify Votes**:
   - Test the `modify-vote` command to update an existing vote:
     ```bash
-    ./target/release/svmgov modify-vote \
-        --proposal_id <PROPOSAL_PDA> \
-        --for_votes 7000 \
-        --against_votes 2000 \
-        --abstain_votes 1000 \
-        --identity_keypair /path/to/keypair.json \
-        --rpc_url https://api.testnet.solana.com
+    ../target/release/svmgov --identity-keypair /path/to/keypair.json --rpc-url https://api.testnet.solana.com modify-vote --proposal-id <PROPOSAL_PDA> --for_votes 7000 --against_votes 2000 --abstain_votes 1000 
     ```
     - **Output**: Logs a Solana Explorer link (e.g., `info: Vote modified. https://explorer.solana.com/tx/<signature>`).
     - **Verify**:
         - **Expected Change**: Vote account reflects `for_votes_bp: 7000`, `against_votes_bp: 2000`, `abstain_votes_bp: 1000`.
       - Refetch the proposal to check for updates:
         ```bash
-        ./target/release/svmgov get-proposal \
-            --proposal_id <PROPOSAL_PDA> \
-            --rpc_url https://api.testnet.solana.com
+        ./target/release/svmgov get-proposal --proposal-id <PROPOSAL_PDA> --rpc-url https://api.testnet.solana.com
         ```
 
 - **Proposal Support**:
