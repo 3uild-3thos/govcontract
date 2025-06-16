@@ -32,7 +32,7 @@ pub async fn support_proposal(
         .accounts(accounts::SupportProposal {
             signer: payer.pubkey(),
             // validator,
-            vote_account,
+            spl_vote_account: vote_account,
             proposal: proposal_pubkey,
             support: support_pda,
             system_program: system_program::ID,

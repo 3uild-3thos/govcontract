@@ -45,7 +45,7 @@ pub async fn modify_vote(
         .accounts(accounts::ModifyVote {
             signer: payer.pubkey(),
             // validator,
-            vote_account,
+            spl_vote_account: vote_account,
             proposal: proposal_pubkey,
             vote: vote_pda,
             system_program: system_program::ID,

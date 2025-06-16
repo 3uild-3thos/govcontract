@@ -88,7 +88,7 @@ pub async fn tally_votes(
             .accounts(accounts::TallyVotes {
                 signer: payer.pubkey(),
                 // validator,
-                vote_account,
+                spl_vote_account: vote_account,
                 proposal: proposal_pubkey,
                 system_program: system_program::ID,
             })

@@ -39,7 +39,7 @@ pub async fn create_proposal(
         .accounts(accounts::CreateProposal {
             signer: payer.pubkey(),
             // validator,
-            vote_account,
+            spl_vote_account: vote_account,
             proposal: proposal_pda,
             system_program: system_program::ID,
         })

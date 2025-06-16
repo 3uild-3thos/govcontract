@@ -249,7 +249,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 *abstain_votes,
                 cli.identity_keypair,
                 cli.rpc_url,
-                cli.validator,
+                // cli.validator,
             )
             .await?;
         }
