@@ -4,10 +4,10 @@ import { Connection, Keypair } from "@solana/web3.js";
 
 import idl from "@/chain/idl/govcontract.json";
 
-export const connection = new Connection(
-  "https://api.devnet.solana.com",
-  "confirmed"
-);
+// const RPC_URL = "https://api.devnet.solana.com";
+const RPC_URL = "https://api.testnet.solana.com";
+
+export const connection = new Connection(RPC_URL, "confirmed");
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const dummyWallet: any = {
