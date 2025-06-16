@@ -1,9 +1,8 @@
 use std::str::FromStr;
-use std::sync::Arc;
 
 use anchor_client::{
     solana_client::rpc_filter::{Memcmp, MemcmpEncodedBytes, RpcFilterType},
-    solana_sdk::pubkey::Pubkey,
+    solana_sdk::{pubkey::Pubkey, signer::Signer},
 };
 use anchor_lang::prelude::AccountMeta;
 use anchor_lang::system_program;
@@ -11,28 +10,25 @@ use anyhow::{Result, anyhow};
 use log::info;
 
 use crate::{
-    anchor_client_setup,
     govcontract::{
         accounts::{Proposal, Vote},
         client::{accounts, args},
     },
-    load_identity_keypair,
+    setup_all,
+    utils::utils::find_spl_vote_accounts,
 };
 pub async fn tally_votes(
     proposal_id: String,
     identity_keypair: Option<String>,
     rpc_url: Option<String>,
+    validator: Pubkey,
 ) -> Result<()> {
     // Parse the proposal ID into a Pubkey
     let proposal_pubkey = Pubkey::from_str(&proposal_id)
         .map_err(|_| anyhow!("Invalid proposal ID: {}", proposal_id))?;
 
-    // Load the identity keypair
-    let keypair = load_identity_keypair(identity_keypair)?;
-    let payer = Arc::new(keypair);
-
-    // Create the Anchor client
-    let program = anchor_client_setup(rpc_url, payer)?;
+    // Load identity keypair, set up cluster and rpc_client, find native vote accunt
+    let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
 
     // Rpc filter to get Vote accounts for this proposal
     let filter = RpcFilterType::Memcmp(Memcmp::new(
@@ -54,20 +50,45 @@ pub async fn tally_votes(
         if index == (batches - 1) {
             finalize = true
         }
-        let mut votes = vec![];
-        for vote in votes_chunk {
-            votes.push(AccountMeta {
-                pubkey: vote.0,
+
+        let (votes, identity_keys) = votes_chunk
+            .iter()
+            .map(|(vote_pub, vote_struct)| {
+                (
+                    AccountMeta {
+                        pubkey: *vote_pub,
+                        is_signer: false,
+                        is_writable: true,
+                    },
+                    &vote_struct.validator,
+                )
+            })
+            .collect::<(Vec<_>, Vec<_>)>();
+
+        let spl_vote_pubkeys = find_spl_vote_accounts(identity_keys, &program.rpc()).await?;
+
+        let spl_vote_accounts = spl_vote_pubkeys
+            .iter()
+            .map(|spl_vote_pubkey| AccountMeta {
+                pubkey: *spl_vote_pubkey,
                 is_signer: false,
                 is_writable: true,
-            });
-        }
+            })
+            .collect::<Vec<AccountMeta>>();
+
+        let votes = votes
+            .into_iter()
+            .zip(spl_vote_accounts.into_iter())
+            .flat_map(|(vote, spl_vote)| [vote, spl_vote])
+            .collect::<Vec<AccountMeta>>();
 
         let sig = program
             .request()
             .args(args::TallyVotes { finalize })
             .accounts(accounts::TallyVotes {
-                signer: program.payer(),
+                signer: payer.pubkey(),
+                // validator,
+                spl_vote_account: vote_account,
                 proposal: proposal_pubkey,
                 system_program: system_program::ID,
             })

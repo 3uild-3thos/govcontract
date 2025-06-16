@@ -1,9 +1,6 @@
-use std::sync::Arc;
-
 use crate::{
-    anchor_client_setup,
     govcontract::client::{accounts, args},
-    load_identity_keypair,
+    setup_all,
 };
 use anchor_client::solana_sdk::{pubkey::Pubkey, signer::Signer};
 use anchor_lang::system_program;
@@ -17,23 +14,16 @@ pub async fn create_proposal(
     identity_keypair: Option<String>,
     rpc_url: Option<String>,
     start_epoch: u64,
-    length: u64
+    length: u64,
+    validator: Pubkey,
 ) -> Result<()> {
-    let keypair = load_identity_keypair(identity_keypair)?;
-    let payer = Arc::new(keypair);
-    let payer_pubkey = payer.pubkey();
-
-    // Create the Anchor client
-    let program = anchor_client_setup(rpc_url, payer)?;
+    // Load identity keypair, set up cluster and rpc_client, find native vote accunt
+    let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
 
     // Generate or use provided seed
     let seed_value = seed.unwrap_or_else(|| rand::random::<u64>());
 
-    let proposal_seeds = &[
-        b"proposal",
-        &seed_value.to_le_bytes(),
-        payer_pubkey.as_ref(),
-    ];
+    let proposal_seeds = &[b"proposal", &seed_value.to_le_bytes(), validator.as_ref()];
     let (proposal_pda, _bump) = Pubkey::find_program_address(proposal_seeds, &program.id());
 
     // Build and send the transaction
@@ -47,14 +37,19 @@ pub async fn create_proposal(
             seed: seed_value,
         })
         .accounts(accounts::CreateProposal {
-            signer: program.payer(),
+            signer: payer.pubkey(),
+            // validator,
+            spl_vote_account: vote_account,
             proposal: proposal_pda,
             system_program: system_program::ID,
         })
         .send()
         .await?;
 
-    info!("Proposal {} created. https://explorer.solana.com/tx/{}", proposal_pda, sig);
+    info!(
+        "Proposal {} created. https://explorer.solana.com/tx/{}",
+        proposal_pda, sig
+    );
 
     Ok(())
 }

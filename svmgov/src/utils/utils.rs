@@ -1,15 +1,43 @@
 use anchor_client::{
     Client, Cluster, Program,
+    solana_client::{
+        nonblocking::rpc_client::RpcClient,
+    },
     solana_sdk::{signature::Keypair, signer::Signer},
 };
-use anchor_lang::Id;
+use anchor_lang::{Id, prelude::Pubkey};
 use anyhow::{Result, anyhow};
 
-use std::{fs, sync::Arc};
+use std::{fs, str::FromStr, sync::Arc};
 
 use crate::govcontract::program::Govcontract;
 
-pub fn load_identity_keypair(keypair_path: Option<String>) -> Result<Keypair> {
+pub async fn setup_all(
+    keypair_path: Option<String>,
+    rpc_url: Option<String>,
+    // validator: Pubkey,
+) -> Result<(Arc<Keypair>, Pubkey, Program<Arc<Keypair>>)> {
+    // Step 1: Load the identity keypair
+    let identity_keypair = load_identity_keypair(keypair_path)?;
+    let identity_keypair_arc = Arc::new(identity_keypair);
+
+    // Step 2: Set the cluster
+    let cluster = set_cluster(rpc_url);
+
+    // Step 3: Create the Anchor client and program
+    let client = Client::new(cluster.clone(), identity_keypair_arc.clone());
+    let program = client.program(Govcontract::id())?;
+
+    // Step 4: Find the vote account using the program's RpcClient
+    let rpc_client = program.rpc();
+    let validator_identity = identity_keypair_arc.pubkey();
+    let vote_account = find_spl_vote_account(&validator_identity, &rpc_client).await?;
+
+    // Step 5: Return all variables
+    Ok((identity_keypair_arc, vote_account, program))
+}
+
+fn load_identity_keypair(keypair_path: Option<String>) -> Result<Keypair> {
     // Check if the keypair path is provided
     let identity_keypair_path = if let Some(path) = keypair_path {
         path
@@ -57,6 +85,45 @@ pub fn load_identity_keypair(keypair_path: Option<String>) -> Result<Keypair> {
     );
 
     Ok(identity_keypair)
+}
+
+async fn find_spl_vote_account(
+    validator_identity: &Pubkey,
+    rpc_client: &RpcClient,
+) -> Result<Pubkey> {
+    let vote_accounts = rpc_client.get_vote_accounts().await?;
+
+    let vote_account = vote_accounts
+        .current
+        .iter()
+        .find(|vote_acc| vote_acc.node_pubkey == validator_identity.to_string())
+        .ok_or(anyhow!(
+            "No Vote account found associated with this validator identity"
+        ))?;
+
+    Ok(Pubkey::from_str(&vote_account.vote_pubkey)?)
+}
+
+// Returns a vector with vote account pubkeys sequencially collected
+pub async fn find_spl_vote_accounts(
+    validator_identities: Vec<&Pubkey>,
+    rpc_client: &RpcClient,
+) -> Result<Vec<Pubkey>> {
+    let vote_accounts = rpc_client.get_vote_accounts().await?;
+
+    let spl_vote_pubkeys = vote_accounts
+        .current
+        .iter()
+        .filter_map(|vote_acc| {
+            if validator_identities.contains(&&Pubkey::from_str(&vote_acc.node_pubkey).ok()?) {
+                Some(Pubkey::from_str(&vote_acc.vote_pubkey).ok()?)
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<Pubkey>>();
+
+    Ok(spl_vote_pubkeys)
 }
 
 fn set_cluster(rpc_url: Option<String>) -> Cluster {

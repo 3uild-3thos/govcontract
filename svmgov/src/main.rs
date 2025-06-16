@@ -1,4 +1,5 @@
 use anchor_client::anchor_lang::declare_program;
+use anchor_lang::prelude::Pubkey;
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use env_logger;
@@ -34,6 +35,10 @@ struct Cli {
     #[arg(short, long, help = "Custom rpc url", global = true)]
     rpc_url: Option<String>,
 
+    /// ONLY FOR TESTING
+    #[arg(short, long, help = "Validator key for testing only", global = true)]
+    validator: Pubkey,
+
     /// Subcommands for the CLI
     #[command(subcommand)]
     command: Commands,
@@ -68,7 +73,10 @@ enum Commands {
         start_epoch: u64,
 
         /// Length in epochs for the proposal to go active for support and eventually voting.
-        #[arg(long, help = "The length of the voting period for the proposal in epochs")]
+        #[arg(
+            long,
+            help = "The length of the voting period for the proposal in epochs"
+        )]
         length: u64,
     },
 
@@ -203,7 +211,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
             title,
             description,
             start_epoch,
-            length
+            length,
         } => {
             instructions::create_proposal(
                 title.to_string(),
@@ -213,6 +221,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 cli.rpc_url,
                 *start_epoch,
                 *length,
+                cli.validator,
             )
             .await?;
         }
@@ -222,6 +231,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 proposal_id.to_string(),
                 cli.identity_keypair,
                 cli.rpc_url,
+                cli.validator,
             )
             .await?;
         }
@@ -239,6 +249,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 *abstain_votes,
                 cli.identity_keypair,
                 cli.rpc_url,
+                // cli.validator,
             )
             .await?;
         }
@@ -256,24 +267,33 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 *abstain_votes,
                 cli.identity_keypair,
                 cli.rpc_url,
+                cli.validator,
             )
             .await?;
         }
 
         Commands::TallyVotes { proposal_id } => {
-            instructions::tally_votes(proposal_id.to_string(), cli.identity_keypair, cli.rpc_url)
-                .await?;
+            instructions::tally_votes(
+                proposal_id.to_string(),
+                cli.identity_keypair,
+                cli.rpc_url,
+                cli.validator,
+            )
+            .await?;
         }
 
         Commands::ListProposals { status } => {
             commands::list_proposals(cli.rpc_url, status.clone()).await?;
         }
-        
+
         Commands::GetProposal { proposal_id } => {
             commands::get_proposal(cli.rpc_url, proposal_id).await?;
         }
 
-        Commands::ListVotes { proposal_id, verbose } => {
+        Commands::ListVotes {
+            proposal_id,
+            verbose,
+        } => {
             commands::list_votes(cli.rpc_url, proposal_id, *verbose).await?;
         }
     }
