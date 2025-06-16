@@ -14,7 +14,7 @@ pub struct TallyVotes<'info> {
     #[account(mut, constraint = proposal.author == signer.key())]
     pub signer: Signer<'info>, // Authority to trigger the tally
     /// CHECK:
-    pub validator: AccountInfo<'info>,
+    // pub validator: AccountInfo<'info>,
     /// CHECK: Vote account is too big to deserialize, so we check on owner and size, then compare node_pubkey with signer
     #[account(
         constraint = spl_vote_account.owner == &vote_program::ID,
@@ -46,7 +46,7 @@ impl<'info> TallyVotes<'info> {
         // Validator identity must be part of the Vote account
         require_keys_eq!(
             node_pubkey,
-            self.validator.key(),
+            self.signer.key(),
             GovernanceError::InvalidVoteAccount
         );
 

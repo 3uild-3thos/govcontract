@@ -15,7 +15,7 @@ use crate::govcontract::program::Govcontract;
 pub async fn setup_all(
     keypair_path: Option<String>,
     rpc_url: Option<String>,
-    validator: Pubkey,
+    // validator: Pubkey,
 ) -> Result<(Arc<Keypair>, Pubkey, Program<Arc<Keypair>>)> {
     // Step 1: Load the identity keypair
     let identity_keypair = load_identity_keypair(keypair_path)?;
@@ -31,7 +31,7 @@ pub async fn setup_all(
     // Step 4: Find the vote account using the program's RpcClient
     let rpc_client = program.rpc();
     let validator_identity = identity_keypair_arc.pubkey();
-    let vote_account = find_spl_vote_account(&validator, &rpc_client).await?;
+    let vote_account = find_spl_vote_account(&validator_identity, &rpc_client).await?;
 
     // Step 5: Return all variables
     Ok((identity_keypair_arc, vote_account, program))

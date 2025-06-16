@@ -16,7 +16,6 @@ pub async fn cast_vote(
     abstain: u64,
     identity_keypair: Option<String>,
     rpc_url: Option<String>,
-    validator: Pubkey,
 ) -> Result<()> {
     // Validate that the total basis points sum to 10,000 (100%)
     if votes_for + votes_against + abstain != 10_000 {
@@ -28,10 +27,10 @@ pub async fn cast_vote(
         .map_err(|_| anyhow!("Invalid proposal ID: {}", proposal_id))?;
 
     // Load identity keypair, set up cluster and rpc_client, find native vote accunt
-    let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url, validator).await?;
+    let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
 
     // Derive the vote PDA using the seeds ["vote", proposal, signer]
-    let vote_seeds = &[b"vote", proposal_pubkey.as_ref(), validator.as_ref()];
+    let vote_seeds = &[b"vote", proposal_pubkey.as_ref(), payer.pubkey().as_ref()];
     let (vote_pda, _bump) = Pubkey::find_program_address(vote_seeds, &program.id());
 
     // Build and send the transaction
@@ -44,7 +43,7 @@ pub async fn cast_vote(
         })
         .accounts(accounts::CastVote {
             signer: payer.pubkey(),
-            validator,
+            // validator,
             vote_account,
             proposal: proposal_pubkey,
             vote: vote_pda,

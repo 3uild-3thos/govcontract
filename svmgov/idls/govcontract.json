@@ -26,10 +26,7 @@
           "signer": true
         },
         {
-          "name": "validator"
-        },
-        {
-          "name": "vote_account"
+          "name": "spl_vote_account"
         },
         {
           "name": "proposal",
@@ -55,7 +52,7 @@
               },
               {
                 "kind": "account",
-                "path": "validator"
+                "path": "signer"
               }
             ]
           }
@@ -99,10 +96,7 @@
           "signer": true
         },
         {
-          "name": "validator"
-        },
-        {
-          "name": "vote_account"
+          "name": "spl_vote_account"
         },
         {
           "name": "proposal",
@@ -128,7 +122,7 @@
               },
               {
                 "kind": "account",
-                "path": "validator"
+                "path": "signer"
               }
             ]
           }
@@ -180,10 +174,7 @@
           "signer": true
         },
         {
-          "name": "validator"
-        },
-        {
-          "name": "vote_account"
+          "name": "spl_vote_account"
         },
         {
           "name": "proposal",
@@ -208,7 +199,7 @@
               },
               {
                 "kind": "account",
-                "path": "validator"
+                "path": "signer"
               }
             ]
           }
@@ -252,10 +243,7 @@
           "signer": true
         },
         {
-          "name": "validator"
-        },
-        {
-          "name": "vote_account"
+          "name": "spl_vote_account"
         },
         {
           "name": "proposal",
@@ -284,7 +272,7 @@
               },
               {
                 "kind": "account",
-                "path": "validator"
+                "path": "signer"
               }
             ]
           }
@@ -315,10 +303,7 @@
           "signer": true
         },
         {
-          "name": "validator"
-        },
-        {
-          "name": "vote_account"
+          "name": "spl_vote_account"
         },
         {
           "name": "proposal",
