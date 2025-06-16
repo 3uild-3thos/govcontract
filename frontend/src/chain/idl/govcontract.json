@@ -1,5 +1,5 @@
 {
-  "address": "3mkuhB2crh6BE5zg2wN5JufDXviVv2Vsia9yjCEg7MiH",
+  "address": "AXnkQnEEMBsKcJ1gSXP1aW6tZMGWodzEaoB6b3bRib2r",
   "metadata": {
     "name": "govcontract",
     "version": "0.1.0",
@@ -15,6 +15,9 @@
           "name": "signer",
           "writable": true,
           "signer": true
+        },
+        {
+          "name": "spl_vote_account"
         },
         {
           "name": "proposal",
@@ -70,6 +73,9 @@
           "signer": true
         },
         {
+          "name": "spl_vote_account"
+        },
+        {
           "name": "proposal",
           "writable": true,
           "pda": {
@@ -80,7 +86,7 @@
               },
               {
                 "kind": "arg",
-                "path": "_seed"
+                "path": "seed"
               },
               {
                 "kind": "account",
@@ -96,7 +102,7 @@
       ],
       "args": [
         {
-          "name": "_seed",
+          "name": "seed",
           "type": "u64"
         },
         {
@@ -112,7 +118,7 @@
           "type": "u64"
         },
         {
-          "name": "end_epoch",
+          "name": "voting_length_epochs",
           "type": "u64"
         }
       ]
@@ -125,6 +131,9 @@
           "name": "signer",
           "writable": true,
           "signer": true
+        },
+        {
+          "name": "spl_vote_account"
         },
         {
           "name": "proposal",
@@ -179,6 +188,9 @@
           "signer": true
         },
         {
+          "name": "spl_vote_account"
+        },
+        {
           "name": "proposal",
           "writable": true
         },
@@ -219,6 +231,9 @@
           "signer": true
         },
         {
+          "name": "spl_vote_account"
+        },
+        {
           "name": "proposal",
           "writable": true
         },
@@ -227,7 +242,12 @@
           "address": "11111111111111111111111111111111"
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "finalize",
+          "type": "bool"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -262,36 +282,41 @@
     },
     {
       "code": 6003,
+      "name": "DescriptionInvalid",
+      "msg": "The description of the proposal must point to a github link"
+    },
+    {
+      "code": 6004,
       "name": "InvalidProposalId",
       "msg": "Invalid proposal ID"
     },
     {
-      "code": 6004,
+      "code": 6005,
       "name": "VotingNotStarted",
       "msg": "Voting on proposal not yet started"
     },
     {
-      "code": 6005,
+      "code": 6006,
       "name": "ProposalClosed",
       "msg": "Proposal closed"
     },
     {
-      "code": 6006,
+      "code": 6007,
       "name": "ProposalFinalized",
       "msg": "Proposal finalized"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "InvalidVoteDistribution",
       "msg": "Vote distribution must add up to 100% in Basis Points"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "VotingPeriodNotEnded",
       "msg": "Voting period not yet ended"
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "InvalidVoteAccount",
       "msg": "Invalid vote account, proposal id mismatch"
     }
@@ -387,7 +412,11 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "proposal_id",
+            "name": "validator",
+            "type": "pubkey"
+          },
+          {
+            "name": "proposal",
             "type": "pubkey"
           },
           {
