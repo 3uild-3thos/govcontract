@@ -44,7 +44,6 @@ pub async fn cast_vote(
         })
         .accounts(accounts::CastVote {
             signer: payer.pubkey(),
-            // validator,
             spl_vote_account: vote_account,
             proposal: proposal_pubkey,
             vote: vote_pda,
