@@ -1,5 +1,5 @@
 {
-  "address": "AXnkQnEEMBsKcJ1gSXP1aW6tZMGWodzEaoB6b3bRib2r",
+  "address": "CF3KBmTvdFCAdakXHo42Y1v3vgin8kmBbEXhJPazfiPH",
   "metadata": {
     "name": "govcontract",
     "version": "0.1.0",
@@ -15,6 +15,9 @@
           "name": "signer",
           "writable": true,
           "signer": true
+        },
+        {
+          "name": "validator"
         },
         {
           "name": "spl_vote_account"
@@ -71,6 +74,9 @@
           "name": "signer",
           "writable": true,
           "signer": true
+        },
+        {
+          "name": "validator"
         },
         {
           "name": "spl_vote_account"
@@ -133,6 +139,9 @@
           "signer": true
         },
         {
+          "name": "validator"
+        },
+        {
           "name": "spl_vote_account"
         },
         {
@@ -188,6 +197,9 @@
           "signer": true
         },
         {
+          "name": "validator"
+        },
+        {
           "name": "spl_vote_account"
         },
         {
@@ -229,6 +241,9 @@
           "name": "signer",
           "writable": true,
           "signer": true
+        },
+        {
+          "name": "validator"
         },
         {
           "name": "spl_vote_account"
