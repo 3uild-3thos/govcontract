@@ -33,7 +33,7 @@ pub async fn tally_votes(
 
     // Rpc filter to get Vote accounts for this proposal
     let filter = RpcFilterType::Memcmp(Memcmp::new(
-        8,
+        40,
         MemcmpEncodedBytes::Bytes(proposal_pubkey.to_bytes().to_vec()),
     ));
 
@@ -45,6 +45,8 @@ pub async fn tally_votes(
         batches += 1;
     }
     let mut finalize = false;
+
+    println!("votes {:?}", vote_accounts);
 
     // Tally the votes, 10 at a time
     for (index, votes_chunk) in vote_accounts.chunks(10).enumerate() {
