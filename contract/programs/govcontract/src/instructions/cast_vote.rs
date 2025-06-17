@@ -12,7 +12,7 @@ pub struct CastVote<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
     /// CHECK:
-    // pub validator: AccountInfo<'info>,
+    pub validator: AccountInfo<'info>,
     /// CHECK: Vote account is too big to deserialize, so we check on owner and size, then compare node_pubkey with signer
     #[account(
         constraint = spl_vote_account.owner == &vote_program::ID,
@@ -25,7 +25,8 @@ pub struct CastVote<'info> {
         init,
         payer = signer,
         space = 8 + Vote::INIT_SPACE,
-        seeds = [b"vote", proposal.key().as_ref(), signer.key().as_ref()],
+        // seeds = [b"vote", proposal.key().as_ref(), signer.key().as_ref()],
+        seeds = [b"vote", proposal.key().as_ref(), validator.key().as_ref()],
         bump
     )]
     pub vote: Account<'info, Vote>,
@@ -51,7 +52,8 @@ impl<'info> CastVote<'info> {
         // Validator identity must be part of the Vote account
         require_keys_eq!(
             node_pubkey,
-            self.spl_vote_account.key(),
+            // self.signer.key(),
+            self.validator.key(),
             GovernanceError::InvalidVoteAccount
         );
 
@@ -72,7 +74,8 @@ impl<'info> CastVote<'info> {
 
         // Store the vote distribution in the Vote PDA
         self.vote.set_inner(Vote {
-            validator: self.signer.key(),
+            // validator: self.signer.key(),
+            validator: self.validator.key(),
             proposal: self.proposal.key(),
             for_votes_bp,
             against_votes_bp,

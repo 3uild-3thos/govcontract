@@ -11,10 +11,11 @@ use anchor_lang::{
 
 #[derive(Accounts)]
 pub struct TallyVotes<'info> {
-    #[account(mut, constraint = proposal.author == signer.key())]
+    // #[account(mut, constraint = proposal.author == signer.key())]
+    #[account(mut, constraint = proposal.author == validator.key())]
     pub signer: Signer<'info>, // Authority to trigger the tally
     /// CHECK:
-    // pub validator: AccountInfo<'info>,
+    pub validator: AccountInfo<'info>,
     /// CHECK: Vote account is too big to deserialize, so we check on owner and size, then compare node_pubkey with signer
     #[account(
         constraint = spl_vote_account.owner == &vote_program::ID,
@@ -46,7 +47,8 @@ impl<'info> TallyVotes<'info> {
         // Validator identity must be part of the Vote account
         require_keys_eq!(
             node_pubkey,
-            self.signer.key(),
+            // self.signer.key(),
+            self.validator.key(),
             GovernanceError::InvalidVoteAccount
         );
 
@@ -97,7 +99,7 @@ impl<'info> TallyVotes<'info> {
             );
 
             // Calculate the validator's stake weight in basis points relative to cluster stake
-            let validator_weight_bp = stake_weight_bp!(validator_stake, cluster_stake)?;
+            let validator_weight_bp = stake_weight_bp!(validator_stake as u128, cluster_stake as u128)? as u64;
 
             // Calculate effective votes for each category based on validator's stake weight
             // Validator Weight: (50,000 * 10,000) / 380,000,000 ≈ 13 bp

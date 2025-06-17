@@ -13,14 +13,18 @@ pub async fn support_proposal(
     proposal_id: String,
     identity_keypair: Option<String>,
     rpc_url: Option<String>,
+    validator: Pubkey,
 ) -> Result<()> {
     let proposal_pubkey =
         Pubkey::from_str(&proposal_id).map_err(|_| anyhow!("Invalid proposal ID"))?;
 
     // Load identity keypair, set up cluster and rpc_client, find native vote accunt
-    let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
+    // let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
+    let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url, validator).await?;
 
-    let payer_pubkey = payer.pubkey();
+    // let payer_pubkey = payer.pubkey();
+    let payer_pubkey = validator;
+
     // Derive the support PDA
     let support_seeds = &[b"support", proposal_pubkey.as_ref(), payer_pubkey.as_ref()];
     let (support_pda, _bump) = Pubkey::find_program_address(support_seeds, &program.id());
@@ -31,6 +35,7 @@ pub async fn support_proposal(
         .args(args::SupportProposal {}) // No arguments are required
         .accounts(accounts::SupportProposal {
             signer: payer.pubkey(),
+            validator,
             spl_vote_account: vote_account,
             proposal: proposal_pubkey,
             support: support_pda,

@@ -15,7 +15,7 @@ pub struct SupportProposal<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
     /// CHECK:
-    // pub validator: AccountInfo<'info>,
+    pub validator: AccountInfo<'info>,
     /// CHECK: Vote account is too big to deserialize, so we check on owner and size, then compare node_pubkey with signer
     #[account(
         constraint = spl_vote_account.owner == &vote_program::ID,
@@ -28,7 +28,8 @@ pub struct SupportProposal<'info> {
         init,
         payer = signer,
         space = 8 + Support::INIT_SPACE,
-        seeds = [b"support", proposal.key().as_ref(), signer.key().as_ref()],
+        // seeds = [b"support", proposal.key().as_ref(), signer.key().as_ref()],
+        seeds = [b"support", proposal.key().as_ref(), validator.key().as_ref()],
         bump
     )]
     pub support: Account<'info, Support>,
@@ -48,7 +49,8 @@ impl<'info> SupportProposal<'info> {
         // Validator identity must be part of the Vote account
         require_keys_eq!(
             node_pubkey,
-            self.signer.key(),
+            // self.signer.key(),
+            self.validator.key(),
             GovernanceError::InvalidVoteAccount
         );
 
@@ -62,7 +64,7 @@ impl<'info> SupportProposal<'info> {
         require!(supporter_stake > 0, GovernanceError::NotEnoughStake);
 
         // Calculate the stake weight of this supporter in basis points
-        let supporter_weight_bp = stake_weight_bp!(supporter_stake, cluster_stake)?;
+        let supporter_weight_bp = stake_weight_bp!(supporter_stake as u128, cluster_stake as u128)? as u64;
 
         // Add the supporter's stake weight to the proposal's cluster support
         self.proposal.cluster_support_bp = self
@@ -74,7 +76,8 @@ impl<'info> SupportProposal<'info> {
         // Initialize the support account
         self.support.set_inner(Support {
             proposal: self.proposal.key(),
-            validator: self.signer.key(),
+            // validator: self.signer.key(),
+            validator: self.validator.key(),
             bump: bumps.support,
         });
 
