@@ -1,5 +1,4 @@
 use anchor_client::anchor_lang::declare_program;
-use anchor_lang::prelude::Pubkey;
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use env_logger;

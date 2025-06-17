@@ -13,7 +13,6 @@ pub async fn support_proposal(
     proposal_id: String,
     identity_keypair: Option<String>,
     rpc_url: Option<String>,
-    validator: Pubkey,
 ) -> Result<()> {
     let proposal_pubkey =
         Pubkey::from_str(&proposal_id).map_err(|_| anyhow!("Invalid proposal ID"))?;

@@ -16,7 +16,6 @@ pub async fn modify_vote(
     abstain_votes: u64,
     identity_keypair: Option<String>,
     rpc_url: Option<String>,
-    validator: Pubkey,
 ) -> Result<()> {
     // Validate that the total basis points sum to 10,000
     if for_votes + against_votes + abstain_votes != 10_000 {
