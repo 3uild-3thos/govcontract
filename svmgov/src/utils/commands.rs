@@ -37,7 +37,7 @@ pub async fn list_proposals(
     };
 
     for proposal in filtered_proposals {
-        info!("Proposal: {:#?}", proposal.1);
+        info!("Proposal id: {}, \nProposal {:#?}", proposal.0, proposal.1);
     }
 
     Ok(())
