@@ -4,8 +4,8 @@ import { Connection, Keypair } from "@solana/web3.js";
 
 import idl from "@/chain/idl/govcontract.json";
 
-// const RPC_URL = "https://api.devnet.solana.com";
-const RPC_URL = "https://api.testnet.solana.com";
+const RPC_URL = "https://api.devnet.solana.com";
+// const RPC_URL = "https://api.testnet.solana.com";
 
 export const connection = new Connection(RPC_URL, "confirmed");
 
