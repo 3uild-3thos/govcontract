@@ -163,12 +163,12 @@ This guide provides detailed instructions for compiling, deploying, and testing 
 1. **Run the `cast-vote` Command**:
 
    ```bash
-   ./target/release/svmgov --identity-keypair /path/to/keypair.json --rpc-url https://api.testnet.solana.com cast-vote --proposal-id <PROPOSAL_PDA> --for_votes 6000 --against_votes 3000 --abstain_votes 1000 
+   ./target/release/svmgov --identity-keypair /path/to/keypair.json --rpc-url https://api.testnet.solana.com cast-vote --proposal-id <PROPOSAL_PDA> --for-votes 6000 --against-votes 3000 --abstain-votes 1000 
    ```
 
    - **Arguments**:
      - `--proposal-id`: Proposal PDA from Step 4.
-     - `--for_votes`, `--against_votes`, `--abstain_votes`: Basis points summing to 10,000 (6000 + 3000 + 1000 = 10,000).
+     - `--for-votes`, `--against-votes`, `--abstain-votes`: Basis points summing to 10,000 (6000 + 3000 + 1000 = 10,000).
      - `--identity-keypair`: Keypair with voting stake (>5% of testnet stake).
    - **Output**: Logs a Solana Explorer link (e.g., `info: Vote cast successfully. https://explorer.solana.com/tx/<signature>`).
    - **Verify**:
