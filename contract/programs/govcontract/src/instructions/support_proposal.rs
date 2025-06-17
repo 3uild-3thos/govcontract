@@ -14,8 +14,6 @@ use crate::{
 pub struct SupportProposal<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
-    /// CHECK:
-    pub validator: AccountInfo<'info>,
     /// CHECK: Vote account is too big to deserialize, so we check on owner and size, then compare node_pubkey with signer
     #[account(
         constraint = spl_vote_account.owner == &vote_program::ID,
@@ -28,8 +26,7 @@ pub struct SupportProposal<'info> {
         init,
         payer = signer,
         space = 8 + Support::INIT_SPACE,
-        // seeds = [b"support", proposal.key().as_ref(), signer.key().as_ref()],
-        seeds = [b"support", proposal.key().as_ref(), validator.key().as_ref()],
+        seeds = [b"support", proposal.key().as_ref(), signer.key().as_ref()],
         bump
     )]
     pub support: Account<'info, Support>,
@@ -49,8 +46,7 @@ impl<'info> SupportProposal<'info> {
         // Validator identity must be part of the Vote account
         require_keys_eq!(
             node_pubkey,
-            // self.signer.key(),
-            self.validator.key(),
+            self.signer.key(),
             GovernanceError::InvalidVoteAccount
         );
 
@@ -76,8 +72,7 @@ impl<'info> SupportProposal<'info> {
         // Initialize the support account
         self.support.set_inner(Support {
             proposal: self.proposal.key(),
-            // validator: self.signer.key(),
-            validator: self.validator.key(),
+            validator: self.signer.key(),
             bump: bumps.support,
         });
 

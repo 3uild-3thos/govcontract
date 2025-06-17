@@ -15,15 +15,12 @@ pub async fn create_proposal(
     rpc_url: Option<String>,
     start_epoch: u64,
     length: u64,
-    validator: Pubkey,
 ) -> Result<()> {
     // Load identity keypair, set up cluster and rpc_client, find native vote accunt
-    // let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
-    let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url, validator).await?;
+    let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
     // Generate or use provided seed
     let seed_value = seed.unwrap_or_else(|| rand::random::<u64>());
-    // let payer_pubkey = payer.pubkey();
-    let payer_pubkey = validator;
+    let payer_pubkey = payer.pubkey();
     let proposal_seeds = &[b"proposal", &seed_value.to_le_bytes(), payer_pubkey.as_ref()];
     let (proposal_pda, _bump) = Pubkey::find_program_address(proposal_seeds, &program.id());
 
@@ -39,7 +36,6 @@ pub async fn create_proposal(
         })
         .accounts(accounts::CreateProposal {
             signer: payer.pubkey(),
-            validator,
             spl_vote_account: vote_account,
             proposal: proposal_pda,
             system_program: system_program::ID,

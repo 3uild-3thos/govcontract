@@ -6,8 +6,7 @@ mod utils;
 use anchor_lang::prelude::*;
 use instructions::*;
 
-// declare_id!("AXnkQnEEMBsKcJ1gSXP1aW6tZMGWodzEaoB6b3bRib2r");
-declare_id!("CF3KBmTvdFCAdakXHo42Y1v3vgin8kmBbEXhJPazfiPH");
+declare_id!("AXnkQnEEMBsKcJ1gSXP1aW6tZMGWodzEaoB6b3bRib2r");
 
 #[program]
 pub mod govcontract {

@@ -28,11 +28,9 @@ pub async fn modify_vote(
         .map_err(|_| anyhow!("Invalid proposal ID: {}", proposal_id))?;
 
     // Load identity keypair, set up cluster and rpc_client, find native vote accunt
-    // let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
-    let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url, validator).await?;
+    let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
 
-    // let payer_pubkey = payer.pubkey();
-    let payer_pubkey = validator;
+    let payer_pubkey = payer.pubkey();
 
     // Derive the vote PDA using the seeds ["vote", proposal, signer]
     let vote_seeds = &[b"vote", proposal_pubkey.as_ref(), payer_pubkey.as_ref()];
@@ -48,7 +46,6 @@ pub async fn modify_vote(
         })
         .accounts(accounts::ModifyVote {
             signer: payer.pubkey(),
-            validator,
             spl_vote_account: vote_account,
             proposal: proposal_pubkey,
             vote: vote_pda,

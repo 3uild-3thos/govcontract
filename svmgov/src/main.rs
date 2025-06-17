@@ -35,10 +35,6 @@ struct Cli {
     #[arg(short, long, help = "Custom rpc url", global = true)]
     rpc_url: Option<String>,
 
-    /// ONLY FOR TESTINGAdd commentMore actions
-    #[arg(short, long, help = "Validator key for testing only", global = true)]
-    validator: Option<Pubkey>,
-
     /// Subcommands for the CLI
     #[command(subcommand)]
     command: Commands,
@@ -221,7 +217,6 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 cli.rpc_url,
                 *start_epoch,
                 *length,
-                cli.validator.unwrap(),
             )
             .await?;
         }
@@ -231,8 +226,6 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 proposal_id.to_string(),
                 cli.identity_keypair,
                 cli.rpc_url,
-                cli.validator.unwrap(),
-
             )
             .await?;
         }
@@ -250,8 +243,6 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 *abstain_votes,
                 cli.identity_keypair,
                 cli.rpc_url,
-                cli.validator.unwrap(),
-
             )
             .await?;
         }
@@ -269,8 +260,6 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 *abstain_votes,
                 cli.identity_keypair,
                 cli.rpc_url,
-                cli.validator.unwrap(),
-
             )
             .await?;
         }
@@ -280,8 +269,6 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 proposal_id.to_string(),
                 cli.identity_keypair,
                 cli.rpc_url,
-                cli.validator.unwrap(),
-
             )
             .await?;
         }

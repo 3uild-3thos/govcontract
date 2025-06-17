@@ -21,15 +21,13 @@ pub async fn tally_votes(
     proposal_id: String,
     identity_keypair: Option<String>,
     rpc_url: Option<String>,
-    validator: Pubkey,
 ) -> Result<()> {
     // Parse the proposal ID into a Pubkey
     let proposal_pubkey = Pubkey::from_str(&proposal_id)
         .map_err(|_| anyhow!("Invalid proposal ID: {}", proposal_id))?;
 
     // Load identity keypair, set up cluster and rpc_client, find native vote accunt
-    // let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
-    let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url, validator).await?;
+    let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
 
     // Rpc filter to get Vote accounts for this proposal
     let filter = RpcFilterType::Memcmp(Memcmp::new(
@@ -90,7 +88,6 @@ pub async fn tally_votes(
             .args(args::TallyVotes { finalize })
             .accounts(accounts::TallyVotes {
                 signer: payer.pubkey(),
-                validator,
                 spl_vote_account: vote_account,
                 proposal: proposal_pubkey,
                 system_program: system_program::ID,

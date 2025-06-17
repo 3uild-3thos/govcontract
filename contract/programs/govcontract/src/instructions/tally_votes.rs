@@ -11,11 +11,8 @@ use anchor_lang::{
 
 #[derive(Accounts)]
 pub struct TallyVotes<'info> {
-    // #[account(mut, constraint = proposal.author == signer.key())]
-    #[account(mut, constraint = proposal.author == validator.key())]
+    #[account(mut, constraint = proposal.author == signer.key())]
     pub signer: Signer<'info>, // Authority to trigger the tally
-    /// CHECK:
-    pub validator: AccountInfo<'info>,
     /// CHECK: Vote account is too big to deserialize, so we check on owner and size, then compare node_pubkey with signer
     #[account(
         constraint = spl_vote_account.owner == &vote_program::ID,
@@ -47,11 +44,9 @@ impl<'info> TallyVotes<'info> {
         // Validator identity must be part of the Vote account
         require_keys_eq!(
             node_pubkey,
-            // self.signer.key(),
-            self.validator.key(),
+            self.signer.key(),
             GovernanceError::InvalidVoteAccount
         );
-        msg!("1");
         self.proposal.voting = false;
         require!(!self.proposal.finalized, GovernanceError::ProposalFinalized);
 
@@ -62,11 +57,9 @@ impl<'info> TallyVotes<'info> {
             (remaining.len() % 2).eq(&0),
             GovernanceError::NotEnoughStake
         );
-        msg!("2");
 
         // 3 accounts: Vote + Identity + Spl_vote
         for vote_chunk in remaining.chunks(2) {
-            msg!("3");
 
             // Deserialize the Vote account
             let vote: Account<Vote> = Account::try_from(
@@ -80,8 +73,6 @@ impl<'info> TallyVotes<'info> {
                 vote.proposal == self.proposal.key(),
                 GovernanceError::InvalidVoteAccount
             );
-            msg!("4");
-            msg!("{:#?}", vote_chunk);
 
             // 4 bytes discriminant, 32 bytes node_pubkey
             let node_pubkey = Pubkey::try_from(
@@ -92,9 +83,8 @@ impl<'info> TallyVotes<'info> {
                     .borrow()[4..36],
             )
             .map_err(|_| GovernanceError::InvalidVoteAccount)?;
-            msg!("5");
 
-            // require_keys_eq!(node_pubkey, vote.validator, GovernanceError::InvalidVoteAccount);
+            require_keys_eq!(node_pubkey, vote.validator, GovernanceError::InvalidVoteAccount);
 
             // Validator stake
             let validator_stake = get_epoch_stake_for_vote_account(

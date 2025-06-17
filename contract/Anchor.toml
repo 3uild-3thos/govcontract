@@ -9,8 +9,7 @@ skip-lint = false
 govcontract = "5BU5KsgU7dpLj6t9tZWy7297rLvpfVHhdTkQrx1MJJ2x"
 
 [programs.devnet]
-# govcontract = "AXnkQnEEMBsKcJ1gSXP1aW6tZMGWodzEaoB6b3bRib2r"
-govcontract = "CF3KBmTvdFCAdakXHo42Y1v3vgin8kmBbEXhJPazfiPH"
+govcontract = "AXnkQnEEMBsKcJ1gSXP1aW6tZMGWodzEaoB6b3bRib2r"
 
 [programs.testnet]
 govcontract = "AXnkQnEEMBsKcJ1gSXP1aW6tZMGWodzEaoB6b3bRib2r"

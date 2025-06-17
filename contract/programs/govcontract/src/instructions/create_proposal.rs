@@ -11,8 +11,6 @@ use crate::{error::GovernanceError, stake_weight_bp, state::Proposal};
 pub struct CreateProposal<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
-    /// CHECK:
-    pub validator: AccountInfo<'info>,
     /// CHECK: Vote account is too big to deserialize, so we check on owner and size, then compare node_pubkey with signer
     #[account(
         constraint = spl_vote_account.owner == &vote_program::ID @ ProgramError::InvalidAccountOwner,
@@ -22,8 +20,7 @@ pub struct CreateProposal<'info> {
     #[account(
         init,
         payer = signer,
-        // seeds = [b"proposal", seed.to_le_bytes().as_ref(), &signer.key.to_bytes()],
-        seeds = [b"proposal", seed.to_le_bytes().as_ref(), &validator.key.to_bytes()],
+        seeds = [b"proposal", seed.to_le_bytes().as_ref(), &signer.key.to_bytes()],
         bump,
         space = Proposal::INIT_SPACE,
     )]
@@ -59,8 +56,7 @@ impl<'info> CreateProposal<'info> {
         // Validator identity must be part of the Vote account
         require_keys_eq!(
             node_pubkey,
-            // self.signer.key(),
-            self.validator.key(),
+            self.signer.key(),
             GovernanceError::InvalidVoteAccount
         );
 
@@ -83,8 +79,7 @@ impl<'info> CreateProposal<'info> {
             stake_weight_bp!(proposer_stake as u128, cluster_stake as u128)?;
 
         self.proposal.set_inner(Proposal {
-            // author: self.signer.key(),
-            author: self.validator.key(),
+            author: self.signer.key(),
             title,
             description,
             creation_epoch: current_epoch,
