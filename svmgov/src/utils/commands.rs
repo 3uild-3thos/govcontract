@@ -93,7 +93,7 @@ pub async fn get_proposal(rpc_url: Option<String>, proposal_id: &String) -> Resu
 
     let proposal_acc = program.account::<Proposal>(proposal_pubkey).await?;
 
-    info!("Proposal {} \n {:#?}", proposal_id, proposal_acc);
+    info!("\nProposal {} \n {:#?}", proposal_id, proposal_acc);
 
     Ok(())
 }
