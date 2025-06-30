@@ -1,16 +1,18 @@
 use anchor_client::{
     Client, Cluster, Program,
-    solana_client::{
-        nonblocking::rpc_client::RpcClient,
-    },
+    solana_client::nonblocking::rpc_client::RpcClient,
     solana_sdk::{signature::Keypair, signer::Signer},
 };
 use anchor_lang::{Id, prelude::Pubkey};
 use anyhow::{Result, anyhow};
+use chrono::prelude::*;
+use std::{fmt, fs, str::FromStr, sync::Arc};
+use textwrap::wrap;
 
-use std::{fs, str::FromStr, sync::Arc};
-
-use crate::govcontract::program::Govcontract;
+use crate::govcontract::{
+    accounts::{Proposal, Vote},
+    program::Govcontract,
+};
 
 pub async fn setup_all(
     keypair_path: Option<String>,
@@ -130,16 +132,9 @@ fn set_cluster(rpc_url: Option<String>) -> Cluster {
         let wss_url = rpc_url.replace("https://", "wss://");
         Cluster::Custom(rpc_url, wss_url)
     } else {
-        //
-        // Cluster::Custom(
-        //     "https://api.mainnet-beta.solana.com".to_string(),
-        //     "wss://api.mainnet-beta.solana.com".to_string(),
-        // )
         Cluster::Custom(
-            "https://turbine-solanad-4cde.devnet.rpcpool.com/168dd64f-ce5e-4e19-a836-f6482ad6b396"
-                .to_string(),
-            "wss://turbine-solanad-4cde.devnet.rpcpool.com/168dd64f-ce5e-4e19-a836-f6482ad6b396"
-                .to_string(),
+            "https://api.mainnet-beta.solana.com".to_string(),
+            "wss://api.mainnet-beta.solana.com".to_string(),
         )
     }
 }
@@ -155,6 +150,124 @@ pub fn anchor_client_setup(
     let client = Client::new(cluster, payer.clone());
     let program = client.program(Govcontract::id())?;
     Ok(program)
+}
+
+impl fmt::Display for Proposal {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let author_str = self.author.to_string();
+        let short_author = format!(
+            "{}...{}",
+            &author_str[..4],
+            &author_str[author_str.len() - 4..]
+        );
+        let wrapped_desc = wrap(&self.description, 80);
+
+        writeln!(f, "{:<25} {}", "Proposal:", self.title)?;
+        writeln!(f, "{:<25} {}", "Author:", short_author)?;
+        writeln!(f, "{:<25} epoch {}", "Created:", self.creation_epoch)?;
+        writeln!(f, "{:<25} epoch {}", "Starts:", self.start_epoch)?;
+        writeln!(f, "{:<25} epoch {}", "Ends:", self.end_epoch)?;
+        writeln!(
+            f,
+            "{:<25} {} bp ({:.2}%)",
+            "Proposer Stake Weight:",
+            self.proposer_stake_weight_bp,
+            self.proposer_stake_weight_bp as f64 / 100.0
+        )?;
+        writeln!(
+            f,
+            "{:<25} {} bp ({:.2}%)",
+            "Cluster Support:",
+            self.cluster_support_bp,
+            self.cluster_support_bp as f64 / 100.0
+        )?;
+        writeln!(
+            f,
+            "{:<25} {} bp ({:.2}%)",
+            "For Votes:",
+            self.for_votes_bp,
+            self.for_votes_bp as f64 / 100.0
+        )?;
+        writeln!(
+            f,
+            "{:<25} {} bp ({:.2}%)",
+            "Against Votes:",
+            self.against_votes_bp,
+            self.against_votes_bp as f64 / 100.0
+        )?;
+        writeln!(
+            f,
+            "{:<25} {} bp ({:.2}%)",
+            "Abstain Votes:",
+            self.abstain_votes_bp,
+            self.abstain_votes_bp as f64 / 100.0
+        )?;
+        writeln!(
+            f,
+            "{:<25} {}",
+            "Voting:",
+            if self.voting { "Yes" } else { "No" }
+        )?;
+        writeln!(
+            f,
+            "{:<25} {}",
+            "Finalized:",
+            if self.finalized { "Yes" } else { "No" }
+        )?;
+        writeln!(f, "{:<25}", "Description:")?;
+        for line in wrapped_desc {
+            writeln!(f, "  {}", line)?;
+        }
+        Ok(())
+    }
+}
+
+impl fmt::Display for Vote {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let validator_str = self.validator.to_string();
+        let short_validator = format!(
+            "{}...{}",
+            &validator_str[..4],
+            &validator_str[validator_str.len() - 4..]
+        );
+        let proposal_str = self.proposal.to_string();
+        let short_proposal = format!(
+            "{}...{}",
+            &proposal_str[..4],
+            &proposal_str[proposal_str.len() - 4..]
+        );
+        let timestamp = Utc
+            .timestamp_opt(self.vote_timestamp, 0)
+            .single()
+            .unwrap_or_default();
+        let formatted_timestamp = timestamp.format("%Y-%m-%d %H:%M:%S UTC").to_string();
+
+        writeln!(f, "{:<15} {}", "Validator:", short_validator)?;
+        writeln!(f, "{:<15} {}", "Proposal:", short_proposal)?;
+        writeln!(
+            f,
+            "{:<15} {} bp ({:.2}%)",
+            "For Votes:",
+            self.for_votes_bp,
+            self.for_votes_bp as f64 / 100.0
+        )?;
+        writeln!(
+            f,
+            "{:<15} {} bp ({:.2}%)",
+            "Against Votes:",
+            self.against_votes_bp,
+            self.against_votes_bp as f64 / 100.0
+        )?;
+        writeln!(
+            f,
+            "{:<15} {} bp ({:.2}%)",
+            "Abstain Votes:",
+            self.abstain_votes_bp,
+            self.abstain_votes_bp as f64 / 100.0
+        )?;
+        writeln!(f, "{:<15} {}", "Timestamp:", formatted_timestamp)?;
+        Ok(())
+    }
 }
 
 #[cfg(test)]

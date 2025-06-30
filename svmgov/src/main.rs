@@ -264,12 +264,8 @@ async fn handle_command(cli: Cli) -> Result<()> {
         }
 
         Commands::TallyVotes { proposal_id } => {
-            instructions::tally_votes(
-                proposal_id.to_string(),
-                cli.identity_keypair,
-                cli.rpc_url,
-            )
-            .await?;
+            instructions::tally_votes(proposal_id.to_string(), cli.identity_keypair, cli.rpc_url)
+                .await?;
         }
 
         Commands::ListProposals { status } => {

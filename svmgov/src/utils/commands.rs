@@ -7,7 +7,6 @@ use anchor_client::{
 
 use anchor_lang::prelude::Pubkey;
 use anyhow::{Result, anyhow};
-use log::info;
 
 use crate::{
     anchor_client_setup,
@@ -37,7 +36,7 @@ pub async fn list_proposals(
     };
 
     for proposal in filtered_proposals {
-        info!("Proposal id: {}, \nProposal {:#?}", proposal.0, proposal.1);
+        println!("\nProposal id: {}, \n{}", proposal.0, proposal.1);
     }
 
     Ok(())
@@ -67,14 +66,11 @@ pub async fn list_votes(
 
     if verbose {
         for vote in votes {
-            info!(
-                "Vote for proposal {}: {:#?} \n {:#?}",
-                proposal_id, vote.0, vote.1
-            );
+            println!("Vote for proposal {}: \n{}", proposal_id, vote.1);
         }
     } else {
         for vote in votes {
-            info!("Vote for proposal {}: {:#?}", proposal_id, vote.0);
+            println!("Vote for proposal {}: {}", proposal_id, vote.0);
         }
     }
 
@@ -93,7 +89,7 @@ pub async fn get_proposal(rpc_url: Option<String>, proposal_id: &String) -> Resu
 
     let proposal_acc = program.account::<Proposal>(proposal_pubkey).await?;
 
-    info!("\nProposal {} \n {:#?}", proposal_id, proposal_acc);
+    println!("Proposal id:  {} \n{}", proposal_id, proposal_acc);
 
     Ok(())
 }

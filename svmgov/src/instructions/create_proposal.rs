@@ -5,7 +5,6 @@ use crate::{
 use anchor_client::solana_sdk::{pubkey::Pubkey, signer::Signer};
 use anchor_lang::system_program;
 use anyhow::Result;
-use log::info;
 
 pub async fn create_proposal(
     proposal_title: String,
@@ -21,7 +20,11 @@ pub async fn create_proposal(
     // Generate or use provided seed
     let seed_value = seed.unwrap_or_else(|| rand::random::<u64>());
     let payer_pubkey = payer.pubkey();
-    let proposal_seeds = &[b"proposal", &seed_value.to_le_bytes(), payer_pubkey.as_ref()];
+    let proposal_seeds = &[
+        b"proposal",
+        &seed_value.to_le_bytes(),
+        payer_pubkey.as_ref(),
+    ];
     let (proposal_pda, _bump) = Pubkey::find_program_address(proposal_seeds, &program.id());
 
     // Build and send the transaction
@@ -43,7 +46,7 @@ pub async fn create_proposal(
         .send()
         .await?;
 
-    info!(
+    println!(
         "Proposal {} created. https://explorer.solana.com/tx/{}",
         proposal_pda, sig
     );

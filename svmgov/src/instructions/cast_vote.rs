@@ -7,7 +7,6 @@ use crate::{
 use anchor_client::solana_sdk::{pubkey::Pubkey, signer::Signer};
 use anchor_lang::system_program;
 use anyhow::{Result, anyhow};
-use log::info;
 
 pub async fn cast_vote(
     proposal_id: String,
@@ -53,7 +52,7 @@ pub async fn cast_vote(
         .send()
         .await?;
 
-    info!(
+    println!(
         "Vote cast successfully. https://explorer.solana.com/tx/{}",
         sig
     );

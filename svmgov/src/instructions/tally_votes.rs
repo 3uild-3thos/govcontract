@@ -101,7 +101,7 @@ pub async fn tally_votes(
     }
     let proposal = program.account::<Proposal>(proposal_pubkey).await?;
 
-    info!("Tally finished: {:#?}", proposal);
+    println!("Tally finished: {}", proposal);
 
     Ok(())
 }

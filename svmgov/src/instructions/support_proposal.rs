@@ -7,7 +7,6 @@ use crate::{
 use anchor_client::solana_sdk::{pubkey::Pubkey, signer::Signer};
 use anchor_lang::system_program;
 use anyhow::{Result, anyhow};
-use log::info;
 
 pub async fn support_proposal(
     proposal_id: String,
@@ -40,7 +39,7 @@ pub async fn support_proposal(
         .send()
         .await?;
 
-    info!("Proposal supported. https://explorer.solana.com/tx/{}", sig);
+    println!("Proposal supported. https://explorer.solana.com/tx/{}", sig);
 
     Ok(())
 }
