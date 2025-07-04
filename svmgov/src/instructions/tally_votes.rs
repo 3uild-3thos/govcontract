@@ -41,6 +41,8 @@ pub async fn tally_votes(
 
     if (vote_accounts.len() % 10) > 0 {
         batches += 1;
+    } else {
+       return Err(anyhow!(""));
     }
     let mut finalize = false;
 

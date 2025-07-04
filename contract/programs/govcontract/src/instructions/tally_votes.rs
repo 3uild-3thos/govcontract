@@ -11,8 +11,8 @@ use anchor_lang::{
 
 #[derive(Accounts)]
 pub struct TallyVotes<'info> {
-    #[account(mut, constraint = proposal.author == signer.key())]
-    pub signer: Signer<'info>, // Authority to trigger the tally
+    #[account(mut)]
+    pub signer: Signer<'info>, // Signer to trigger the tally
     /// CHECK: Vote account is too big to deserialize, so we check on owner and size, then compare node_pubkey with signer
     #[account(
         constraint = spl_vote_account.owner == &vote_program::ID,
@@ -39,13 +39,13 @@ impl<'info> TallyVotes<'info> {
 
         // 4 bytes discriminant, 32 bytes node_pubkey
         let node_pubkey = Pubkey::try_from(&self.spl_vote_account.data.borrow()[4..36])
-            .map_err(|_| ProgramError::Custom(1))?;
+            .map_err(|_| GovernanceError::FailedDeserializeNodePubkey )?;
 
         // Validator identity must be part of the Vote account
         require_keys_eq!(
             node_pubkey,
             self.signer.key(),
-            GovernanceError::InvalidVoteAccount
+            GovernanceError::VoteNodePubkeyMismatch
         );
         self.proposal.voting = false;
         require!(!self.proposal.finalized, GovernanceError::ProposalFinalized);
@@ -65,7 +65,7 @@ impl<'info> TallyVotes<'info> {
             let vote: Account<Vote> = Account::try_from(
                 vote_chunk
                     .get(0)
-                    .ok_or(GovernanceError::InvalidVoteAccount)?,
+                    .ok_or(GovernanceError::NotEnoughAccounts)?,
             )?;
 
             // Validate the Vote account belongs to this proposal
@@ -78,19 +78,19 @@ impl<'info> TallyVotes<'info> {
             let node_pubkey = Pubkey::try_from(
                 &vote_chunk
                     .get(1)
-                    .ok_or(GovernanceError::InvalidVoteAccount)?
+                    .ok_or(GovernanceError::NotEnoughAccounts)?
                     .data
                     .borrow()[4..36],
             )
-            .map_err(|_| GovernanceError::InvalidVoteAccount)?;
+            .map_err(|_| GovernanceError::FailedDeserializeNodePubkey)?;
 
-            require_keys_eq!(node_pubkey, vote.validator, GovernanceError::InvalidVoteAccount);
+            require_keys_eq!(node_pubkey, vote.validator, GovernanceError::VoteNodePubkeyMismatch);
 
             // Validator stake
             let validator_stake = get_epoch_stake_for_vote_account(
                 vote_chunk
                     .get(1)
-                    .ok_or(GovernanceError::InvalidVoteAccount)?
+                    .ok_or(GovernanceError::NotEnoughAccounts)?
                     .key,
             );
 

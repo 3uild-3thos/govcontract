@@ -8,6 +8,8 @@ use utils::{commands, utils::*};
 
 declare_program!(govcontract);
 
+// anchor idl init --provider.cluster http://86.109.14.141:8899 --provider.wallet /path/to/wallet.json -f target/idl/my_program.json 4igPvJuaCVUCwqaQ3q7L8Y5JL5G1vsDCfLGMMoNthmSt
+
 #[derive(Parser)]
 #[command(
     name = "svmgov",

@@ -24,4 +24,10 @@ pub enum GovernanceError {
     VotingPeriodNotEnded,
     #[msg("Invalid vote account, proposal id mismatch")]
     InvalidVoteAccount,
+    #[msg("Failed to deserialize node_pubkey from Vote account")]
+    FailedDeserializeNodePubkey,
+    #[msg("Deserialized node_pubkey from Vote accounts does not match")]
+    VoteNodePubkeyMismatch,
+    #[msg("Not enough accounts for tally")]
+    NotEnoughAccounts,
 }
