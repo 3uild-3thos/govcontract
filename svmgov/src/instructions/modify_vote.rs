@@ -1,5 +1,5 @@
-use std::str::FromStr;
 use log::debug;
+use std::str::FromStr;
 
 use crate::{
     govcontract::client::{accounts, args},
@@ -17,24 +17,30 @@ pub async fn modify_vote(
     identity_keypair: Option<String>,
     rpc_url: Option<String>,
 ) -> Result<()> {
-    debug!("modify_vote called with proposal_id: {}, for_votes: {}, against_votes: {}, abstain_votes: {}, identity_keypair: {:?}, rpc_url: {:?}", proposal_id, for_votes, against_votes, abstain_votes, identity_keypair, rpc_url);
+    debug!(
+        "modify_vote called with proposal_id: {}, for_votes: {}, against_votes: {}, abstain_votes: {}, identity_keypair: {:?}, rpc_url: {:?}",
+        proposal_id, for_votes, against_votes, abstain_votes, identity_keypair, rpc_url
+    );
 
     // Validate that the total basis points sum to 10,000
     if for_votes + against_votes + abstain_votes != 10_000 {
-        return Err(anyhow!("Total vote basis points must sum to 10,000: got {}", for_votes + against_votes + abstain_votes));
+        return Err(anyhow!(
+            "Total vote basis points must sum to 10,000: got {}",
+            for_votes + against_votes + abstain_votes
+        ));
     }
 
     // Parse the proposal ID into a Pubkey
-    let proposal_pubkey = match Pubkey::from_str(&proposal_id) {
-        Ok(pubkey) => pubkey,
-        Err(_) => {
-            return Err(anyhow!("Invalid proposal ID: {}", proposal_id));
-        }
-    };
+    let proposal_pubkey = Pubkey::from_str(&proposal_id)
+        .map_err(|_| anyhow!("Invalid proposal ID: {}", proposal_id))?;
 
     // Load identity keypair, set up cluster and rpc_client, find native vote account
     let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
-    debug!("Setup complete: payer={}, vote_account={}", payer.pubkey(), vote_account);
+    debug!(
+        "Setup complete: payer={}, vote_account={}",
+        payer.pubkey(),
+        vote_account
+    );
 
     let payer_pubkey = payer.pubkey();
     // Derive the vote PDA using the seeds ["vote", proposal, signer]

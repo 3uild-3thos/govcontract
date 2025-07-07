@@ -209,7 +209,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
         cli.rpc_url,
         cli.command
     );
-    
+
     match &cli.command {
         Commands::CreateProposal {
             seed,

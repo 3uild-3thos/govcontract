@@ -6,7 +6,7 @@ use anchor_client::{
 use anchor_lang::{Id, prelude::Pubkey};
 use anyhow::{Result, anyhow};
 use chrono::prelude::*;
-use std::{collections::{HashMap, HashSet}, fmt, fs, str::FromStr, sync::Arc};
+use std::{collections::HashMap, fmt, fs, str::FromStr, sync::Arc};
 use textwrap::wrap;
 
 use crate::govcontract::{
@@ -110,13 +110,19 @@ pub async fn find_spl_vote_accounts(
     validator_identities: Vec<&Pubkey>,
     rpc_client: &RpcClient,
 ) -> Result<Vec<Pubkey>> {
-    log::debug!("find_spl_vote_accounts called with validator_identities: {:?}", validator_identities);
-    
+    log::debug!(
+        "find_spl_vote_accounts called with validator_identities: {:?}",
+        validator_identities
+    );
+
     let vote_accounts = rpc_client.get_vote_accounts().await?;
-    log::debug!("Fetched {} current vote accounts from RPC", vote_accounts.current.len());
-    
+    log::debug!(
+        "Fetched {} current vote accounts from RPC",
+        vote_accounts.current.len()
+    );
+
     let mut spl_vote_pubkeys = Vec::with_capacity(validator_identities.len());
-    
+
     // Map of node_pubkey to vote_pubkey
     let vote_account_map = vote_accounts
         .current
@@ -127,15 +133,25 @@ pub async fn find_spl_vote_accounts(
                 .map(|pk| Ok((pk, Pubkey::from_str(&vote_acc.vote_pubkey)?)))
         })
         .collect::<Result<HashMap<_, _>>>()?;
-    log::debug!("Constructed vote_account_map with {} entries", vote_account_map.len());
+    log::debug!(
+        "Constructed vote_account_map with {} entries",
+        vote_account_map.len()
+    );
 
     // Build the result in the order of validator_identities
     for identity in validator_identities {
         if let Some(vote_pubkey) = vote_account_map.get(identity) {
-            log::debug!("Found SPL vote pubkey {} for validator identity {}", vote_pubkey, identity);
+            log::debug!(
+                "Found SPL vote pubkey {} for validator identity {}",
+                vote_pubkey,
+                identity
+            );
             spl_vote_pubkeys.push(*vote_pubkey);
         } else {
-            log::debug!("No SPL vote account found for validator identity {}", identity);
+            log::debug!(
+                "No SPL vote account found for validator identity {}",
+                identity
+            );
             return Err(anyhow!(
                 "No SPL vote account found for validator identity {}",
                 identity

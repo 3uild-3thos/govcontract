@@ -19,14 +19,19 @@ pub async fn cast_vote(
     // Debug: Log input parameters
     log::debug!(
         "cast_vote: proposal_id={}, votes_for={}, votes_against={}, abstain={}",
-        proposal_id, votes_for, votes_against, abstain
+        proposal_id,
+        votes_for,
+        votes_against,
+        abstain
     );
 
     // Validate that the total basis points sum to 10,000 (100%)
     if votes_for + votes_against + abstain != 10_000 {
         log::debug!(
             "Validation failed: votes_for={} + votes_against={} + abstain={} != 10,000",
-            votes_for, votes_against, abstain
+            votes_for,
+            votes_against,
+            abstain
         );
         return Err(anyhow!("Total vote basis points must sum to 10,000"));
     }
@@ -45,21 +50,23 @@ pub async fn cast_vote(
     };
 
     // Debug: Log before calling setup_all
-    log::debug!("Calling setup_all with identity_keypair={:?}, rpc_url={:?}", identity_keypair, rpc_url);
+    log::debug!(
+        "Calling setup_all with identity_keypair={:?}, rpc_url={:?}",
+        identity_keypair,
+        rpc_url
+    );
     let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
     let payer_pubkey = payer.pubkey();
     log::debug!(
         "setup_all complete: payer_pubkey={}, vote_account={}",
-        payer_pubkey, vote_account
+        payer_pubkey,
+        vote_account
     );
 
     // Derive the vote PDA using the seeds ["vote", proposal, signer]
     let vote_seeds = &[b"vote", proposal_pubkey.as_ref(), payer_pubkey.as_ref()];
     let (vote_pda, bump) = Pubkey::find_program_address(vote_seeds, &program.id());
-    log::debug!(
-        "Derived vote PDA: vote_pda={}, bump={}",
-        vote_pda, bump
-    );
+    log::debug!("Derived vote PDA: vote_pda={}, bump={}", vote_pda, bump);
 
     // Debug: Log before sending transaction
     log::debug!("Building and sending CastVote transaction");
