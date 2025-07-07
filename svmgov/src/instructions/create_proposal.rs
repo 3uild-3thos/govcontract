@@ -15,10 +15,29 @@ pub async fn create_proposal(
     start_epoch: u64,
     length: u64,
 ) -> Result<()> {
+    log::debug!(
+        "create_proposal: title={}, description={}, seed={:?}, identity_keypair={:?}, rpc_url={:?}, start_epoch={}, length={}",
+        proposal_title,
+        proposal_description,
+        seed,
+        identity_keypair,
+        rpc_url,
+        start_epoch,
+        length
+    );
+
     // Load identity keypair, set up cluster and rpc_client, find native vote accunt
     let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
+    log::debug!(
+        "setup_all complete: payer_pubkey={}, vote_account={}",
+        payer.pubkey(),
+        vote_account
+    );
+
     // Generate or use provided seed
     let seed_value = seed.unwrap_or_else(|| rand::random::<u64>());
+    log::debug!("Using seed_value: {}", seed_value);
+
     let payer_pubkey = payer.pubkey();
     let proposal_seeds = &[
         b"proposal",
@@ -26,8 +45,10 @@ pub async fn create_proposal(
         payer_pubkey.as_ref(),
     ];
     let (proposal_pda, _bump) = Pubkey::find_program_address(proposal_seeds, &program.id());
+    log::debug!("Derived proposal PDA: {}", proposal_pda);
 
     // Build and send the transaction
+    log::debug!("Building and sending CreateProposal transaction");
     let sig = program
         .request()
         .args(args::CreateProposal {
@@ -45,6 +66,7 @@ pub async fn create_proposal(
         })
         .send()
         .await?;
+    log::debug!("Transaction sent successfully: signature={}", sig);
 
     println!(
         "Proposal {} created. https://explorer.solana.com/tx/{}",

@@ -13,22 +13,41 @@ pub async fn support_proposal(
     identity_keypair: Option<String>,
     rpc_url: Option<String>,
 ) -> Result<()> {
-    let proposal_pubkey =
-        Pubkey::from_str(&proposal_id).map_err(|_| anyhow!("Invalid proposal ID"))?;
+    log::debug!(
+        "support_proposal: proposal_id={}, identity_keypair={:?}, rpc_url={:?}",
+        proposal_id,
+        identity_keypair,
+        rpc_url
+    );
 
-    // Load identity keypair, set up cluster and rpc_client, find native vote accunt
+    let proposal_pubkey = match Pubkey::from_str(&proposal_id) {
+        Ok(pubkey) => {
+            log::debug!("Parsed proposal_pubkey: {}", pubkey);
+            pubkey
+        }
+        Err(_) => {
+            log::debug!("Invalid proposal_id: {}", proposal_id);
+            return Err(anyhow!("Invalid proposal ID"));
+        }
+    };
+
     let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
+    log::debug!(
+        "setup_all complete: payer_pubkey={}, vote_account={}",
+        payer.pubkey(),
+        vote_account
+    );
 
     let payer_pubkey = payer.pubkey();
 
-    // Derive the support PDA
     let support_seeds = &[b"support", proposal_pubkey.as_ref(), payer_pubkey.as_ref()];
     let (support_pda, _bump) = Pubkey::find_program_address(support_seeds, &program.id());
+    log::debug!("Derived support_pda: {}", support_pda);
 
-    // Build and send the transaction
+    log::debug!("Building and sending SupportProposal transaction");
     let sig = program
         .request()
-        .args(args::SupportProposal {}) // No arguments are required
+        .args(args::SupportProposal {})
         .accounts(accounts::SupportProposal {
             signer: payer.pubkey(),
             spl_vote_account: vote_account,
@@ -38,6 +57,7 @@ pub async fn support_proposal(
         })
         .send()
         .await?;
+    log::debug!("Transaction sent successfully: signature={}", sig);
 
     println!("Proposal supported. https://explorer.solana.com/tx/{}", sig);
 

@@ -2,6 +2,7 @@ use anchor_client::anchor_lang::declare_program;
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use env_logger;
+use log::debug;
 mod instructions;
 mod utils;
 use utils::{commands, utils::*};
@@ -41,7 +42,7 @@ struct Cli {
     command: Commands,
 }
 
-#[derive(Subcommand)]
+#[derive(Subcommand, Debug)]
 enum Commands {
     #[command(
         about = "Create a proposal to vote on",
@@ -202,6 +203,13 @@ enum Commands {
 }
 
 async fn handle_command(cli: Cli) -> Result<()> {
+    log::debug!(
+        "Handling command: identity_keypair={:?}, rpc_url={:?}, command={:?}",
+        cli.identity_keypair,
+        cli.rpc_url,
+        cli.command
+    );
+    
     match &cli.command {
         Commands::CreateProposal {
             seed,
