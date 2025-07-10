@@ -1,5 +1,3 @@
-import { PublicKey } from "@solana/web3.js";
-import { program } from "@/chain/helpers";
 import { useGetValidators } from "./useGetValidators";
 import { useVotes } from "./useVotes";
 import { useQuery } from "@tanstack/react-query";

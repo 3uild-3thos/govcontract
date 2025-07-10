@@ -103,7 +103,11 @@ export function TopVotersMobile() {
                     </div>
                   </div>
                 </TableCell>
-                <TableCell>{formatNumber(validator.voteWeight)}</TableCell>
+                <TableCell>
+                  {validator.voteWeight
+                    ? formatNumber(validator.voteWeight)
+                    : "-"}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

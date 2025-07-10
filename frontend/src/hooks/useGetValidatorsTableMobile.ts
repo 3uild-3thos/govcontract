@@ -10,7 +10,7 @@ const VOTE_TYPES: VoteTypeText[] = ["Yes", "No", "Abstain", "None"];
 interface ValidatorVote {
   address: string;
   voteType: VoteTypeText;
-  voteWeight: number;
+  voteWeight?: number;
 }
 
 export const useGetValidatorsTableMobile = () => {

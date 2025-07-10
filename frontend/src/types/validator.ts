@@ -9,6 +9,7 @@ export interface Validator {
   commission: number;
   asn?: string;
   description?: string;
+  stake_weight?: number;
   // rank: number;
   // identity: string;
   // last_vote: number;
@@ -41,7 +42,6 @@ export interface Validator {
   // commission_score: number;
   // first_epoch_distance: number;
   // epoch_distance_score: number;
-  // stake_weight: number;
   // above_halt_line: boolean;
   // stake_weight_score: number;
   // withdraw_authority_score: number;
