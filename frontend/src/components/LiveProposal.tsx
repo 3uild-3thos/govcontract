@@ -63,7 +63,7 @@ export const LiveProposal = ({
         </Cell>
         <hr className="h-[1px] border-dao-border" />
         <Cell>
-          <Cell.Title>{timeRemaining}</Cell.Title>
+          <Cell.Title>{timeRemaining}hrs</Cell.Title>
           <Cell.Description>Time Remaining</Cell.Description>
         </Cell>
         <hr className="h-[1px] border-dao-border" />
