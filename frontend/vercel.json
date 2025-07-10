@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/solana/:path*",
+      "destination": "http://86.109.14.141:8899/:path*"
+    }
+  ]
+}
