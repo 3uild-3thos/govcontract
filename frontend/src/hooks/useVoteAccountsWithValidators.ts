@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useGetValidators } from "./useGetValidators"; // your existing hook
 import { PublicKey } from "@solana/web3.js";
 import { useVotes } from "./useVotes";
-import { program } from "@/chain/helpers";
 import { Vote } from "@/chain";
 import { Validator } from "@/types";
 
@@ -30,6 +29,7 @@ export interface VoteAccountsWithValidators {
 export const useVoteAccountsWithValidators = () => {
   const { data: validators, isLoading: isLoadingValidators } =
     useGetValidators();
+
   const { data: votes, isLoading: isLoadingVotes } = useVotes();
 
   const enabled =
@@ -49,38 +49,27 @@ export const useVoteAccountsWithValidators = () => {
       const validatorMap: ValidatorMap = {};
 
       for (const vote of votes) {
-        for (const validator of validators) {
-          const proposal = vote.account.proposalId;
+        const validator = validators.find(
+          (v) => vote.account.validator.toBase58() === v.vote_identity
+        );
+        if (validator) {
+          const votePk = vote.publicKey.toBase58();
 
-          const validatorPubkey = new PublicKey(validator.vote_identity);
-          const [expectedVotePda] = PublicKey.findProgramAddressSync(
-            [
-              Buffer.from("vote"),
-              proposal.toBuffer(),
-              validatorPubkey.toBuffer(),
-            ],
-            program.programId
-          );
+          const entry: VoteValidatorEntry = {
+            votePDA: vote.publicKey,
+            voteAccount: vote,
+            validator,
+          };
 
-          if (expectedVotePda.equals(vote.publicKey)) {
-            const votePk = vote.publicKey.toBase58();
+          voteMap[votePk] = entry;
 
-            const entry: VoteValidatorEntry = {
-              votePDA: vote.publicKey,
-              voteAccount: vote,
-              validator,
-            };
-
-            voteMap[votePk] = entry;
-
-            if (validator) {
-              const valId = validator.identity;
-              if (!validatorMap[valId]) {
-                validatorMap[valId] = [];
-              }
-              validatorMap[valId].push(entry);
-            }
+          const valId = validator.vote_identity;
+          if (!validatorMap[valId]) {
+            validatorMap[valId] = [];
           }
+          validatorMap[valId].push(entry);
+        } else {
+          console.warn("no validator found");
         }
       }
 

@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { VotesBubbleChart } from "./VotesBubbleChart";
 import { useGetValidatorsBubbleChart, ValidatorInfo } from "@/hooks";
 import { useCallback, useEffect, useState } from "react";
+import { roundDecimals } from "@/lib/helpers";
 
 const splitColor: Record<string, string> = {
   yes: "bg-green-icon-active",
@@ -70,7 +71,7 @@ export const ValidatorDetail = () => {
         <div className="flex flex-wrap gap-2 mb-6 max-md:hidden">
           <Pill>
             <VoteIcon className="h-3.5 w-3.5" />
-            {selectedValidator?.description} Votes
+            {selectedValidator?.voteCount} Votes
           </Pill>
         </div>
 
@@ -86,7 +87,9 @@ export const ValidatorDetail = () => {
           </Cell>
           <hr className="h-[1px] border-dao-border" />
           <Cell>
-            <Cell.Title>{selectedValidator?.staked} SOL</Cell.Title>
+            <Cell.Title>
+              {selectedValidator?.staked.toLocaleString()} SOL
+            </Cell.Title>
             <Cell.Description>Total Staked</Cell.Description>
           </Cell>
           <hr className="h-[1px] border-dao-border" />
@@ -103,7 +106,9 @@ export const ValidatorDetail = () => {
                   key={name}
                   className="flex flex-col p-3 gradient-bg !border-none !rounded-lg max-w-[117px] w-full"
                 >
-                  <div className="font-medium">{split}%</div>
+                  <div className="font-medium">
+                    {roundDecimals(split.toString())}%
+                  </div>
                   <div className="flex items-center text-sm gap-x-1">
                     <div
                       className={cn("w-2 h-2 rounded-full", splitColor[name])}

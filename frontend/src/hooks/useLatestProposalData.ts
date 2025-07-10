@@ -34,7 +34,6 @@ interface LatestProposal {
 export const useLatestProposalData = () => {
   const { data: validators, isLoading: isLoadingValidators } =
     useGetValidators();
-  // const { data: votes, isLoading: isLoadingVotes } = useVotes();
 
   const { data: votesHashMap, isLoading: isLoadingVotesHashMap } =
     useVoteAccountsWithValidators();
@@ -42,8 +41,6 @@ export const useLatestProposalData = () => {
   const enabled =
     !isLoadingValidators &&
     validators !== undefined &&
-    // !isLoadingVotes &&
-    // votes !== undefined &&
     !isLoadingVotesHashMap &&
     votesHashMap !== undefined;
 
@@ -75,13 +72,11 @@ const getData = async (
     return (acc += curr.activated_stake);
   }, 0);
 
-  console.log("proposals:", proposals);
-
   // filter out finished
   // sort bt creationEpoch
   // grab the first one
   const latest = proposals
-    .filter((p) => !p.account.finalized)
+    // .filter((p) => !p.account.finalized)
     .sort(
       (a, b) =>
         Number(b.account.creationEpoch) - Number(a.account.creationEpoch)
@@ -96,10 +91,7 @@ const getData = async (
   let votesCount = 0;
   // for each vote, get validator's activated_stake
   for (const { voteAccount, validator } of votes) {
-    if (
-      !latest.publicKey.equals(voteAccount.account.proposalId) ||
-      !validator
-    ) {
+    if (!latest.publicKey.equals(voteAccount.account.proposal) || !validator) {
       continue;
     }
 
@@ -172,34 +164,6 @@ const getData = async (
     requiredQuorum,
     currentQuorumPct,
   };
-  console.log("latestProposalData:", latestProposalData);
 
   return latestProposalData;
 };
-
-// type ProposalAccountData = Awaited<
-//   ReturnType<Program<Govcontract>["account"]["proposal"]["fetch"]>
-// >;
-
-// async function isVotingActive(
-//   connection: Connection,
-//   proposal: ProposalAccountData
-// ): Promise<boolean> {
-//   const { epoch } = await connection.getEpochInfo();
-
-//   return (
-//     proposal.voting &&
-//     epoch >= Number(proposal.startEpoch) &&
-//     epoch < Number(proposal.endEpoch) &&
-//     !proposal.finalized
-//   );
-// }
-
-// async function canTallyProposal(
-//   connection: Connection,
-//   proposal: ProposalAccountData
-// ): Promise<boolean> {
-//   const { epoch } = await connection.getEpochInfo();
-
-//   return !proposal.finalized && epoch >= Number(proposal.endEpoch);
-// }

@@ -37,7 +37,6 @@ export const ProposalDetails = () => {
     currentQuorumPct,
   } = data;
 
-  console.log("data:", data);
   return (
     <div className="grid md:grid-cols-2 gap-8 md:gap-14">
       {/* Left Column - Proposal Details */}

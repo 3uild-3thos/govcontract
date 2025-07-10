@@ -41,7 +41,7 @@ export const LiveResults = ({
               <span>{forVotes}%</span>
             </div>
             <div className="text-dao-text-label text-sm z-1">
-              {forStake} SOL
+              {forStake.toLocaleString()} SOL
             </div>
           </div>
         </div>
@@ -59,7 +59,7 @@ export const LiveResults = ({
               <span>{againstVotes}%</span>
             </div>
             <div className="text-dao-text-label text-sm z-1">
-              {againstStake} SOL
+              {againstStake.toLocaleString()} SOL
             </div>
           </div>
         </div>
@@ -77,7 +77,7 @@ export const LiveResults = ({
               <span>{abstainVotes}%</span>
             </div>
             <div className="text-dao-text-label text-sm z-1">
-              {abstainStake} SOL
+              {abstainStake.toLocaleString()} SOL
             </div>
           </div>
         </div>
@@ -95,7 +95,7 @@ export const LiveResults = ({
               <span>{undecidedVotes}%</span>
             </div>
             <div className="text-dao-text-label text-sm z-1">
-              {undecidedStake} SOL
+              {undecidedStake.toLocaleString()} SOL
             </div>
           </div>
         </div>

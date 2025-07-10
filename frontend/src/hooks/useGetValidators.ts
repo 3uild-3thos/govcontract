@@ -1,4 +1,6 @@
-import { getValidators } from "@/data";
+import { connection } from "@/chain/helpers";
+import { getStakeWizValidators } from "@/data";
+import { Validator, Validators } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 
 export const useGetValidators = () => {
@@ -6,101 +8,50 @@ export const useGetValidators = () => {
     staleTime: 1000 * 120, // 2 minutes
     queryKey: ["validators"],
     queryFn: getValidators,
-    select: ({ data }) => data,
-    // select: ({ data }): Validators => [
-    //   {
-    //     ...mockValidatorData,
-    //     name: "vote account 1",
-    //     vote_identity: "AHYic562KhgtAEkb1rSesqS87dFYRcfXb4WwWus3Zc9C", // dummy pk,
-    //     image: "https://www.svgrepo.com/show/340131/debug.svg",
-    //     activated_stake: mockValidatorData.activated_stake * 2,
-    //   },
-    //   {
-    //     ...mockValidatorData,
-    //     name: "vote account 2",
-    //     vote_identity: "CuNSEWbYCD6GqR5Jr4PHvdt4Jniv78gxtMukiSgg5TSq", // dummy pk
-    //     image: "https://www.svgrepo.com/show/340131/debug.svg",
-    //     activated_stake: mockValidatorData.activated_stake / 2,
-    //   },
-    //   {
-    //     ...mockValidatorData,
-    //     name: "vote account 3",
-    //     vote_identity: "4QfaUKZ94xfHQF78XCWE39mi2z1x5B7G5dWAvkKySczx", // dummy pk
-    //     image: "https://www.svgrepo.com/show/340131/debug.svg",
-    //   },
-    //   ...data.slice(0, 1), // TODO: remove this slice
-    // ],
   });
 };
 
-// const mockValidatorData = {
-//   rank: 1068,
-//   identity: "HEL1USMZKAL2odpNBj2oCjffnFGaYwmbGmyewGv1e2TU",
-//   vote_identity: "he1iusunGwqrNtafDtLdhsUQDFvo13z9sUa36PauBtk",
-//   last_vote: 337775448,
-//   root_slot: 337775417,
-//   credits: 581945248,
-//   epoch_credits: 6114922,
-//   activated_stake: 13795407.942981862,
-//   version: "2.2.12",
-//   delinquent: false,
-//   skip_rate: 0.015243902439024,
-//   updated_at: "2025-05-04 14:46:30.628618+02",
-//   first_epoch_with_stake: 595,
-//   name: "Helius",
-//   keybase: "",
-//   description: "Crypto's #1 developer platform. Exclusively on Solana.",
-//   website: "https://helius.dev",
-//   commission: 0,
-//   image:
-//     "https://media.stakewiz.com/he1iusunGwqrNtafDtLdhsUQDFvo13z9sUa36PauBtk-orange360x360.png",
-//   ip_latitude: "50.1109221",
-//   ip_longitude: "8.6821267",
-//   ip_city: "Frankfurt",
-//   ip_country: "Germany",
-//   ip_asn: "AS20326",
-//   ip_org: "Teraswitch Networks Inc.",
-//   mod: false,
-//   is_jito: true,
-//   jito_commission_bps: 0,
-//   admin_comment: null,
-//   vote_success: 99.58,
-//   vote_success_score: 19.92,
-//   wiz_skip_rate: 0.015253203172666,
-//   skip_rate_score: 14.97,
-//   info_score: 10,
-//   commission_score: 10,
-//   first_epoch_distance: 186,
-//   epoch_distance_score: 10,
-//   stake_weight: 3.51,
-//   above_halt_line: true,
-//   stake_weight_score: 0,
-//   withdraw_authority_score: 0,
-//   asn: "AS20326",
-//   asn_concentration: 18.7,
-//   asn_concentration_score: -8.13,
-//   tpu_ip: "64.130.57.131",
-//   tpu_ip_concentration: 0,
-//   tpu_ip_concentration_score: 0,
-//   uptime: 100,
-//   uptime_score: 20,
-//   wiz_score: 42.56,
-//   version_valid: true,
-//   city_concentration: 21.51,
-//   city_concentration_score: -8.6,
-//   invalid_version_score: 0,
-//   superminority_penalty: -20,
-//   score_version: 56,
-//   no_voting_override: false,
-//   epoch: 781,
-//   epoch_slot_height: 383481,
-//   asncity_concentration: 4.46,
-//   asncity_concentration_score: -5.59,
-//   skip_rate_ignored: false,
-//   stake_ratio: 1,
-//   credit_ratio: 99.7,
-//   apy_estimate: 7.36,
-//   staking_apy: 7.39,
-//   jito_apy: 1.33,
-//   total_apy: 8.72,
-// };
+const getValidators = async (): Promise<Validators> => {
+  // const voteAccounts = await connection.getVoteAccounts();
+
+  const [stakeWizValidators, voteAccounts] = await Promise.allSettled([
+    getStakeWizValidators(),
+    connection.getVoteAccounts(),
+  ]);
+
+  if (
+    stakeWizValidators.status === "fulfilled" &&
+    voteAccounts.status === "fulfilled"
+  ) {
+    const allVotes = [
+      ...voteAccounts.value.current,
+      ...voteAccounts.value.delinquent,
+    ];
+
+    // fpr each vote account, check if there is info from stake wiz validator data
+    let unknownCount = 0;
+    return allVotes.map((vote) => {
+      const matchedValidator = stakeWizValidators.value.data.find(
+        (v) => v.vote_identity === vote.nodePubkey
+      );
+
+      if (matchedValidator) {
+        return { ...matchedValidator };
+      }
+      unknownCount++;
+      const unknownValidator: Validator = {
+        name: `Unknown validator #${unknownCount}`,
+        activated_stake: vote.activatedStake,
+        version: "-",
+        description: "",
+        asn: "-",
+        vote_identity: vote.nodePubkey,
+        commission: vote.commission,
+      };
+
+      return unknownValidator;
+    });
+  }
+
+  return [];
+};

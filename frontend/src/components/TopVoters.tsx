@@ -19,6 +19,7 @@ import {
 import { ChevronLeft, ChevronRight, Download, Search } from "lucide-react";
 import { SortBy, useGetValidatorsTable, ValidatorsTableRow } from "@/hooks";
 import { useDebounceCallback } from "usehooks-ts";
+import { roundDecimals } from "@/lib/helpers";
 
 const downloadCsvData = (rawData: ValidatorsTableRow[]) => {
   const data = rawData.map(
@@ -70,8 +71,6 @@ export function TopVoters() {
   const [sortBy, setSortBy] = useState<SortBy>("weight");
 
   const { data: validatorsData, isLoading } = useGetValidatorsTable(sortBy);
-
-  console.log("isLoading:", isLoading);
 
   // first, apply search term
   const searchedData = useMemo(() => {
@@ -222,7 +221,7 @@ export function TopVoters() {
                   <div className="flex gap-x-6">
                     <div className="flex flex-col">
                       <div className="font-medium">
-                        {validator.voterSplits.yes}%
+                        {roundDecimals(validator.voterSplits.yes.toString())}%
                       </div>
                       <div className="flex items-center text-sm gap-x-1">
                         <div className="w-2 h-2 rounded-full bg-green-500"></div>
@@ -231,7 +230,7 @@ export function TopVoters() {
                     </div>
                     <div className="flex flex-col">
                       <div className="font-medium">
-                        {validator.voterSplits.no}%
+                        {roundDecimals(validator.voterSplits.no.toString())}%
                       </div>
                       <div className="flex items-center text-sm gap-x-1">
                         <div className="w-2 h-2 rounded-full bg-red-500"></div>
@@ -240,7 +239,10 @@ export function TopVoters() {
                     </div>
                     <div className="flex flex-col">
                       <div className="font-medium">
-                        {validator.voterSplits.abstain}%
+                        {roundDecimals(
+                          validator.voterSplits.abstain.toString()
+                        )}
+                        %
                       </div>
                       <div className="flex items-center text-sm gap-x-1">
                         <div className="w-2 h-2 rounded-full bg-orange-500"></div>
@@ -249,7 +251,10 @@ export function TopVoters() {
                     </div>
                     <div className="flex flex-col">
                       <div className="font-medium">
-                        {validator.voterSplits.undecided}%
+                        {roundDecimals(
+                          validator.voterSplits.undecided.toString()
+                        )}
+                        %
                       </div>
                       <div className="flex items-center text-sm gap-x-1">
                         <div className="w-2 h-2 rounded-full bg-gray-500"></div>

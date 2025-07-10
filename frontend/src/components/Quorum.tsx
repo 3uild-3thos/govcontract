@@ -29,7 +29,9 @@ export const Quorum = () => {
           <div className="text-xl font-bold text-dao-text-primary">
             {REQUIRED_QUORUM_PCT * 100}%
           </div>
-          <div className="text-dao-text-secondary text-sm">2,115,564 SOL</div>
+          <div className="text-dao-text-secondary text-sm">
+            {data.requiredQuorum.toLocaleString()} SOL
+          </div>
         </div>
 
         <p className="text-sm text-dao-text-muted leading-relaxed md:max-w-80">

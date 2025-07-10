@@ -29,7 +29,7 @@ export interface Support {
 }
 
 interface RawVote {
-  proposalId: PublicKey;
+  proposal: PublicKey;
   forVotesBp: BN;
   againstVotesBp: BN;
   abstainVotesBp: BN;

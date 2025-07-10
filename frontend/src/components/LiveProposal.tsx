@@ -1,5 +1,6 @@
 import { Clock, VoteIcon } from "lucide-react";
 import { Cell, Pill, RealmsLink } from "./ui";
+import { getDaysLeft } from "@/helpers";
 
 interface Props {
   title: string;
@@ -21,6 +22,8 @@ export const LiveProposal = ({
   currentQuorumPct,
 }: Props) => {
   const timeRemaining = endDate?.toLocaleDateString() || "-";
+  const daysLeft = endDate ? getDaysLeft(endDate) : "-";
+
   return (
     <div>
       <div className="text-xs font-medium tracking-wider text-dao-text-secondary uppercase mb-3">
@@ -39,7 +42,7 @@ export const LiveProposal = ({
         <Pill>{currentQuorumPct}% Quorum</Pill>
         <Pill>
           <Clock className="h-3.5 w-3.5" />
-          <span>{endDate?.toLocaleDateString() || "-"} Days left</span>
+          <span>{daysLeft || "-"} Days left</span>
         </Pill>
         <Pill>
           <VoteIcon className="h-3.5 w-3.5" />
@@ -70,7 +73,7 @@ export const LiveProposal = ({
         </Cell>
         <hr className="h-[1px] border-dao-border" />
         <Cell>
-          <Cell.Title>{requiredQuorum} SOL</Cell.Title>
+          <Cell.Title>{requiredQuorum.toLocaleString()} SOL</Cell.Title>
           <Cell.Description>Quorum Required</Cell.Description>
         </Cell>
       </div>

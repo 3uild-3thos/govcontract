@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/govcontract.json`.
  */
 export type Govcontract = {
-  address: "3mkuhB2crh6BE5zg2wN5JufDXviVv2Vsia9yjCEg7MiH";
+  address: "AXnkQnEEMBsKcJ1gSXP1aW6tZMGWodzEaoB6b3bRib2r";
   metadata: {
     name: "govcontract";
     version: "0.1.0";
@@ -21,6 +21,9 @@ export type Govcontract = {
           name: "signer";
           writable: true;
           signer: true;
+        },
+        {
+          name: "splVoteAccount";
         },
         {
           name: "proposal";
@@ -76,6 +79,9 @@ export type Govcontract = {
           signer: true;
         },
         {
+          name: "splVoteAccount";
+        },
+        {
           name: "proposal";
           writable: true;
           pda: {
@@ -118,7 +124,7 @@ export type Govcontract = {
           type: "u64";
         },
         {
-          name: "endEpoch";
+          name: "votingLengthEpochs";
           type: "u64";
         }
       ];
@@ -131,6 +137,9 @@ export type Govcontract = {
           name: "signer";
           writable: true;
           signer: true;
+        },
+        {
+          name: "splVoteAccount";
         },
         {
           name: "proposal";
@@ -185,6 +194,9 @@ export type Govcontract = {
           signer: true;
         },
         {
+          name: "splVoteAccount";
+        },
+        {
           name: "proposal";
           writable: true;
         },
@@ -225,6 +237,9 @@ export type Govcontract = {
           signer: true;
         },
         {
+          name: "splVoteAccount";
+        },
+        {
           name: "proposal";
           writable: true;
         },
@@ -233,7 +248,12 @@ export type Govcontract = {
           address: "11111111111111111111111111111111";
         }
       ];
-      args: [];
+      args: [
+        {
+          name: "finalize";
+          type: "bool";
+        }
+      ];
     }
   ];
   accounts: [
@@ -268,38 +288,58 @@ export type Govcontract = {
     },
     {
       code: 6003;
+      name: "descriptionInvalid";
+      msg: "The description of the proposal must point to a github link";
+    },
+    {
+      code: 6004;
       name: "invalidProposalId";
       msg: "Invalid proposal ID";
     },
     {
-      code: 6004;
+      code: 6005;
       name: "votingNotStarted";
       msg: "Voting on proposal not yet started";
     },
     {
-      code: 6005;
+      code: 6006;
       name: "proposalClosed";
       msg: "Proposal closed";
     },
     {
-      code: 6006;
+      code: 6007;
       name: "proposalFinalized";
       msg: "Proposal finalized";
     },
     {
-      code: 6007;
+      code: 6008;
       name: "invalidVoteDistribution";
       msg: "Vote distribution must add up to 100% in Basis Points";
     },
     {
-      code: 6008;
+      code: 6009;
       name: "votingPeriodNotEnded";
       msg: "Voting period not yet ended";
     },
     {
-      code: 6009;
+      code: 6010;
       name: "invalidVoteAccount";
       msg: "Invalid vote account, proposal id mismatch";
+    },
+    {
+      code: 6011;
+      name: "failedDeserializeNodePubkey";
+      msg: "Failed to deserialize node_pubkey from Vote account";
+    },
+    {
+      code: 6012;
+      name: "voteNodePubkeyMismatch";
+      msg: "Deserialized node_pubkey from Vote accounts does not match";
+    },
+    {
+      code: 6013;
+      name: "notEnoughAccounts";
+      msg: "Not enough accounts for tally";
     }
   ];
   types: [
@@ -393,7 +433,11 @@ export type Govcontract = {
         kind: "struct";
         fields: [
           {
-            name: "proposalId";
+            name: "validator";
+            type: "pubkey";
+          },
+          {
+            name: "proposal";
             type: "pubkey";
           },
           {
