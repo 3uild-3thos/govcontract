@@ -30,4 +30,14 @@ pub enum GovernanceError {
     VoteNodePubkeyMismatch,
     #[msg("Not enough accounts for tally")]
     NotEnoughAccounts,
+    #[msg("Cluster stake cannot be zero")]
+    InvalidClusterStake,
+    #[msg("Start epoch must be current or future epoch")]
+    InvalidStartEpoch,
+    #[msg("Voting length must be bigger than 0")]
+    InvalidVotingLength,
+    #[msg("Invalid Vote account version")]
+    InvalidVoteAccountVersion,
+    #[msg("Invaid Vote account size")]
+    InvalidVoteAccountSize,
 }
