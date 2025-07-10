@@ -1,6 +1,6 @@
 import { Clock, VoteIcon } from "lucide-react";
 import { Cell, Pill, RealmsLink } from "./ui";
-import { getDaysLeft } from "@/helpers";
+import { getDaysLeft, getHoursLeft } from "@/helpers";
 
 interface Props {
   title: string;
@@ -21,7 +21,7 @@ export const LiveProposal = ({
   requiredQuorum,
   currentQuorumPct,
 }: Props) => {
-  const timeRemaining = endDate?.toLocaleDateString() || "-";
+  const timeRemaining = endDate ? getHoursLeft(endDate) : "-";
   const daysLeft = endDate ? getDaysLeft(endDate) : "-";
 
   return (
