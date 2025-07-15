@@ -47,7 +47,7 @@ export const Footer = () => {
         <div className="flex justify-center gap-6 mb-8">
           <Link
             className="text-gray-400 hover:text-white transition-colors"
-            href="https://github.com/"
+            href="https://github.com/3uild-3thos/govcontract"
             target="_blank"
           >
             <GithubIcon />
@@ -75,23 +75,26 @@ export const Footer = () => {
         <div className="text-sm text-dao-text-secondary mb-4">
           © 2025 Realms.Today LLC |{" "}
           <Link
-            href="#"
+            href="https://www.realms.today/terms"
             className="hover:text-white transition-colors underline"
+            target="_blank"
           >
             Terms
           </Link>{" "}
           |{" "}
           <Link
-            href="#"
+            href="https://www.realms.today/privacy-policy"
             className="hover:text-white transition-colors underline"
+            target="_blank"
           >
             Privacy Policy
           </Link>
         </div>
 
         <Link
-          href="#"
+          href="https://docs.realms.today/"
           className="hover:text-white transition-colors text-dao-text-secondary text-sm block mb-4"
+          target="_blank"
         >
           Read the Docs
         </Link>
@@ -99,8 +102,9 @@ export const Footer = () => {
         <div className="text-dao-text-secondary text-md">
           Powered by{" "}
           <Link
-            href="#"
+            href="https://www.realms.today/"
             className="text-white font-bold hover:text-gray-200 transition-colors"
+            target="_blank"
           >
             Realms.Today
           </Link>
