@@ -1,6 +1,7 @@
 import { Clock, VoteIcon } from "lucide-react";
 import { Cell, Pill, RealmsLink } from "./ui";
 import { getDaysLeft, getHoursLeft } from "@/helpers";
+import { getProposalPhase } from "@/lib/proposals";
 
 interface Props {
   title: string;
@@ -10,6 +11,8 @@ interface Props {
   currentEpoch: number | undefined;
   requiredQuorum: number;
   currentQuorumPct: number;
+  voting: boolean;
+  finalized: boolean;
 }
 
 export const LiveProposal = ({
@@ -20,9 +23,13 @@ export const LiveProposal = ({
   currentEpoch,
   requiredQuorum,
   currentQuorumPct,
+  voting,
+  finalized,
 }: Props) => {
   const timeRemaining = endDate ? getHoursLeft(endDate) : "-";
   const daysLeft = endDate ? getDaysLeft(endDate) : "-";
+
+  const currentPhase = getProposalPhase(voting, finalized);
 
   return (
     <div>
@@ -58,7 +65,7 @@ export const LiveProposal = ({
 
       <div className="space-y-3">
         <Cell className="max-md:hidden">
-          <Cell.Title>Voting Phase</Cell.Title>
+          <Cell.Title>{currentPhase || "-"} Phase</Cell.Title>
           <Cell.Description>Current State</Cell.Description>
         </Cell>
         <hr className="h-[1px] border-dao-border" />

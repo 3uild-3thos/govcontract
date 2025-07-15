@@ -35,6 +35,8 @@ export const ProposalDetails = () => {
     currentEpoch,
     requiredQuorum,
     currentQuorumPct,
+    voting,
+    finalized,
   } = data;
 
   return (
@@ -48,6 +50,8 @@ export const ProposalDetails = () => {
         currentEpoch={currentEpoch}
         requiredQuorum={requiredQuorum}
         currentQuorumPct={currentQuorumPct}
+        voting={voting}
+        finalized={finalized}
       />
 
       {/* Right Column - Live Results */}

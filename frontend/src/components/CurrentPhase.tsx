@@ -1,6 +1,7 @@
 import { useLatestProposalData } from "@/hooks";
 import { PhaseTimeline } from "./ui";
 import { CurrentPhaseLoadingSkeleton } from "./CurrentPhaseLoadingSkeleton";
+import { getProposalPhase } from "@/lib/proposals";
 
 export const CurrentPhase = () => {
   const { data, isLoading } = useLatestProposalData();
@@ -11,10 +12,7 @@ export const CurrentPhase = () => {
 
   const { voting, finalized } = data;
 
-  let currentPhase: "Support" | "Voting" | "Finished" | undefined = undefined;
-  if (!voting && !finalized) currentPhase = "Support";
-  else if (voting && !finalized) currentPhase = "Voting";
-  else if (!voting && finalized) currentPhase = "Finished";
+  const currentPhase = getProposalPhase(voting, finalized);
 
   return (
     <div className="grid md:grid-cols-12 gap-14">
