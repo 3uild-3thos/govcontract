@@ -92,7 +92,7 @@ export const Footer = () => {
         </div>
 
         <Link
-          href="https://docs.realms.today/"
+          href="https://github.com/3uild-3thos/govcontract#solana-validator-governance-system"
           className="hover:text-white transition-colors text-dao-text-secondary text-sm block mb-4"
           target="_blank"
         >
