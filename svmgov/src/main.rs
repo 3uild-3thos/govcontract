@@ -2,7 +2,6 @@ use anchor_client::anchor_lang::declare_program;
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use env_logger;
-use log::debug;
 mod instructions;
 mod utils;
 use utils::{commands, utils::*};
