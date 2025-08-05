@@ -32,22 +32,13 @@ interface LatestProposal {
 }
 
 export const useLatestProposalData = () => {
-  const { data: validators, isLoading: isLoadingValidators } =
-    useGetValidators();
+  const { data: validators } = useGetValidators();
 
-  const { data: votesHashMap, isLoading: isLoadingVotesHashMap } =
-    useVoteAccountsWithValidators();
-
-  const enabled =
-    !isLoadingValidators &&
-    validators !== undefined &&
-    !isLoadingVotesHashMap &&
-    votesHashMap !== undefined;
+  const { data: votesHashMap } = useVoteAccountsWithValidators();
 
   return useQuery({
     staleTime: 1000 * 120, // 2 minutes
-    queryKey: ["latestProposalData"],
-    enabled,
+    queryKey: ["latestProposalData", validators?.length, votesHashMap],
     queryFn: () => getData(validators, votesHashMap),
   });
 };
@@ -58,12 +49,9 @@ const getData = async (
   votesHashMap: VoteAccountsWithValidators | undefined
 ) => {
   const proposals = await getAllProposals();
-
   if (validators === undefined)
     throw new Error("Unable to get validators info");
   // if (votes === undefined) throw new Error("Unable to get votes info");
-  if (votesHashMap === undefined)
-    throw new Error("Unable to get votesHashMap info");
 
   if (proposals.length === 0) throw new Error("No proposals found");
   // if (votes.length === 0) throw new Error("No votes found");
@@ -78,6 +66,50 @@ const getData = async (
   const latest = proposals
     // .filter((p) => !p.account.finalized)
     .sort((a, b) => b.account.creationEpoch.cmp(a.account.creationEpoch))[0];
+
+  const { title, description, voting, finalized, endEpoch } = latest.account;
+
+  let endDate: Date | undefined = undefined;
+  try {
+    const epochSchedule = await connection.getEpochSchedule();
+    const endEpochFirstSlot = epochSchedule.getSlotsInEpoch(
+      endEpoch.toNumber()
+    );
+    const endDateBlockTime = await connection.getBlockTime(endEpochFirstSlot);
+    endDate = endDateBlockTime ? new Date(endDateBlockTime * 1000) : undefined;
+  } catch (error) {
+    console.error("error getting end epoch to date:", error);
+  }
+  let currentEpoch: number | undefined = undefined;
+  try {
+    currentEpoch = (await connection.getEpochInfo()).epoch;
+  } catch (error) {
+    console.error("error getting currentEpoch:", error);
+  }
+
+  if (votesHashMap === undefined) {
+    const latestProposalDataEmpty: LatestProposal = {
+      title,
+      description,
+      voting,
+      finalized,
+      forVotesPercentage: 0,
+      againstVotesPercentage: 0,
+      abstainVotesPercentage: 0,
+      undecidedVotesPercentage: 0,
+      forStake: 0,
+      againstStake: 0,
+      abstainStake: 0,
+      undecidedStake: totalStake,
+      votesCount: 0,
+      endDate,
+      currentEpoch,
+      requiredQuorum: 0,
+      currentQuorumPct: 0,
+    };
+
+    return latestProposalDataEmpty;
+  }
 
   const votes = Object.values(votesHashMap.voteMap);
 
@@ -105,8 +137,6 @@ const getData = async (
   }
 
   // undecided stake = total validator's stake - voted stake
-  const { title, description, voting, finalized, endEpoch } = latest.account;
-
   const votedStake = forStakeSum + againstStakeSum + abstainStakeSum;
   const undecidedStakeSum = totalStake - votedStake;
 
@@ -123,24 +153,6 @@ const getData = async (
 
   const requiredQuorum = Math.round(totalStake * REQUIRED_QUORUM_PCT);
   const currentQuorumPct = Math.round((votedStake * 100) / totalStake);
-
-  let endDate: Date | undefined = undefined;
-  try {
-    const epochSchedule = await connection.getEpochSchedule();
-    const endEpochFirstSlot = epochSchedule.getSlotsInEpoch(
-      endEpoch.toNumber()
-    );
-    const endDateBlockTime = await connection.getBlockTime(endEpochFirstSlot);
-    endDate = endDateBlockTime ? new Date(endDateBlockTime * 1000) : undefined;
-  } catch (error) {
-    console.error("error getting end epoch to date:", error);
-  }
-  let currentEpoch: number | undefined = undefined;
-  try {
-    currentEpoch = (await connection.getEpochInfo()).epoch;
-  } catch (error) {
-    console.error("error getting currentEpoch:", error);
-  }
 
   const latestProposalData: LatestProposal = {
     title,
