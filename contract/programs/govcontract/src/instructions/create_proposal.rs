@@ -2,7 +2,6 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::epoch_stake::{
     get_epoch_stake_for_vote_account, get_epoch_total_stake,
 };
-use anchor_lang::solana_program::native_token::LAMPORTS_PER_SOL;
 use anchor_lang::solana_program::vote::{program as vote_program, state::VoteState};
 
 use crate::{error::GovernanceError, stake_weight_bp, state::Proposal};
@@ -85,14 +84,7 @@ impl<'info> CreateProposal<'info> {
 
         // Get proposal creator stake
         let proposer_stake = get_epoch_stake_for_vote_account(self.spl_vote_account.key);
-
-        // RFP:Only staked validators with at least 40k can submit a proposal to be considered for voting
         msg!("Validator stake {}", proposer_stake);
-        require_gte!(
-            proposer_stake,
-            40_000u64 * LAMPORTS_PER_SOL,
-            GovernanceError::NotEnoughStake
-        );
 
         // Get the current epoch from the Clock sysvar
         let clock = Clock::get()?;
@@ -108,6 +100,14 @@ impl<'info> CreateProposal<'info> {
         // Add proposer stake weight to support weight??
         let proposer_stake_weight_bp =
             stake_weight_bp!(proposer_stake as u128, cluster_stake as u128)?;
+
+        // RFP:Only staked validators with at least 5% of stake can submit a proposal to be considered for voting
+        require_gte!(
+            proposer_stake_weight_bp,
+            500,
+            GovernanceError::NotEnoughStake
+        );
+        msg!("Validator stake weight BP{}", proposer_stake_weight_bp);
 
         self.proposal.set_inner(Proposal {
             author: self.signer.key(),
