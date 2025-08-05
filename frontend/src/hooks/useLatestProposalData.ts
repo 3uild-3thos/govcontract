@@ -77,10 +77,7 @@ const getData = async (
   // grab the first one
   const latest = proposals
     // .filter((p) => !p.account.finalized)
-    .sort(
-      (a, b) =>
-        Number(b.account.creationEpoch) - Number(a.account.creationEpoch)
-    )[0];
+    .sort((a, b) => b.account.creationEpoch.cmp(a.account.creationEpoch))[0];
 
   const votes = Object.values(votesHashMap.voteMap);
 
