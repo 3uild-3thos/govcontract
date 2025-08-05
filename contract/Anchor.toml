@@ -9,10 +9,10 @@ skip-lint = false
 govcontract = "5BU5KsgU7dpLj6t9tZWy7297rLvpfVHhdTkQrx1MJJ2x"
 
 [programs.devnet]
-govcontract = "AXnkQnEEMBsKcJ1gSXP1aW6tZMGWodzEaoB6b3bRib2r"
+govcontract = "GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc"
 
 [programs.testnet]
-govcontract = "tGoVgdg8H4pdLZxcSyX3TcKwu7UyPRfq3xoDSEQzW4a"
+govcontract = "GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc"
 
 [registry]
 url = "https://api.apr.dev"
