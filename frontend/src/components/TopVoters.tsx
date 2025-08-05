@@ -214,14 +214,15 @@ export function TopVoters() {
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="">
-                  {formatNumber(validator.activated_stake)}
-                </TableCell>
+                <TableCell>{formatNumber(validator.activated_stake)}</TableCell>
                 <TableCell className="px-1">
                   <div className="flex gap-x-6">
                     <div className="flex flex-col">
                       <div className="font-medium">
-                        {roundDecimals(validator.voterSplits.yes.toString())}%
+                        {typeof validator.voterSplits.yes === "number"
+                          ? roundDecimals(validator.voterSplits.yes.toString())
+                          : validator.voterSplits.yes}
+                        %
                       </div>
                       <div className="flex items-center text-sm gap-x-1">
                         <div className="w-2 h-2 rounded-full bg-green-500"></div>
@@ -230,7 +231,10 @@ export function TopVoters() {
                     </div>
                     <div className="flex flex-col">
                       <div className="font-medium">
-                        {roundDecimals(validator.voterSplits.no.toString())}%
+                        {typeof validator.voterSplits.no === "number"
+                          ? roundDecimals(validator.voterSplits.no.toString())
+                          : validator.voterSplits.no}
+                        %
                       </div>
                       <div className="flex items-center text-sm gap-x-1">
                         <div className="w-2 h-2 rounded-full bg-red-500"></div>
@@ -239,9 +243,11 @@ export function TopVoters() {
                     </div>
                     <div className="flex flex-col">
                       <div className="font-medium">
-                        {roundDecimals(
-                          validator.voterSplits.abstain.toString()
-                        )}
+                        {typeof validator.voterSplits.abstain === "number"
+                          ? roundDecimals(
+                              validator.voterSplits.abstain.toString()
+                            )
+                          : validator.voterSplits.abstain}
                         %
                       </div>
                       <div className="flex items-center text-sm gap-x-1">
@@ -251,9 +257,11 @@ export function TopVoters() {
                     </div>
                     <div className="flex flex-col">
                       <div className="font-medium">
-                        {roundDecimals(
-                          validator.voterSplits.undecided.toString()
-                        )}
+                        {typeof validator.voterSplits.undecided === "number"
+                          ? roundDecimals(
+                              validator.voterSplits.undecided.toString()
+                            )
+                          : validator.voterSplits.undecided}
                         %
                       </div>
                       <div className="flex items-center text-sm gap-x-1">
