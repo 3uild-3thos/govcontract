@@ -350,7 +350,7 @@ mod tests {
         assert!(result.is_err(), "Expected Err, got {:?}", result);
         assert_eq!(
             result.unwrap_err().to_string(),
-            "Keypair path is required for creating proposal",
+            "No identity keypair path provided. Please specify the path using the --identity_keypair flag.",
             "Unexpected error message"
         );
     }
@@ -362,8 +362,7 @@ mod tests {
         assert!(result.is_err(), "Expected Err, got {:?}", result.as_ref());
         let error_msg = result.as_ref().unwrap_err().to_string();
         assert!(
-            error_msg.contains("No such file or directory")
-                || error_msg.contains("Failed to read keypair file"),
+            error_msg.contains("The specified keypair file does not exist"),
             "Unexpected error message: {}",
             error_msg
         );
