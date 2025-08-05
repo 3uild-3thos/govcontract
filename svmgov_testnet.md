@@ -239,3 +239,27 @@ This guide provides detailed instructions for compiling, deploying, and testing 
 - **Proposal Support**:
   - Test with multiple validators (keypairs) supporting the same proposal to verify `cluster_support_bp` accumulates correctly.
   - Use `list-proposals` and `get-proposal` to verify changes.
+
+./target/release/svmgov --rpc-url http://86.109.14.141:8899 create-proposal --identity-keypair ByaDoc1TAiSkp3gGkRDR4bVSqbe55W37mjwYbTy38Tq3.json --title "Test Governance Proposal VID" --description "https://github.com/repo/test-proposal-vid" --seed 12345 --start-epoch 667 --length 2
+
+./target/release/svmgov --rpc-url http://86.109.14.141:8899 support-proposal --proposal-id  --identity-keypair HkAGc7akgEH7HxkHWNk3htZHMid7fmG2eU6SxyGf9PKa.json                                                         
+
+./target/release/svmgov --rpc-url http://86.109.14.141:8899 cast-vote --proposal-id  --identity-keypair HkAGc7akgEH7HxkHWNk3htZHMid7fmG2eU6SxyGf9PKa.json --for-votes 3000 --against-votes 4000 --abstain-votes 3000 
+
+./target/release/svmgov --rpc-url http://86.109.14.141:8899 cast-vote --proposal-id  --identity-keypair ByaDoc1TAiSkp3gGkRDR4bVSqbe55W37mjwYbTy38Tq3.json --for-votes 4000 --against-votes 4000 --abstain-votes 2000
+
+./target/release/svmgov --rpc-url http://86.109.14.141:8899 tally-votes --proposal-id  --identity-keypair ByaDoc1TAiSkp3gGkRDR4bVSqbe55W37mjwYbTy38Tq3.json
+
+
+
+
+
+./target/release/svmgov --rpc-url http://86.109.14.141:8899 create-proposal --identity-keypair ByaDoc1TAiSkp3gGkRDR4bVSqbe55W37mjwYbTy38Tq3.json --title "Test Governance Proposal VID 2" --description "https://github.com/repo/test-proposal-2" --seed 123456 --start-epoch 667 --length 2
+
+./target/release/svmgov --rpc-url http://86.109.14.141:8899 support-proposal --proposal-id  --identity-keypair HkAGc7akgEH7HxkHWNk3htZHMid7fmG2eU6SxyGf9PKa.json                                                         
+
+./target/release/svmgov --rpc-url http://86.109.14.141:8899 cast-vote --proposal-id  --identity-keypair HkAGc7akgEH7HxkHWNk3htZHMid7fmG2eU6SxyGf9PKa.json --for-votes 7000 --against-votes 2000 --abstain-votes 1000 
+
+./target/release/svmgov --rpc-url http://86.109.14.141:8899 cast-vote --proposal-id  --identity-keypair ByaDoc1TAiSkp3gGkRDR4bVSqbe55W37mjwYbTy38Tq3.json --for-votes 9000 --against-votes 1000 --abstain-votes 0
+
+./target/release/svmgov --rpc-url http://86.109.14.141:8899 tally-votes --proposal-id  --identity-keypair ByaDoc1TAiSkp3gGkRDR4bVSqbe55W37mjwYbTy38Tq3.json

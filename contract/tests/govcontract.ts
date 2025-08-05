@@ -44,11 +44,11 @@ describe("govcontract", () => {
   const fetchedVoteAccount = program.account.vote.fetch(voteAccount); // returns a promise
 
   it("Fund Dummy Validator Accounts!", async () => {
-    const connection = new Connection("https://api.devnet.solana.com", "confirmed");
+    const connection = provider.connection;
 
     const lamportsToSend = 10_000_000;
 
-    const transferTransaction = new Transaction().add(
+    const transferTransaction = new anchor.web3.Transaction().add(
       SystemProgram.transfer({
         fromPubkey: provider.publicKey,
         toPubkey: vote2.publicKey,
@@ -61,7 +61,7 @@ describe("govcontract", () => {
       })
     )
 
-    await sendAndConfirmTransaction(connection, transferTransaction, [payer.payer]);
+    await anchor.web3.sendAndConfirmTransaction(connection, transferTransaction, [payer.payer]);
 
     console.log("\nDummy Validator Accounts Funded Successfuly!");
   });
