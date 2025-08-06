@@ -18,7 +18,6 @@ pub struct ModifyVote<'info> {
         constraint = spl_vote_account.data_len() == VoteState::size_of() @ GovernanceError::InvalidVoteAccountSize
     )]
     pub spl_vote_account: AccountInfo<'info>,
-    #[account(mut)]
     pub proposal: Account<'info, Proposal>,
     #[account(
         mut,
