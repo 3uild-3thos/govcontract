@@ -198,6 +198,12 @@ enum Commands {
         /// Verbose vote list
         #[arg(long, help = "List votes verbose", default_value_t = false)]
         verbose: bool,
+
+        #[arg(
+            long,
+            help = "Filter votes by specific voter pubkey. If not provided, shows all votes for the proposal",
+        )]
+        pubkey: Option<String>,
     },
 }
 
@@ -288,8 +294,9 @@ async fn handle_command(cli: Cli) -> Result<()> {
         Commands::ListVotes {
             proposal_id,
             verbose,
+            pubkey,
         } => {
-            commands::list_votes(cli.rpc_url, proposal_id, *verbose).await?;
+            commands::list_votes(cli.rpc_url, &proposal_id, *verbose, pubkey.clone()).await?;
         }
     }
 

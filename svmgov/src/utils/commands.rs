@@ -44,25 +44,31 @@ pub async fn list_proposals(
 
 pub async fn list_votes(
     rpc_url: Option<String>,
-    proposal_id: &String,
+    proposal_id: &str,
     verbose: bool,
+    voter_pubkey: Option<String>,
 ) -> Result<()> {
-    // Parse the proposal ID into a Pubkey
-    let proposal_pubkey = Pubkey::from_str(&proposal_id)
+    let proposal_pubkey = Pubkey::from_str(proposal_id)
         .map_err(|_| anyhow!("Invalid proposal ID: {}", proposal_id))?;
-    // Create a mock Payer
-    let mock_payer = Arc::new(Keypair::new());
 
-    // Create the Anchor client
+    let mock_payer = Arc::new(Keypair::new());
     let program = anchor_client_setup(rpc_url, mock_payer)?;
 
-    // Rpc filter to get Vote accounts for this proposal
-    let filter = vec![RpcFilterType::Memcmp(Memcmp::new(
+    let mut filters = vec![RpcFilterType::Memcmp(Memcmp::new(
         40,
         MemcmpEncodedBytes::Bytes(proposal_pubkey.to_bytes().to_vec()),
     ))];
 
-    let votes = program.accounts::<Vote>(filter).await?;
+    if let Some(voter_key) = voter_pubkey {
+        let voter_pubkey = Pubkey::from_str(&voter_key)
+            .map_err(|_| anyhow!("Invalid voter pubkey: {}", voter_key))?;
+        filters.push(RpcFilterType::Memcmp(Memcmp::new(
+            8,
+            MemcmpEncodedBytes::Bytes(voter_pubkey.to_bytes().to_vec()),
+        )));
+    }
+
+    let votes = program.accounts::<Vote>(filters).await?;
 
     if verbose {
         for vote in votes {
