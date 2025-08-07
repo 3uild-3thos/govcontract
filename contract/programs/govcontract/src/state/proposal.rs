@@ -21,4 +21,6 @@ pub struct Proposal {
     pub voting: bool,
     pub finalized: bool,
     pub proposal_bump: u8,
+    pub creation_timestamp: i64,
+    pub vote_count: u32
 }

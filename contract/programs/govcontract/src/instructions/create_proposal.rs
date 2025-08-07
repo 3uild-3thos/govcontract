@@ -86,6 +86,13 @@ impl<'info> CreateProposal<'info> {
         let proposer_stake = get_epoch_stake_for_vote_account(self.spl_vote_account.key);
         msg!("Validator stake {}", proposer_stake);
 
+        // Only staked validators with at least 100k stake can submit a proposal to be considered for voting
+        require_gte!(
+            proposer_stake,
+            100_000,
+            GovernanceError::NotEnoughStake
+        );
+
         // Get the current epoch from the Clock sysvar
         let clock = Clock::get()?;
         let current_epoch = clock.epoch;
@@ -101,12 +108,6 @@ impl<'info> CreateProposal<'info> {
         let proposer_stake_weight_bp =
             stake_weight_bp!(proposer_stake as u128, cluster_stake as u128)?;
 
-        // RFP:Only staked validators with at least 5% of stake can submit a proposal to be considered for voting
-        require_gte!(
-            proposer_stake_weight_bp,
-            500,
-            GovernanceError::NotEnoughStake
-        );
         msg!("Validator stake weight BP{}", proposer_stake_weight_bp);
 
         self.proposal.set_inner(Proposal {
@@ -126,6 +127,8 @@ impl<'info> CreateProposal<'info> {
             voting: false,
             finalized: false,
             proposal_bump: bumps.proposal,
+            creation_timestamp: Clock::get()?.unix_timestamp,
+            vote_count: 0
         });
 
         Ok(())
