@@ -20,7 +20,7 @@ pub struct CreateProposal<'info> {
     #[account(
         init,
         payer = signer,
-        seeds = [b"proposal", seed.to_le_bytes().as_ref(), &signer.key.to_bytes()],
+        seeds = [b"proposal", seed.to_le_bytes().as_ref(), spl_vote_account.key.as_ref()],
         bump,
         space = Proposal::INIT_SPACE,
     )]

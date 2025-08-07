@@ -24,7 +24,7 @@ pub struct CastVote<'info> {
         init,
         payer = signer,
         space = 8 + Vote::INIT_SPACE,
-        seeds = [b"vote", proposal.key().as_ref(), signer.key().as_ref()],
+        seeds = [b"vote", proposal.key().as_ref(), spl_vote_account.key().as_ref()],
         bump
     )]
     pub vote: Account<'info, Vote>,

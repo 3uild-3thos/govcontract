@@ -16,7 +16,7 @@ pub struct TallyVotes<'info> {
     /// CHECK: Vote account is too big to deserialize, so we check on owner and size, then compare node_pubkey with signer
     #[account(
         constraint = spl_vote_account.owner == &vote_program::ID @ ProgramError::InvalidAccountOwner,
-        constraint = spl_vote_account.data_len() >= VoteState::size_of() @ GovernanceError::InvalidVoteAccountSize
+        constraint = spl_vote_account.data_len() == VoteState::size_of() @ GovernanceError::InvalidVoteAccountSize
     )]
     pub spl_vote_account: AccountInfo<'info>,
     #[account(mut)]

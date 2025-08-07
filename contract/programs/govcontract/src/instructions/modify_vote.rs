@@ -21,7 +21,7 @@ pub struct ModifyVote<'info> {
     pub proposal: Account<'info, Proposal>,
     #[account(
         mut,
-        seeds = [b"vote", proposal.key().as_ref(), signer.key().as_ref()],
+        seeds = [b"vote", proposal.key().as_ref(), spl_vote_account.key().as_ref()],
         bump = vote.bump,
     )]
     pub vote: Account<'info, Vote>,

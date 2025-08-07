@@ -26,7 +26,7 @@ pub struct SupportProposal<'info> {
         init,
         payer = signer,
         space = 8 + Support::INIT_SPACE,
-        seeds = [b"support", proposal.key().as_ref(), signer.key().as_ref()],
+        seeds = [b"support", proposal.key().as_ref(), spl_vote_account.key.as_ref()],
         bump
     )]
     pub support: Account<'info, Support>,
