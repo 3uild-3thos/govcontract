@@ -182,7 +182,7 @@ enum Commands {
                       An optional RPC URL can be provided to connect to the chain; otherwise, a default URL is used.\n\n\
                       Examples:\n\
                       $ svmgov --rpc-url https://api.mainnet-beta.solana.com list-proposals\n\
-                      $ svmgov --rpc-url https://api.mainnet-beta.solana.com list-proposals --status \"active\""
+                      $ svmgov -r https://api.mainnet-beta.solana.com list-proposals --status \"active\""
     )]
     ListProposals {
         /// Filter on status of the proposals <active>.
@@ -197,7 +197,7 @@ enum Commands {
                       An optional RPC URL can be provided to connect to the chain; otherwise, a default URL is used.\n\n\
                       Examples:\n\
                       $ svmgov --rpc-url https://api.mainnet-beta.solana.com list-votes --proposal-id \"123\"\n\
-                      $ svmgov --rpc-url https://api.mainnet-beta.solana.com list-votes --proposal-id \"123\" --verbose true"
+                      $ svmgov -r https://api.mainnet-beta.solana.com list-votes --proposal-id \"123\" --verbose true"
     )]
     ListVotes {
         /// Proposal id to get votes for.
