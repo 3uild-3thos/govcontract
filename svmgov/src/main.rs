@@ -121,6 +121,14 @@ enum Commands {
         abstain_votes: u64,
     },
 
+    #[command(
+        about = "Modify an existing vote on a proposal",
+        long_about = "This command modifies an existing vote on a live governance proposal. \
+                      Voters can update how they allocate their stake weight across 'For', 'Against', and 'Abstain' using basis points, which must sum to 10,000 (representing 100% of their stake). \
+                      It requires the proposal ID and the identity keypair to sign the modification. An optional RPC URL can be provided to connect to the chain.\n\n\
+                      Example:\n\
+                      $ svmgov --identity-keypair /path/to/key.json --rpc-url https://api.mainnet-beta.solana.com modify-vote --proposal-id 123 --for-votes 7000 --against-votes 2000 --abstain-votes 1000"
+    )]
     ModifyVote {
         /// Proposal ID for which the vote is being modified (proposal Pubkey).
         #[arg(long, help = "Proposal ID")]
@@ -155,8 +163,8 @@ enum Commands {
     },
 
     #[command(
-        about = "Display a proposal",
-        long_about = "This command retrieves and displays a governance proposal from the Solana Validator Governance program. \
+        about = "Display a proposal and it's details",
+        long_about = "This command retrieves and displays a governance proposal and it's details from the Solana Validator Governance program. \
                       An optional RPC URL can be provided to connect to the chain; otherwise, a default URL is used.\n\n\
                       Examples:\n\
                       $ svmgov --rpc-url https://api.mainnet-beta.solana.com get-proposal --proposal-id \"123\""
@@ -168,7 +176,7 @@ enum Commands {
     },
 
     #[command(
-        about = "List all governance proposals",
+        about = "List all governance proposals. Use the get-proposal command for individual proposal details",
         long_about = "This command retrieves and displays a list of all governance proposals from the Solana Validator Governance program. \
                       You can optionally filter proposals by their status (e.g., 'active') using the --status flag. \
                       An optional RPC URL can be provided to connect to the chain; otherwise, a default URL is used.\n\n\

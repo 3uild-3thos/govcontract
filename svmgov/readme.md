@@ -54,6 +54,14 @@ To use `svmgov`, follow these steps:
 
 Run any command with `--help` for detailed usage, e.g., `svmgov create-proposal --help`.
 
+### Typical Workflow
+Here's a common sequence to get started:
+1. List all proposals to find IDs: `svmgov list-proposals -r https://api.mainnet-beta.solana.com`
+2. View details for a specific proposal: `svmgov get-proposal --proposal-id <ID> -r https://api.mainnet-beta.solana.com`
+3. Support a proposal (if needed): `svmgov support-proposal --proposal-id <ID> -i /path/to/identity_key.json`
+4. Cast or modify a vote: `svmgov cast-vote --proposal-id <ID> --for-votes 7000 --against-votes 2000 --abstain-votes 1000 -i /path/to/identity_key.json` (use `modify-vote` to update).
+5. After voting ends, tally results: `svmgov tally-votes --proposal-id <ID> -i /path/to/identity_key.json`
+6. List votes for verification: `svmgov list-votes --proposal-id <ID> --verbose true -r https://api.mainnet-beta.solana.com`
 ---
 
 ## Governance Mechanics
