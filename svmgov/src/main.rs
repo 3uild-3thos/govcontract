@@ -17,6 +17,8 @@ declare_program!(govcontract);
     about = "A simple CLI to help creating and voting on validator governance proposals.",
     long_about = "svmgov is a command-line tool for interacting with the Solana Validator Governance program. \
                     It allows users to create proposals, support proposals, cast votes, tally votes, and list proposals and votes.\n\n\
+                    Environment variables can be used for global options: SVMGOV_KEY for --identity-keypair and SVMGOV_RPC for --rpc-url. \
+                    Flags override env vars if both are provided.\n\n\
                     To get started, use one of the subcommands below. For example, to list all proposals:\n\
                     $ svmgov --rpc-url https://api.mainnet-beta.solana.com list-proposals\n\n\
                     For more information on each subcommand, use --help, e.g., `svmgov create-proposal --help`."
@@ -27,13 +29,20 @@ struct Cli {
     #[arg(
         short,
         long,
-        help = "Path to the identity keypair JSON file",
-        global = true
+        help = "Path to the identity keypair JSON file (or set via SVMGOV_KEY env var)",
+        global = true,
+        env = "SVMGOV_KEY"
     )]
     identity_keypair: Option<String>,
 
     /// Custom rpc url. This argument is also global and can be used with any subcommand.
-    #[arg(short, long, help = "Custom rpc url", global = true)]
+    #[arg(
+        short, 
+        long, 
+        help = "Custom rpc url (or set via SVMGOV_RPC env var)", 
+        global = true, 
+        env = "SVMGOV_RPC"
+    )]
     rpc_url: Option<String>,
 
     /// Subcommands for the CLI
