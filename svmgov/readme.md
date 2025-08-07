@@ -38,8 +38,10 @@ To use `svmgov`, follow these steps:
 
 ### Global Arguments
 
-- `--identity-keypair <PATH>`: Path to the validator’s identity keypair JSON file (required for most commands).
-- `--rpc-url <URL>`: Custom RPC URL for the Solana network (optional; defaults to `https://api.mainnet-beta.solana.com`).
+- `--identity-keypair <PATH>` (short: `-i`; env: `SVMGOV_KEY`): Path to the validator’s identity keypair JSON file (required for most commands).
+- `--rpc-url <URL>` (short: `-r`; env: `SVMGOV_RPC`): Custom RPC URL for the Solana network (optional; defaults to `https://api.mainnet-beta.solana.com`).
+
+Example env usage: Set `export SVMGOV_KEY="/path/to/key.json"` and `export SVMGOV_RPC="https://api.testnet.solana.com"`, then run commands without these flags (e.g., `svmgov list-proposals` uses the env values).
 
 ### Available Commands
 
