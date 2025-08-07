@@ -39,20 +39,65 @@ macro_rules! stake_weight_bp {
 pub fn is_valid_github_link(link: &str) -> bool {
     const PREFIX: &str = "https://github.com/";
     const MAX_SEGMENTS: usize = 10;
+    const MIN_SEGMENTS: usize = 2;
 
     if !link.starts_with(PREFIX) {
         return false;
     }
 
-    let path = &link[PREFIX.len()..];
-    if path.is_empty() || path.starts_with('/') || path.contains(' ') || path.contains('?') || path.contains('#') {
+    let mut path = &link[PREFIX.len()..];
+    if path.ends_with('/') {
+        if path.len() == 1 { // If only '/', path would be empty after trim
+            return false;
+        }
+        path = &path[..path.len() - 1];
+    }
+    if path.is_empty() || path.starts_with('/') {
         return false;
     }
 
-    let segments: Vec<&str> = path.split('/').collect();
-    if segments.len() < 2 || segments.len() > MAX_SEGMENTS {
+    let mut segment_count = 0;
+    let mut in_segment = false;
+    let mut has_invalid_char = false;
+
+    for c in path.chars() {
+        match c {
+            '/' => {
+                if !in_segment {
+                    // Consecutive '/' -> empty segment
+                    return false;
+                }
+                in_segment = false;
+                segment_count += 1;
+                if segment_count > MAX_SEGMENTS {
+                    return false;
+                }
+            }
+            ' ' | '?' | '#' => {
+                has_invalid_char = true;
+                break; // Early exit on forbidden chars
+            }
+            _ => {
+                if !in_segment {
+                    in_segment = true;
+                }
+                if !c.is_alphanumeric() && !matches!(c, '-' | '_' | '.') {
+                    has_invalid_char = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    if has_invalid_char {
         return false;
     }
 
-    segments.iter().all(|seg| !seg.is_empty() && seg.chars().all(|c| c.is_alphanumeric() || matches!(c, '-' | '_' | '.')))
+    // Account for the last segment if it was being processed
+    if in_segment {
+        segment_count += 1;
+    }
+
+    // Check trailing '/' was handled (no empty last segment)
+    segment_count >= MIN_SEGMENTS && segment_count <= MAX_SEGMENTS
 }
