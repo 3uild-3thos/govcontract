@@ -40,4 +40,6 @@ pub enum GovernanceError {
     InvalidVoteAccountVersion,
     #[msg("Invaid Vote account size")]
     InvalidVoteAccountSize,
+    #[msg("All votes cast on the proposal must be counted to finalize")]
+    AllVotesCount,
 }

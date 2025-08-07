@@ -57,7 +57,11 @@ impl<'info> TallyVotes<'info> {
             self.signer.key(),
             GovernanceError::VoteNodePubkeyMismatch
         );
-        self.proposal.voting = false;
+
+        if self.proposal.voting {
+            self.proposal.voting = false
+        }
+
         require!(!self.proposal.finalized, GovernanceError::ProposalFinalized);
 
         // Get cluster stake
@@ -68,6 +72,7 @@ impl<'info> TallyVotes<'info> {
             (remaining.len() % 2) == 0,
             GovernanceError::NotEnoughAccounts
         );
+        let mut vote_count = self.proposal.vote_count;
 
         // 2 accounts: Vote + Spl_vote
         for vote_chunk in remaining.chunks(2) {
@@ -87,11 +92,7 @@ impl<'info> TallyVotes<'info> {
             let chunk_vote_account = vote_chunk
                 .get(1)
                 .ok_or(GovernanceError::NotEnoughAccounts)?;
-            // require_eq!(
-            //     chunk_vote_account.data_len(),
-            //     VoteState::size_of(),
-            //     GovernanceError::InvalidVoteAccount
-            // );
+            
             require_eq!(
                 *chunk_vote_account.owner,
                 vote_program::ID,
@@ -171,11 +172,19 @@ impl<'info> TallyVotes<'info> {
                 .abstain_votes_bp
                 .checked_add(abstain_votes)
                 .ok_or(ProgramError::ArithmeticOverflow)?;
+
+            // vote.sub_lamports(vote.get_lamports())?;
+            vote.to_account_info().realloc(0, false)?;
+            
+            vote_count -= 1;
         }
+        self.proposal.vote_count = vote_count;
 
         // Mark the proposal as finalized
-        if finalize {
+        if finalize && vote_count == 0 {
             self.proposal.finalized = true;
+        } else {
+            return Err(GovernanceError::AllVotesCount.into());
         }
 
         Ok(())
