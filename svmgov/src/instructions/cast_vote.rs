@@ -56,15 +56,15 @@ pub async fn cast_vote(
         rpc_url
     );
     let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
-    let payer_pubkey = payer.pubkey();
+
     log::debug!(
         "setup_all complete: payer_pubkey={}, vote_account={}",
-        payer_pubkey,
+        payer.pubkey(),
         vote_account
     );
 
     // Derive the vote PDA using the seeds ["vote", proposal, signer]
-    let vote_seeds = &[b"vote", proposal_pubkey.as_ref(), payer_pubkey.as_ref()];
+    let vote_seeds = &[b"vote", proposal_pubkey.as_ref(), vote_account.as_ref()];
     let (vote_pda, bump) = Pubkey::find_program_address(vote_seeds, &program.id());
     log::debug!("Derived vote PDA: vote_pda={}, bump={}", vote_pda, bump);
 

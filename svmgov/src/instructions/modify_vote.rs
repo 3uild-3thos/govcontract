@@ -42,9 +42,8 @@ pub async fn modify_vote(
         vote_account
     );
 
-    let payer_pubkey = payer.pubkey();
     // Derive the vote PDA using the seeds ["vote", proposal, signer]
-    let vote_seeds = &[b"vote", proposal_pubkey.as_ref(), payer_pubkey.as_ref()];
+    let vote_seeds = &[b"vote", proposal_pubkey.as_ref(), vote_account.as_ref()];
     let (vote_pda, _bump) = Pubkey::find_program_address(vote_seeds, &program.id());
     debug!("Derived vote PDA: {}", vote_pda);
 

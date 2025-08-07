@@ -38,11 +38,10 @@ pub async fn create_proposal(
     let seed_value = seed.unwrap_or_else(|| rand::random::<u64>());
     log::debug!("Using seed_value: {}", seed_value);
 
-    let payer_pubkey = payer.pubkey();
     let proposal_seeds = &[
         b"proposal",
         &seed_value.to_le_bytes(),
-        payer_pubkey.as_ref(),
+        vote_account.as_ref(),
     ];
     let (proposal_pda, _bump) = Pubkey::find_program_address(proposal_seeds, &program.id());
     log::debug!("Derived proposal PDA: {}", proposal_pda);

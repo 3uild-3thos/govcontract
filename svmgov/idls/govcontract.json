@@ -52,7 +52,7 @@
               },
               {
                 "kind": "account",
-                "path": "signer"
+                "path": "spl_vote_account"
               }
             ]
           }
@@ -122,7 +122,7 @@
               },
               {
                 "kind": "account",
-                "path": "signer"
+                "path": "spl_vote_account"
               }
             ]
           }
@@ -177,11 +177,11 @@
           "name": "spl_vote_account"
         },
         {
-          "name": "proposal",
-          "writable": true
+          "name": "proposal"
         },
         {
           "name": "vote",
+          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -199,7 +199,7 @@
               },
               {
                 "kind": "account",
-                "path": "signer"
+                "path": "spl_vote_account"
               }
             ]
           }
@@ -272,7 +272,7 @@
               },
               {
                 "kind": "account",
-                "path": "signer"
+                "path": "spl_vote_account"
               }
             ]
           }
@@ -367,7 +367,7 @@
     {
       "code": 6000,
       "name": "NotEnoughStake",
-      "msg": "Minimum stake required to create proposal is 40k"
+      "msg": "Minimum stake required to create proposal is 5% of cluster stake"
     },
     {
       "code": 6001,
@@ -418,6 +418,46 @@
       "code": 6010,
       "name": "InvalidVoteAccount",
       "msg": "Invalid vote account, proposal id mismatch"
+    },
+    {
+      "code": 6011,
+      "name": "FailedDeserializeNodePubkey",
+      "msg": "Failed to deserialize node_pubkey from Vote account"
+    },
+    {
+      "code": 6012,
+      "name": "VoteNodePubkeyMismatch",
+      "msg": "Deserialized node_pubkey from Vote accounts does not match"
+    },
+    {
+      "code": 6013,
+      "name": "NotEnoughAccounts",
+      "msg": "Not enough accounts for tally"
+    },
+    {
+      "code": 6014,
+      "name": "InvalidClusterStake",
+      "msg": "Cluster stake cannot be zero"
+    },
+    {
+      "code": 6015,
+      "name": "InvalidStartEpoch",
+      "msg": "Start epoch must be current or future epoch"
+    },
+    {
+      "code": 6016,
+      "name": "InvalidVotingLength",
+      "msg": "Voting length must be bigger than 0"
+    },
+    {
+      "code": 6017,
+      "name": "InvalidVoteAccountVersion",
+      "msg": "Invalid Vote account version"
+    },
+    {
+      "code": 6018,
+      "name": "InvalidVoteAccountSize",
+      "msg": "Invaid Vote account size"
     }
   ],
   "types": [
@@ -481,6 +521,14 @@
           {
             "name": "proposal_bump",
             "type": "u8"
+          },
+          {
+            "name": "creation_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "vote_count",
+            "type": "u32"
           }
         ]
       }
