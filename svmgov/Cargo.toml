@@ -2,7 +2,8 @@
 name = "svmgov"
 version = "0.1.0"
 edition = "2024"
-authors = ["bergabman", "berg@turbin3.com"]
+rust-version = "1.85.0"
+authors = ["bergabman", "berg@turbin3.org"]
 
 [dependencies]
 clap = { version = "4.5.37", features = ["derive"] }
