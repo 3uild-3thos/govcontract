@@ -7,6 +7,7 @@ use anchor_client::{
 
 use anchor_lang::prelude::Pubkey;
 use anyhow::{Result, anyhow};
+use indicatif::{ProgressBar, ProgressStyle};
 
 use crate::{
     anchor_client_setup,
@@ -23,6 +24,17 @@ pub async fn list_proposals(
     // Create the Anchor client
     let program = anchor_client_setup(rpc_url, mock_payer)?;
 
+    // Create a spinner for progress indication
+    let spinner = ProgressBar::new_spinner();
+    spinner.set_style(
+        ProgressStyle::default_spinner()
+            .template("{spinner:.green} {msg}")
+            .unwrap()
+            .tick_strings(&["⠏", "⠇", "⠦", "⠴", "⠼", "⠸", "⠹", "⠙", "⠋", "⠓"])
+    );
+
+    spinner.set_message("Getting all proposals...");
+    spinner.enable_steady_tick(std::time::Duration::from_millis(100));
     let proposals = program.accounts::<Proposal>(vec![]).await?;
 
     let filtered_proposals = if let Some(filter) = proposal_filter {
@@ -35,9 +47,13 @@ pub async fn list_proposals(
         proposals
     };
 
+    // Stop the spinner 
+    spinner.finish_with_message("Proposals collected.");
+
     for proposal in filtered_proposals {
         println!("\nProposal id: {}, \n{}", proposal.0, proposal.1);
     }
+    
 
     Ok(())
 }
@@ -62,8 +78,23 @@ pub async fn list_votes(
         MemcmpEncodedBytes::Bytes(proposal_pubkey.to_bytes().to_vec()),
     ))];
 
+    // Create a spinner for progress indication
+    let spinner = ProgressBar::new_spinner();
+    spinner.set_style(
+        ProgressStyle::default_spinner()
+            .template("{spinner:.green} {msg}")
+            .unwrap()
+            .tick_strings(&["⠏", "⠇", "⠦", "⠴", "⠼", "⠸", "⠹", "⠙", "⠋", "⠓"])
+    );
+
+    spinner.set_message("Getting all vote accounts...");
+    spinner.enable_steady_tick(std::time::Duration::from_millis(100));
+
     let votes = program.accounts::<Vote>(filter).await?;
 
+    // Stop the spinner 
+    spinner.finish_with_message("Vote accounts collected.");
+    
     if verbose {
         for vote in votes {
             println!("Vote for proposal {}: \n{}", proposal_id, vote.1);

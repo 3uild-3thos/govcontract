@@ -7,6 +7,7 @@ use crate::{
 use anchor_client::solana_sdk::{pubkey::Pubkey, signer::Signer};
 use anchor_lang::system_program;
 use anyhow::{Result, anyhow};
+use indicatif::{ProgressBar, ProgressStyle};
 
 pub async fn cast_vote(
     proposal_id: String,
@@ -68,6 +69,17 @@ pub async fn cast_vote(
     let (vote_pda, bump) = Pubkey::find_program_address(vote_seeds, &program.id());
     log::debug!("Derived vote PDA: vote_pda={}, bump={}", vote_pda, bump);
 
+    // Create a spinner for progress indication
+    let spinner = ProgressBar::new_spinner();
+    spinner.set_style(
+        ProgressStyle::default_spinner()
+            .template("{spinner:.green} {msg}")
+            .unwrap()
+            .tick_strings(&["⠏", "⠇", "⠦", "⠴", "⠼", "⠸", "⠹", "⠙", "⠋", "⠓"])
+    );
+
+    spinner.set_message("Sending cast-vote transaction...");
+    spinner.enable_steady_tick(std::time::Duration::from_millis(100));
     // Debug: Log before sending transaction
     log::debug!("Building and sending CastVote transaction");
     let sig = program
@@ -88,10 +100,11 @@ pub async fn cast_vote(
         .await?;
     log::debug!("Transaction sent successfully: signature={}", sig);
 
-    println!(
+    spinner.finish_with_message(format!(
         "Vote cast successfully. https://explorer.solana.com/tx/{}",
         sig
-    );
+    ));
+
     log::debug!("cast_vote completed successfully");
     Ok(())
 }

@@ -8,6 +8,7 @@ use anchor_lang::prelude::AccountMeta;
 use anchor_lang::system_program;
 use anyhow::{Result, anyhow};
 use log::info;
+use indicatif::{ProgressBar, ProgressStyle};
 
 use crate::{
     govcontract::{
@@ -35,6 +36,18 @@ pub async fn tally_votes(
         MemcmpEncodedBytes::Bytes(proposal_pubkey.to_bytes().to_vec()),
     ));
 
+     // Create a spinner for progress indication
+    let spinner = ProgressBar::new_spinner();
+    spinner.set_style(
+        ProgressStyle::default_spinner()
+            .template("{spinner:.green} {msg}")
+            .unwrap()
+            .tick_strings(&["⠏", "⠇", "⠦", "⠴", "⠼", "⠸", "⠹", "⠙", "⠋", "⠓"])
+    );
+
+    spinner.set_message("Gathering vote accounts, tallying votes...");
+    spinner.enable_steady_tick(std::time::Duration::from_millis(100));
+
     let vote_accounts = program.accounts::<Vote>(vec![filter]).await?;
 
     let mut batches = vote_accounts.len() / 10;
@@ -43,8 +56,6 @@ pub async fn tally_votes(
         batches += 1;
     }
     let mut finalize = false;
-
-    println!("votes {:?}", vote_accounts);
 
     // Tally the votes, 10 at a time
     for (index, votes_chunk) in vote_accounts.chunks(10).enumerate() {
@@ -101,7 +112,7 @@ pub async fn tally_votes(
     }
     let proposal = program.account::<Proposal>(proposal_pubkey).await?;
 
-    println!("Tally finished: {}", proposal);
+    spinner.finish_with_message(format!("Tally finished: {}", proposal));
 
     Ok(())
 }

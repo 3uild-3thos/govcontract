@@ -7,6 +7,7 @@ use crate::{
 use anchor_client::solana_sdk::{pubkey::Pubkey, signer::Signer};
 use anchor_lang::system_program;
 use anyhow::{Result, anyhow};
+use indicatif::{ProgressBar, ProgressStyle};
 
 pub async fn support_proposal(
     proposal_id: String,
@@ -43,6 +44,18 @@ pub async fn support_proposal(
     let support_seeds = &[b"support", proposal_pubkey.as_ref(), payer_pubkey.as_ref()];
     let (support_pda, _bump) = Pubkey::find_program_address(support_seeds, &program.id());
     log::debug!("Derived support_pda: {}", support_pda);
+    
+    // Create a spinner for progress indication
+    let spinner = ProgressBar::new_spinner();
+    spinner.set_style(
+        ProgressStyle::default_spinner()
+            .template("{spinner:.green} {msg}")
+            .unwrap()
+            .tick_strings(&["⠏", "⠇", "⠦", "⠴", "⠼", "⠸", "⠹", "⠙", "⠋", "⠓"])
+    );
+
+    spinner.set_message("Supporting proposal...");
+    spinner.enable_steady_tick(std::time::Duration::from_millis(100));
 
     log::debug!("Building and sending SupportProposal transaction");
     let sig = program
@@ -59,7 +72,9 @@ pub async fn support_proposal(
         .await?;
     log::debug!("Transaction sent successfully: signature={}", sig);
 
-    println!("Proposal supported. https://explorer.solana.com/tx/{}", sig);
+    spinner.finish_with_message(format!(
+        "Proposal supported. https://explorer.solana.com/tx/{}", sig
+    ));
 
     Ok(())
 }
