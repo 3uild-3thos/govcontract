@@ -261,25 +261,15 @@ impl fmt::Display for Proposal {
 impl fmt::Display for Vote {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let validator_str = self.validator.to_string();
-        let short_validator = format!(
-            "{}...{}",
-            &validator_str[..4],
-            &validator_str[validator_str.len() - 4..]
-        );
         let proposal_str = self.proposal.to_string();
-        let short_proposal = format!(
-            "{}...{}",
-            &proposal_str[..4],
-            &proposal_str[proposal_str.len() - 4..]
-        );
         let timestamp = Utc
             .timestamp_opt(self.vote_timestamp, 0)
             .single()
             .unwrap_or_default();
         let formatted_timestamp = timestamp.format("%Y-%m-%d %H:%M:%S UTC").to_string();
 
-        writeln!(f, "{:<15} {}", "Validator:", short_validator)?;
-        writeln!(f, "{:<15} {}", "Proposal:", short_proposal)?;
+        writeln!(f, "{:<15} {}", "Validator:", validator_str)?;
+        writeln!(f, "{:<15} {}", "Proposal:", proposal_str)?;
         writeln!(
             f,
             "{:<15} {} bp ({:.2}%)",
