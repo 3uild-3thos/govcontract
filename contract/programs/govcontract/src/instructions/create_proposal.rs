@@ -4,6 +4,7 @@ use anchor_lang::solana_program::epoch_stake::{
 };
 use anchor_lang::solana_program::vote::{program as vote_program, state::VoteState};
 
+use crate::utils::is_valid_github_link;
 use crate::{error::GovernanceError, stake_weight_bp, state::Proposal};
 
 #[derive(Accounts)]
@@ -46,7 +47,7 @@ impl<'info> CreateProposal<'info> {
 
         // Description must be a github link, leading to the proposal
         require!(
-            description.starts_with("https://github.com"),
+            is_valid_github_link(&description),
             GovernanceError::DescriptionInvalid
         );
 

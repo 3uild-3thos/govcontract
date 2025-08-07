@@ -34,3 +34,25 @@ macro_rules! stake_weight_bp {
             })
     };
 }
+
+/// Validates if the input is a well-formed GitHub repository or issue link.
+pub fn is_valid_github_link(link: &str) -> bool {
+    const PREFIX: &str = "https://github.com/";
+    const MAX_SEGMENTS: usize = 10;
+
+    if !link.starts_with(PREFIX) {
+        return false;
+    }
+
+    let path = &link[PREFIX.len()..];
+    if path.is_empty() || path.starts_with('/') || path.contains(' ') || path.contains('?') || path.contains('#') {
+        return false;
+    }
+
+    let segments: Vec<&str> = path.split('/').collect();
+    if segments.len() < 2 || segments.len() > MAX_SEGMENTS {
+        return false;
+    }
+
+    segments.iter().all(|seg| !seg.is_empty() && seg.chars().all(|c| c.is_alphanumeric() || matches!(c, '-' | '_' | '.')))
+}
