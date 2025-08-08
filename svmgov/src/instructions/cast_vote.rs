@@ -80,6 +80,7 @@ pub async fn cast_vote(
 
     spinner.set_message("Sending cast-vote transaction...");
     spinner.enable_steady_tick(std::time::Duration::from_millis(100));
+    
     // Debug: Log before sending transaction
     log::debug!("Building and sending CastVote transaction");
     let sig = program

@@ -12,6 +12,11 @@ declare_id!("GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc");
 pub mod govcontract {
     use super::*;
 
+    pub fn initialize_index(ctx: Context<InitializedIndex>) -> Result<()> {
+        ctx.accounts.init_index(&ctx.bumps)?;
+        Ok(())
+    }
+
     pub fn create_proposal(
         ctx: Context<CreateProposal>,
         seed: u64,
@@ -42,7 +47,6 @@ pub mod govcontract {
 
     pub fn cast_vote(
         ctx: Context<CastVote>,
-        // proposal_id: Pubkey,
         for_votes_bp: u64,
         against_votes_bp: u64,
         abstain_votes_bp: u64,
@@ -62,11 +66,6 @@ pub mod govcontract {
             .modify_vote(for_votes_bp, against_votes_bp, abstain_votes_bp)?;
         Ok(())
     }
-
-    // pub fn remove_vote(ctx: Context<ModifyVote>) -> Result<()> {
-    //     msg!("Greetings from: {:?}", ctx.program_id);
-    //     Ok(())
-    // }
 
     pub fn tally_votes<'info>(
         ctx: Context<'_, '_, 'info, 'info, TallyVotes<'info>>,

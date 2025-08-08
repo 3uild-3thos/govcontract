@@ -216,6 +216,15 @@ enum Commands {
         #[arg(long, help = "List votes verbose", default_value_t = false)]
         verbose: bool,
     },
+
+    #[command(
+        about = "Initialize the proposal index pda",
+        long_about = "This command allows anyone to initialize the proposal index pda which will follow proposal creation \
+                      An optional RPC URL can be provided to connect to the chain.\n\n\
+                      Example:\n\
+                      $ svmgov --identity-keypair /path/to/key.json --rpc-url https://api.mainnet-beta.solana.com init-index"
+    )]
+    InitIndex {},
 }
 
 async fn handle_command(cli: Cli) -> Result<()> {
@@ -228,86 +237,82 @@ async fn handle_command(cli: Cli) -> Result<()> {
 
     match &cli.command {
         Commands::CreateProposal {
-            seed,
-            title,
-            description,
-            start_epoch,
-            length,
-        } => {
-            instructions::create_proposal(
-                title.to_string(),
-                description.to_string(),
-                *seed,
-                cli.identity_keypair,
-                cli.rpc_url,
-                *start_epoch,
-                *length,
-            )
-            .await?;
-        }
-
-        Commands::SupportProposal { proposal_id } => {
-            instructions::support_proposal(
-                proposal_id.to_string(),
-                cli.identity_keypair,
-                cli.rpc_url,
-            )
-            .await?;
-        }
-
-        Commands::CastVote {
-            proposal_id,
-            for_votes,
-            against_votes,
-            abstain_votes,
-        } => {
-            instructions::cast_vote(
-                proposal_id.to_string(),
-                *for_votes,
-                *against_votes,
-                *abstain_votes,
-                cli.identity_keypair,
-                cli.rpc_url,
-            )
-            .await?;
-        }
-
-        Commands::ModifyVote {
-            proposal_id,
-            for_votes,
-            against_votes,
-            abstain_votes,
-        } => {
-            instructions::modify_vote(
-                proposal_id.to_string(),
-                *for_votes,
-                *against_votes,
-                *abstain_votes,
-                cli.identity_keypair,
-                cli.rpc_url,
-            )
-            .await?;
-        }
-
-        Commands::TallyVotes { proposal_id } => {
-            instructions::tally_votes(proposal_id.to_string(), cli.identity_keypair, cli.rpc_url)
+                        seed,
+                        title,
+                        description,
+                        start_epoch,
+                        length,
+            } => {
+                instructions::create_proposal(
+                    title.to_string(),
+                    description.to_string(),
+                    *seed,
+                    cli.identity_keypair,
+                    cli.rpc_url,
+                    *start_epoch,
+                    *length,
+                )
                 .await?;
-        }
-
+            }
+        Commands::SupportProposal { proposal_id } => {
+                instructions::support_proposal(
+                    proposal_id.to_string(),
+                    cli.identity_keypair,
+                    cli.rpc_url,
+                )
+                .await?;
+            }
+        Commands::CastVote {
+                proposal_id,
+                for_votes,
+                against_votes,
+                abstain_votes,
+            } => {
+                instructions::cast_vote(
+                    proposal_id.to_string(),
+                    *for_votes,
+                    *against_votes,
+                    *abstain_votes,
+                    cli.identity_keypair,
+                    cli.rpc_url,
+                )
+                .await?;
+            }
+        Commands::ModifyVote {
+                proposal_id,
+                for_votes,
+                against_votes,
+                abstain_votes,
+            } => {
+                instructions::modify_vote(
+                    proposal_id.to_string(),
+                    *for_votes,
+                    *against_votes,
+                    *abstain_votes,
+                    cli.identity_keypair,
+                    cli.rpc_url,
+                )
+                .await?;
+            }
+        Commands::TallyVotes { proposal_id } => {
+                instructions::tally_votes(proposal_id.to_string(), cli.identity_keypair, cli.rpc_url)
+                    .await?;
+            }
         Commands::ListProposals { status } => {
-            commands::list_proposals(cli.rpc_url, status.clone()).await?;
-        }
-
+                commands::list_proposals(cli.rpc_url, status.clone()).await?;
+            }
         Commands::GetProposal { proposal_id } => {
-            commands::get_proposal(cli.rpc_url, proposal_id).await?;
-        }
-
+                commands::get_proposal(cli.rpc_url, proposal_id).await?;
+            }
         Commands::ListVotes {
-            proposal_id,
-            verbose,
-        } => {
-            commands::list_votes(cli.rpc_url, proposal_id, *verbose).await?;
-        }
+                proposal_id,
+                verbose,
+            } => {
+                commands::list_votes(cli.rpc_url, proposal_id, *verbose).await?;
+            }
+        Commands::InitIndex {  } => {
+            instructions::initialize_index(cli.identity_keypair, cli.rpc_url).await?;
+        },
     }
 
     Ok(())

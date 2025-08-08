@@ -8,7 +8,6 @@ pub struct Proposal {
     pub title: String,
     #[max_len(250)]
     pub description: String,
-    // Epoch got from sysvar at creation
     pub creation_epoch: u64,
     pub start_epoch: u64,
     pub end_epoch: u64,
@@ -22,5 +21,6 @@ pub struct Proposal {
     pub finalized: bool,
     pub proposal_bump: u8,
     pub creation_timestamp: i64,
-    pub vote_count: u32
+    pub vote_count: u32,
+    pub index: u32,
 }

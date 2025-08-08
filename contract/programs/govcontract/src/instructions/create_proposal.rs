@@ -4,8 +4,12 @@ use anchor_lang::solana_program::epoch_stake::{
 };
 use anchor_lang::solana_program::vote::{program as vote_program, state::VoteState};
 
-use crate::utils::is_valid_github_link;
-use crate::{error::GovernanceError, stake_weight_bp, state::Proposal};
+use crate::{
+    utils::is_valid_github_link,
+    error::GovernanceError, 
+    stake_weight_bp, 
+    state::{Proposal, ProposalIndex}
+};
 
 #[derive(Accounts)]
 #[instruction(seed: u64)]
@@ -26,6 +30,12 @@ pub struct CreateProposal<'info> {
         space = Proposal::INIT_SPACE,
     )]
     pub proposal: Account<'info, Proposal>,
+    #[account(
+        mut,
+        seeds = [b"index"],
+        bump = proposal_index.bump
+    )]
+    pub proposal_index: Account<'info, ProposalIndex>,
     pub system_program: Program<'info, System>,
 }
 
@@ -129,8 +139,10 @@ impl<'info> CreateProposal<'info> {
             finalized: false,
             proposal_bump: bumps.proposal,
             creation_timestamp: Clock::get()?.unix_timestamp,
-            vote_count: 0
+            vote_count: 0,
+            index: self.proposal_index.current_index + 1
         });
+        self.proposal_index.current_index += 1;
 
         Ok(())
     }
