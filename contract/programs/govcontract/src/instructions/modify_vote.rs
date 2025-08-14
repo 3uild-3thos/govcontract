@@ -1,6 +1,10 @@
-use anchor_lang::prelude::*;
-use anchor_lang::solana_program::epoch_stake::get_epoch_stake_for_vote_account;
-use anchor_lang::solana_program::vote::{program as vote_program, state::VoteState};
+use anchor_lang::{
+    prelude::*,
+    solana_program::{
+        epoch_stake::get_epoch_stake_for_vote_account,
+        vote::{program as vote_program, state::VoteState},
+    },
+};
 
 use crate::{
     error::GovernanceError,

@@ -1,8 +1,11 @@
-use anchor_lang::prelude::*;
-use anchor_lang::solana_program::epoch_stake::{
-    get_epoch_stake_for_vote_account, get_epoch_total_stake,
+use anchor_lang::{
+    prelude::*,
+    solana_program::{
+        epoch_stake::{get_epoch_stake_for_vote_account, get_epoch_total_stake},
+        vote::{program as vote_program, state::VoteState},
+        native_token::LAMPORTS_PER_SOL
+    },
 };
-use anchor_lang::solana_program::vote::{program as vote_program, state::VoteState};
 
 use crate::{
     utils::is_valid_github_link,
@@ -79,8 +82,6 @@ impl<'info> CreateProposal<'info> {
         // 4 bytes discriminant, 32 bytes node_pubkey
         let node_pubkey =
             Pubkey::try_from(&vote_account_data[4..36]).map_err(|_| GovernanceError::InvalidVoteAccount)?;
-
-        require!(version <= 2, GovernanceError::InvalidVoteAccount);
         // Validator identity must be part of the Vote account
         require_keys_eq!(
             node_pubkey,
@@ -100,7 +101,7 @@ impl<'info> CreateProposal<'info> {
         // Only staked validators with at least 100k stake can submit a proposal to be considered for voting
         require_gte!(
             proposer_stake,
-            100_000,
+            100_000 * LAMPORTS_PER_SOL,
             GovernanceError::NotEnoughStake
         );
 
@@ -131,10 +132,10 @@ impl<'info> CreateProposal<'info> {
                 .checked_add(voting_length_epochs)
                 .ok_or(ProgramError::ArithmeticOverflow)?,
             proposer_stake_weight_bp: TryInto::<u64>::try_into(proposer_stake_weight_bp)?,
-            cluster_support_bp: 0,
-            for_votes_bp: 0,
-            against_votes_bp: 0,
-            abstain_votes_bp: 0,
+            cluster_support_lamports: 0,
+            for_votes_lamports: 0,
+            against_votes_lamports: 0,
+            abstain_votes_lamports: 0,
             voting: false,
             finalized: false,
             proposal_bump: bumps.proposal,

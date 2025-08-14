@@ -1,12 +1,13 @@
-use anchor_lang::prelude::*;
-use anchor_lang::solana_program::epoch_stake::{
-    get_epoch_stake_for_vote_account, get_epoch_total_stake,
+use anchor_lang::{
+    prelude::*,
+    solana_program::{
+        epoch_stake::{get_epoch_stake_for_vote_account, get_epoch_total_stake},
+        vote::{program as vote_program, state::VoteState},
+    },
 };
-use anchor_lang::solana_program::vote::{program as vote_program, state::VoteState};
 
 use crate::{
     error::GovernanceError,
-    stake_weight_bp,
     state::{Proposal, Support},
 };
 
@@ -69,14 +70,11 @@ impl<'info> SupportProposal<'info> {
         // Ensure the supporter has some stake
         require!(supporter_stake > 0, GovernanceError::NotEnoughStake);
 
-        // Calculate the stake weight of this supporter in basis points
-        let supporter_weight_bp = stake_weight_bp!(supporter_stake as u128, cluster_stake as u128)?;
-
-        // Add the supporter's stake weight to the proposal's cluster support
-        self.proposal.cluster_support_bp = self
+        // Add the supporter's raw stake (in lamports) to the proposal's cluster support
+        self.proposal.cluster_support_lamports = self
             .proposal
-            .cluster_support_bp
-            .checked_add(TryInto::<u64>::try_into(supporter_weight_bp)?)
+            .cluster_support_lamports
+            .checked_add(supporter_stake)
             .ok_or(ProgramError::ArithmeticOverflow)?;
 
         // Initialize the support account
@@ -86,8 +84,15 @@ impl<'info> SupportProposal<'info> {
             bump: bumps.support,
         });
 
-        // Check if cluster support reaches 5% (500 basis points)
-        if self.proposal.cluster_support_bp >= 500 {
+        // Check if cluster support reaches 5% of total cluster stake
+        // Use u128 to avoid overflow: check if (cluster_support_lamports * 100) >= (cluster_stake * 5)
+        let support_scaled = (self.proposal.cluster_support_lamports as u128)
+            .checked_mul(100)
+            .ok_or(ProgramError::ArithmeticOverflow)?;
+        let cluster_scaled = (cluster_stake as u128)
+            .checked_mul(5)
+            .ok_or(ProgramError::ArithmeticOverflow)?;
+        if support_scaled >= cluster_scaled {
             // Set proposal.voting to true, indicating it’s active and can be voted on
             self.proposal.voting = true;
         }

@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 #[error_code]
 pub enum GovernanceError {
-    #[msg("Minimum stake required to create proposal is 5% of cluster stake")]
+    #[msg("Minimum stake required to create proposal is 100k")]
     NotEnoughStake,
     #[msg("The title of the proposal is too long, max 50 char")]
     TitleTooLong,

@@ -1,12 +1,14 @@
-use crate::{
-    error::GovernanceError,
-    stake_weight_bp,
-    state::{Proposal, Vote},
-};
-use anchor_lang::solana_program::vote::{program as vote_program, state::VoteState};
 use anchor_lang::{
     prelude::*,
-    solana_program::epoch_stake::{get_epoch_stake_for_vote_account, get_epoch_total_stake},
+    solana_program::{
+        epoch_stake::{get_epoch_stake_for_vote_account, get_epoch_total_stake},
+        vote::{program as vote_program, state::VoteState},
+    }
+};
+
+use crate::{
+    error::GovernanceError,
+    state::{Proposal, Vote},
 };
 
 #[derive(Accounts)]
@@ -124,52 +126,47 @@ impl<'info> TallyVotes<'info> {
             let validator_stake = get_epoch_stake_for_vote_account(chunk_vote_account.key);
             require_gt!(validator_stake, 0u64, GovernanceError::NotEnoughStake);
 
-            // Calculate the validator's stake weight in basis points relative to cluster stake
-            let validator_weight_bp = TryInto::<u64>::try_into(stake_weight_bp!(
-                validator_stake as u128,
-                cluster_stake as u128
-            )?)?;
+            // Calculate effective votes for each category based on actual lamports
+            // Use u128 to avoid overflow in multiplication, then divide by 10,000
+            // Example (assuming validator_stake = 3372 lamports, ~0.000003372 SOL):
+            // Vote Distribution: for_votes_bp = 7520, against_votes_bp = 2100, abstain_votes_bp = 380
+            // Effective Votes (in lamports):
+            // for_votes = (3372 * 7520) / 10_000 = 2535 (floored)
+            // against_votes = (3372 * 2100) / 10_000 = 708 (floored)
+            // abstain_votes = (3372 * 380) / 10_000 = 128 (floored)
+            // Total apportioned: 3371 lamports (minimal 1 lamport loss due to integer flooring across categories)
 
-            // Calculate effective votes for each category based on validator's stake weight
-            // Validator Weight: (50,000 * 10,000) / 380,000,000 ≈ 13 bp
-            // Vote Distribution: Suppose
-            // for_votes_bp = 7000, against_votes_bp = 2000, abstain_votes_bp = 1000 (total = 10,000 bp)
-            // Effective Votes:
-            // for_votes = (13 * 7000) / 10,000 = 9
-            // against_votes = (13 * 2000) / 10,000 = 2
-            // abstain_votes = (13 * 1000) / 10,000 = 1
-
-            let for_votes = (validator_weight_bp)
-                .checked_mul(vote.for_votes_bp)
+            let for_votes = (validator_stake as u128)
+                .checked_mul(vote.for_votes_bp as u128)
                 .and_then(|product| product.checked_div(10_000))
-                .ok_or(ProgramError::ArithmeticOverflow)?;
+                .ok_or(ProgramError::ArithmeticOverflow)? as u64;
 
-            let against_votes = (validator_weight_bp)
-                .checked_mul(vote.against_votes_bp)
+            let against_votes = (validator_stake as u128)
+                .checked_mul(vote.against_votes_bp as u128)
                 .and_then(|product| product.checked_div(10_000))
-                .ok_or(ProgramError::ArithmeticOverflow)?;
+                .ok_or(ProgramError::ArithmeticOverflow)? as u64;
 
-            let abstain_votes = (validator_weight_bp)
-                .checked_mul(vote.abstain_votes_bp)
+            let abstain_votes = (validator_stake as u128)
+                .checked_mul(vote.abstain_votes_bp as u128)
                 .and_then(|product| product.checked_div(10_000))
-                .ok_or(ProgramError::ArithmeticOverflow)?;
+                .ok_or(ProgramError::ArithmeticOverflow)? as u64;
 
             // Add to the proposal's totals
-            self.proposal.for_votes_bp = self
+            self.proposal.for_votes_lamports = self
                 .proposal
-                .for_votes_bp
+                .for_votes_lamports
                 .checked_add(for_votes)
                 .ok_or(ProgramError::ArithmeticOverflow)?;
 
-            self.proposal.against_votes_bp = self
+            self.proposal.against_votes_lamports = self
                 .proposal
-                .against_votes_bp
+                .against_votes_lamports
                 .checked_add(against_votes)
                 .ok_or(ProgramError::ArithmeticOverflow)?;
 
-            self.proposal.abstain_votes_bp = self
+            self.proposal.abstain_votes_lamports = self
                 .proposal
-                .abstain_votes_bp
+                .abstain_votes_lamports
                 .checked_add(abstain_votes)
                 .ok_or(ProgramError::ArithmeticOverflow)?;
 
