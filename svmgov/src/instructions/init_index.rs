@@ -40,7 +40,7 @@ pub async fn initialize_index(
     spinner.enable_steady_tick(std::time::Duration::from_millis(100));
     
     // Debug: Log before sending transaction
-    log::debug!("Building and sending InitiallizeIndex transaction");
+    log::debug!("Building and sending InitializeIndex transaction");
     let sig = program
         .request()
         .args(args::InitializeIndex {})

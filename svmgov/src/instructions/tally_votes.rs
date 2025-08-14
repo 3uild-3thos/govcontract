@@ -63,7 +63,7 @@ pub async fn tally_votes(
             finalize = true
         }
 
-        let (votes, identity_keys) = votes_chunk
+        let (votes, validator_keys) = votes_chunk
             .iter()
             .map(|(vote_pub, vote_struct)| {
                 (
@@ -77,18 +77,18 @@ pub async fn tally_votes(
             })
             .collect::<(Vec<_>, Vec<_>)>();
 
-        let spl_vote_pubkeys = find_spl_vote_accounts(identity_keys, &program.rpc()).await?;
+        let spl_vote_pubkeys = find_spl_vote_accounts(validator_keys, &program.rpc()).await?;
 
         let spl_vote_accounts = spl_vote_pubkeys
             .iter()
             .map(|spl_vote_pubkey| AccountMeta {
                 pubkey: *spl_vote_pubkey,
                 is_signer: false,
-                is_writable: true,
+                is_writable: false,
             })
             .collect::<Vec<AccountMeta>>();
 
-        let votes = votes
+        let remaining_accounts = votes
             .into_iter()
             .zip(spl_vote_accounts.into_iter())
             .flat_map(|(vote, spl_vote)| [vote, spl_vote])
@@ -104,7 +104,7 @@ pub async fn tally_votes(
                 system_program: system_program::ID,
             })
             // Remaining accounts
-            .accounts(votes)
+            .accounts(remaining_accounts)
             .send()
             .await?;
 

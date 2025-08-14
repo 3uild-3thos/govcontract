@@ -212,31 +212,31 @@ impl fmt::Display for Proposal {
         )?;
         writeln!(
             f,
-            "{:<25} {} bp ({:.2}%)",
+            "{:<25} {} lamports (~{:.2} SOL)",
             "Cluster Support:",
-            self.cluster_support_bp,
-            self.cluster_support_bp as f64 / 100.0
+            self.cluster_support_lamports,
+            self.cluster_support_lamports as f64 / 1_000_000_000.0
         )?;
         writeln!(
             f,
-            "{:<25} {} bp ({:.2}%)",
+            "{:<25} {} lamports (~{:.2} SOL)",
             "For Votes:",
-            self.for_votes_bp,
-            self.for_votes_bp as f64 / 100.0
+            self.for_votes_lamports,
+            self.for_votes_lamports as f64 / 1_000_000_000.0
         )?;
         writeln!(
             f,
-            "{:<25} {} bp ({:.2}%)",
+            "{:<25} {} lamports (~{:.2} SOL)",
             "Against Votes:",
-            self.against_votes_bp,
-            self.against_votes_bp as f64 / 100.0
+            self.against_votes_lamports,
+            self.against_votes_lamports as f64 / 1_000_000_000.0
         )?;
         writeln!(
             f,
-            "{:<25} {} bp ({:.2}%)",
+            "{:<25} {} lamports (~{:.2} SOL)",
             "Abstain Votes:",
-            self.abstain_votes_bp,
-            self.abstain_votes_bp as f64 / 100.0
+            self.abstain_votes_lamports,
+            self.abstain_votes_lamports as f64 / 1_000_000_000.0
         )?;
         writeln!(
             f,
@@ -433,4 +433,6 @@ mod tests {
             "Program ID does not match expected"
         );
     }
+
+    
 }

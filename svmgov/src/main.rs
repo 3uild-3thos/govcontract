@@ -197,6 +197,14 @@ enum Commands {
         /// Filter on status of the proposals <active>.
         #[arg(long, help = "Status of proposal")]
         status: Option<String>,
+
+        /// Limit the number of proposals listed
+        #[arg(long, help = "Limit the number of proposals listed", default_value_t = 0)]
+        limit: usize,
+
+        /// Output in JSON format
+        #[arg(long, help = "Output in JSON format", default_value_t = false)]
+        json: bool,
     },
 
     #[command(
@@ -215,6 +223,14 @@ enum Commands {
         /// Verbose vote list
         #[arg(long, help = "List votes verbose", default_value_t = false)]
         verbose: bool,
+
+        /// Limit the number of votes listed
+        #[arg(long, help = "Limit the number of votes listed", default_value_t = 0)]
+        limit: usize,
+
+        /// Output in JSON format
+        #[arg(long, help = "Output in JSON format", default_value_t = false)]
+        json: bool,
     },
 
     #[command(
@@ -298,17 +314,19 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 instructions::tally_votes(proposal_id.to_string(), cli.identity_keypair, cli.rpc_url)
                     .await?;
             }
-        Commands::ListProposals { status } => {
-                commands::list_proposals(cli.rpc_url, status.clone()).await?;
+        Commands::ListProposals { status, limit, json } => {
+                commands::list_proposals(cli.rpc_url.clone(), status.clone(), Some(*limit), *json).await?;
             }
         Commands::GetProposal { proposal_id } => {
-                commands::get_proposal(cli.rpc_url, proposal_id).await?;
+                commands::get_proposal(cli.rpc_url.clone(), proposal_id).await?;
             }
         Commands::ListVotes {
                 proposal_id,
                 verbose,
+                limit,
+                json,
             } => {
-                commands::list_votes(cli.rpc_url, proposal_id, *verbose).await?;
+                commands::list_votes(cli.rpc_url.clone(), proposal_id, *verbose, Some(*limit), *json).await?;
             }
         Commands::InitIndex {  } => {
             instructions::initialize_index(cli.identity_keypair, cli.rpc_url).await?;

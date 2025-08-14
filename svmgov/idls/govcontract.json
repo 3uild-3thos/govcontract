@@ -441,7 +441,7 @@
     {
       "code": 6000,
       "name": "NotEnoughStake",
-      "msg": "Minimum stake required to create proposal is 5% of cluster stake"
+      "msg": "Minimum stake required to create proposal is 100k"
     },
     {
       "code": 6001,
@@ -574,19 +574,19 @@
             "type": "u64"
           },
           {
-            "name": "cluster_support_bp",
+            "name": "cluster_support_lamports",
             "type": "u64"
           },
           {
-            "name": "for_votes_bp",
+            "name": "for_votes_lamports",
             "type": "u64"
           },
           {
-            "name": "against_votes_bp",
+            "name": "against_votes_lamports",
             "type": "u64"
           },
           {
-            "name": "abstain_votes_bp",
+            "name": "abstain_votes_lamports",
             "type": "u64"
           },
           {

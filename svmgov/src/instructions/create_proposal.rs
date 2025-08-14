@@ -37,16 +37,15 @@ pub async fn create_proposal(
 
     // Generate or use provided seed
     let seed_value = seed.unwrap_or_else(|| rand::random::<u64>());
-    log::debug!("Using seed_value: {}", seed_value);
+    log::debug!("Using seed: {}", seed_value);
 
-    let payer_pubkey = payer.pubkey();
     let proposal_seeds = &[
         b"proposal",
         &seed_value.to_le_bytes(),
-        payer_pubkey.as_ref(),
+        vote_account.as_ref(),
     ];
     let (proposal_pda, _bump) = Pubkey::find_program_address(proposal_seeds, &program.id());
-    let (proposal_index, _bump) = Pubkey::find_program_address(&[b"index"], &program.id());
+    let (proposal_index_pda, _index_bump) = Pubkey::find_program_address(&[b"index"], &program.id());
     log::debug!("Derived proposal PDA: {}", proposal_pda);
 
     // Create a spinner for progress indication
@@ -76,7 +75,7 @@ pub async fn create_proposal(
             signer: payer.pubkey(),
             spl_vote_account: vote_account,
             proposal: proposal_pda,
-            proposal_index,
+            proposal_index: proposal_index_pda,
             system_program: system_program::ID,
         })
         .send()

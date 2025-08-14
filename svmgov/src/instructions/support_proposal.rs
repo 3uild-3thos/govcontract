@@ -39,9 +39,7 @@ pub async fn support_proposal(
         vote_account
     );
 
-    let payer_pubkey = payer.pubkey();
-
-    let support_seeds = &[b"support", proposal_pubkey.as_ref(), payer_pubkey.as_ref()];
+    let support_seeds = &[b"support", proposal_pubkey.as_ref(), vote_account.as_ref()];
     let (support_pda, _bump) = Pubkey::find_program_address(support_seeds, &program.id());
     log::debug!("Derived support_pda: {}", support_pda);
     
