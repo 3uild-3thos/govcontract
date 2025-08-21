@@ -42,4 +42,8 @@ pub enum GovernanceError {
     InvalidVoteAccountSize,
     #[msg("All votes cast on the proposal must be counted to finalize")]
     AllVotesCount,
+    #[msg("Stake account invalid")]
+    InvalidStakeState,
+    #[msg("Invalid Stake acocunt size")]
+    InvalidStakeAccountSize,
 }

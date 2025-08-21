@@ -141,7 +141,9 @@ impl<'info> CreateProposal<'info> {
             proposal_bump: bumps.proposal,
             creation_timestamp: Clock::get()?.unix_timestamp,
             vote_count: 0,
-            index: self.proposal_index.current_index + 1
+            index: self.proposal_index.current_index + 1,
+            merkle_root_hash: [0u8;32],
+            snapshot_slot: Clock::get()?.slot,
         });
         self.proposal_index.current_index += 1;
 

@@ -67,6 +67,16 @@ pub mod govcontract {
         Ok(())
     }
 
+    pub fn cast_vote_override(
+    ctx: Context<CastVoteOverride>,
+    for_votes_bp: u64,
+    against_votes_bp: u64,
+    abstain_votes_bp: u64,
+) -> Result<()> {
+    ctx.accounts.cast_vote_override(for_votes_bp, against_votes_bp, abstain_votes_bp, &ctx.bumps)?;
+    Ok(())
+}
+
     pub fn tally_votes<'info>(
         ctx: Context<'_, '_, 'info, 'info, TallyVotes<'info>>,
         finalize: bool,
