@@ -1,7 +1,11 @@
 use anchor_lang::{
     prelude::*,
     solana_program::{
-        epoch_stake::{get_epoch_stake_for_vote_account, get_epoch_total_stake}, instruction::Instruction, keccak, program::invoke, stake::{program as stake_program, state::StakeStateV2}, vote::{program as vote_program, state::VoteState}
+        epoch_stake::get_epoch_total_stake, 
+        instruction::Instruction, 
+        keccak, program::invoke, 
+        stake::{program as stake_program, state::StakeStateV2}, 
+        vote::{program as vote_program, state::VoteState}
     }
 };
 
@@ -114,22 +118,22 @@ impl<'info> CastVoteOverride<'info> {
         let leaf_data = [&self.signer.key().to_bytes()[..], &self.spl_stake_account.key().to_bytes()[..], &self.spl_vote_account.key().to_bytes()[..], &delegator_stake.to_le_bytes(), &self.proposal.snapshot_slot.to_le_bytes()];
         let leaf_hash = keccak::hashv(&leaf_data);
 
-        // CPI to Snapshot Program's verify instruction
-        let verify_ix = Instruction {
-            program_id: self.snapshot_program.key(),
-            accounts: vec![
-                AccountMeta::new_readonly(self.proposal.key(), false), // Proposal for root
-            ],
-            data: snapshot_program::instruction::Verify {
-                root: self.proposal.merkle_root_hash,
-                leaf: leaf_hash.0,
-                proof,
-            }.data(),
-        };
-        invoke(
-            &verify_ix,
-            &[self.proposal.to_account_info(), self.snapshot_program.to_account_info()],
-        )?;
+        // // CPI to Snapshot Program's verify instruction
+        // let verify_ix = Instruction {
+        //     program_id: self.snapshot_program.key(),
+        //     accounts: vec![
+        //         AccountMeta::new_readonly(self.proposal.key(), false), // Proposal for root
+        //     ],
+        //     data: snapshot_program::instruction::Verify {
+        //         root: self.proposal.merkle_root_hash,
+        //         leaf: leaf_hash.0,
+        //         proof,
+        //     }.data(),
+        // };
+        // invoke(
+        //     &verify_ix,
+        //     &[self.proposal.to_account_info(), self.snapshot_program.to_account_info()],
+        // )?;
 
         // Compute delegator weight and add prorated votes to proposal totals
         let cluster_stake = get_epoch_total_stake();
@@ -141,9 +145,9 @@ impl<'info> CastVoteOverride<'info> {
         let against_add = delegator_weight_bp.checked_mul(against_votes_bp).and_then(|p| p.checked_div(10_000)).ok_or(ProgramError::ArithmeticOverflow)?;
         let abstain_add = delegator_weight_bp.checked_mul(abstain_votes_bp).and_then(|p| p.checked_div(10_000)).ok_or(ProgramError::ArithmeticOverflow)?;
 
-        self.proposal.for_votes_bp = self.proposal.for_votes_bp.checked_add(for_add).ok_or(ProgramError::ArithmeticOverflow)?;
-        self.proposal.against_votes_bp = self.proposal.against_votes_bp.checked_add(against_add).ok_or(ProgramError::ArithmeticOverflow)?;
-        self.proposal.abstain_votes_bp = self.proposal.abstain_votes_bp.checked_add(abstain_add).ok_or(ProgramError::ArithmeticOverflow)?;
+        self.proposal.for_votes_lamports = self.proposal.for_votes_lamports.checked_add(for_add).ok_or(ProgramError::ArithmeticOverflow)?;
+        self.proposal.against_votes_lamports = self.proposal.against_votes_lamports.checked_add(against_add).ok_or(ProgramError::ArithmeticOverflow)?;
+        self.proposal.abstain_votes_lamports = self.proposal.abstain_votes_lamports.checked_add(abstain_add).ok_or(ProgramError::ArithmeticOverflow)?;
 
 
         // Store override

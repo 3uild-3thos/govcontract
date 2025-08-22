@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use crate::{
+    fetch_snapshot_data,
     govcontract::client::{accounts, args},
     setup_all,
 };
@@ -9,30 +10,32 @@ use anchor_lang::system_program;
 use anyhow::{Result, anyhow};
 use indicatif::{ProgressBar, ProgressStyle};
 
-pub async fn cast_vote(
+pub async fn cast_vote_override(
     proposal_id: String,
-    votes_for: u64,
-    votes_against: u64,
-    abstain: u64,
+    for_votes: u64,
+    against_votes: u64,
+    abstain_votes: u64,
     identity_keypair: Option<String>,
     rpc_url: Option<String>,
+    operator_api: Option<String>,
 ) -> Result<()> {
     // Debug: Log input parameters
     log::debug!(
-        "cast_vote: proposal_id={}, votes_for={}, votes_against={}, abstain={}",
+        "cast_vote_override: proposal_id={}, for_votes={}, against_votes={}, abstain_votes={}, operator_api={:?}",
         proposal_id,
-        votes_for,
-        votes_against,
-        abstain
+        for_votes,
+        against_votes,
+        abstain_votes,
+        operator_api
     );
 
     // Validate that the total basis points sum to 10,000 (100%)
-    if votes_for + votes_against + abstain != 10_000 {
+    if for_votes + against_votes + abstain_votes != 10_000 {
         log::debug!(
-            "Validation failed: votes_for={} + votes_against={} + abstain={} != 10,000",
-            votes_for,
-            votes_against,
-            abstain
+            "Validation failed: for_votes={} + against_votes={} + abstain_votes={} != 10,000",
+            for_votes,
+            against_votes,
+            abstain_votes
         );
         return Err(anyhow!("Total vote basis points must sum to 10,000"));
     }
@@ -64,10 +67,14 @@ pub async fn cast_vote(
         vote_account
     );
 
-    // Derive the vote PDA using the seeds ["vote", proposal, spl_vote_account]
-    let vote_seeds = &[b"vote", proposal_pubkey.as_ref(), vote_account.as_ref()];
-    let (vote_pda, bump) = Pubkey::find_program_address(vote_seeds, &program.id());
-    log::debug!("Derived vote PDA: vote_pda={}, bump={}", vote_pda, bump);
+    // For now, we'll use placeholder data since the actual snapshot integration isn't ready
+    // TODO: Implement actual snapshot data fetching from operator API
+    log::debug!("Using placeholder snapshot data for now");
+
+    // Fetch snapshot data from operator API
+    let snapshot_data =
+        fetch_snapshot_data(&payer.pubkey(), &proposal_pubkey, operator_api).await?;
+    println!("📸 Snapshot data retrieved successfully");
 
     // Create a spinner for progress indication
     let spinner = ProgressBar::new_spinner();
@@ -78,34 +85,50 @@ pub async fn cast_vote(
             .tick_strings(&["⠏", "⠇", "⠦", "⠴", "⠼", "⠸", "⠹", "⠙", "⠋", "⠓"]),
     );
 
-    spinner.set_message("Sending cast-vote transaction...");
+    spinner.set_message("Sending vote override transaction...");
     spinner.enable_steady_tick(std::time::Duration::from_millis(100));
 
     // Debug: Log before sending transaction
-    log::debug!("Building and sending CastVote transaction");
+    log::debug!("Building and sending CastVoteOverride transaction");
+
+    // TODO: Uncomment when the contract types are available
+    
     let sig = program
         .request()
-        .args(args::CastVote {
-            for_votes_bp: votes_for as u64,
-            against_votes_bp: votes_against as u64,
-            abstain_votes_bp: abstain as u64,
+        .args(args::CastVoteOverride {
+            for_votes_bp: for_votes,
+            against_votes_bp: against_votes,
+            abstain_votes_bp: abstain_votes,
+            proof: snapshot_data.merkle_proof,
         })
-        .accounts(accounts::CastVote {
+        .accounts(accounts::CastVoteOverride {
             signer: payer.pubkey(),
             spl_vote_account: vote_account,
+            spl_stake_account: snapshot_data.stake_account,
             proposal: proposal_pubkey,
-            vote: vote_pda,
+            validator_vote: snapshot_data.validator_vote_pda,
+            vote_override: snapshot_data.vote_override_pda,
+            snapshot_program: snapshot_data.snapshot_program,
             system_program: system_program::ID,
         })
         .send()
         .await?;
     log::debug!("Transaction sent successfully: signature={}", sig);
+    
+
+    // For now, just show what would be sent
+    log::debug!("Vote override data prepared:");
+    log::debug!("  - Proposal: {}", proposal_pubkey);
+    log::debug!("  - For votes: {} bp", for_votes);
+    log::debug!("  - Against votes: {} bp", against_votes);
+    log::debug!("  - Abstain votes: {} bp", abstain_votes);
+    log::debug!("  - Snapshot data retrieved successfully");
 
     spinner.finish_with_message(format!(
-        "Vote cast successfully. https://explorer.solana.com/tx/{}",
-        sig
+        "Vote override prepared for proposal {}. Ready for contract integration.",
+        proposal_pubkey
     ));
 
-    log::debug!("cast_vote completed successfully");
+    log::debug!("cast_vote_override completed successfully");
     Ok(())
 }

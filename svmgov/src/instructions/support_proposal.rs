@@ -42,14 +42,14 @@ pub async fn support_proposal(
     let support_seeds = &[b"support", proposal_pubkey.as_ref(), vote_account.as_ref()];
     let (support_pda, _bump) = Pubkey::find_program_address(support_seeds, &program.id());
     log::debug!("Derived support_pda: {}", support_pda);
-    
+
     // Create a spinner for progress indication
     let spinner = ProgressBar::new_spinner();
     spinner.set_style(
         ProgressStyle::default_spinner()
             .template("{spinner:.green} {msg}")
             .unwrap()
-            .tick_strings(&["⠏", "⠇", "⠦", "⠴", "⠼", "⠸", "⠹", "⠙", "⠋", "⠓"])
+            .tick_strings(&["⠏", "⠇", "⠦", "⠴", "⠼", "⠸", "⠹", "⠙", "⠋", "⠓"]),
     );
 
     spinner.set_message("Supporting proposal...");
@@ -71,7 +71,8 @@ pub async fn support_proposal(
     log::debug!("Transaction sent successfully: signature={}", sig);
 
     spinner.finish_with_message(format!(
-        "Proposal supported. https://explorer.solana.com/tx/{}", sig
+        "Proposal supported. https://explorer.solana.com/tx/{}",
+        sig
     ));
 
     Ok(())

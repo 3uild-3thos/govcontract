@@ -48,13 +48,13 @@ pub async fn modify_vote(
     let (vote_pda, _bump) = Pubkey::find_program_address(vote_seeds, &program.id());
     debug!("Derived vote PDA: {}", vote_pda);
 
-     // Create a spinner for progress indication
+    // Create a spinner for progress indication
     let spinner = ProgressBar::new_spinner();
     spinner.set_style(
         ProgressStyle::default_spinner()
             .template("{spinner:.green} {msg}")
             .unwrap()
-            .tick_strings(&["⠏", "⠇", "⠦", "⠴", "⠼", "⠸", "⠹", "⠙", "⠋", "⠓"])
+            .tick_strings(&["⠏", "⠇", "⠦", "⠴", "⠼", "⠸", "⠹", "⠙", "⠋", "⠓"]),
     );
 
     spinner.set_message("Modifying vote...");
@@ -78,11 +78,11 @@ pub async fn modify_vote(
         })
         .send()
         .await?;
-    
+
     spinner.finish_with_message(format!(
         "Vote modified successfully. https://explorer.solana.com/tx/{}",
         sig
     ));
-    
+
     Ok(())
 }

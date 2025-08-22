@@ -1,7 +1,6 @@
 use anchor_client::anchor_lang::declare_program;
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use env_logger;
 mod instructions;
 mod utils;
 use utils::{commands, utils::*};
@@ -37,10 +36,10 @@ struct Cli {
 
     /// Custom rpc url. This argument is also global and can be used with any subcommand.
     #[arg(
-        short, 
-        long, 
-        help = "Custom rpc url (or set via SVMGOV_RPC env var)", 
-        global = true, 
+        short,
+        long,
+        help = "Custom rpc url (or set via SVMGOV_RPC env var)",
+        global = true,
         env = "SVMGOV_RPC"
     )]
     rpc_url: Option<String>,
@@ -199,7 +198,11 @@ enum Commands {
         status: Option<String>,
 
         /// Limit the number of proposals listed
-        #[arg(long, help = "Limit the number of proposals listed", default_value_t = 0)]
+        #[arg(
+            long,
+            help = "Limit the number of proposals listed",
+            default_value_t = 0
+        )]
         limit: usize,
 
         /// Output in JSON format
@@ -241,6 +244,45 @@ enum Commands {
                       $ svmgov --identity-keypair /path/to/key.json --rpc-url https://api.mainnet-beta.solana.com init-index"
     )]
     InitIndex {},
+
+    #[command(
+        about = "Override validator vote with delegator vote",
+        long_about = "This command allows a delegator to override their validator's vote on a proposal. \
+                      The CLI fetches snapshot data from the operator API and submits the override. \
+                      Requires the delegator's stake account and the proposal ID.\n\n\
+                      Example:\n\
+                      $ svmgov --identity-keypair /path/to/key.json cast-vote-override --proposal-id \"123\" --for-votes 6000 --against-votes 3000 --abstain-votes 1000"
+    )]
+    CastVoteOverride {
+        /// Proposal ID for which to override the vote
+        #[arg(long, help = "Proposal ID")]
+        proposal_id: String,
+
+        /// Basis points for 'For' vote
+        #[arg(
+            long,
+            help = "Basis points for 'For' (must sum to 10,000 with other votes)"
+        )]
+        for_votes: u64,
+
+        /// Basis points for 'Against' vote
+        #[arg(
+            long,
+            help = "Basis points for 'Against' (must sum to 10,000 with other votes)"
+        )]
+        against_votes: u64,
+
+        /// Basis points for 'Abstain' vote
+        #[arg(
+            long,
+            help = "Basis points for 'Abstain' (must sum to 10,000 with other votes)"
+        )]
+        abstain_votes: u64,
+
+        /// Operator API endpoint (optional, uses env var by default)
+        #[arg(long, help = "Operator API endpoint for snapshot data")]
+        operator_api: Option<String>,
+    },
 }
 
 async fn handle_command(cli: Cli) -> Result<()> {
@@ -253,84 +295,114 @@ async fn handle_command(cli: Cli) -> Result<()> {
 
     match &cli.command {
         Commands::CreateProposal {
-                        seed,
-                        title,
-                        description,
-                        start_epoch,
-                        length,
-            } => {
-                instructions::create_proposal(
-                    title.to_string(),
-                    description.to_string(),
-                    *seed,
-                    cli.identity_keypair,
-                    cli.rpc_url,
-                    *start_epoch,
-                    *length,
-                )
-                .await?;
-            }
+            seed,
+            title,
+            description,
+            start_epoch,
+            length,
+        } => {
+            instructions::create_proposal(
+                title.to_string(),
+                description.to_string(),
+                *seed,
+                cli.identity_keypair,
+                cli.rpc_url,
+                *start_epoch,
+                *length,
+            )
+            .await?;
+        }
         Commands::SupportProposal { proposal_id } => {
-                instructions::support_proposal(
-                    proposal_id.to_string(),
-                    cli.identity_keypair,
-                    cli.rpc_url,
-                )
-                .await?;
-            }
+            instructions::support_proposal(
+                proposal_id.to_string(),
+                cli.identity_keypair,
+                cli.rpc_url,
+            )
+            .await?;
+        }
         Commands::CastVote {
-                proposal_id,
-                for_votes,
-                against_votes,
-                abstain_votes,
-            } => {
-                instructions::cast_vote(
-                    proposal_id.to_string(),
-                    *for_votes,
-                    *against_votes,
-                    *abstain_votes,
-                    cli.identity_keypair,
-                    cli.rpc_url,
-                )
-                .await?;
-            }
+            proposal_id,
+            for_votes,
+            against_votes,
+            abstain_votes,
+        } => {
+            instructions::cast_vote(
+                proposal_id.to_string(),
+                *for_votes,
+                *against_votes,
+                *abstain_votes,
+                cli.identity_keypair,
+                cli.rpc_url,
+            )
+            .await?;
+        }
         Commands::ModifyVote {
-                proposal_id,
-                for_votes,
-                against_votes,
-                abstain_votes,
-            } => {
-                instructions::modify_vote(
-                    proposal_id.to_string(),
-                    *for_votes,
-                    *against_votes,
-                    *abstain_votes,
-                    cli.identity_keypair,
-                    cli.rpc_url,
-                )
-                .await?;
-            }
+            proposal_id,
+            for_votes,
+            against_votes,
+            abstain_votes,
+        } => {
+            instructions::modify_vote(
+                proposal_id.to_string(),
+                *for_votes,
+                *against_votes,
+                *abstain_votes,
+                cli.identity_keypair,
+                cli.rpc_url,
+            )
+            .await?;
+        }
         Commands::TallyVotes { proposal_id } => {
-                instructions::tally_votes(proposal_id.to_string(), cli.identity_keypair, cli.rpc_url)
-                    .await?;
-            }
-        Commands::ListProposals { status, limit, json } => {
-                commands::list_proposals(cli.rpc_url.clone(), status.clone(), Some(*limit), *json).await?;
-            }
+            instructions::tally_votes(proposal_id.to_string(), cli.identity_keypair, cli.rpc_url)
+                .await?;
+        }
+        Commands::ListProposals {
+            status,
+            limit,
+            json,
+        } => {
+            commands::list_proposals(cli.rpc_url.clone(), status.clone(), Some(*limit), *json)
+                .await?;
+        }
         Commands::GetProposal { proposal_id } => {
-                commands::get_proposal(cli.rpc_url.clone(), proposal_id).await?;
-            }
+            commands::get_proposal(cli.rpc_url.clone(), proposal_id).await?;
+        }
         Commands::ListVotes {
+            proposal_id,
+            verbose,
+            limit,
+            json,
+        } => {
+            commands::list_votes(
+                cli.rpc_url.clone(),
                 proposal_id,
-                verbose,
-                limit,
-                json,
-            } => {
-                commands::list_votes(cli.rpc_url.clone(), proposal_id, *verbose, Some(*limit), *json).await?;
-            }
-        Commands::InitIndex {  } => {
+                *verbose,
+                Some(*limit),
+                *json,
+            )
+            .await?;
+        }
+        Commands::InitIndex {} => {
             instructions::initialize_index(cli.identity_keypair, cli.rpc_url).await?;
-        },
+        }
+        Commands::CastVoteOverride {
+            proposal_id,
+            for_votes,
+            against_votes,
+            abstain_votes,
+            operator_api,
+        } => {
+            instructions::cast_vote_override(
+                proposal_id.to_string(),
+                *for_votes,
+                *against_votes,
+                *abstain_votes,
+                cli.identity_keypair,
+                cli.rpc_url,
+                operator_api.clone(),
+            )
+            .await?;
+        }
     }
 
     Ok(())

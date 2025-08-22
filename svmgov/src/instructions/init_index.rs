@@ -25,7 +25,11 @@ pub async fn initialize_index(
 
     // Derive the index PDA using the seed ["index"]
     let (proposal_index, _bump) = Pubkey::find_program_address(&[b"index"], &program.id());
-    log::debug!("Derived index PDA: index_pda={}, bump={}", proposal_index, _bump);
+    log::debug!(
+        "Derived index PDA: index_pda={}, bump={}",
+        proposal_index,
+        _bump
+    );
 
     // Create a spinner for progress indication
     let spinner = ProgressBar::new_spinner();
@@ -33,12 +37,12 @@ pub async fn initialize_index(
         ProgressStyle::default_spinner()
             .template("{spinner:.green} {msg}")
             .unwrap()
-            .tick_strings(&["⠏", "⠇", "⠦", "⠴", "⠼", "⠸", "⠹", "⠙", "⠋", "⠓"])
+            .tick_strings(&["⠏", "⠇", "⠦", "⠴", "⠼", "⠸", "⠹", "⠙", "⠋", "⠓"]),
     );
 
     spinner.set_message("Sending init_index transaction...");
     spinner.enable_steady_tick(std::time::Duration::from_millis(100));
-    
+
     // Debug: Log before sending transaction
     log::debug!("Building and sending InitializeIndex transaction");
     let sig = program

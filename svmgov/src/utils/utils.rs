@@ -306,6 +306,40 @@ impl fmt::Display for Vote {
     }
 }
 
+// Snapshot data structure
+pub struct SnapshotData {
+    pub validator_vote_account: Pubkey,
+    pub stake_account: Pubkey,
+    pub validator_vote_pda: Pubkey,
+    pub vote_override_pda: Pubkey,
+    pub snapshot_program: Pubkey,
+    pub merkle_proof: Vec<[u8; 32]>,
+}
+
+pub async fn fetch_snapshot_data(
+    delegator: &Pubkey,
+    proposal: &Pubkey,
+    operator_api: Option<String>,
+) -> Result<SnapshotData> {
+    let api_url = operator_api.unwrap_or_else(|| {
+        std::env::var("OPERATOR_API_URL").unwrap_or_else(|_| "https://api.operator.com".to_string())
+    });
+
+    // This is a placeholder implementation
+    // 1. Make HTTP request to operator API
+    // 2. Get delegator's stake account, validator info, and merkle proof
+    // 3. Calculate PDAs for validator vote and vote override
+    // 4. Return the complete snapshot data
+
+    println!("🌐 Fetching snapshot data from: {}", api_url);
+
+    // For now, return mock data structure
+    // TODO: Implement actual API call to operator
+    anyhow::bail!(
+        "Snapshot data fetching not yet implemented. This requires integration with the operator API to get delegator stake information, validator vote accounts, and merkle proofs."
+    );
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -433,6 +467,4 @@ mod tests {
             "Program ID does not match expected"
         );
     }
-
-    
 }

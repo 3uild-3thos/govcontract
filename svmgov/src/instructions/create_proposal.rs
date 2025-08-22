@@ -45,7 +45,8 @@ pub async fn create_proposal(
         vote_account.as_ref(),
     ];
     let (proposal_pda, _bump) = Pubkey::find_program_address(proposal_seeds, &program.id());
-    let (proposal_index_pda, _index_bump) = Pubkey::find_program_address(&[b"index"], &program.id());
+    let (proposal_index_pda, _index_bump) =
+        Pubkey::find_program_address(&[b"index"], &program.id());
     log::debug!("Derived proposal PDA: {}", proposal_pda);
 
     // Create a spinner for progress indication
@@ -54,7 +55,7 @@ pub async fn create_proposal(
         ProgressStyle::default_spinner()
             .template("{spinner:.green} {msg}")
             .unwrap()
-            .tick_strings(&["⠏", "⠇", "⠦", "⠴", "⠼", "⠸", "⠹", "⠙", "⠋", "⠓"])
+            .tick_strings(&["⠏", "⠇", "⠦", "⠴", "⠼", "⠸", "⠹", "⠙", "⠋", "⠓"]),
     );
 
     spinner.set_message("Creating proposal...");

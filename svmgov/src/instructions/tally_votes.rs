@@ -7,8 +7,8 @@ use anchor_client::{
 use anchor_lang::prelude::AccountMeta;
 use anchor_lang::system_program;
 use anyhow::{Result, anyhow};
-use log::info;
 use indicatif::{ProgressBar, ProgressStyle};
+use log::info;
 
 use crate::{
     govcontract::{
@@ -36,13 +36,13 @@ pub async fn tally_votes(
         MemcmpEncodedBytes::Bytes(proposal_pubkey.to_bytes().to_vec()),
     ));
 
-     // Create a spinner for progress indication
+    // Create a spinner for progress indication
     let spinner = ProgressBar::new_spinner();
     spinner.set_style(
         ProgressStyle::default_spinner()
             .template("{spinner:.green} {msg}")
             .unwrap()
-            .tick_strings(&["⠏", "⠇", "⠦", "⠴", "⠼", "⠸", "⠹", "⠙", "⠋", "⠓"])
+            .tick_strings(&["⠏", "⠇", "⠦", "⠴", "⠼", "⠸", "⠹", "⠙", "⠋", "⠓"]),
     );
 
     spinner.set_message("Gathering vote accounts, tallying votes...");
