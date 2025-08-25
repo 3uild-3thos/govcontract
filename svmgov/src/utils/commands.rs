@@ -12,6 +12,7 @@ use serde_json::{Value, json};
 
 use crate::{
     anchor_client_setup,
+    find_delegator_stake_accounts,
     govcontract::accounts::{Proposal, Vote},
 };
 
@@ -50,7 +51,7 @@ pub async fn list_proposals(
 
     if let Some(filter) = proposal_filter {
         if filter == "active" {
-            proposals = proposals.into_iter().filter(|p| p.1.voting).collect();
+            proposals.retain(|p| p.1.voting);
         }
     }
 
@@ -187,6 +188,29 @@ pub async fn get_proposal(rpc_url: Option<String>, proposal_id: &String) -> Resu
     let proposal_acc = program.account::<Proposal>(proposal_pubkey).await?;
 
     println!("Proposal id:  {} \n{}", proposal_id, proposal_acc);
+
+    Ok(())
+}
+
+pub async fn list_stake_accounts(
+    rpc_url: Option<String>,
+    delegator_wallet: Pubkey,
+) -> Result<()> {
+    // Create a mock Payer
+    let mock_payer = Arc::new(Keypair::new());
+
+    // Set up RPC client via anchor setup (consistent with other commands)
+    let program = anchor_client_setup(rpc_url, payer)?;
+    let rpc_client = program.rpc();
+
+    // Fetch and log
+    let stakes = find_delegator_stake_accounts(&delegator_wallet, &rpc_client).await?;
+    for (stake_pk, vote_pk, validator_pk, active_stake) in stakes {
+        println!(
+            "Stake Account: {}, Vote Account: {}, Validator Identity: {}, Active Stake: {}",
+            stake_pk, vote_pk, validator_pk, active_stake
+        );
+    }
 
     Ok(())
 }

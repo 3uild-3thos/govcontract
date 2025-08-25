@@ -1,36 +1,34 @@
+#![allow(clippy::too_many_arguments)]
+use crate::{
+    error::GovernanceError,
+    merkle_helpers::{ConsensusResult, MetaMerkleLeaf},
+    state::{Proposal, ProposalIndex},
+    utils::is_valid_github_link, 
+    SNAPSHOT_PROGRAM_ID,
+};
+
 use anchor_lang::{
     prelude::*,
     solana_program::{
-        epoch_stake::{get_epoch_stake_for_vote_account, get_epoch_total_stake},
+        epoch_stake::get_epoch_total_stake, hash::hash, instruction::Instruction,
+        native_token::LAMPORTS_PER_SOL, program::invoke,
         vote::{program as vote_program, state::VoteState},
-        native_token::LAMPORTS_PER_SOL
+
     },
 };
 
-use crate::{
-    utils::is_valid_github_link,
-    error::GovernanceError, 
-    stake_weight_bp, 
-    state::{Proposal, ProposalIndex}
-};
 
 #[derive(Accounts)]
 #[instruction(seed: u64)]
 pub struct CreateProposal<'info> {
     #[account(mut)]
-    pub signer: Signer<'info>,
-    /// CHECK: Vote account is too big to deserialize, so we check on owner and size, then compare node_pubkey with signer
-    #[account(
-        constraint = spl_vote_account.owner == &vote_program::ID @ ProgramError::InvalidAccountOwner,
-        constraint = spl_vote_account.data_len() == VoteState::size_of() @ GovernanceError::InvalidVoteAccountSize
-    )]
-    pub spl_vote_account: AccountInfo<'info>,
+    pub signer: Signer<'info>, // Proposal creator (validator)
     #[account(
         init,
         payer = signer,
-        seeds = [b"proposal", seed.to_le_bytes().as_ref(), spl_vote_account.key.as_ref()],
+        seeds = [b"proposal", seed.to_le_bytes().as_ref(), spl_vote_account.key().as_ref()],
         bump,
-        space = Proposal::INIT_SPACE,
+        space = 8 + Proposal::INIT_SPACE,
     )]
     pub proposal: Account<'info, Proposal>,
     #[account(
@@ -39,6 +37,18 @@ pub struct CreateProposal<'info> {
         bump = proposal_index.bump
     )]
     pub proposal_index: Account<'info, ProposalIndex>,
+    /// CHECK: Vote account is too big to deserialize, so we check on owner and size, then compare node_pubkey with signer
+    #[account(
+        constraint = spl_vote_account.owner == &vote_program::ID @ ProgramError::InvalidAccountOwner,
+        constraint = spl_vote_account.data_len() == VoteState::size_of() @ GovernanceError::InvalidVoteAccountSize
+    )]
+    pub spl_vote_account: AccountInfo<'info>,
+    /// CHECK:
+    #[account(constraint = snapshot_program.key() == SNAPSHOT_PROGRAM_ID @ GovernanceError::InvalidSnapshotProgram)]
+    pub snapshot_program: UncheckedAccount<'info>,
+    // pub snapshot_program: Program<'info, Snapshot>,  // Snapshot Program for verification, uncomment in production
+    #[account(seeds = [b"consensus_result"], bump)] // ConsensusResult PDA, assuming seeds
+    pub consensus_result: Account<'info, ConsensusResult>, // Holds snapshot_slot and snapshot_hash
     pub system_program: Program<'info, System>,
 }
 
@@ -49,89 +59,84 @@ impl<'info> CreateProposal<'info> {
         description: String,
         start_epoch: u64,
         voting_length_epochs: u64,
+        meta_merkle_proof: Vec<[u8; 32]>, // Merkle proof for validator leaf
+        meta_merkle_leaf: MetaMerkleLeaf, // Validator leaf data
         bumps: &CreateProposalBumps,
     ) -> Result<()> {
+        // Validate proposal inputs
         require!(title.len() <= 50, GovernanceError::TitleTooLong);
-
         require!(
             description.len() <= 250,
             GovernanceError::DescriptionTooLong
         );
-
-        // Description must be a github link, leading to the proposal
         require!(
             is_valid_github_link(&description),
             GovernanceError::DescriptionInvalid
         );
-
-        // Voting length can't be 0
         require_gt!(
             voting_length_epochs,
             0u64,
             GovernanceError::InvalidVotingLength
         );
 
-        let vote_account_data = self.spl_vote_account.data.borrow();
-        let version = u32::from_le_bytes(
-            vote_account_data[0..4]
-                .try_into()
-                .map_err(|_| GovernanceError::InvalidVoteAccount)?,
-        );
-        require!(version <= 2, GovernanceError::InvalidVoteAccount);
-
-        // 4 bytes discriminant, 32 bytes node_pubkey
-        let node_pubkey =
-            Pubkey::try_from(&vote_account_data[4..36]).map_err(|_| GovernanceError::InvalidVoteAccount)?;
-        // Validator identity must be part of the Vote account
+        // Ensure leaf matches signer and has sufficient stake
         require_keys_eq!(
-            node_pubkey,
+            meta_merkle_leaf.voting_wallet,
             self.signer.key(),
             GovernanceError::InvalidVoteAccount
         );
-
-        // Get cluster stake syscall
-        let cluster_stake = get_epoch_total_stake();
-        require_gt!(cluster_stake, 0u64, GovernanceError::InvalidClusterStake);
-        msg!("Epoch stake {}", cluster_stake);
-
-        // Get proposal creator stake
-        let proposer_stake = get_epoch_stake_for_vote_account(self.spl_vote_account.key);
-        msg!("Validator stake {}", proposer_stake);
-
-        // Only staked validators with at least 100k stake can submit a proposal to be considered for voting
         require_gte!(
-            proposer_stake,
+            meta_merkle_leaf.active_stake,
             100_000 * LAMPORTS_PER_SOL,
             GovernanceError::NotEnoughStake
         );
 
-        // Get the current epoch from the Clock sysvar
-        let clock = Clock::get()?;
-        let current_epoch = clock.epoch;
+        // Hash the leaf for verification
+        let leaf_bytes = meta_merkle_leaf.try_to_vec()?;
+        let leaf_hash = hash(&leaf_bytes).to_bytes();
 
-        // Start epoch must be current or future epoch
-        require_gte!(
-            start_epoch,
-            current_epoch,
-            GovernanceError::InvalidStartEpoch
+        // Get root and slot from ConsensusResult
+        let root = self.consensus_result.snapshot_hash;
+        let snapshot_slot = self.consensus_result.snapshot_slot;
+
+        // Ensure snapshot is not stale
+        let clock = Clock::get()?;
+        require!(
+            snapshot_slot <= clock.slot && clock.slot - snapshot_slot < 1000,
+            GovernanceError::StaleSnapshot
         );
 
-        // Add proposer stake weight to support weight??
+        // CPI to verify Merkle inclusion
+        // let verify_ix = Instruction {
+        //     program_id: SNAPSHOT_PROGRAM_ID,
+        //     accounts: vec![
+        //         AccountMeta::new_readonly(*self.snapshot_program.key, false),
+        //         AccountMeta::new_readonly(*self.consensus_result.key, false),
+        //     ],
+        //     data: snapshot_program::instruction::Verify {
+        //         leaf_hash,
+        //         proof: meta_merkle_proof,
+        //         root,
+        //     }.data(),
+        // };
+        // invoke(&verify_ix, &[self.snapshot_program.to_account_info()])?;
+
+        // Calculate stake weight basis points
+        let cluster_stake = get_epoch_total_stake();
         let proposer_stake_weight_bp =
-            stake_weight_bp!(proposer_stake as u128, cluster_stake as u128)?;
+            (meta_merkle_leaf.active_stake as u128 * 10_000) / cluster_stake as u128;
 
-        msg!("Validator stake weight BP{}", proposer_stake_weight_bp);
-
+        // Initialize proposal account
         self.proposal.set_inner(Proposal {
             author: self.signer.key(),
             title,
             description,
-            creation_epoch: current_epoch,
+            creation_epoch: clock.epoch,
             start_epoch,
             end_epoch: start_epoch
                 .checked_add(voting_length_epochs)
                 .ok_or(ProgramError::ArithmeticOverflow)?,
-            proposer_stake_weight_bp: TryInto::<u64>::try_into(proposer_stake_weight_bp)?,
+            proposer_stake_weight_bp: proposer_stake_weight_bp.try_into()?,
             cluster_support_lamports: 0,
             for_votes_lamports: 0,
             against_votes_lamports: 0,
@@ -139,11 +144,11 @@ impl<'info> CreateProposal<'info> {
             voting: false,
             finalized: false,
             proposal_bump: bumps.proposal,
-            creation_timestamp: Clock::get()?.unix_timestamp,
+            creation_timestamp: clock.unix_timestamp,
             vote_count: 0,
             index: self.proposal_index.current_index + 1,
-            merkle_root_hash: [0u8;32],
-            snapshot_slot: Clock::get()?.slot,
+            merkle_root_hash: root,
+            snapshot_slot,
         });
         self.proposal_index.current_index += 1;
 

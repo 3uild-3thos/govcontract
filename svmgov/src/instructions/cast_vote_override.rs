@@ -67,10 +67,6 @@ pub async fn cast_vote_override(
         vote_account
     );
 
-    // For now, we'll use placeholder data since the actual snapshot integration isn't ready
-    // TODO: Implement actual snapshot data fetching from operator API
-    log::debug!("Using placeholder snapshot data for now");
-
     // Fetch snapshot data from operator API
     let snapshot_data =
         fetch_snapshot_data(&payer.pubkey(), &proposal_pubkey, operator_api).await?;

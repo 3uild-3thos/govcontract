@@ -13,4 +13,3 @@ pub use init_index::initialize_index;
 pub use modify_vote::modify_vote;
 pub use support_proposal::support_proposal;
 pub use tally_votes::tally_votes;
-// pub use init_index::initialize_index;

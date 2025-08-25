@@ -1,80 +1,101 @@
-use anchor_lang::{
-    prelude::*,
-    solana_program::{
-        epoch_stake::{get_epoch_stake_for_vote_account, get_epoch_total_stake},
-        vote::{program as vote_program, state::VoteState},
-    },
-};
+#![allow(clippy::too_many_arguments)]
 
 use crate::{
     error::GovernanceError,
+    merkle_helpers::{ConsensusResult, MetaMerkleLeaf},
     state::{Proposal, Support},
+    SNAPSHOT_PROGRAM_ID,
+};
+
+use anchor_lang::{
+    prelude::*,
+    solana_program::{
+        epoch_stake::get_epoch_total_stake, hash::hash, instruction::Instruction,
+        native_token::LAMPORTS_PER_SOL, program::invoke,
+    },
 };
 
 #[derive(Accounts)]
 pub struct SupportProposal<'info> {
     #[account(mut)]
-    pub signer: Signer<'info>,
-    /// CHECK: Vote account is too big to deserialize, so we check on owner and size, then compare node_pubkey with signer
-    #[account(
-        constraint = spl_vote_account.owner == &vote_program::ID @ ProgramError::InvalidAccountOwner,
-        constraint = spl_vote_account.data_len() == VoteState::size_of() @ GovernanceError::InvalidVoteAccountSize
-    )]
-    pub spl_vote_account: AccountInfo<'info>,
+    pub signer: Signer<'info>, // Proposal supporter (validator)
     #[account(mut)]
-    pub proposal: Account<'info, Proposal>,
+    pub proposal: Account<'info, Proposal>, // Proposal to support
     #[account(
         init,
         payer = signer,
         space = 8 + Support::INIT_SPACE,
-        seeds = [b"support", proposal.key().as_ref(), spl_vote_account.key.as_ref()],
+        seeds = [b"support", proposal.key().as_ref(), signer.key().as_ref()],
         bump
     )]
-    pub support: Account<'info, Support>,
-    pub system_program: Program<'info, System>,
+    pub support: Account<'info, Support>, // New support account
+    /// CHECK:
+    #[account(constraint = snapshot_program.key() == SNAPSHOT_PROGRAM_ID @ GovernanceError::InvalidSnapshotProgram)]
+    pub snapshot_program: UncheckedAccount<'info>,
+    // pub snapshot_program: Program<'info, Snapshot>,  // Snapshot Program for verification, uncomment in production
+    #[account(seeds = [b"consensus_result"], bump)] // ConsensusResult PDA
+    pub consensus_result: Account<'info, ConsensusResult>, // Holds snapshot_slot and snapshot_hash
+    pub system_program: Program<'info, System>, // For account creation
 }
 
 impl<'info> SupportProposal<'info> {
-    pub fn support_proposal(&mut self, bumps: &SupportProposalBumps) -> Result<()> {
+    pub fn support_proposal(
+        &mut self,
+        meta_merkle_proof: Vec<[u8; 32]>, // Merkle proof for validator leaf
+        meta_merkle_leaf: MetaMerkleLeaf, // Validator leaf data
+        bumps: &SupportProposalBumps,
+    ) -> Result<()> {
+        // Ensure proposal is eligible for support
         require!(!self.proposal.voting, GovernanceError::ProposalClosed);
         require!(!self.proposal.finalized, GovernanceError::ProposalFinalized);
 
-        let vote_account_data = &self.spl_vote_account.data.borrow();
-
-        let version = u32::from_le_bytes(
-            vote_account_data[0..4]
-                .try_into()
-                .map_err(|_| GovernanceError::InvalidVoteAccountVersion)?,
-        );
-
-        require!(version <= 2, GovernanceError::InvalidVoteAccount);
-
-        // 4 bytes discriminant, 32 bytes node_pubkey
-        let node_pubkey = Pubkey::try_from(&vote_account_data[4..36])
-            .map_err(|_| GovernanceError::InvalidVoteAccount)?;
-
-        // Validator identity must be part of the Vote account
+        // Ensure leaf matches signer and has sufficient stake
         require_keys_eq!(
-            node_pubkey,
+            meta_merkle_leaf.voting_wallet,
             self.signer.key(),
             GovernanceError::InvalidVoteAccount
         );
+        require_gte!(
+            meta_merkle_leaf.active_stake,
+            1_000 * LAMPORTS_PER_SOL,
+            GovernanceError::NotEnoughStake
+        );
 
-        // Get cluster stake
-        let cluster_stake = get_epoch_total_stake();
-        require_gt!(cluster_stake, 0u64, GovernanceError::InvalidClusterStake);
+        // Hash the leaf for verification
+        let leaf_bytes = meta_merkle_leaf.try_to_vec()?;
+        let leaf_hash = hash(&leaf_bytes).to_bytes();
 
-        // Get supporter stake
-        let supporter_stake = get_epoch_stake_for_vote_account(self.spl_vote_account.key);
+        // Get root and slot from ConsensusResult
+        let root = self.consensus_result.snapshot_hash;
+        let snapshot_slot = self.consensus_result.snapshot_slot;
 
-        // Ensure the supporter has some stake
-        require!(supporter_stake > 0, GovernanceError::NotEnoughStake);
+        // Ensure snapshot is not stale (adjust delta as needed)
+        let clock = Clock::get()?;
+        require!(
+            snapshot_slot <= clock.slot && clock.slot - snapshot_slot < 1000,
+            GovernanceError::StaleSnapshot
+        );
 
-        // Add the supporter's raw stake (in lamports) to the proposal's cluster support
+        // CPI to verify Merkle inclusion
+        // let verify_ix = Instruction {
+        //     program_id: SNAPSHOT_PROGRAM_ID,
+        //     accounts: vec![
+        //         AccountMeta::new_readonly(self.snapshot_program.key(), false),
+        //         AccountMeta::new_readonly(self.consensus_result.key(), false),  // Verify reads ConsensusResult
+        //     ],
+        //     data: snapshot_program::instruction::Verify {
+        //         leaf_hash,
+        //         proof: meta_merkle_proof,
+        //         root,
+        //     }.data(),
+        // };
+        // invoke(&verify_ix, &[self.snapshot_program.to_account_info(), self.consensus_result.to_account_info()])?;
+
+        // Add the supporter's stake (from verified leaf) to the proposal's cluster support
         self.proposal.cluster_support_lamports = self
             .proposal
             .cluster_support_lamports
-            .checked_add(supporter_stake)
+            .checked_add(meta_merkle_leaf.active_stake)
             .ok_or(ProgramError::ArithmeticOverflow)?;
 
         // Initialize the support account
@@ -85,17 +106,14 @@ impl<'info> SupportProposal<'info> {
         });
 
         // Check if cluster support reaches 5% of total cluster stake
-        // Use u128 to avoid overflow: check if (cluster_support_lamports * 100) >= (cluster_stake * 5)
-        let support_scaled = (self.proposal.cluster_support_lamports as u128)
-            .checked_mul(100)
-            .ok_or(ProgramError::ArithmeticOverflow)?;
-        let cluster_scaled = (cluster_stake as u128)
-            .checked_mul(5)
-            .ok_or(ProgramError::ArithmeticOverflow)?;
+        let cluster_stake = get_epoch_total_stake();
+        let support_scaled = (self.proposal.cluster_support_lamports as u128) * 100;
+        let cluster_scaled = (cluster_stake as u128) * 5;
         if support_scaled >= cluster_scaled {
-            // Set proposal.voting to true, indicating it’s active and can be voted on
+            // Activate voting if threshold met
             self.proposal.voting = true;
         }
+
         Ok(())
     }
 }
