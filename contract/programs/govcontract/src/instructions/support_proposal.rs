@@ -10,7 +10,7 @@ use crate::{
 use anchor_lang::{
     prelude::*,
     solana_program::{
-        epoch_stake::get_epoch_total_stake, hash::hash, instruction::Instruction,
+        epoch_stake::get_epoch_total_stake, instruction::Instruction,
         native_token::LAMPORTS_PER_SOL, program::invoke,
     },
 };
@@ -60,11 +60,7 @@ impl<'info> SupportProposal<'info> {
             1_000 * LAMPORTS_PER_SOL,
             GovernanceError::NotEnoughStake
         );
-
-        // Hash the leaf for verification
-        let leaf_bytes = meta_merkle_leaf.try_to_vec()?;
-        let leaf_hash = hash(&leaf_bytes).to_bytes();
-
+        
         // Get root and slot from ConsensusResult
         let root = self.consensus_result.snapshot_hash;
         let snapshot_slot = self.consensus_result.snapshot_slot;

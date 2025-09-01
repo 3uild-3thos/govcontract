@@ -1,11 +1,11 @@
 use crate::{
+    create_spinner,
     govcontract::client::{accounts, args},
     setup_all,
 };
 use anchor_client::solana_sdk::{pubkey::Pubkey, signer::Signer};
 use anchor_lang::system_program;
 use anyhow::Result;
-use indicatif::{ProgressBar, ProgressStyle};
 
 pub async fn create_proposal(
     proposal_title: String,
@@ -27,16 +27,11 @@ pub async fn create_proposal(
         length
     );
 
-    // Load identity keypair, set up cluster and rpc_client, find native vote accunt
+    // Load identity keypair, set up cluster and rpc_client, find native vote account
     let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
-    log::debug!(
-        "setup_all complete: payer_pubkey={}, vote_account={}",
-        payer.pubkey(),
-        vote_account
-    );
 
     // Generate or use provided seed
-    let seed_value = seed.unwrap_or_else(|| rand::random::<u64>());
+    let seed_value = seed.unwrap_or_else(rand::random::<u64>);
     log::debug!("Using seed: {}", seed_value);
 
     let proposal_seeds = &[
@@ -50,16 +45,7 @@ pub async fn create_proposal(
     log::debug!("Derived proposal PDA: {}", proposal_pda);
 
     // Create a spinner for progress indication
-    let spinner = ProgressBar::new_spinner();
-    spinner.set_style(
-        ProgressStyle::default_spinner()
-            .template("{spinner:.green} {msg}")
-            .unwrap()
-            .tick_strings(&["⠏", "⠇", "⠦", "⠴", "⠼", "⠸", "⠹", "⠙", "⠋", "⠓"]),
-    );
-
-    spinner.set_message("Creating proposal...");
-    spinner.enable_steady_tick(std::time::Duration::from_millis(100));
+    let spinner = create_spinner("Creating proposal...");
 
     // Build and send the transaction
     log::debug!("Building and sending CreateProposal transaction");
@@ -71,12 +57,16 @@ pub async fn create_proposal(
             start_epoch,
             voting_length_epochs: length,
             seed: seed_value,
+            meta_merkle_leaf: todo!("Implement meta merkle leaf"),
+            meta_merkle_proof: vec![], // Empty proof for now
         })
         .accounts(accounts::CreateProposal {
             signer: payer.pubkey(),
             spl_vote_account: vote_account,
             proposal: proposal_pda,
             proposal_index: proposal_index_pda,
+            consensus_result: Pubkey::new_unique(), // Mock consensus result
+            snapshot_program: Pubkey::new_unique(), // Mock snapshot program
             system_program: system_program::ID,
         })
         .send()

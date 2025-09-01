@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use crate::{
+    create_spinner,
     fetch_snapshot_data,
     govcontract::client::{accounts, args},
     setup_all,
@@ -8,7 +9,6 @@ use crate::{
 use anchor_client::solana_sdk::{pubkey::Pubkey, signer::Signer};
 use anchor_lang::system_program;
 use anyhow::{Result, anyhow};
-use indicatif::{ProgressBar, ProgressStyle};
 
 pub async fn cast_vote_override(
     proposal_id: String,
@@ -39,33 +39,12 @@ pub async fn cast_vote_override(
         );
         return Err(anyhow!("Total vote basis points must sum to 10,000"));
     }
-    log::debug!("Basis points validated: sum = 10,000");
 
     // Parse the proposal ID into a Pubkey
-    let proposal_pubkey = match Pubkey::from_str(&proposal_id) {
-        Ok(pubkey) => {
-            log::debug!("Parsed proposal_id into Pubkey: {}", pubkey);
-            pubkey
-        }
-        Err(_) => {
-            log::debug!("Failed to parse proposal_id: {}", proposal_id);
-            return Err(anyhow!("Invalid proposal ID: {}", proposal_id));
-        }
-    };
+    let proposal_pubkey = Pubkey::from_str(&proposal_id)
+        .map_err(|_| anyhow!("Invalid proposal ID: {}", proposal_id))?;
 
-    // Debug: Log before calling setup_all
-    log::debug!(
-        "Calling setup_all with identity_keypair={:?}, rpc_url={:?}",
-        identity_keypair,
-        rpc_url
-    );
     let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
-    let payer_pubkey = payer.pubkey();
-    log::debug!(
-        "setup_all complete: payer_pubkey={}, vote_account={}",
-        payer_pubkey,
-        vote_account
-    );
 
     // Fetch snapshot data from operator API
     let snapshot_data =
@@ -73,29 +52,21 @@ pub async fn cast_vote_override(
     println!("📸 Snapshot data retrieved successfully");
 
     // Create a spinner for progress indication
-    let spinner = ProgressBar::new_spinner();
-    spinner.set_style(
-        ProgressStyle::default_spinner()
-            .template("{spinner:.green} {msg}")
-            .unwrap()
-            .tick_strings(&["⠏", "⠇", "⠦", "⠴", "⠼", "⠸", "⠹", "⠙", "⠋", "⠓"]),
-    );
-
-    spinner.set_message("Sending vote override transaction...");
-    spinner.enable_steady_tick(std::time::Duration::from_millis(100));
+    let spinner = create_spinner("Sending vote override transaction...");
 
     // Debug: Log before sending transaction
     log::debug!("Building and sending CastVoteOverride transaction");
 
-    // TODO: Uncomment when the contract types are available
-    
     let sig = program
         .request()
         .args(args::CastVoteOverride {
             for_votes_bp: for_votes,
             against_votes_bp: against_votes,
             abstain_votes_bp: abstain_votes,
-            proof: snapshot_data.merkle_proof,
+            stake_merkle_proof: snapshot_data.merkle_proof,
+            stake_merkle_leaf: snapshot_data,
+            meta_merkle_proof: todo!(),
+            meta_merkle_leaf: todo!(),
         })
         .accounts(accounts::CastVoteOverride {
             signer: payer.pubkey(),
@@ -104,15 +75,14 @@ pub async fn cast_vote_override(
             proposal: proposal_pubkey,
             validator_vote: snapshot_data.validator_vote_pda,
             vote_override: snapshot_data.vote_override_pda,
+            consensus_result: Pubkey::new_unique(), // Mock consensus result
             snapshot_program: snapshot_data.snapshot_program,
             system_program: system_program::ID,
         })
         .send()
         .await?;
     log::debug!("Transaction sent successfully: signature={}", sig);
-    
 
-    // For now, just show what would be sent
     log::debug!("Vote override data prepared:");
     log::debug!("  - Proposal: {}", proposal_pubkey);
     log::debug!("  - For votes: {} bp", for_votes);
@@ -121,7 +91,7 @@ pub async fn cast_vote_override(
     log::debug!("  - Snapshot data retrieved successfully");
 
     spinner.finish_with_message(format!(
-        "Vote override prepared for proposal {}. Ready for contract integration.",
+        "Vote override sending for proposal {}.",
         proposal_pubkey
     ));
 

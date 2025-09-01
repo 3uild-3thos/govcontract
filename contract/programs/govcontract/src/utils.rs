@@ -2,6 +2,7 @@
 ///
 /// This macro uses integer arithmetic to compute the stake weight by multiplying the validator's stake
 /// by 10,000 (to convert to basis points) and dividing by the total cluster stake.
+/// Uses u128 internally to prevent overflow during multiplication.
 ///
 /// # Arguments
 ///
@@ -23,16 +24,22 @@
 /// ```
 #[macro_export]
 macro_rules! stake_weight_bp {
-    ($validator_stake:expr, $cluster_stake:expr) => {
-        $validator_stake
-            .checked_mul(10_000)
+    ($validator_stake:expr, $cluster_stake:expr) => {{
+        let validator_stake_u128 = $validator_stake as u128;
+        let cluster_stake_u128 = $cluster_stake as u128;
+
+        validator_stake_u128
+            .checked_mul(10_000u128)
             .ok_or(ProgramError::ArithmeticOverflow)
             .and_then(|mul_result| {
                 mul_result
-                    .checked_div($cluster_stake)
+                    .checked_div(cluster_stake_u128)
                     .ok_or(ProgramError::ArithmeticOverflow)
             })
-    };
+            .and_then(|div_result| {
+                u64::try_from(div_result).map_err(|_| ProgramError::ArithmeticOverflow)
+            })
+    }};
 }
 
 /// Validates if the input is a well-formed GitHub repository or issue link.
@@ -99,5 +106,5 @@ pub fn is_valid_github_link(link: &str) -> bool {
     }
 
     // Check trailing '/' was handled (no empty last segment)
-    segment_count >= MIN_SEGMENTS && segment_count <= MAX_SEGMENTS
+    (MIN_SEGMENTS..=MAX_SEGMENTS).contains(&segment_count)
 }

@@ -7,11 +7,11 @@ use anchor_client::{
 
 use anchor_lang::prelude::Pubkey;
 use anyhow::{Result, anyhow};
-use indicatif::{ProgressBar, ProgressStyle};
 use serde_json::{Value, json};
 
 use crate::{
     anchor_client_setup,
+    create_spinner,
     find_delegator_stake_accounts,
     govcontract::accounts::{Proposal, Vote},
 };
@@ -29,16 +29,7 @@ pub async fn list_proposals(
     let program = anchor_client_setup(rpc_url, mock_payer)?;
 
     // Create a spinner for progress indication
-    let spinner = ProgressBar::new_spinner();
-    spinner.set_style(
-        ProgressStyle::default_spinner()
-            .template("{spinner:.green} {msg}")
-            .unwrap()
-            .tick_strings(&["⠏", "⠇", "⠦", "⠴", "⠼", "⠸", "⠹", "⠙", "⠋", "⠓"]),
-    );
-
-    spinner.set_message("Getting all proposals...");
-    spinner.enable_steady_tick(std::time::Duration::from_millis(100));
+    let spinner = create_spinner("Getting all proposals...");
     let mut proposals = program.accounts::<Proposal>(vec![]).await?;
 
     // Stop the spinner
@@ -119,16 +110,7 @@ pub async fn list_votes(
     ))];
 
     // Create a spinner for progress indication
-    let spinner = ProgressBar::new_spinner();
-    spinner.set_style(
-        ProgressStyle::default_spinner()
-            .template("{spinner:.green} {msg}")
-            .unwrap()
-            .tick_strings(&["⠏", "⠇", "⠦", "⠴", "⠼", "⠸", "⠹", "⠙", "⠋", "⠓"]),
-    );
-
-    spinner.set_message("Getting all vote accounts...");
-    spinner.enable_steady_tick(std::time::Duration::from_millis(100));
+    let spinner = create_spinner("Getting all vote accounts...");
 
     let mut votes = program.accounts::<Vote>(filter).await?;
 
@@ -200,15 +182,15 @@ pub async fn list_stake_accounts(
     let mock_payer = Arc::new(Keypair::new());
 
     // Set up RPC client via anchor setup (consistent with other commands)
-    let program = anchor_client_setup(rpc_url, payer)?;
+    let program = anchor_client_setup(rpc_url, mock_payer)?;
     let rpc_client = program.rpc();
 
     // Fetch and log
     let stakes = find_delegator_stake_accounts(&delegator_wallet, &rpc_client).await?;
-    for (stake_pk, vote_pk, validator_pk, active_stake) in stakes {
+    for (stake_pk, vote_pk, active_stake) in stakes {
         println!(
-            "Stake Account: {}, Vote Account: {}, Validator Identity: {}, Active Stake: {}",
-            stake_pk, vote_pk, validator_pk, active_stake
+            "Stake Account: {}, Vote Account: {}, Active Stake: {}",
+            stake_pk, vote_pk, active_stake
         );
     }
 

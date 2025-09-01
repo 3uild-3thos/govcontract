@@ -52,4 +52,12 @@ pub enum GovernanceError {
     StaleSnapshot,
     #[msg("Invalid Snapshot program: provided program ID does not match the expected Merkle Verifier Service program")]
     InvalidSnapshotProgram,
+    #[msg("Only the original proposal author can add the merkle root hash")]
+    UnauthorizedMerkleRootUpdate,
+    #[msg("Merkle root hash is already set for this proposal")]
+    MerkleRootAlreadySet,
+    #[msg("Merkle root hash cannot be all zeros")]
+    InvalidMerkleRoot,
+    #[msg("Invalid snapshot slot: snapshot slot must be less past or current slot")]
+    InvalidSnapshotSlot,
 }

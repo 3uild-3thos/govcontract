@@ -1,3 +1,4 @@
+pub mod add_merkle_root;
 pub mod cast_vote;
 pub mod cast_vote_override;
 pub mod create_proposal;
@@ -6,6 +7,7 @@ pub mod support_proposal;
 pub mod tally_votes;
 pub mod initialize_index;
 
+pub use add_merkle_root::*;
 pub use cast_vote::*;
 pub use cast_vote_override::*;
 pub use create_proposal::*;

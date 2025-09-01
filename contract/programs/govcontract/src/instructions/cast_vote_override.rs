@@ -33,7 +33,7 @@ pub struct CastVoteOverride<'info> {
         constraint = spl_vote_account.owner == &vote_program::ID @ ProgramError::InvalidAccountOwner,
         constraint = spl_vote_account.data_len() == VoteState::size_of() @ GovernanceError::InvalidVoteAccountSize
     )]
-    pub spl_vote_account: AccountInfo<'info>,
+    pub spl_vote_account: UncheckedAccount<'info>,
     #[account(
         init,
         payer = signer,
@@ -119,13 +119,13 @@ impl<'info> CastVoteOverride<'info> {
         let meta_leaf_bytes = meta_merkle_leaf.try_to_vec()?;
         let meta_leaf_hash = hash(&meta_leaf_bytes).to_bytes();
 
-        // Get global root and slot from ConsensusResult
-        let global_root = self.consensus_result.snapshot_hash;
-        let snapshot_slot = self.consensus_result.snapshot_slot;
+        // Get root and slot from ConsensusResult
+        let consensus_root = self.consensus_result.snapshot_hash;
+        let consensus_slot = self.consensus_result.snapshot_slot;
 
         // Ensure snapshot is not stale (adjust delta as needed)
         require!(
-            snapshot_slot <= clock.slot && clock.slot - snapshot_slot < 1000,
+            consensus_slot <= clock.slot && clock.slot - consensus_slot < 1000,
             GovernanceError::StaleSnapshot
         );
 
@@ -199,11 +199,13 @@ impl<'info> CastVoteOverride<'info> {
             .for_votes_lamports
             .checked_sub(self.validator_vote.for_votes_lamports)
             .ok_or(ProgramError::ArithmeticOverflow)?;
+
         self.proposal.against_votes_lamports = self
             .proposal
             .against_votes_lamports
             .checked_sub(self.validator_vote.against_votes_lamports)
             .ok_or(ProgramError::ArithmeticOverflow)?;
+
         self.proposal.abstain_votes_lamports = self
             .proposal
             .abstain_votes_lamports
@@ -216,11 +218,13 @@ impl<'info> CastVoteOverride<'info> {
             .for_votes_lamports
             .checked_add(for_votes_lamports)
             .ok_or(ProgramError::ArithmeticOverflow)?;
+
         self.proposal.against_votes_lamports = self
             .proposal
             .against_votes_lamports
             .checked_add(against_votes_lamports)
             .ok_or(ProgramError::ArithmeticOverflow)?;
+
         self.proposal.abstain_votes_lamports = self
             .proposal
             .abstain_votes_lamports
@@ -280,6 +284,7 @@ impl<'info> CastVoteOverride<'info> {
             stake_account: stake_merkle_leaf.stake_account,
             validator: meta_merkle_leaf.vote_account,
             proposal: self.proposal.key(),
+            vote_account_validator: self.validator_vote.key(),
             for_votes_bp,
             against_votes_bp,
             abstain_votes_bp,

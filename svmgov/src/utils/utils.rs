@@ -1,16 +1,32 @@
 use anchor_client::{
-    solana_account_decoder::UiAccountEncoding, solana_client::{nonblocking::rpc_client::RpcClient, rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig}, rpc_filter::{Memcmp, MemcmpEncodedBytes, RpcFilterType}}, solana_sdk::{commitment_config::{CommitmentConfig, CommitmentLevel}, signature::Keypair, signer::Signer, stake::{self, state::StakeStateV2}}, Client, Cluster, Program
+    solana_account_decoder::UiAccountEncoding, solana_client::{nonblocking::rpc_client::RpcClient, rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig}, rpc_filter::{Memcmp, MemcmpEncodedBytes, RpcFilterType}}, solana_sdk::{commitment_config::{CommitmentConfig, CommitmentLevel}, native_token::LAMPORTS_PER_SOL, signature::Keypair, signer::Signer, stake::{self, state::StakeStateV2}}, Client, Cluster, Program
 };
 use anchor_lang::{prelude::Pubkey, AnchorDeserialize, Id};
 use anyhow::{Result, anyhow};
 use chrono::prelude::*;
-use std::{collections::HashMap, fmt, fs, str::FromStr, sync::Arc};
+use indicatif::{ProgressBar, ProgressStyle};
+use std::{collections::HashMap, fmt, fs, str::FromStr, sync::Arc, time::Duration};
 use textwrap::wrap;
 
 use crate::govcontract::{
     accounts::{Proposal, Vote},
     program::Govcontract,
 };
+use crate::constants::*;
+
+/// Creates and configures a progress spinner with a custom message
+pub fn create_spinner(message: &str) -> ProgressBar {
+    let spinner = ProgressBar::new_spinner();
+    spinner.set_style(
+        ProgressStyle::default_spinner()
+            .template("{spinner:.green} {msg}")
+            .unwrap()
+            .tick_strings(&["⠏", "⠇", "⠦", "⠴", "⠼", "⠸", "⠹", "⠙", "⠋", "⠓"]),
+    );
+    spinner.set_message(message.to_string());
+    spinner.enable_steady_tick(Duration::from_millis(SPINNER_TICK_DURATION_MS));
+    spinner
+}
 
 pub async fn setup_all(
     keypair_path: Option<String>,
@@ -32,7 +48,14 @@ pub async fn setup_all(
     let validator_identity = identity_keypair_arc.pubkey();
     let vote_account = find_spl_vote_account(&validator_identity, &rpc_client).await?;
 
-    // Step 5: Return all variables
+    // Step 5: Log the setup completion
+    log::debug!(
+        "setup_all completed successfully: payer_pubkey={}, vote_account={}",
+        identity_keypair_arc.pubkey(),
+        vote_account
+    );
+
+    // Return all variables
     Ok((identity_keypair_arc, vote_account, program))
 }
 
@@ -161,14 +184,16 @@ pub async fn find_spl_vote_accounts(
     Ok(spl_vote_pubkeys)
 }
 
+
+/// Returns stake pubkey + vote pubkey + validator pubkey + stake amount
 pub(crate) async fn find_delegator_stake_accounts(
     withdraw_authority: &Pubkey,
     rpc_client: &RpcClient,
 ) -> Result<Vec<(Pubkey, Pubkey, u64)>> {
 
     let filters = vec![
-        RpcFilterType::DataSize(200),
-        RpcFilterType::Memcmp(Memcmp::new(44, MemcmpEncodedBytes::Bytes(withdraw_authority.to_bytes().to_vec())),
+        RpcFilterType::DataSize(STAKE_ACCOUNT_DATA_SIZE),
+        RpcFilterType::Memcmp(Memcmp::new(STAKE_ACCOUNT_WITHDRAW_AUTHORITY_OFFSET, MemcmpEncodedBytes::Bytes(withdraw_authority.to_bytes().to_vec())),
     )];
 
     let config = RpcProgramAccountsConfig { 
@@ -213,8 +238,8 @@ fn set_cluster(rpc_url: Option<String>) -> Cluster {
         Cluster::Custom(rpc_url, wss_url)
     } else {
         Cluster::Custom(
-            "https://api.mainnet-beta.solana.com".to_string(),
-            "wss://api.mainnet-beta.solana.com".to_string(),
+            DEFAULT_RPC_URL.to_string(),
+            DEFAULT_WSS_URL.to_string(),
         )
     }
 }
@@ -259,28 +284,28 @@ impl fmt::Display for Proposal {
             "{:<25} {} lamports (~{:.2} SOL)",
             "Cluster Support:",
             self.cluster_support_lamports,
-            self.cluster_support_lamports as f64 / 1_000_000_000.0
+            self.cluster_support_lamports / LAMPORTS_PER_SOL
         )?;
         writeln!(
             f,
             "{:<25} {} lamports (~{:.2} SOL)",
             "For Votes:",
             self.for_votes_lamports,
-            self.for_votes_lamports as f64 / 1_000_000_000.0
+            self.for_votes_lamports / LAMPORTS_PER_SOL
         )?;
         writeln!(
             f,
             "{:<25} {} lamports (~{:.2} SOL)",
             "Against Votes:",
             self.against_votes_lamports,
-            self.against_votes_lamports as f64 / 1_000_000_000.0
+            self.against_votes_lamports / LAMPORTS_PER_SOL
         )?;
         writeln!(
             f,
             "{:<25} {} lamports (~{:.2} SOL)",
             "Abstain Votes:",
             self.abstain_votes_lamports,
-            self.abstain_votes_lamports as f64 / 1_000_000_000.0
+            self.abstain_votes_lamports / LAMPORTS_PER_SOL
         )?;
         writeln!(
             f,
@@ -366,7 +391,7 @@ pub async fn fetch_snapshot_data(
     operator_api: Option<String>,
 ) -> Result<SnapshotData> {
     let api_url = operator_api.unwrap_or_else(|| {
-        std::env::var("OPERATOR_API_URL").unwrap_or_else(|_| "https://api.operator.com".to_string())
+        std::env::var(OPERATOR_API_URL_ENV).unwrap_or_else(|_| DEFAULT_OPERATOR_API_URL.to_string())
     });
 
     println!("🌐 Fetching snapshot data from: {}", api_url);
@@ -387,7 +412,7 @@ pub async fn fetch_snapshot_data(
     let (vote_override_pda, _) = Pubkey::find_program_address(vote_override_seeds, &Pubkey::new_unique());
     
     // Mock merkle proof (32 bytes each)
-    let merkle_proof = vec![[0u8; 32]; 3]; // Mock 3-level proof
+    let merkle_proof = vec![[0u8; 32]; MOCK_MERKLE_PROOF_LEVELS]; // Mock merkle proof
 
     Ok(SnapshotData {
         validator_vote_account,
@@ -481,11 +506,11 @@ mod tests {
         match cluster {
             Cluster::Custom(rpc, wss) => {
                 assert_eq!(
-                    rpc, "https://api.mainnet-beta.solana.com",
+                    rpc, DEFAULT_RPC_URL,
                     "Default RPC URL mismatch"
                 );
                 assert_eq!(
-                    wss, "wss://api.mainnet-beta.solana.com",
+                    wss, DEFAULT_WSS_URL,
                     "Default WSS URL mismatch"
                 );
             }

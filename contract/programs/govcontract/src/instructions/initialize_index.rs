@@ -19,9 +19,9 @@ pub struct InitializedIndex<'info> {
 
 impl<'info> InitializedIndex<'info> {
     pub fn init_index(&mut self, bumps: &InitializedIndexBumps) -> Result<()> {
-        self.proposal_index.set_inner(ProposalIndex{ 
-            current_index: 0, 
-            bump: bumps.proposal_index 
+        self.proposal_index.set_inner(ProposalIndex {
+            current_index: 0,
+            bump: bumps.proposal_index,
         });
         Ok(())
     }

@@ -19,27 +19,28 @@ use crate::{
 #[derive(Accounts)]
 pub struct ModifyVote<'info> {
     #[account(mut)]
-    pub signer: Signer<'info>,  // Voter (validator)
+    pub signer: Signer<'info>, // Voter (validator)
     #[account(mut)]
-    pub proposal: Account<'info, Proposal>,  // Proposal being modified
+    pub proposal: Account<'info, Proposal>, // Proposal being modified
     #[account(
         mut,
         seeds = [b"vote", proposal.key().as_ref(), signer.key().as_ref()],
         bump = vote.bump,
     )]
-    pub vote: Account<'info, Vote>,  // Existing vote to modify
+    pub vote: Account<'info, Vote>, // Existing vote to modify
     /// CHECK: Vote account is too big to deserialize, so we check on owner and size, then compare node_pubkey with signer
     #[account(
         constraint = spl_vote_account.owner == &vote_program::ID @ ProgramError::InvalidAccountOwner,
         constraint = spl_vote_account.data_len() == VoteState::size_of() @ GovernanceError::InvalidVoteAccountSize
     )]
-    pub spl_vote_account: AccountInfo<'info>,
+    pub spl_vote_account: UncheckedAccount<'info>,
     /// CHECK:
     #[account(constraint = snapshot_program.key() == SNAPSHOT_PROGRAM_ID @ GovernanceError::InvalidSnapshotProgram)]
-    pub snapshot_program: Program<'info, Snapshot>,  // Snapshot Program for verification
-    #[account(seeds = [b"consensus_result"], bump)]  // ConsensusResult PDA
-    pub consensus_result: Account<'info, ConsensusResult>,  // Holds snapshot_slot and snapshot_hash
-    pub system_program: Program<'info, System>,  // For account operations
+    pub snapshot_program: UncheckedAccount<'info>,
+    // pub snapshot_program: Program<'info, Snapshot>,  // Snapshot Program for verification, uncomment in production
+    #[account(seeds = [b"consensus_result"], bump)] // ConsensusResult PDA
+    pub consensus_result: Account<'info, ConsensusResult>, // Holds snapshot_slot and snapshot_hash
+    pub system_program: Program<'info, System>, // For account operations
 }
 
 impl<'info> ModifyVote<'info> {
@@ -48,8 +49,8 @@ impl<'info> ModifyVote<'info> {
         for_votes_bp: u64,
         against_votes_bp: u64,
         abstain_votes_bp: u64,
-        meta_merkle_proof: Vec<[u8; 32]>,  // Merkle proof for validator leaf
-        meta_merkle_leaf: MetaMerkleLeaf,  // Validator leaf data
+        meta_merkle_proof: Vec<[u8; 32]>, // Merkle proof for validator leaf
+        meta_merkle_leaf: MetaMerkleLeaf, // Validator leaf data
     ) -> Result<()> {
         // Check that the proposal is open for voting
         require!(self.proposal.voting, GovernanceError::ProposalClosed);
@@ -75,8 +76,16 @@ impl<'info> ModifyVote<'info> {
         require!(total_bp == 10_000, GovernanceError::InvalidVoteDistribution);
 
         // Ensure leaf matches signer and has sufficient stake
-        require_keys_eq!(meta_merkle_leaf.voting_wallet, self.signer.key(), GovernanceError::InvalidVoteAccount);
-        require_gt!(meta_merkle_leaf.active_stake, 0u64, GovernanceError::NotEnoughStake);
+        require_keys_eq!(
+            meta_merkle_leaf.voting_wallet,
+            self.signer.key(),
+            GovernanceError::InvalidVoteAccount
+        );
+        require_gt!(
+            meta_merkle_leaf.active_stake,
+            0u64,
+            GovernanceError::NotEnoughStake
+        );
 
         // Hash the leaf for verification
         let leaf_bytes = meta_merkle_leaf.try_to_vec()?;
@@ -87,31 +96,40 @@ impl<'info> ModifyVote<'info> {
         let snapshot_slot = self.consensus_result.snapshot_slot;
 
         // Ensure snapshot is not stale (adjust delta as needed)
-        require!(snapshot_slot <= clock.slot && clock.slot - snapshot_slot < 1000, GovernanceError::StaleSnapshot);
+        require!(
+            snapshot_slot <= clock.slot && clock.slot - snapshot_slot < 1000,
+            GovernanceError::StaleSnapshot
+        );
 
         // CPI to verify Merkle inclusion
-        let verify_ix = Instruction {
-            program_id: SNAPSHOT_PROGRAM_ID,
-            accounts: vec![
-                AccountMeta::new_readonly(self.snapshot_program.key(), false),
-                AccountMeta::new_readonly(self.consensus_result.key(), false),  // If verify reads ConsensusResult
-            ],
-            data: snapshot_program::instruction::Verify {
-                leaf_hash,
-                proof: meta_merkle_proof,
-                root,
-            }.data(),
-        };
-        invoke(&verify_ix, &[self.snapshot_program.to_account_info(), self.consensus_result.to_account_info()])?;
+        // let verify_ix = Instruction {
+        //     program_id: SNAPSHOT_PROGRAM_ID,
+        //     accounts: vec![
+        //         AccountMeta::new_readonly(self.snapshot_program.key(), false),
+        //         AccountMeta::new_readonly(self.consensus_result.key(), false),  // If verify reads ConsensusResult
+        //     ],
+        //     data: snapshot_program::instruction::Verify {
+        //         leaf_hash,
+        //         proof: meta_merkle_proof,
+        //         root,
+        //     }.data(),
+        // };
+        // invoke(&verify_ix, &[self.snapshot_program.to_account_info(), self.consensus_result.to_account_info()])?;
 
         // Subtract old lamports from proposal totals
-        self.proposal.for_votes_lamports = self.proposal.for_votes_lamports
+        self.proposal.for_votes_lamports = self
+            .proposal
+            .for_votes_lamports
             .checked_sub(self.vote.for_votes_lamports)
             .ok_or(ProgramError::ArithmeticOverflow)?;
-        self.proposal.against_votes_lamports = self.proposal.against_votes_lamports
+        self.proposal.against_votes_lamports = self
+            .proposal
+            .against_votes_lamports
             .checked_sub(self.vote.against_votes_lamports)
             .ok_or(ProgramError::ArithmeticOverflow)?;
-        self.proposal.abstain_votes_lamports = self.proposal.abstain_votes_lamports
+        self.proposal.abstain_votes_lamports = self
+            .proposal
+            .abstain_votes_lamports
             .checked_sub(self.vote.abstain_votes_lamports)
             .ok_or(ProgramError::ArithmeticOverflow)?;
 
@@ -133,13 +151,19 @@ impl<'info> ModifyVote<'info> {
             .ok_or(ProgramError::ArithmeticOverflow)? as u64;
 
         // Add new lamports to proposal totals
-        self.proposal.for_votes_lamports = self.proposal.for_votes_lamports
+        self.proposal.for_votes_lamports = self
+            .proposal
+            .for_votes_lamports
             .checked_add(for_votes_lamports)
             .ok_or(ProgramError::ArithmeticOverflow)?;
-        self.proposal.against_votes_lamports = self.proposal.against_votes_lamports
+        self.proposal.against_votes_lamports = self
+            .proposal
+            .against_votes_lamports
             .checked_add(against_votes_lamports)
             .ok_or(ProgramError::ArithmeticOverflow)?;
-        self.proposal.abstain_votes_lamports = self.proposal.abstain_votes_lamports
+        self.proposal.abstain_votes_lamports = self
+            .proposal
+            .abstain_votes_lamports
             .checked_add(abstain_votes_lamports)
             .ok_or(ProgramError::ArithmeticOverflow)?;
 

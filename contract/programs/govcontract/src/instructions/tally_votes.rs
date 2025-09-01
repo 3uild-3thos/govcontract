@@ -20,7 +20,7 @@ pub struct TallyVotes<'info> {
         constraint = spl_vote_account.owner == &vote_program::ID @ ProgramError::InvalidAccountOwner,
         constraint = spl_vote_account.data_len() == VoteState::size_of() @ GovernanceError::InvalidVoteAccountSize
     )]
-    pub spl_vote_account: AccountInfo<'info>,
+    pub spl_vote_account: UncheckedAccount<'info>,
     #[account(mut)]
     pub proposal: Account<'info, Proposal>,
     pub system_program: Program<'info, System>,
@@ -170,7 +170,6 @@ impl<'info> TallyVotes<'info> {
                 .checked_add(abstain_votes)
                 .ok_or(ProgramError::ArithmeticOverflow)?;
 
-            // vote.sub_lamports(vote.get_lamports())?;
             vote.to_account_info().realloc(0, false)?;
             
             vote_count -= 1;

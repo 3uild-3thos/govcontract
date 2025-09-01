@@ -34,7 +34,7 @@ pub struct CastVote<'info> {
         constraint = spl_vote_account.owner == &vote_program::ID @ ProgramError::InvalidAccountOwner,
         constraint = spl_vote_account.data_len() == VoteState::size_of() @ GovernanceError::InvalidVoteAccountSize
     )]
-    pub spl_vote_account: AccountInfo<'info>,
+    pub spl_vote_account: UncheckedAccount<'info>,
     /// CHECK:
     #[account(constraint = snapshot_program.key() == SNAPSHOT_PROGRAM_ID @ GovernanceError::InvalidSnapshotProgram)]
     pub snapshot_program: UncheckedAccount<'info>,
@@ -89,18 +89,14 @@ impl<'info> CastVote<'info> {
             GovernanceError::NotEnoughStake
         );
 
-        // Hash the leaf for verification
-        let leaf_bytes = meta_merkle_leaf.try_to_vec()?;
-        let leaf_hash = hash(&leaf_bytes).to_bytes();
-
         // Get root and slot from ConsensusResult
-        let root = self.consensus_result.snapshot_hash;
-        let snapshot_slot = self.consensus_result.snapshot_slot;
+        let consensus_root = self.consensus_result.snapshot_hash;
+        let consensus_slot = self.consensus_result.snapshot_slot;
 
-        // Ensure snapshot is not stale (adjust delta as needed)
+        // Ensure snapshot is correct
         require!(
-            snapshot_slot <= clock.slot && clock.slot - snapshot_slot < 1000,
-            GovernanceError::StaleSnapshot
+            consensus_slot <= clock.slot,
+            GovernanceError::InvalidSnapshotSlot
         );
 
         // CPI to verify Merkle inclusion

@@ -1,4 +1,4 @@
-#![allow(unexpected_cfgs, unused_variables)]
+#![allow(unexpected_cfgs, unused_variables, clippy::too_many_arguments)]
 mod error;
 mod instructions;
 mod merkle_helpers;
@@ -31,16 +31,12 @@ pub mod govcontract {
         description: String,
         start_epoch: u64,
         voting_length_epochs: u64,
-        meta_merkle_proof: Vec<[u8; 32]>,
-        meta_merkle_leaf: MetaMerkleLeaf,
     ) -> Result<()> {
         ctx.accounts.create_proposal(
             title,
             description,
             start_epoch,
             voting_length_epochs,
-            meta_merkle_proof,
-            meta_merkle_leaf,
             &ctx.bumps,
         )?;
         Ok(())
@@ -48,7 +44,6 @@ pub mod govcontract {
 
     pub fn support_proposal(
         ctx: Context<SupportProposal>,
-        proposal_id: u64,
         meta_merkle_proof: Vec<[u8; 32]>,
         meta_merkle_leaf: MetaMerkleLeaf,
     ) -> Result<()> {
@@ -114,6 +109,14 @@ pub mod govcontract {
             meta_merkle_leaf,
             &ctx.bumps,
         )?;
+        Ok(())
+    }
+
+    pub fn add_merkle_root(
+        ctx: Context<AddMerkleRoot>,
+        merkle_root_hash: [u8; 32],
+    ) -> Result<()> {
+        ctx.accounts.add_merkle_root(merkle_root_hash)?;
         Ok(())
     }
 

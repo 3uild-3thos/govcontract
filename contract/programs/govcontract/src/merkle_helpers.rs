@@ -17,6 +17,7 @@ pub struct StakeMerkleLeaf {
     /// Active delegated stake amount.
     pub active_stake: u64,
 }
+
 #[account]
 pub struct ConsensusResult {
     pub snapshot_slot: u64,

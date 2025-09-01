@@ -1,3 +1,3 @@
 pub mod commands;
 pub mod utils;
-pub mod merkle_helpers;
+pub mod api_helpers;

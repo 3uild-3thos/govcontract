@@ -26,9 +26,6 @@
           "signer": true
         },
         {
-          "name": "spl_vote_account"
-        },
-        {
           "name": "proposal",
           "writable": true
         },
@@ -58,6 +55,40 @@
           }
         },
         {
+          "name": "spl_vote_account"
+        },
+        {
+          "name": "snapshot_program"
+        },
+        {
+          "name": "consensus_result",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  115,
+                  101,
+                  110,
+                  115,
+                  117,
+                  115,
+                  95,
+                  114,
+                  101,
+                  115,
+                  117,
+                  108,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
@@ -74,6 +105,25 @@
         {
           "name": "abstain_votes_bp",
           "type": "u64"
+        },
+        {
+          "name": "meta_merkle_proof",
+          "type": {
+            "vec": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        },
+        {
+          "name": "meta_merkle_leaf",
+          "type": {
+            "defined": {
+              "name": "MetaMerkleLeaf"
+            }
+          }
         }
       ]
     },
@@ -94,12 +144,6 @@
           "name": "signer",
           "writable": true,
           "signer": true
-        },
-        {
-          "name": "spl_vote_account"
-        },
-        {
-          "name": "spl_stake_account"
         },
         {
           "name": "proposal",
@@ -128,6 +172,9 @@
               }
             ]
           }
+        },
+        {
+          "name": "spl_vote_account"
         },
         {
           "name": "vote_override",
@@ -164,7 +211,38 @@
           }
         },
         {
+          "name": "spl_stake_account"
+        },
+        {
           "name": "snapshot_program"
+        },
+        {
+          "name": "consensus_result",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  115,
+                  101,
+                  110,
+                  115,
+                  117,
+                  115,
+                  95,
+                  114,
+                  101,
+                  115,
+                  117,
+                  108,
+                  116
+                ]
+              }
+            ]
+          }
         },
         {
           "name": "system_program",
@@ -185,13 +263,40 @@
           "type": "u64"
         },
         {
-          "name": "proof",
+          "name": "stake_merkle_proof",
           "type": {
             "vec": {
               "array": [
                 "u8",
                 32
               ]
+            }
+          }
+        },
+        {
+          "name": "stake_merkle_leaf",
+          "type": {
+            "defined": {
+              "name": "StakeMerkleLeaf"
+            }
+          }
+        },
+        {
+          "name": "meta_merkle_proof",
+          "type": {
+            "vec": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        },
+        {
+          "name": "meta_merkle_leaf",
+          "type": {
+            "defined": {
+              "name": "MetaMerkleLeaf"
             }
           }
         }
@@ -214,9 +319,6 @@
           "name": "signer",
           "writable": true,
           "signer": true
-        },
-        {
-          "name": "spl_vote_account"
         },
         {
           "name": "proposal",
@@ -266,6 +368,40 @@
           }
         },
         {
+          "name": "spl_vote_account"
+        },
+        {
+          "name": "snapshot_program"
+        },
+        {
+          "name": "consensus_result",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  115,
+                  101,
+                  110,
+                  115,
+                  117,
+                  115,
+                  95,
+                  114,
+                  101,
+                  115,
+                  117,
+                  108,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
@@ -290,6 +426,25 @@
         {
           "name": "voting_length_epochs",
           "type": "u64"
+        },
+        {
+          "name": "meta_merkle_proof",
+          "type": {
+            "vec": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        },
+        {
+          "name": "meta_merkle_leaf",
+          "type": {
+            "defined": {
+              "name": "MetaMerkleLeaf"
+            }
+          }
         }
       ]
     },
@@ -402,6 +557,25 @@
         {
           "name": "abstain_votes_bp",
           "type": "u64"
+        },
+        {
+          "name": "meta_merkle_proof",
+          "type": {
+            "vec": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        },
+        {
+          "name": "meta_merkle_leaf",
+          "type": {
+            "defined": {
+              "name": "MetaMerkleLeaf"
+            }
+          }
         }
       ]
     },
@@ -422,9 +596,6 @@
           "name": "signer",
           "writable": true,
           "signer": true
-        },
-        {
-          "name": "spl_vote_account"
         },
         {
           "name": "proposal",
@@ -453,7 +624,38 @@
               },
               {
                 "kind": "account",
-                "path": "spl_vote_account"
+                "path": "signer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "snapshot_program"
+        },
+        {
+          "name": "consensus_result",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  115,
+                  101,
+                  110,
+                  115,
+                  117,
+                  115,
+                  95,
+                  114,
+                  101,
+                  115,
+                  117,
+                  108,
+                  116
+                ]
               }
             ]
           }
@@ -463,7 +665,31 @@
           "address": "11111111111111111111111111111111"
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "proposal_id",
+          "type": "u64"
+        },
+        {
+          "name": "meta_merkle_proof",
+          "type": {
+            "vec": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        },
+        {
+          "name": "meta_merkle_leaf",
+          "type": {
+            "defined": {
+              "name": "MetaMerkleLeaf"
+            }
+          }
+        }
+      ]
     },
     {
       "name": "tally_votes",
@@ -504,6 +730,19 @@
     }
   ],
   "accounts": [
+    {
+      "name": "ConsensusResult",
+      "discriminator": [
+        105,
+        121,
+        122,
+        243,
+        100,
+        58,
+        93,
+        161
+      ]
+    },
     {
       "name": "Proposal",
       "discriminator": [
@@ -673,16 +912,81 @@
     },
     {
       "code": 6020,
-      "name": "InvalidStakeState",
+      "name": "InvalidStakeAccount",
       "msg": "Stake account invalid"
     },
     {
       "code": 6021,
+      "name": "InvalidStakeState",
+      "msg": "Stake account invalid"
+    },
+    {
+      "code": 6022,
       "name": "InvalidStakeAccountSize",
       "msg": "Invalid Stake account size"
+    },
+    {
+      "code": 6023,
+      "name": "StaleSnapshot",
+      "msg": "Snapshot is stale"
+    },
+    {
+      "code": 6024,
+      "name": "InvalidSnapshotProgram",
+      "msg": "Invalid Snapshot program: provided program ID does not match the expected Merkle Verifier Service program"
     }
   ],
   "types": [
+    {
+      "name": "ConsensusResult",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "snapshot_slot",
+            "type": "u64"
+          },
+          {
+            "name": "snapshot_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "MetaMerkleLeaf",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "voting_wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "vote_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "stake_merkle_root",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "active_stake",
+            "type": "u64"
+          }
+        ]
+      }
+    },
     {
       "name": "Proposal",
       "type": {
@@ -789,6 +1093,35 @@
       }
     },
     {
+      "name": "StakeMerkleLeaf",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "voting_wallet",
+            "docs": [
+              "Wallet designated for governance voting for the stake account."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "stake_account",
+            "docs": [
+              "The stake account address."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "active_stake",
+            "docs": [
+              "Active delegated stake amount."
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
       "name": "Support",
       "type": {
         "kind": "struct",
@@ -834,6 +1167,26 @@
             "type": "u64"
           },
           {
+            "name": "for_votes_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "against_votes_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "abstain_votes_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "stake",
+            "type": "u64"
+          },
+          {
+            "name": "override_lamports",
+            "type": "u64"
+          },
+          {
             "name": "vote_timestamp",
             "type": "i64"
           },
@@ -871,6 +1224,18 @@
           },
           {
             "name": "abstain_votes_bp",
+            "type": "u64"
+          },
+          {
+            "name": "for_votes_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "against_votes_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "abstain_votes_lamports",
             "type": "u64"
           },
           {

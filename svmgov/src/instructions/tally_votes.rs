@@ -7,10 +7,10 @@ use anchor_client::{
 use anchor_lang::prelude::AccountMeta;
 use anchor_lang::system_program;
 use anyhow::{Result, anyhow};
-use indicatif::{ProgressBar, ProgressStyle};
 use log::info;
 
 use crate::{
+    create_spinner,
     govcontract::{
         accounts::{Proposal, Vote},
         client::{accounts, args},
@@ -37,16 +37,7 @@ pub async fn tally_votes(
     ));
 
     // Create a spinner for progress indication
-    let spinner = ProgressBar::new_spinner();
-    spinner.set_style(
-        ProgressStyle::default_spinner()
-            .template("{spinner:.green} {msg}")
-            .unwrap()
-            .tick_strings(&["⠏", "⠇", "⠦", "⠴", "⠼", "⠸", "⠹", "⠙", "⠋", "⠓"]),
-    );
-
-    spinner.set_message("Gathering vote accounts, tallying votes...");
-    spinner.enable_steady_tick(std::time::Duration::from_millis(100));
+    let spinner = create_spinner("Gathering vote accounts, tallying votes...");
 
     let vote_accounts = program.accounts::<Vote>(vec![filter]).await?;
 

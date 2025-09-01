@@ -4,6 +4,8 @@ use clap::{Parser, Subcommand};
 mod instructions;
 mod utils;
 use utils::{commands, utils::*};
+mod constants;
+use constants::*;
 
 declare_program!(govcontract);
 
@@ -30,7 +32,7 @@ struct Cli {
         long,
         help = "Path to the identity keypair JSON file (or set via SVMGOV_KEY env var)",
         global = true,
-        env = "SVMGOV_KEY"
+        env = SVMGOV_KEY_ENV
     )]
     identity_keypair: Option<String>,
 
@@ -40,7 +42,7 @@ struct Cli {
         long,
         help = "Custom rpc url (or set via SVMGOV_RPC env var)",
         global = true,
-        env = "SVMGOV_RPC"
+        env = SVMGOV_RPC_ENV
     )]
     rpc_url: Option<String>,
 
