@@ -44,4 +44,6 @@ pub enum GovernanceError {
     AllVotesCount,
     #[msg("Vote count underflow occurred during tally")]
     VoteCountUnderflow,
+    #[msg("Vote account appears to be closed")]
+    VoteAccountClosed,
 }

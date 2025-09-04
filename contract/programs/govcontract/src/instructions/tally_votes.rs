@@ -94,16 +94,37 @@ impl<'info> TallyVotes<'info> {
             let chunk_vote_account = vote_chunk
                 .get(1)
                 .ok_or(GovernanceError::NotEnoughAccounts)?;
-            
+
+            // Check if vote account appears to be closed or empty
+            require_gt!(
+                chunk_vote_account.lamports(),
+                0u64,
+                GovernanceError::VoteAccountClosed
+            );
+
+            // Check if data length matches expected VoteState size
+            require_eq!(
+                chunk_vote_account.data_len(),
+                VoteState::size_of(),
+                GovernanceError::VoteAccountClosed
+            );
+
+            // Additional check: ensure data is not all zeros (completely empty account)
+            let data = chunk_vote_account.data.borrow();
+            require!(
+                !data.iter().all(|&byte| byte == 0),
+                GovernanceError::VoteAccountClosed
+            );
+
             require_eq!(
                 *chunk_vote_account.owner,
                 vote_program::ID,
                 GovernanceError::InvalidVoteAccount
             );
 
-            let chunk_data = chunk_vote_account.data.borrow();
+            // let chunk_data = data;
             let chunk_version = u32::from_le_bytes(
-                chunk_data[0..4]
+                data[0..4]
                     .try_into()
                     .map_err(|_| GovernanceError::InvalidVoteAccountVersion)?,
             );
@@ -113,7 +134,7 @@ impl<'info> TallyVotes<'info> {
             );
 
             // 4 bytes discriminant, 32 bytes node_pubkey
-            let node_pubkey = Pubkey::try_from(&chunk_data[4..36])
+            let node_pubkey = Pubkey::try_from(&data[4..36])
                 .map_err(|_| GovernanceError::FailedDeserializeNodePubkey)?;
 
             require_keys_eq!(
