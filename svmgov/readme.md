@@ -276,10 +276,12 @@ List all governance proposals, optionally filtered by status.
 
 **Arguments**:
 - `--status <STATUS>`: Optional filter (e.g., "active").
+- `--limit <NUMBER>`: Limit the number of proposals listed (default: 0, meaning no limit).
+- `--json`: Output in JSON format (default: false).
 
 **Example**:
 ```sh
-svmgov list-proposals --rpc-url https://api.mainnet-beta.solana.com
+svmgov list-proposals --rpc-url https://api.mainnet-beta.solana.com --limit 5 --json
 ```
 
 ### `list-votes`
@@ -288,11 +290,13 @@ List votes for a specific proposal, with optional verbose details.
 
 **Arguments**:
 - `--proposal-id <ID>`: The proposal’s ID (PDA) (required).
-- `--verbose true`: List votes with details.
+- `--verbose`: List votes with details (default: false).
+- `--limit <NUMBER>`: Limit the number of votes listed (default: 0, meaning no limit).
+- `--json`: Output in JSON format (default: false).
 
 **Example**:
 ```sh
-svmgov list-votes --proposal-id "123" --rpc-url https://api.mainnet-beta.solana.com --verbose true
+svmgov list-votes --proposal-id "123" --rpc-url https://api.mainnet-beta.solana.com --verbose --limit 10 --json
 ```
 
 ---

@@ -191,10 +191,12 @@ enum Commands {
         about = "List all governance proposals. Use the get-proposal command for individual proposal details",
         long_about = "This command retrieves and displays a list of all governance proposals from the Solana Validator Governance program. \
                       You can optionally filter proposals by their status (e.g., 'active') using the --status flag. \
+                      Use --limit to restrict the number of proposals listed (default: 0, meaning no limit). \
+                      Use --json to output in JSON format (default: false). \
                       An optional RPC URL can be provided to connect to the chain; otherwise, a default URL is used.\n\n\
                       Examples:\n\
                       $ svmgov --rpc-url https://api.mainnet-beta.solana.com list-proposals\n\
-                      $ svmgov -r https://api.mainnet-beta.solana.com list-proposals --status \"active\""
+                      $ svmgov -r https://api.mainnet-beta.solana.com list-proposals --status \"active\" --limit 5 --json true"
     )]
     ListProposals {
         /// Filter on status of the proposals <active>.
@@ -218,10 +220,12 @@ enum Commands {
         about = "List all votes for a specified proposal",
         long_about = "This command retrieves and displays all votes cast on a specified governance proposal. \
                       It requires the proposal ID, and use the --verbose flag for detailed output. \
+                      Use --limit to restrict the number of votes listed (default: 0, meaning no limit). \
+                      Use --json to output in JSON format (default: false). \
                       An optional RPC URL can be provided to connect to the chain; otherwise, a default URL is used.\n\n\
                       Examples:\n\
                       $ svmgov --rpc-url https://api.mainnet-beta.solana.com list-votes --proposal-id \"123\"\n\
-                      $ svmgov -r https://api.mainnet-beta.solana.com list-votes --proposal-id \"123\" --verbose true"
+                      $ svmgov -r https://api.mainnet-beta.solana.com list-votes --proposal-id \"123\" --verbose true --limit 10 --json true"
     )]
     ListVotes {
         /// Proposal id to get votes for.
