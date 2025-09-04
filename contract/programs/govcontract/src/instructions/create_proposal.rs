@@ -3,7 +3,6 @@ use anchor_lang::{
     solana_program::{
         epoch_stake::{get_epoch_stake_for_vote_account, get_epoch_total_stake},
         vote::{program as vote_program, state::VoteState},
-        native_token::LAMPORTS_PER_SOL
     },
 };
 
@@ -31,7 +30,7 @@ pub struct CreateProposal<'info> {
         payer = signer,
         seeds = [b"proposal", seed.to_le_bytes().as_ref(), spl_vote_account.key.as_ref()],
         bump,
-        space = Proposal::INIT_SPACE,
+        space = 8 + Proposal::INIT_SPACE,
     )]
     pub proposal: Account<'info, Proposal>,
     #[account(
