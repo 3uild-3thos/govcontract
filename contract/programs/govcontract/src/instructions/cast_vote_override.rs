@@ -1,7 +1,7 @@
 use anchor_lang::{
     prelude::*,
     solana_program::{
-        stake::{program as stake_program, state::StakeStateV2},
+        stake::program as stake_program,
         vote::{program as vote_program, state::VoteState},
     },
 };

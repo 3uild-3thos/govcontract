@@ -15,7 +15,7 @@ pub struct AddMerkleRoot<'info> {
         mut,
         constraint = proposal.author == signer.key() @ GovernanceError::UnauthorizedMerkleRootUpdate,
         constraint = !proposal.finalized @ GovernanceError::ProposalFinalized,
-        constraint = proposal.merkle_root_hash.is_none() @ GovernanceError::MerkleRootAlreadySet
+        constraint = proposal.merkle_root_hash.is_some() @ GovernanceError::MerkleRootAlreadySet
     )]
     pub proposal: Account<'info, Proposal>,
 }
