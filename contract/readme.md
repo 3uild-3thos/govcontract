@@ -51,7 +51,9 @@ The contract emits comprehensive events for all major governance actions. Fronte
 ### ProposalCreated
 Emitted when a new proposal is created.
 
-**Fields:**
+<details>
+<summary><strong>Click to view event fields</strong></summary>
+
 - `proposal_id: Pubkey` - The unique identifier of the proposal
 - `author: Pubkey` - The public key of the validator who created the proposal
 - `title: String` - The proposal title
@@ -61,19 +63,27 @@ Emitted when a new proposal is created.
 - `snapshot_slot: u64` - The slot when the validator stake snapshot was taken
 - `creation_timestamp: i64` - Unix timestamp of proposal creation
 
+</details>
+
 ### ProposalSupported
 Emitted when a validator supports a proposal.
 
-**Fields:**
+<details>
+<summary><strong>Click to view event fields</strong></summary>
+
 - `proposal_id: Pubkey` - The proposal being supported
 - `supporter: Pubkey` - The validator providing support
 - `cluster_support_lamports: u64` - Total lamports of cluster support after this action
 - `voting_activated: bool` - Whether this support activated voting (5% threshold reached)
 
+</details>
+
 ### VoteCast
 Emitted when a validator casts their vote.
 
-**Fields:**
+<details>
+<summary><strong>Click to view event fields</strong></summary>
+
 - `proposal_id: Pubkey` - The proposal being voted on
 - `voter: Pubkey` - The validator casting the vote
 - `vote_account: Pubkey` - The validator's vote account
@@ -85,10 +95,14 @@ Emitted when a validator casts their vote.
 - `abstain_votes_lamports: u64` - Lamports allocated to "Abstain" (based on stake)
 - `vote_timestamp: i64` - Unix timestamp of the vote
 
+</details>
+
 ### VoteOverrideCast
 Emitted when a delegator overrides their validator's vote.
 
-**Fields:**
+<details>
+<summary><strong>Click to view event fields</strong></summary>
+
 - `proposal_id: Pubkey` - The proposal being voted on
 - `delegator: Pubkey` - The delegator overriding the vote
 - `stake_account: Pubkey` - The stake account being used
@@ -102,10 +116,14 @@ Emitted when a delegator overrides their validator's vote.
 - `stake_amount: u64` - The amount of stake being used for the override
 - `vote_timestamp: i64` - Unix timestamp of the vote override
 
+</details>
+
 ### VoteModified
 Emitted when a validator modifies their existing vote.
 
-**Fields:**
+<details>
+<summary><strong>Click to view event fields</strong></summary>
+
 - `proposal_id: Pubkey` - The proposal being voted on
 - `voter: Pubkey` - The validator modifying their vote
 - `vote_account: Pubkey` - The validator's vote account
@@ -120,18 +138,26 @@ Emitted when a validator modifies their existing vote.
 - `abstain_votes_lamports: u64` - Lamports allocated to "Abstain"
 - `modification_timestamp: i64` - Unix timestamp of the modification
 
+</details>
+
 ### MerkleRootAdded
 Emitted when a merkle root hash is added to a proposal.
 
-**Fields:**
+<details>
+<summary><strong>Click to view event fields</strong></summary>
+
 - `proposal_id: Pubkey` - The proposal receiving the merkle root
 - `author: Pubkey` - The validator adding the merkle root
 - `merkle_root_hash: [u8; 32]` - The merkle root hash bytes
 
+</details>
+
 ### ProposalFinalized
 Emitted when a proposal is finalized after voting ends.
 
-**Fields:**
+<details>
+<summary><strong>Click to view event fields</strong></summary>
+
 - `proposal_id: Pubkey` - The finalized proposal
 - `finalizer: Pubkey` - The account that finalized the proposal
 - `total_for_votes: u64` - Total lamports voted "For"
@@ -139,6 +165,8 @@ Emitted when a proposal is finalized after voting ends.
 - `total_abstain_votes: u64` - Total lamports voted "Abstain"
 - `total_votes_count: u32` - Total number of votes cast
 - `finalization_timestamp: i64` - Unix timestamp of finalization
+
+</details>
 
 ## Event Usage
 
@@ -174,7 +202,6 @@ const overrideListener = program.addEventListener('VoteOverrideCast', (event, sl
 
 Events are strongly typed and included in the generated TypeScript types from the IDL.
 
-These events provide complete transparency and real-time monitoring capabilities for the governance system.
 
 ## Development
 
