@@ -95,7 +95,7 @@ pub async fn list_votes(
     json_output: bool,
 ) -> Result<()> {
     // Parse the proposal ID into a Pubkey
-    let proposal_pubkey = Pubkey::from_str(&proposal_id)
+    let proposal_pubkey = Pubkey::from_str(proposal_id)
         .map_err(|_| anyhow!("Invalid proposal ID: {}", proposal_id))?;
     // Create a mock Payer
     let mock_payer = Arc::new(Keypair::new());
@@ -159,7 +159,7 @@ pub async fn list_votes(
 
 pub async fn get_proposal(rpc_url: Option<String>, proposal_id: &String) -> Result<()> {
     // Parse the proposal ID into a Pubkey
-    let proposal_pubkey = Pubkey::from_str(&proposal_id)
+    let proposal_pubkey = Pubkey::from_str(proposal_id)
         .map_err(|_| anyhow!("Invalid proposal ID: {}", proposal_id))?;
     // Create a mock Payer
     let mock_payer = Arc::new(Keypair::new());
