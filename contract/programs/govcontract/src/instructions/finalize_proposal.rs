@@ -13,7 +13,6 @@ pub struct FinalizeProposal<'info> {
     #[account(
         mut,
         constraint = !proposal.finalized @ GovernanceError::ProposalFinalized,
-        constraint = !proposal.voting @ GovernanceError::ProposalClosed
     )]
     pub proposal: Account<'info, Proposal>,
 }
@@ -38,8 +37,8 @@ impl<'info> FinalizeProposal<'info> {
             finalization_timestamp: clock.unix_timestamp,
         });
 
-        // Mark the proposal as finalized
         self.proposal.finalized = true;
+        self.proposal.voting = false;
 
         Ok(())
     }

@@ -116,6 +116,12 @@ impl<'info> CreateProposal<'info> {
         )?;
 
         let clock = Clock::get()?;
+        
+        require_gte!(
+            start_epoch, 
+            clock.epoch, 
+            GovernanceError::InvalidStartEpoch
+        );
 
         // Calculate stake weight basis points
         let cluster_stake = get_epoch_total_stake();

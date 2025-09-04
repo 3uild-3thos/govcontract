@@ -22,7 +22,7 @@ pub struct ModifyVote<'info> {
     pub proposal: Account<'info, Proposal>, // Proposal being modified
     #[account(
         mut,
-        seeds = [b"vote", proposal.key().as_ref(), signer.key().as_ref()],
+        seeds = [b"vote", proposal.key().as_ref(), spl_vote_account.key().as_ref()],
         bump = vote.bump,
     )]
     pub vote: Account<'info, Vote>, // Existing vote to modify
@@ -90,6 +90,12 @@ impl<'info> ModifyVote<'info> {
         require_eq!(
             meta_merkle_leaf.voting_wallet,
             self.signer.key(),
+            GovernanceError::InvalidVoteAccount
+        );
+        // Ensure the proof's vote_account matches the provided SPL vote account
+        require_eq!(
+            meta_merkle_leaf.vote_account,
+            self.spl_vote_account.key(),
             GovernanceError::InvalidVoteAccount
         );
         require_gt!(

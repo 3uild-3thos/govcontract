@@ -101,6 +101,12 @@ impl<'info> CastVote<'info> {
             GovernanceError::NotEnoughStake
         );
 
+        require_eq!(
+            meta_merkle_leaf.vote_account, 
+            self.spl_vote_account.key(), 
+            GovernanceError::InvalidVoteAccount
+        );
+        
         verify_merkle_proof_cpi(
             &self.meta_merkle_proof.to_account_info(),
             &self.consensus_result.to_account_info(),

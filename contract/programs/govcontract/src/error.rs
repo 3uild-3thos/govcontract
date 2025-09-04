@@ -40,16 +40,12 @@ pub enum GovernanceError {
     InvalidVoteAccountVersion,
     #[msg("Invalid Vote account size")]
     InvalidVoteAccountSize,
-    #[msg("All votes cast on the proposal must be counted to finalize")]
-    AllVotesCount,
     #[msg("Stake account invalid")]
     InvalidStakeAccount,
     #[msg("Stake account invalid")]
     InvalidStakeState,
     #[msg("Invalid Stake account size")]
     InvalidStakeAccountSize,
-    #[msg("Snapshot is stale")]
-    StaleSnapshot,
     #[msg("Invalid Snapshot program: provided program ID does not match the expected Merkle Verifier Service program")]
     InvalidSnapshotProgram,
     #[msg("Only the original proposal author can add the merkle root hash")]

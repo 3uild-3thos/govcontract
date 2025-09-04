@@ -26,6 +26,7 @@ pub async fn cast_vote_override(
     identity_keypair: Option<String>,
     rpc_url: Option<String>,
     _operator_api: Option<String>,
+    stake_account_override: Option<String>,
 ) -> Result<()> {
     if for_votes + against_votes + abstain_votes != BASIS_POINTS_TOTAL {
         return Err(anyhow!(
@@ -39,14 +40,20 @@ pub async fn cast_vote_override(
 
     let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
 
-    let voter_summary = get_voter_summary(&payer.pubkey(), None).await?;
-    let stake_account = voter_summary
-        .stake_accounts
-        .first()
-        .ok_or(anyhow!("No stake account found for voter"))?;
+    let stake_account_str = if let Some(sa) = stake_account_override.as_ref() {
+        sa.clone()
+    } else {
+        let voter_summary = get_voter_summary(&payer.pubkey(), None).await?;
+        voter_summary
+            .stake_accounts
+            .first()
+            .ok_or(anyhow!("No stake account found for voter"))?
+            .stake_account
+            .clone()
+    };
 
     let meta_merkle_proof = get_vote_account_proof(&vote_account.to_string(), None).await?;
-    let stake_merkle_proof = get_stake_account_proof(&stake_account.stake_account, None).await?;
+    let stake_merkle_proof = get_stake_account_proof(&stake_account_str, None).await?;
 
     let (consensus_result_pda, meta_merkle_proof_pda) =
         generate_pdas_from_vote_proof_response(&meta_merkle_proof)?;
@@ -54,7 +61,7 @@ pub async fn cast_vote_override(
     let validator_vote_pda = derive_vote_pda(&proposal_pubkey, &vote_account, &program.id());
     let vote_override_pda = derive_vote_override_pda(
         &proposal_pubkey,
-        &Pubkey::from_str(&stake_account.stake_account)?,
+        &Pubkey::from_str(&stake_account_str)?,
         &validator_vote_pda,
         &program.id(),
     );
@@ -79,7 +86,7 @@ pub async fn cast_vote_override(
         .accounts(accounts::CastVoteOverride {
             signer: payer.pubkey(),
             spl_vote_account: vote_account,
-            spl_stake_account: Pubkey::from_str(&stake_account.stake_account)?,
+            spl_stake_account: Pubkey::from_str(&stake_account_str)?,
             proposal: proposal_pubkey,
             validator_vote: validator_vote_pda,
             vote_override: vote_override_pda,

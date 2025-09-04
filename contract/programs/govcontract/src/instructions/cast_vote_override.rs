@@ -44,7 +44,6 @@ pub struct CastVoteOverride<'info> {
     /// CHECK: stake account for override
     #[account(
         constraint = spl_stake_account.owner == &stake_program::ID @ ProgramError::InvalidAccountOwner,
-        constraint = spl_stake_account.data_len() == StakeStateV2::size_of() @ GovernanceError::InvalidVoteAccountSize
     )]
     pub spl_stake_account: UncheckedAccount<'info>,
     /// CHECK:
@@ -123,6 +122,12 @@ impl<'info> CastVoteOverride<'info> {
             GovernanceError::InvalidStakeAccount
         );
 
+        require_eq!(
+            meta_merkle_leaf.vote_account, 
+            self.spl_vote_account.key(), 
+            GovernanceError::InvalidVoteAccount
+        );
+        
         verify_merkle_proof_cpi(
             &self.meta_merkle_proof.to_account_info(),
             &self.consensus_result.to_account_info(),

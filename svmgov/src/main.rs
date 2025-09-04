@@ -253,9 +253,14 @@ enum Commands {
         about = "Override validator vote with delegator vote",
         long_about = "This command allows a delegator to override their validator's vote on a proposal. \
                       The CLI fetches snapshot data from the operator API and submits the override. \
-                      Requires the delegator's stake account and the proposal ID.\n\n\
-                      Example:\n\
-                      $ svmgov --identity-keypair /path/to/key.json cast-vote-override --proposal-id \"123\" --for-votes 6000 --against-votes 3000 --abstain-votes 1000"
+                      Requires the proposal ID and a stake account delegated by the signer. You may explicitly pass a stake \
+                      account using --stake-account <PUBKEY> (base58). If omitted, the CLI selects the first stake account \
+                      from the voter summary.\n\n\
+                      Examples:\n\
+                      # Auto-select first stake account from summary\n\
+                      $ svmgov --identity-keypair /path/to/key.json cast-vote-override --proposal-id \"123\" --for-votes 6000 --against-votes 3000 --abstain-votes 1000\n\
+                      # Use an explicit stake account\n\
+                      $ svmgov --identity-keypair /path/to/key.json cast-vote-override --proposal-id \"123\" --for-votes 6000 --against-votes 3000 --abstain-votes 1000 --stake-account <STAKE_PUBKEY>"
     )]
     CastVoteOverride {
         /// Proposal ID for which to override the vote
@@ -286,6 +291,10 @@ enum Commands {
         /// Operator API endpoint (optional, uses env var by default)
         #[arg(long, help = "Operator API endpoint for snapshot data")]
         operator_api: Option<String>,
+
+        /// Optional specific stake account to use for override
+        #[arg(long, help = "Stake account to use for override (base58 pubkey). If omitted, the first stake account from the voter summary will be used.")]
+        stake_account: Option<String>,
     },
 
     #[command(
@@ -417,6 +426,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
             against_votes,
             abstain_votes,
             operator_api,
+            stake_account,
         } => {
             instructions::cast_vote_override(
                 proposal_id.to_string(),
@@ -426,6 +436,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 cli.identity_keypair,
                 cli.rpc_url,
                 operator_api.clone(),
+                stake_account.clone(),
             )
             .await?;
         }

@@ -28,10 +28,6 @@
         {
           "name": "proposal",
           "writable": true
-        },
-        {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
@@ -479,7 +475,7 @@
               },
               {
                 "kind": "account",
-                "path": "signer"
+                "path": "spl_vote_account"
               }
             ]
           }
@@ -650,6 +646,99 @@
       ]
     }
   ],
+  "events": [
+    {
+      "name": "MerkleRootAdded",
+      "discriminator": [
+        171,
+        59,
+        45,
+        200,
+        89,
+        55,
+        150,
+        244
+      ]
+    },
+    {
+      "name": "ProposalCreated",
+      "discriminator": [
+        186,
+        8,
+        160,
+        108,
+        81,
+        13,
+        51,
+        206
+      ]
+    },
+    {
+      "name": "ProposalFinalized",
+      "discriminator": [
+        159,
+        104,
+        210,
+        220,
+        86,
+        209,
+        61,
+        51
+      ]
+    },
+    {
+      "name": "ProposalSupported",
+      "discriminator": [
+        248,
+        220,
+        71,
+        30,
+        127,
+        209,
+        67,
+        231
+      ]
+    },
+    {
+      "name": "VoteCast",
+      "discriminator": [
+        39,
+        53,
+        195,
+        104,
+        188,
+        17,
+        225,
+        213
+      ]
+    },
+    {
+      "name": "VoteModified",
+      "discriminator": [
+        192,
+        64,
+        130,
+        9,
+        210,
+        47,
+        57,
+        175
+      ]
+    },
+    {
+      "name": "VoteOverrideCast",
+      "discriminator": [
+        111,
+        204,
+        225,
+        252,
+        254,
+        218,
+        120,
+        236
+      ]
+    }
+  ],
   "errors": [
     {
       "code": 6000,
@@ -768,46 +857,66 @@
     },
     {
       "code": 6023,
-      "name": "StaleSnapshot",
-      "msg": "Snapshot is stale"
-    },
-    {
-      "code": 6024,
       "name": "InvalidSnapshotProgram",
       "msg": "Invalid Snapshot program: provided program ID does not match the expected Merkle Verifier Service program"
     },
     {
-      "code": 6025,
+      "code": 6024,
       "name": "UnauthorizedMerkleRootUpdate",
       "msg": "Only the original proposal author can add the merkle root hash"
     },
     {
-      "code": 6026,
+      "code": 6025,
       "name": "MerkleRootAlreadySet",
       "msg": "Merkle root hash is already set for this proposal"
     },
     {
-      "code": 6027,
+      "code": 6026,
       "name": "InvalidMerkleRoot",
       "msg": "Merkle root hash cannot be all zeros"
     },
     {
-      "code": 6028,
+      "code": 6027,
       "name": "InvalidSnapshotSlot",
       "msg": "Invalid snapshot slot: snapshot slot must be less past or current slot"
     },
     {
-      "code": 6029,
+      "code": 6028,
       "name": "MustBeOwnedBySnapshotProgram",
       "msg": "Account must be owned by Snapshot program"
     },
     {
-      "code": 6030,
+      "code": 6029,
       "name": "InvalidConsensusResultPDA",
       "msg": "Invalid consensus result PDA"
     }
   ],
   "types": [
+    {
+      "name": "MerkleRootAdded",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "proposal_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "author",
+            "type": "pubkey"
+          },
+          {
+            "name": "merkle_root_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
     {
       "name": "Proposal",
       "type": {
@@ -918,6 +1027,82 @@
       }
     },
     {
+      "name": "ProposalCreated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "proposal_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "author",
+            "type": "pubkey"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "start_epoch",
+            "type": "u64"
+          },
+          {
+            "name": "end_epoch",
+            "type": "u64"
+          },
+          {
+            "name": "snapshot_slot",
+            "type": "u64"
+          },
+          {
+            "name": "creation_timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProposalFinalized",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "proposal_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "finalizer",
+            "type": "pubkey"
+          },
+          {
+            "name": "total_for_votes",
+            "type": "u64"
+          },
+          {
+            "name": "total_against_votes",
+            "type": "u64"
+          },
+          {
+            "name": "total_abstain_votes",
+            "type": "u64"
+          },
+          {
+            "name": "total_votes_count",
+            "type": "u32"
+          },
+          {
+            "name": "finalization_timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
       "name": "ProposalIndex",
       "type": {
         "kind": "struct",
@@ -929,6 +1114,30 @@
           {
             "name": "bump",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProposalSupported",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "proposal_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "supporter",
+            "type": "pubkey"
+          },
+          {
+            "name": "cluster_support_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "voting_activated",
+            "type": "bool"
           }
         ]
       }
@@ -1039,6 +1248,114 @@
       }
     },
     {
+      "name": "VoteCast",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "proposal_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "voter",
+            "type": "pubkey"
+          },
+          {
+            "name": "vote_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "for_votes_bp",
+            "type": "u64"
+          },
+          {
+            "name": "against_votes_bp",
+            "type": "u64"
+          },
+          {
+            "name": "abstain_votes_bp",
+            "type": "u64"
+          },
+          {
+            "name": "for_votes_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "against_votes_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "abstain_votes_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "vote_timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "VoteModified",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "proposal_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "voter",
+            "type": "pubkey"
+          },
+          {
+            "name": "vote_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "old_for_votes_bp",
+            "type": "u64"
+          },
+          {
+            "name": "old_against_votes_bp",
+            "type": "u64"
+          },
+          {
+            "name": "old_abstain_votes_bp",
+            "type": "u64"
+          },
+          {
+            "name": "new_for_votes_bp",
+            "type": "u64"
+          },
+          {
+            "name": "new_against_votes_bp",
+            "type": "u64"
+          },
+          {
+            "name": "new_abstain_votes_bp",
+            "type": "u64"
+          },
+          {
+            "name": "for_votes_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "against_votes_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "abstain_votes_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "modification_timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
       "name": "VoteOverride",
       "type": {
         "kind": "struct",
@@ -1094,6 +1411,62 @@
           {
             "name": "bump",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "VoteOverrideCast",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "proposal_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "delegator",
+            "type": "pubkey"
+          },
+          {
+            "name": "stake_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "validator",
+            "type": "pubkey"
+          },
+          {
+            "name": "for_votes_bp",
+            "type": "u64"
+          },
+          {
+            "name": "against_votes_bp",
+            "type": "u64"
+          },
+          {
+            "name": "abstain_votes_bp",
+            "type": "u64"
+          },
+          {
+            "name": "for_votes_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "against_votes_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "abstain_votes_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "stake_amount",
+            "type": "u64"
+          },
+          {
+            "name": "vote_timestamp",
+            "type": "i64"
           }
         ]
       }
