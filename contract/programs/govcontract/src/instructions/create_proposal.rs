@@ -3,8 +3,7 @@
 use anchor_lang::{
     prelude::*,
     solana_program::{
-        epoch_stake::{get_epoch_stake_for_vote_account, get_epoch_total_stake},
-        vote::{program as vote_program, state::VoteState},
+        epoch_stake::{get_epoch_stake_for_vote_account, get_epoch_total_stake}, native_token::LAMPORTS_PER_SOL, vote::{program as vote_program, state::VoteState}
     },
 };
 
@@ -102,7 +101,7 @@ impl<'info> CreateProposal<'info> {
 
         require_gte!(
             meta_merkle_leaf.active_stake,
-            100_000_000_000_u64, // 100k SOL in lamports
+            100_000 * LAMPORTS_PER_SOL, // 100k SOL in lamports
             GovernanceError::NotEnoughStake
         );
 

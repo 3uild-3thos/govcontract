@@ -18,7 +18,7 @@ govcontract = "GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "testnet"
+cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
