@@ -189,15 +189,20 @@ Override a validator's vote as a delegator using stake account verification.
 - `--for-votes <BASIS_POINTS>`: Basis points for 'For' (required).
 - `--against-votes <BASIS_POINTS>`: Basis points for 'Against' (required).
 - `--abstain-votes <BASIS_POINTS>`: Basis points for 'Abstain' (required).
+- `--stake-account <PUBKEY>`: Optional stake account pubkey (base58). If omitted, the CLI selects the first stake account from the voter summary for the signer.
 
 **Requirements**:
 - Basis points must sum to 10,000 (100%).
 - Requires stake account ownership and merkle proof verification.
 - Can only override votes for stake accounts delegated to the caller.
 
-**Example**:
+**Examples**:
 ```sh
+# Auto-select first stake account from summary
 svmgov cast-vote-override --proposal-id "123" --for-votes 7000 --against-votes 2000 --abstain-votes 1000 --identity-keypair /path/to/key.json
+
+# Use an explicit stake account
+svmgov cast-vote-override --proposal-id "123" --for-votes 7000 --against-votes 2000 --abstain-votes 1000 --stake-account <STAKE_PUBKEY> --identity-keypair /path/to/key.json
 ```
 
 ### `modify-vote`
@@ -225,11 +230,12 @@ Add a merkle root hash to a proposal for stake verification.
 
 **Arguments**:
 - `--proposal-id <ID>`: The proposal's ID (PDA) (required).
-- `--merkle-root <HASH>`: The merkle root hash as a hex string (required).
+- `--merkle-root <HASH>`: The merkle root hash as a hex string (required). Accepts with or without `0x` prefix; must decode to exactly 32 bytes.
 
 **Requirements**:
 - Can only be called by the original proposal author.
 - Merkle root hash cannot be all zeros.
+- Must decode to exactly 32 bytes.
 
 **Example**:
 ```sh
