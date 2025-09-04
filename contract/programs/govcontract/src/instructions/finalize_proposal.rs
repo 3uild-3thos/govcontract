@@ -27,7 +27,7 @@ impl<'info> FinalizeProposal<'info> {
             GovernanceError::VotingPeriodNotEnded
         );
 
-        // Emit proposal finalized event
+
         emit!(ProposalFinalized {
             proposal_id: self.proposal.key(),
             finalizer: self.signer.key(),

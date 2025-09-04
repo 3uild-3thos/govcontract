@@ -287,6 +287,24 @@ enum Commands {
         #[arg(long, help = "Operator API endpoint for snapshot data")]
         operator_api: Option<String>,
     },
+
+    #[command(
+        about = "Add merkle root hash to a proposal for verification",
+        long_about = "This command adds a merkle root hash to a proposal for stake verification. \
+                      It requires the proposal ID and the merkle root hash as a hex string. \
+                      Only the original proposal author can call this command.\n\n\
+                      Example:\n\
+                      $ svmgov --identity-keypair /path/to/key.json add-merkle-root --proposal-id \"123\" --merkle-root \"0x1234567890abcdef...\""
+    )]
+    AddMerkleRoot {
+        /// Proposal ID to add the merkle root to
+        #[arg(long, help = "Proposal ID")]
+        proposal_id: String,
+
+        /// Merkle root hash as a hex string
+        #[arg(long, help = "Merkle root hash (hex string)")]
+        merkle_root: String,
+    },
 }
 
 async fn handle_command(cli: Cli) -> Result<()> {
@@ -408,6 +426,18 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 cli.identity_keypair,
                 cli.rpc_url,
                 operator_api.clone(),
+            )
+            .await?;
+        }
+        Commands::AddMerkleRoot {
+            proposal_id,
+            merkle_root,
+        } => {
+            instructions::add_merkle_root(
+                proposal_id.to_string(),
+                merkle_root.to_string(),
+                cli.identity_keypair,
+                cli.rpc_url,
             )
             .await?;
         }
