@@ -12,18 +12,22 @@ This project enables Solana validators to participate in transparent and secure 
 ### Smart Contract
 The backbone of the governance system, written in Rust using Anchor. It handles:
 
- - Proposal creation and support.
+ - Proposal creation and support with merkle proof verification.
  - Voting with stake-weighted basis points (For, Against, Abstain).
- - Tallying and outcome determination.
+ - Vote override functionality for delegators.
+ - Comprehensive PDA derivation utilities.
+ - Enhanced error handling and validation.
 
 Details: Check the [Contract README](../main/contract/readme.md).
 
 ## CLI (svmgov)
 A Rust-based command-line interface that allows validators to manage governance actions by sending transactions to the contract. Key features include:
 
- - Creating and supporting proposals.
- - Casting votes and tallying results.
- - Listing proposals and votes.
+ - Creating and supporting proposals with snapshot verification.
+ - Casting validator votes and delegator vote overrides.
+ - API integration for real-time validator stake data.
+ - Proposal finalization and result determination.
+ - Listing proposals, votes, and validator information.
 
 Details: See the [CLI README](../main/svmgov/readme.md).
 
