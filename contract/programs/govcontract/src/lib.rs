@@ -67,6 +67,11 @@ pub mod govcontract {
         Ok(())
     }
 
+    pub fn refund_vote(ctx: Context<RefundVote>) -> Result<()> {
+        ctx.accounts.refund_vote()?;
+        Ok(())
+    }
+
     pub fn tally_votes<'info>(
         ctx: Context<'_, '_, 'info, 'info, TallyVotes<'info>>,
         finalize: bool,

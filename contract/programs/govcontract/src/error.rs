@@ -46,4 +46,8 @@ pub enum GovernanceError {
     VoteCountUnderflow,
     #[msg("Vote account appears to be closed")]
     VoteAccountClosed,
+    #[msg("Proposal must be finalized before vote refund")]
+    ProposalNotFinalized,
+    #[msg("Vote must be tallied before it can be refunded")]
+    VoteNotTallied,
 }
