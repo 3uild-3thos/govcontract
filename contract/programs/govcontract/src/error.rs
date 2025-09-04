@@ -38,8 +38,10 @@ pub enum GovernanceError {
     InvalidVotingLength,
     #[msg("Invalid Vote account version")]
     InvalidVoteAccountVersion,
-    #[msg("Invaid Vote account size")]
+    #[msg("Invalid Vote account size")]
     InvalidVoteAccountSize,
     #[msg("All votes cast on the proposal must be counted to finalize")]
     AllVotesCount,
+    #[msg("Vote count underflow occurred during tally")]
+    VoteCountUnderflow,
 }

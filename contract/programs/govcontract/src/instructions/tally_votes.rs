@@ -173,7 +173,8 @@ impl<'info> TallyVotes<'info> {
             // vote.sub_lamports(vote.get_lamports())?;
             vote.to_account_info().realloc(0, false)?;
             
-            vote_count -= 1;
+            vote_count = vote_count.checked_sub(1)
+                .ok_or(GovernanceError::VoteCountUnderflow)?;
         }
         self.proposal.vote_count = vote_count;
 
