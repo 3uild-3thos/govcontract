@@ -6,6 +6,7 @@ use anchor_lang::{
 use crate::{
     calculate_vote_lamports,
     error::GovernanceError,
+    events::VoteCast,
     merkle_helpers::verify_merkle_proof_cpi,
     state::{Proposal, Vote},
 };
@@ -136,6 +137,20 @@ impl<'info> CastVote<'info> {
             stake: voter_stake,
             vote_timestamp: clock.unix_timestamp,
             bump: bumps.vote,
+        });
+
+        // Emit vote cast event
+        emit!(VoteCast {
+            proposal_id: self.proposal.key(),
+            voter: self.signer.key(),
+            vote_account: self.spl_vote_account.key(),
+            for_votes_bp,
+            against_votes_bp,
+            abstain_votes_bp,
+            for_votes_lamports,
+            against_votes_lamports,
+            abstain_votes_lamports,
+            vote_timestamp: clock.unix_timestamp,
         });
 
         Ok(())

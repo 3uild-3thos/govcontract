@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::{
     error::GovernanceError,
+    events::MerkleRootAdded,
     state::Proposal,
 };
 
@@ -32,6 +33,12 @@ impl<'info> AddMerkleRoot<'info> {
         );
 
         self.proposal.merkle_root_hash = Some(merkle_root_hash);
+
+        emit!(MerkleRootAdded {
+            proposal_id: self.proposal.key(),
+            author: self.signer.key(),
+            merkle_root_hash,
+        });
 
         Ok(())
     }

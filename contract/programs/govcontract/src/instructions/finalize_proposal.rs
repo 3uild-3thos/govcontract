@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::{
     error::GovernanceError,
+    events::ProposalFinalized,
     state::Proposal,
 };
 
@@ -25,6 +26,17 @@ impl<'info> FinalizeProposal<'info> {
             clock.epoch >= self.proposal.end_epoch,
             GovernanceError::VotingPeriodNotEnded
         );
+
+        // Emit proposal finalized event
+        emit!(ProposalFinalized {
+            proposal_id: self.proposal.key(),
+            finalizer: self.signer.key(),
+            total_for_votes: self.proposal.for_votes_lamports,
+            total_against_votes: self.proposal.against_votes_lamports,
+            total_abstain_votes: self.proposal.abstain_votes_lamports,
+            total_votes_count: self.proposal.vote_count,
+            finalization_timestamp: clock.unix_timestamp,
+        });
 
         // Mark the proposal as finalized
         self.proposal.finalized = true;

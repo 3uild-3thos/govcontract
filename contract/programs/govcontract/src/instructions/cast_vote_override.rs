@@ -9,6 +9,7 @@ use anchor_lang::{
 use crate::{
     calculate_vote_lamports,
     error::GovernanceError,
+    events::VoteOverrideCast,
     merkle_helpers::verify_merkle_proof_cpi,
     state::{Proposal, Vote, VoteOverride},
 };
@@ -191,7 +192,23 @@ impl<'info> CastVoteOverride<'info> {
             against_votes_lamports,
             abstain_votes_lamports,
         });
-        
+
+        // Emit vote override cast event
+        emit!(VoteOverrideCast {
+            proposal_id: self.proposal.key(),
+            delegator: self.signer.key(),
+            stake_account: stake_merkle_leaf.stake_account,
+            validator: meta_merkle_leaf.vote_account,
+            for_votes_bp,
+            against_votes_bp,
+            abstain_votes_bp,
+            for_votes_lamports,
+            against_votes_lamports,
+            abstain_votes_lamports,
+            stake_amount: delegator_stake,
+            vote_timestamp: clock.unix_timestamp,
+        });
+
         self.proposal.vote_count += 1;
 
         Ok(())

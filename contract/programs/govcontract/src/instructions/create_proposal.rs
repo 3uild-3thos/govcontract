@@ -12,6 +12,7 @@ use gov_v1::{MetaMerkleProof, ID as SNAPSHOT_PROGRAM_ID};
 
 use crate::{
     error::GovernanceError,
+    events::ProposalCreated,
     merkle_helpers::verify_merkle_proof_cpi,
     stake_weight_bp,
     state::{Proposal, ProposalIndex},
@@ -139,6 +140,18 @@ impl<'info> CreateProposal<'info> {
             ..Proposal::default()
         });
         self.proposal_index.current_index += 1;
+
+        // Emit proposal created event
+        emit!(ProposalCreated {
+            proposal_id: self.proposal.key(),
+            author: self.signer.key(),
+            title: self.proposal.title.clone(),
+            description: self.proposal.description.clone(),
+            start_epoch: self.proposal.start_epoch,
+            end_epoch: self.proposal.end_epoch,
+            snapshot_slot: self.proposal.snapshot_slot,
+            creation_timestamp: self.proposal.creation_timestamp,
+        });
 
         Ok(())
     }

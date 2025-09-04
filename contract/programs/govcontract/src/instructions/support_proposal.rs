@@ -7,6 +7,7 @@ use gov_v1::{MetaMerkleProof, ID as SNAPSHOT_PROGRAM_ID};
 
 use crate::{
     error::GovernanceError,
+    events::ProposalSupported,
     merkle_helpers::verify_merkle_proof_cpi,
     state::{Proposal, Support},
 };
@@ -89,10 +90,20 @@ impl<'info> SupportProposal<'info> {
         let cluster_stake = get_epoch_total_stake();
         let support_scaled = (self.proposal.cluster_support_lamports as u128) * 100;
         let cluster_scaled = (cluster_stake as u128) * 5;
-        if support_scaled >= cluster_scaled {
+        let voting_activated = if support_scaled >= cluster_scaled {
             // Activate voting if threshold met
             self.proposal.voting = true;
-        }
+            true
+        } else {
+            false
+        };
+
+        emit!(ProposalSupported {
+            proposal_id: self.proposal.key(),
+            supporter: self.signer.key(),
+            cluster_support_lamports: self.proposal.cluster_support_lamports,
+            voting_activated,
+        });
 
         Ok(())
     }

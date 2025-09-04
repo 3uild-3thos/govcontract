@@ -87,6 +87,26 @@ The Solana Validator Governance program enforces the following rules, which impa
 
 The CLI does not perform local validation of these conditions; the smart contract handles enforcement through merkle proof verification, and the CLI relays any resulting errors.
 
+## Event Monitoring
+
+All CLI commands that interact with the governance contract emit comprehensive events that frontend applications and external services can monitor in real-time. These events provide complete transparency into governance activities.
+
+### Available Events
+
+- **`ProposalCreated`** - Emitted when `create-proposal` is executed
+- **`ProposalSupported`** - Emitted when `support-proposal` is executed
+- **`VoteCast`** - Emitted when `cast-vote` is executed
+- **`VoteOverrideCast`** - Emitted when `cast-vote-override` is executed
+- **`VoteModified`** - Emitted when `modify-vote` is executed
+- **`MerkleRootAdded`** - Emitted when `add-merkle-root` is executed
+- **`ProposalFinalized`** - Emitted when `finalize-proposal` is executed
+
+### Monitoring Events
+
+Frontend applications can listen to these events for real-time updates:
+
+For detailed event data structures and usage examples, refer to the [Contract Events Documentation](../contract/readme.md#events).
+
 ---
 
 ## Commands in Detail

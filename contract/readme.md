@@ -44,6 +44,138 @@ To use this contract, you'll need to:
 8. **Add merkle root**: Use the `add_merkle_root` instruction to set the merkle root hash for a proposal.
 9. **Finalize proposal**: Use the `finalize_proposal` instruction to determine the outcome after voting ends.
 
+## Events
+
+The contract emits comprehensive events for all major governance actions. Frontend applications and external services can listen to these events to track governance activity in real-time. All events are automatically included in the generated IDL.
+
+### ProposalCreated
+Emitted when a new proposal is created.
+
+**Fields:**
+- `proposal_id: Pubkey` - The unique identifier of the proposal
+- `author: Pubkey` - The public key of the validator who created the proposal
+- `title: String` - The proposal title
+- `description: String` - The proposal description
+- `start_epoch: u64` - The epoch when voting begins
+- `end_epoch: u64` - The epoch when voting ends
+- `snapshot_slot: u64` - The slot when the validator stake snapshot was taken
+- `creation_timestamp: i64` - Unix timestamp of proposal creation
+
+### ProposalSupported
+Emitted when a validator supports a proposal.
+
+**Fields:**
+- `proposal_id: Pubkey` - The proposal being supported
+- `supporter: Pubkey` - The validator providing support
+- `cluster_support_lamports: u64` - Total lamports of cluster support after this action
+- `voting_activated: bool` - Whether this support activated voting (5% threshold reached)
+
+### VoteCast
+Emitted when a validator casts their vote.
+
+**Fields:**
+- `proposal_id: Pubkey` - The proposal being voted on
+- `voter: Pubkey` - The validator casting the vote
+- `vote_account: Pubkey` - The validator's vote account
+- `for_votes_bp: u64` - Basis points allocated to "For"
+- `against_votes_bp: u64` - Basis points allocated to "Against"
+- `abstain_votes_bp: u64` - Basis points allocated to "Abstain"
+- `for_votes_lamports: u64` - Lamports allocated to "For" (based on stake)
+- `against_votes_lamports: u64` - Lamports allocated to "Against" (based on stake)
+- `abstain_votes_lamports: u64` - Lamports allocated to "Abstain" (based on stake)
+- `vote_timestamp: i64` - Unix timestamp of the vote
+
+### VoteOverrideCast
+Emitted when a delegator overrides their validator's vote.
+
+**Fields:**
+- `proposal_id: Pubkey` - The proposal being voted on
+- `delegator: Pubkey` - The delegator overriding the vote
+- `stake_account: Pubkey` - The stake account being used
+- `validator: Pubkey` - The validator whose vote is being overridden
+- `for_votes_bp: u64` - Basis points allocated to "For"
+- `against_votes_bp: u64` - Basis points allocated to "Against"
+- `abstain_votes_bp: u64` - Basis points allocated to "Abstain"
+- `for_votes_lamports: u64` - Lamports allocated to "For"
+- `against_votes_lamports: u64` - Lamports allocated to "Against"
+- `abstain_votes_lamports: u64` - Lamports allocated to "Abstain"
+- `stake_amount: u64` - The amount of stake being used for the override
+- `vote_timestamp: i64` - Unix timestamp of the vote override
+
+### VoteModified
+Emitted when a validator modifies their existing vote.
+
+**Fields:**
+- `proposal_id: Pubkey` - The proposal being voted on
+- `voter: Pubkey` - The validator modifying their vote
+- `vote_account: Pubkey` - The validator's vote account
+- `old_for_votes_bp: u64` - Previous basis points for "For"
+- `old_against_votes_bp: u64` - Previous basis points for "Against"
+- `old_abstain_votes_bp: u64` - Previous basis points for "Abstain"
+- `new_for_votes_bp: u64` - New basis points for "For"
+- `new_against_votes_bp: u64` - New basis points for "Against"
+- `new_abstain_votes_bp: u64` - New basis points for "Abstain"
+- `for_votes_lamports: u64` - Lamports allocated to "For"
+- `against_votes_lamports: u64` - Lamports allocated to "Against"
+- `abstain_votes_lamports: u64` - Lamports allocated to "Abstain"
+- `modification_timestamp: i64` - Unix timestamp of the modification
+
+### MerkleRootAdded
+Emitted when a merkle root hash is added to a proposal.
+
+**Fields:**
+- `proposal_id: Pubkey` - The proposal receiving the merkle root
+- `author: Pubkey` - The validator adding the merkle root
+- `merkle_root_hash: [u8; 32]` - The merkle root hash bytes
+
+### ProposalFinalized
+Emitted when a proposal is finalized after voting ends.
+
+**Fields:**
+- `proposal_id: Pubkey` - The finalized proposal
+- `finalizer: Pubkey` - The account that finalized the proposal
+- `total_for_votes: u64` - Total lamports voted "For"
+- `total_against_votes: u64` - Total lamports voted "Against"
+- `total_abstain_votes: u64` - Total lamports voted "Abstain"
+- `total_votes_count: u32` - Total number of votes cast
+- `finalization_timestamp: i64` - Unix timestamp of finalization
+
+## Event Usage
+
+Frontend applications can listen to these events using Anchor's event system:
+
+```javascript
+import * as anchor from '@coral-xyz/anchor';
+
+// Initialize program
+const program = new anchor.Program(IDL, PROGRAM_ID, provider);
+
+// Listen for proposal creation
+const proposalListener = program.addEventListener('ProposalCreated', (event, slot) => {
+  console.log('New proposal:', event.title);
+  // Update proposals list in UI
+});
+
+// Listen for votes
+const voteListener = program.addEventListener('VoteCast', (event, slot) => {
+  console.log('Vote cast:', event.forVotesBp, 'basis points');
+  // Update voting results in real-time
+});
+
+// Listen for vote overrides
+const overrideListener = program.addEventListener('VoteOverrideCast', (event, slot) => {
+  console.log('Vote override by delegator');
+  // Update delegator voting status
+});
+
+// Cleanup listeners when component unmounts
+// program.removeEventListener(proposalListener);
+```
+
+Events are strongly typed and included in the generated TypeScript types from the IDL.
+
+These events provide complete transparency and real-time monitoring capabilities for the governance system.
+
 ## Development
 
 To contribute to this project, you'll need:

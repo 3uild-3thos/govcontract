@@ -8,6 +8,7 @@ use anchor_lang::{
 use crate::{
     calculate_vote_lamports,
     error::GovernanceError,
+    events::VoteModified,
     merkle_helpers::verify_merkle_proof_cpi,
     state::{Proposal, Vote},
 };
@@ -124,6 +125,22 @@ impl<'info> ModifyVote<'info> {
             against_votes_lamports,
             abstain_votes_lamports,
         )?;
+
+        emit!(VoteModified {
+            proposal_id: self.proposal.key(),
+            voter: self.signer.key(),
+            vote_account: self.spl_vote_account.key(),
+            old_for_votes_bp: self.vote.for_votes_bp,
+            old_against_votes_bp: self.vote.against_votes_bp,
+            old_abstain_votes_bp: self.vote.abstain_votes_bp,
+            new_for_votes_bp: for_votes_bp,
+            new_against_votes_bp: against_votes_bp,
+            new_abstain_votes_bp: abstain_votes_bp,
+            for_votes_lamports,
+            against_votes_lamports,
+            abstain_votes_lamports,
+            modification_timestamp: clock.unix_timestamp,
+        });
 
         // Update the vote account with new distribution and lamports
         self.vote.for_votes_bp = for_votes_bp;

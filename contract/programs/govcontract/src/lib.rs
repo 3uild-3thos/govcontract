@@ -1,5 +1,6 @@
 #![allow(unexpected_cfgs, unused_variables, clippy::too_many_arguments)]
 mod error;
+mod events;
 mod instructions;
 mod merkle_helpers;
 mod state;
