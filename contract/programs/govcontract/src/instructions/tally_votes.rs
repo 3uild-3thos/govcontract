@@ -41,7 +41,7 @@ impl<'info> TallyVotes<'info> {
         );
 
         let vote_account_data = &self.spl_vote_account.data.borrow();
-        let (version, node_pubkey) = get_vote_state_values(&vote_account_data)
+        let (version, node_pubkey) = get_vote_state_values(vote_account_data)
             .map_err(|_| GovernanceError::InvalidVoteAccount)?;
 
         require!(version <= 2, GovernanceError::InvalidVoteAccountVersion);
@@ -74,17 +74,15 @@ impl<'info> TallyVotes<'info> {
             // Deserialize the Vote account
             let mut vote: Account<Vote> = Account::try_from(
                 vote_chunk
-                    .get(0)
+                    .first()
                     .ok_or(GovernanceError::NotEnoughAccounts)?,
             )?;
 
-            // Validate the Vote account belongs to this proposal
             require!(
                 vote.proposal == self.proposal.key(),
                 GovernanceError::InvalidVoteAccount
             );
 
-            // Skip votes that have already been tallied
             if vote.tallied {
                 msg!("Vote {} has already been tallied, skipping", vote.validator);
                 continue;

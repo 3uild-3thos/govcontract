@@ -41,7 +41,7 @@ impl<'info> SupportProposal<'info> {
         require!(!self.proposal.finalized, GovernanceError::ProposalFinalized);
 
         let vote_account_data = &self.spl_vote_account.data.borrow();
-        let (version, node_pubkey) = get_vote_state_values(&vote_account_data)
+        let (version, node_pubkey) = get_vote_state_values(vote_account_data)
             .map_err(|_| GovernanceError::InvalidVoteAccount)?;
 
         require!(version <= 2, GovernanceError::InvalidVoteAccountVersion);
