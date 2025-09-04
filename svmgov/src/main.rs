@@ -357,8 +357,12 @@ async fn handle_command(cli: Cli) -> Result<()> {
             .await?;
         }
         Commands::FinalizeProposal { proposal_id } => {
-            instructions::finalize_proposal(proposal_id.to_string(), cli.identity_keypair, cli.rpc_url)
-                .await?;
+            instructions::finalize_proposal(
+                proposal_id.to_string(),
+                cli.identity_keypair,
+                cli.rpc_url,
+            )
+            .await?;
         }
         Commands::ListProposals {
             status,

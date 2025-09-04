@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use anchor_client::solana_sdk::{pubkey::Pubkey, signer::Signer};
 use anchor_lang::system_program;
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use gov_v1::ID as SNAPSHOT_PROGRAM_ID;
 
 use crate::{
@@ -10,11 +10,7 @@ use crate::{
     govcontract::client::{accounts, args},
     utils::{
         api_helpers::{generate_pdas_from_vote_proof_response, get_vote_account_proof},
-        utils::{
-            create_spinner,
-            derive_vote_pda,
-            setup_all,
-        },
+        utils::{create_spinner, derive_vote_pda, setup_all},
     },
 };
 

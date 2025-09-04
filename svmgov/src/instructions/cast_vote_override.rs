@@ -10,19 +10,11 @@ use crate::{
     govcontract::client::{accounts, args},
     utils::{
         api_helpers::{
-            convert_merkle_proof_strings,
-            convert_stake_merkle_leaf_data_to_idl_type,
-            generate_pdas_from_vote_proof_response,
-            get_stake_account_proof,
-            get_vote_account_proof,
-            get_voter_summary,
+            convert_merkle_proof_strings, convert_stake_merkle_leaf_data_to_idl_type,
+            generate_pdas_from_vote_proof_response, get_stake_account_proof,
+            get_vote_account_proof, get_voter_summary,
         },
-        utils::{
-            create_spinner,
-            derive_vote_override_pda,
-            derive_vote_pda,
-            setup_all,
-        },
+        utils::{create_spinner, derive_vote_override_pda, derive_vote_pda, setup_all},
     },
 };
 

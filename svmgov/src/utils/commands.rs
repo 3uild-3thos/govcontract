@@ -10,9 +10,7 @@ use anyhow::{Result, anyhow};
 use serde_json::{Value, json};
 
 use crate::{
-    anchor_client_setup,
-    create_spinner,
-    find_delegator_stake_accounts,
+    anchor_client_setup, create_spinner, find_delegator_stake_accounts,
     govcontract::accounts::{Proposal, Vote},
 };
 
@@ -174,10 +172,7 @@ pub async fn get_proposal(rpc_url: Option<String>, proposal_id: &String) -> Resu
     Ok(())
 }
 
-pub async fn list_stake_accounts(
-    rpc_url: Option<String>,
-    delegator_wallet: Pubkey,
-) -> Result<()> {
+pub async fn list_stake_accounts(rpc_url: Option<String>, delegator_wallet: Pubkey) -> Result<()> {
     // Create a mock Payer
     let mock_payer = Arc::new(Keypair::new());
 

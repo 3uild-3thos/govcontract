@@ -3,11 +3,7 @@ use anyhow::Result;
 
 use crate::{
     govcontract::client::{accounts, args},
-    utils::utils::{
-        create_spinner,
-        derive_proposal_index_pda,
-        setup_all,
-    },
+    utils::utils::{create_spinner, derive_proposal_index_pda, setup_all},
 };
 
 pub async fn initialize_index(

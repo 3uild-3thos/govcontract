@@ -24,9 +24,18 @@ fn test_cli_help_contains_expected_commands() {
         .expect("Failed to run CLI");
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    assert!(stdout.contains("create-proposal"), "Help should show create-proposal command");
-    assert!(stdout.contains("cast-vote"), "Help should show cast-vote command");
-    assert!(stdout.contains("support-proposal"), "Help should show support-proposal command");
+    assert!(
+        stdout.contains("create-proposal"),
+        "Help should show create-proposal command"
+    );
+    assert!(
+        stdout.contains("cast-vote"),
+        "Help should show cast-vote command"
+    );
+    assert!(
+        stdout.contains("support-proposal"),
+        "Help should show support-proposal command"
+    );
 }
 
 // Test CLI error handling for missing arguments
@@ -39,5 +48,8 @@ fn test_cli_error_on_invalid_command() {
         .expect("Failed to run CLI");
 
     // Should fail with an error
-    assert!(!output.status.success(), "CLI should fail on invalid command");
+    assert!(
+        !output.status.success(),
+        "CLI should fail on invalid command"
+    );
 }

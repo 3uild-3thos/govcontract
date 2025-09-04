@@ -10,11 +10,7 @@ use crate::{
     govcontract::client::{accounts, args},
     utils::{
         api_helpers::{generate_pdas_from_vote_proof_response, get_vote_account_proof},
-        utils::{
-            create_spinner,
-            derive_vote_pda,
-            setup_all,
-        },
+        utils::{create_spinner, derive_vote_pda, setup_all},
     },
 };
 
@@ -27,7 +23,10 @@ pub async fn modify_vote(
     rpc_url: Option<String>,
 ) -> Result<()> {
     if for_votes + against_votes + abstain_votes != BASIS_POINTS_TOTAL {
-        return Err(anyhow!("Total vote basis points must sum to {}", BASIS_POINTS_TOTAL));
+        return Err(anyhow!(
+            "Total vote basis points must sum to {}",
+            BASIS_POINTS_TOTAL
+        ));
     }
 
     let proposal_pubkey = Pubkey::from_str(&proposal_id)

@@ -1,7 +1,16 @@
-use std::{collections::HashMap, fmt, fs, str::FromStr, sync::Arc, time::Duration};
+use std::{
+    collections::HashMap,
+    fmt,
+    fs,
+    str::FromStr,
+    sync::Arc,
+    time::Duration,
+};
 
 use anchor_client::{
-    Client, Cluster, Program,
+    Client,
+    Cluster,
+    Program,
     solana_account_decoder::UiAccountEncoding,
     solana_client::{
         nonblocking::rpc_client::RpcClient,

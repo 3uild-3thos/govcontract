@@ -5,10 +5,7 @@ use anyhow::{anyhow, Result};
 
 use crate::{
     govcontract::client::{accounts, args},
-    utils::utils::{
-        create_spinner,
-        setup_all,
-    },
+    utils::utils::{create_spinner, setup_all},
 };
 
 pub async fn finalize_proposal(

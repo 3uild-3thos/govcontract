@@ -70,7 +70,10 @@ pub struct StakeMerkleLeafData {
 
 /// Get voter summary with all vote and stake accounts
 /// Endpoint: GET /voter/:voting_wallet?snapshot_slot=...
-pub async fn get_voter_summary(wallet: &Pubkey, snapshot_slot: Option<u64>) -> Result<VoterSummaryResponse> {
+pub async fn get_voter_summary(
+    wallet: &Pubkey,
+    snapshot_slot: Option<u64>,
+) -> Result<VoterSummaryResponse> {
     let base_url = get_api_base_url();
     let mut url = format!("{}/voter/{}", base_url, wallet);
 
@@ -95,7 +98,10 @@ pub async fn get_voter_summary(wallet: &Pubkey, snapshot_slot: Option<u64>) -> R
 
 /// Get merkle proof for a vote account
 /// Endpoint: GET /proof/vote_account/:vote_account?snapshot_slot=...
-pub async fn get_vote_account_proof(vote_account: &str, snapshot_slot: Option<u64>) -> Result<VoteAccountProofResponse> {
+pub async fn get_vote_account_proof(
+    vote_account: &str,
+    snapshot_slot: Option<u64>,
+) -> Result<VoteAccountProofResponse> {
     let base_url = get_api_base_url();
     let mut url = format!("{}/proof/vote_account/{}", base_url, vote_account);
 
@@ -119,7 +125,10 @@ pub async fn get_vote_account_proof(vote_account: &str, snapshot_slot: Option<u6
 
 /// Get merkle proof for a stake account
 /// Endpoint: GET /proof/stake_account/:stake_account?snapshot_slot=...
-pub async fn get_stake_account_proof(stake_account: &str, snapshot_slot: Option<u64>) -> Result<StakeAccountProofResponse> {
+pub async fn get_stake_account_proof(
+    stake_account: &str,
+    snapshot_slot: Option<u64>,
+) -> Result<StakeAccountProofResponse> {
     let base_url = get_api_base_url();
     let mut url = format!("{}/proof/stake_account/{}", base_url, stake_account);
 
@@ -143,8 +152,7 @@ pub async fn get_stake_account_proof(stake_account: &str, snapshot_slot: Option<
 
 /// Get the base API URL from environment or default
 fn get_api_base_url() -> String {
-    std::env::var(SVMGOV_OPERATOR_URL_ENV)
-        .unwrap_or_else(|_| DEFAULT_OPERATOR_API_URL.to_string())
+    std::env::var(SVMGOV_OPERATOR_URL_ENV).unwrap_or_else(|_| DEFAULT_OPERATOR_API_URL.to_string())
 }
 
 /// Convert API MetaMerkleLeafData to gov_v1 MetaMerkleLeaf
@@ -231,7 +239,10 @@ pub fn convert_merkle_proof_strings(proof_strings: &[String]) -> Result<Vec<[u8;
             };
 
             if bytes.len() != 32 {
-                return Err(anyhow!("Merkle proof hash must be 32 bytes, got {}", bytes.len()));
+                return Err(anyhow!(
+                    "Merkle proof hash must be 32 bytes, got {}",
+                    bytes.len()
+                ));
             }
 
             let mut hash = [0u8; 32];
@@ -240,7 +251,6 @@ pub fn convert_merkle_proof_strings(proof_strings: &[String]) -> Result<Vec<[u8;
         })
         .collect()
 }
-
 
 /// TryFrom implementation to convert gov_v1 StakeMerkleLeaf to IDL-compatible StakeMerkleLeaf type
 impl TryFrom<StakeMerkleLeaf> for crate::govcontract::types::StakeMerkleLeaf {
@@ -256,7 +266,9 @@ impl TryFrom<StakeMerkleLeaf> for crate::govcontract::types::StakeMerkleLeaf {
 }
 
 /// Convert API StakeMerkleLeafData directly to IDL-compatible StakeMerkleLeaf type
-pub fn convert_stake_merkle_leaf_data_to_idl_type(stake_merkle_leaf_data: &StakeMerkleLeafData) -> Result<crate::govcontract::types::StakeMerkleLeaf> {
+pub fn convert_stake_merkle_leaf_data_to_idl_type(
+    stake_merkle_leaf_data: &StakeMerkleLeafData,
+) -> Result<crate::govcontract::types::StakeMerkleLeaf> {
     // First convert to gov_v1 type, then to IDL type
     let gov_v1_leaf: StakeMerkleLeaf = stake_merkle_leaf_data.try_into()?;
     gov_v1_leaf.try_into()
@@ -269,18 +281,27 @@ pub fn generate_consensus_result_pda(snapshot_slot: u64) -> Result<Pubkey> {
 }
 
 /// Generate MetaMerkleProof PDA for a given consensus result and vote account
-pub fn generate_meta_merkle_proof_pda(consensus_result_pda: &Pubkey, vote_account: &Pubkey) -> Result<Pubkey> {
+pub fn generate_meta_merkle_proof_pda(
+    consensus_result_pda: &Pubkey,
+    vote_account: &Pubkey,
+) -> Result<Pubkey> {
     let (pda, _bump) = MetaMerkleProof::pda(consensus_result_pda, vote_account);
     Ok(pda)
 }
 
 /// Generate both ConsensusResult and MetaMerkleProof PDAs from VoteAccountProofResponse
-pub fn generate_pdas_from_vote_proof_response(response: &VoteAccountProofResponse) -> Result<(Pubkey, Pubkey)> {
+pub fn generate_pdas_from_vote_proof_response(
+    response: &VoteAccountProofResponse,
+) -> Result<(Pubkey, Pubkey)> {
     let consensus_pda = generate_consensus_result_pda(response.snapshot_slot)?;
     let vote_account = Pubkey::from_str(&response.meta_merkle_leaf.vote_account)
         .map_err(|e| anyhow!("Invalid vote_account pubkey in response: {}", e))?;
     let meta_proof = generate_meta_merkle_proof_pda(&consensus_pda, &vote_account)?;
 
-    log::debug!("Generated PDAs - consensus_result: {}, meta_merkle_proof: {}", consensus_pda, meta_proof);
+    log::debug!(
+        "Generated PDAs - consensus_result: {}, meta_merkle_proof: {}",
+        consensus_pda,
+        meta_proof
+    );
     Ok((consensus_pda, meta_proof))
 }

@@ -9,11 +9,7 @@ use crate::{
     govcontract::client::{accounts, args},
     utils::{
         api_helpers::{generate_pdas_from_vote_proof_response, get_vote_account_proof},
-        utils::{
-            create_spinner,
-            derive_support_pda,
-            setup_all,
-        },
+        utils::{create_spinner, derive_support_pda, setup_all},
     },
 };
 
