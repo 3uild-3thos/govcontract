@@ -55,6 +55,7 @@ pub async fn cast_vote_override(
     let vote_override_pda = derive_vote_override_pda(
         &proposal_pubkey,
         &Pubkey::from_str(&stake_account.stake_account)?,
+        &validator_vote_pda,
         &program.id(),
     );
 

@@ -439,12 +439,14 @@ pub fn derive_support_pda(
 pub fn derive_vote_override_pda(
     proposal_pubkey: &Pubkey,
     stake_account: &Pubkey,
+    validator_vote_pda: &Pubkey,
     program_id: &Pubkey,
 ) -> Pubkey {
     let seeds = &[
         b"vote_override",
         proposal_pubkey.as_ref(),
         stake_account.as_ref(),
+        validator_vote_pda.as_ref(),
     ];
     let (pda, _) = Pubkey::find_program_address(seeds, program_id);
     pda
