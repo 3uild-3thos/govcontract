@@ -11,6 +11,17 @@ This repository contains a Solana program that enables a decentralized governanc
 * **Voting**: Validators can cast votes on a proposal, with their vote weight determined by their stake.
 * **Tallying**: The contract can tally the votes and determine the outcome of a proposal.
 
+### Tally Process Design
+
+The tally process is designed to be **permissionless** - any validator can initiate the tally operation once the voting period has ended. This design choice enables:
+
+- **Decentralized finalization**: No single point of failure - multiple validators can compete to finalize proposals
+- **Faster resolution**: Proposals can be tallied as soon as voting ends, without waiting for the original proposer
+- **Censorship resistance**: No validator can prevent proposal finalization by refusing to tally
+- **Network efficiency**: Distributed responsibility for proposal finalization across the validator set
+
+This approach ensures that governance proposals are resolved in a timely manner while maintaining the decentralized nature of the system.
+
 ## Contract Structure
 
 The contract is organized into several modules:
