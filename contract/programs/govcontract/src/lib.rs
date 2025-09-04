@@ -14,8 +14,7 @@ pub mod govcontract {
     use super::*;
 
     pub fn initialize_index(ctx: Context<InitializedIndex>) -> Result<()> {
-        ctx.accounts.init_index(&ctx.bumps)?;
-        Ok(())
+        ctx.accounts.init_index(&ctx.bumps)
     }
 
     pub fn create_proposal(
@@ -32,13 +31,11 @@ pub mod govcontract {
             start_epoch,
             voting_length_epochs,
             &ctx.bumps,
-        )?;
-        Ok(())
+        )
     }
 
     pub fn support_proposal(ctx: Context<SupportProposal>) -> Result<()> {
-        ctx.accounts.support_proposal(&ctx.bumps)?;
-        Ok(())
+        ctx.accounts.support_proposal(&ctx.bumps)
     }
 
     // pub fn modify_proposal(ctx: Context<CreateProposal>) -> Result<()> {
@@ -53,8 +50,7 @@ pub mod govcontract {
         abstain_votes_bp: u64,
     ) -> Result<()> {
         ctx.accounts
-            .cast_vote(for_votes_bp, against_votes_bp, abstain_votes_bp, &ctx.bumps)?;
-        Ok(())
+            .cast_vote(for_votes_bp, against_votes_bp, abstain_votes_bp, &ctx.bumps)
     }
 
     pub fn modify_vote(
@@ -64,21 +60,17 @@ pub mod govcontract {
         abstain_votes_bp: u64,
     ) -> Result<()> {
         ctx.accounts
-            .modify_vote(for_votes_bp, against_votes_bp, abstain_votes_bp)?;
-        Ok(())
+            .modify_vote(for_votes_bp, against_votes_bp, abstain_votes_bp)
     }
 
     pub fn refund_vote(ctx: Context<RefundVote>) -> Result<()> {
-        ctx.accounts.refund_vote()?;
-        Ok(())
+        ctx.accounts.refund_vote()
     }
 
     pub fn tally_votes<'info>(
         ctx: Context<'_, '_, 'info, 'info, TallyVotes<'info>>,
         finalize: bool,
     ) -> Result<()> {
-        ctx.accounts.tally_votes(ctx.remaining_accounts, finalize)?;
-
-        Ok(())
+        ctx.accounts.tally_votes(ctx.remaining_accounts, finalize)
     }
 }
