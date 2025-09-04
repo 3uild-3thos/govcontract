@@ -8,6 +8,7 @@ use anchor_lang::{
 };
 
 use crate::{
+    constants::{MIN_PROPOSAL_STAKE_LAMPORTS, MAX_TITLE_LENGTH, MAX_DESCRIPTION_LENGTH, VOTE_STATE_VERSION_MAX},
     utils::{is_valid_github_link, get_vote_state_values},
     error::GovernanceError,
     stake_weight_bp,
@@ -51,10 +52,10 @@ impl<'info> CreateProposal<'info> {
         voting_length_epochs: u64,
         bumps: &CreateProposalBumps,
     ) -> Result<()> {
-        require!(title.len() <= 50, GovernanceError::TitleTooLong);
+        require!(title.len() <= MAX_TITLE_LENGTH, GovernanceError::TitleTooLong);
 
         require!(
-            description.len() <= 250,
+            description.len() <= MAX_DESCRIPTION_LENGTH,
             GovernanceError::DescriptionTooLong
         );
 
@@ -75,7 +76,7 @@ impl<'info> CreateProposal<'info> {
         let (version, node_pubkey) = get_vote_state_values(&vote_account_data)
             .map_err(|_| GovernanceError::InvalidVoteAccount)?;
 
-        require!(version <= 2, GovernanceError::InvalidVoteAccountVersion);
+        require!(version <= VOTE_STATE_VERSION_MAX, GovernanceError::InvalidVoteAccountVersion);
 
         // Validator identity must be part of the Vote account
         require_keys_eq!(
@@ -96,7 +97,7 @@ impl<'info> CreateProposal<'info> {
         // Only staked validators with at least 100k stake can submit a proposal to be considered for voting
         require_gte!(
             proposer_stake,
-            100_000 * LAMPORTS_PER_SOL,
+            MIN_PROPOSAL_STAKE_LAMPORTS,
             GovernanceError::NotEnoughStake
         );
 

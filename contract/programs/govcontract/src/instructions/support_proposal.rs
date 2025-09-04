@@ -7,6 +7,7 @@ use anchor_lang::{
 };
 
 use crate::{
+    constants::VOTE_STATE_VERSION_MAX,
     error::GovernanceError,
     state::{Proposal, Support},
     utils::get_vote_state_values,
@@ -44,7 +45,7 @@ impl<'info> SupportProposal<'info> {
         let (version, node_pubkey) = get_vote_state_values(vote_account_data)
             .map_err(|_| GovernanceError::InvalidVoteAccount)?;
 
-        require!(version <= 2, GovernanceError::InvalidVoteAccountVersion);
+        require!(version <= VOTE_STATE_VERSION_MAX, GovernanceError::InvalidVoteAccountVersion);
 
         // Validator identity must be part of the Vote account
         require_keys_eq!(

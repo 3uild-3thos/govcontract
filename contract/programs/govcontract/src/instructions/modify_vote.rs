@@ -7,6 +7,7 @@ use anchor_lang::{
 };
 
 use crate::{
+    constants::{BASIS_POINTS_DIVISOR, VOTE_STATE_VERSION_MAX},
     error::GovernanceError,
     state::{Proposal, Vote},
     utils::get_vote_state_values,
@@ -48,7 +49,7 @@ impl<'info> ModifyVote<'info> {
         let (version, node_pubkey) = get_vote_state_values(&vote_account_data)
             .map_err(|_| GovernanceError::InvalidVoteAccount)?;
 
-        require!(version <= 2, GovernanceError::InvalidVoteAccountVersion);
+        require!(version <= VOTE_STATE_VERSION_MAX, GovernanceError::InvalidVoteAccountVersion);
 
         // Validator identity must be part of the Vote account
         require_keys_eq!(
@@ -78,7 +79,7 @@ impl<'info> ModifyVote<'info> {
             .checked_add(against_votes_bp)
             .and_then(|sum| sum.checked_add(abstain_votes_bp))
             .ok_or(ProgramError::ArithmeticOverflow)?;
-        require!(total_bp == 10_000, GovernanceError::InvalidVoteDistribution);
+        require!(total_bp == BASIS_POINTS_DIVISOR, GovernanceError::InvalidVoteDistribution);
 
         // Store the vote distribution in the Vote PDA
         self.vote.for_votes_bp = for_votes_bp;

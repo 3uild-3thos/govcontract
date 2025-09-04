@@ -7,6 +7,7 @@ use anchor_lang::{
 };
 
 use crate::{
+    constants::{BASIS_POINTS_DIVISOR, VOTE_STATE_VERSION_MAX},
     error::GovernanceError,
     state::{Proposal, Vote},
     utils::get_vote_state_values,
@@ -44,7 +45,7 @@ impl<'info> TallyVotes<'info> {
         let (version, node_pubkey) = get_vote_state_values(vote_account_data)
             .map_err(|_| GovernanceError::InvalidVoteAccount)?;
 
-        require!(version <= 2, GovernanceError::InvalidVoteAccountVersion);
+        require!(version <= VOTE_STATE_VERSION_MAX, GovernanceError::InvalidVoteAccountVersion);
 
         // Validator identity must be part of the Vote account
         require_keys_eq!(
@@ -119,7 +120,7 @@ impl<'info> TallyVotes<'info> {
             let (chunk_version, node_pubkey) = get_vote_state_values(&data)
                 .map_err(|_| GovernanceError::InvalidVoteAccountVersion)?;
 
-            require!(chunk_version <= 2, GovernanceError::InvalidVoteAccountVersion);
+            require!(chunk_version <= VOTE_STATE_VERSION_MAX, GovernanceError::InvalidVoteAccountVersion);
 
             require_keys_eq!(
                 node_pubkey,
@@ -132,28 +133,28 @@ impl<'info> TallyVotes<'info> {
             require_gt!(validator_stake, 0u64, GovernanceError::NotEnoughStake);
 
             // Calculate effective votes for each category based on actual lamports
-            // Use u128 to avoid overflow in multiplication, then divide by 10,000
+            // Use u128 to avoid overflow in multiplication, then divide by BASIS_POINTS_DIVISOR
             // Example (assuming validator_stake = 3372 lamports, ~0.000003372 SOL):
             // Vote Distribution: for_votes_bp = 7520, against_votes_bp = 2100, abstain_votes_bp = 380
             // Effective Votes (in lamports):
-            // for_votes = (3372 * 7520) / 10_000 = 2535 (floored)
-            // against_votes = (3372 * 2100) / 10_000 = 708 (floored)
-            // abstain_votes = (3372 * 380) / 10_000 = 128 (floored)
+            // for_votes = (stake * for_bp) / BASIS_POINTS_DIVISOR
+            // against_votes = (stake * against_bp) / BASIS_POINTS_DIVISOR
+            // abstain_votes = (stake * abstain_bp) / BASIS_POINTS_DIVISOR
             // Total apportioned: 3371 lamports (minimal 1 lamport loss due to integer flooring across categories)
 
             let for_votes = (validator_stake as u128)
                 .checked_mul(vote.for_votes_bp as u128)
-                .and_then(|product| product.checked_div(10_000))
+                .and_then(|product| product.checked_div(BASIS_POINTS_DIVISOR as u128))
                 .ok_or(ProgramError::ArithmeticOverflow)? as u64;
 
             let against_votes = (validator_stake as u128)
                 .checked_mul(vote.against_votes_bp as u128)
-                .and_then(|product| product.checked_div(10_000))
+                .and_then(|product| product.checked_div(BASIS_POINTS_DIVISOR as u128))
                 .ok_or(ProgramError::ArithmeticOverflow)? as u64;
 
             let abstain_votes = (validator_stake as u128)
                 .checked_mul(vote.abstain_votes_bp as u128)
-                .and_then(|product| product.checked_div(10_000))
+                .and_then(|product| product.checked_div(BASIS_POINTS_DIVISOR as u128))
                 .ok_or(ProgramError::ArithmeticOverflow)? as u64;
 
             // Add to the proposal's totals

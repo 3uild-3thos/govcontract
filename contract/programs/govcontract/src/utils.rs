@@ -27,11 +27,11 @@ use anchor_lang::prelude::*;
 macro_rules! stake_weight_bp {
     ($validator_stake:expr, $cluster_stake:expr) => {
         $validator_stake
-            .checked_mul(10_000)
+            .checked_mul(crate::constants::BASIS_POINTS_DIVISOR as u128)
             .ok_or(ProgramError::ArithmeticOverflow)
             .and_then(|mul_result| {
                 mul_result
-                    .checked_div($cluster_stake)
+                    .checked_div($cluster_stake as u128)
                     .ok_or(ProgramError::ArithmeticOverflow)
             })
     };

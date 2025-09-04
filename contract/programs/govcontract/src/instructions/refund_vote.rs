@@ -6,6 +6,7 @@ use anchor_lang::{
 };
 
 use crate::{
+    constants::VOTE_STATE_VERSION_MAX,
     error::GovernanceError,
     state::{Proposal, Vote},
     utils::get_vote_state_values,
@@ -43,7 +44,7 @@ impl<'info> RefundVote<'info> {
         let (version, node_pubkey) = get_vote_state_values(&vote_account_data)
             .map_err(|_| GovernanceError::InvalidVoteAccountVersion)?;
 
-        require!(version <= 2, GovernanceError::InvalidVoteAccountVersion);
+        require!(version <= VOTE_STATE_VERSION_MAX, GovernanceError::InvalidVoteAccountVersion);
 
         // Only the original validator can refund their vote
         require_keys_eq!(

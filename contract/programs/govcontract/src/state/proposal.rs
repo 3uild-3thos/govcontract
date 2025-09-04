@@ -1,12 +1,14 @@
 use anchor_lang::prelude::*;
 
+use crate::constants::{MAX_TITLE_LENGTH, MAX_DESCRIPTION_LENGTH};
+
 #[account]
 #[derive(InitSpace)]
 pub struct Proposal {
     pub author: Pubkey,
-    #[max_len(50)]
+    #[max_len(MAX_TITLE_LENGTH)]
     pub title: String,
-    #[max_len(250)]
+    #[max_len(MAX_DESCRIPTION_LENGTH)]
     pub description: String,
     pub creation_epoch: u64,
     pub start_epoch: u64,

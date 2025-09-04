@@ -1,4 +1,5 @@
 #![allow(unexpected_cfgs, unused_variables)]
+mod constants;
 mod error;
 mod instructions;
 mod state;
