@@ -25,4 +25,5 @@ pub struct Proposal {
     pub creation_timestamp: i64,
     pub vote_count: u32,
     pub index: u32,
+    pub tallied_votes: u32,
 }

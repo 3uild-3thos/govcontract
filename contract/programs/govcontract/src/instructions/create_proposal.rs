@@ -136,7 +136,8 @@ impl<'info> CreateProposal<'info> {
             proposal_bump: bumps.proposal,
             creation_timestamp: Clock::get()?.unix_timestamp,
             vote_count: 0,
-            index: self.proposal_index.current_index + 1
+            index: self.proposal_index.current_index + 1,
+            tallied_votes: 0
         });
         self.proposal_index.current_index += 1;
 

@@ -30,10 +30,10 @@ pub struct TallyVotes<'info> {
 
 impl<'info> TallyVotes<'info> {
     pub fn tally_votes(
-        &mut self,
-        remaining: &'info [AccountInfo<'info>],
-        finalize: bool,
-    ) -> Result<()> {
+    &mut self,
+    remaining: &'info [AccountInfo<'info>],
+    finalize: bool,
+) -> Result<()> {
         // Check if the voting period has ended
         let clock = Clock::get()?;
         require!(
@@ -68,7 +68,9 @@ impl<'info> TallyVotes<'info> {
             (remaining.len() % 2) == 0,
             GovernanceError::NotEnoughAccounts
         );
+
         let mut vote_count = self.proposal.vote_count;
+        let mut tallied_in_this_call = 0u32;
 
         // 2 accounts: Vote + Spl_vote
         for vote_chunk in remaining.chunks(2) {
@@ -181,13 +183,23 @@ impl<'info> TallyVotes<'info> {
 
             vote_count = vote_count.checked_sub(1)
                 .ok_or(GovernanceError::VoteCountUnderflow)?;
+
+            // Track tallied votes
+            tallied_in_this_call += 1;
         }
         self.proposal.vote_count = vote_count;
+        self.proposal.tallied_votes += tallied_in_this_call;
 
-        // Mark the proposal as finalized
+        let total_votes = self.proposal.vote_count.checked_add(self.proposal.tallied_votes)
+            .ok_or(ProgramError::ArithmeticOverflow)?;
+        msg!("Total tallied: {}/{}", self.proposal.tallied_votes, total_votes);
+
+        // Mark the proposal as finalized only if all votes are tallied and vote_count is 0
         if finalize && vote_count == 0 {
             self.proposal.finalized = true;
-        } else {
+            msg!("Proposal {} finalized successfully", self.proposal.key());
+        } else if finalize && vote_count > 0 {
+            msg!("Cannot finalize: {} votes remaining to be tallied", vote_count);
             return Err(GovernanceError::AllVotesCount.into());
         }
 
