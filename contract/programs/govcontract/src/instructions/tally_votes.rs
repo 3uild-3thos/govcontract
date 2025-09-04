@@ -79,7 +79,7 @@ impl<'info> TallyVotes<'info> {
         // 2 accounts: Vote + Spl_vote
         for vote_chunk in remaining.chunks(2) {
             // Deserialize the Vote account
-            let vote: Account<Vote> = Account::try_from(
+            let mut vote: Account<Vote> = Account::try_from(
                 vote_chunk
                     .get(0)
                     .ok_or(GovernanceError::NotEnoughAccounts)?,
@@ -91,25 +91,28 @@ impl<'info> TallyVotes<'info> {
                 GovernanceError::InvalidVoteAccount
             );
 
+            // Skip votes that have already been tallied
+            if vote.tallied {
+                msg!("Vote {} has already been tallied, skipping", vote.validator);
+                continue;
+            }
+
             let chunk_vote_account = vote_chunk
                 .get(1)
                 .ok_or(GovernanceError::NotEnoughAccounts)?;
 
-            // Check if vote account appears to be closed or empty
             require_gt!(
                 chunk_vote_account.lamports(),
                 0u64,
                 GovernanceError::VoteAccountClosed
             );
 
-            // Check if data length matches expected VoteState size
             require_eq!(
                 chunk_vote_account.data_len(),
                 VoteState::size_of(),
                 GovernanceError::VoteAccountClosed
             );
 
-            // Additional check: ensure data is not all zeros (completely empty account)
             let data = chunk_vote_account.data.borrow();
             require!(
                 !data.iter().all(|&byte| byte == 0),
@@ -122,7 +125,6 @@ impl<'info> TallyVotes<'info> {
                 GovernanceError::InvalidVoteAccount
             );
 
-            // let chunk_data = data;
             let chunk_version = u32::from_le_bytes(
                 data[0..4]
                     .try_into()
@@ -191,9 +193,9 @@ impl<'info> TallyVotes<'info> {
                 .checked_add(abstain_votes)
                 .ok_or(ProgramError::ArithmeticOverflow)?;
 
-            // vote.sub_lamports(vote.get_lamports())?;
-            vote.to_account_info().realloc(0, false)?;
-            
+            // Mark vote as tallied
+            vote.tallied = true;
+
             vote_count = vote_count.checked_sub(1)
                 .ok_or(GovernanceError::VoteCountUnderflow)?;
         }

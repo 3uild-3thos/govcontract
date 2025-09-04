@@ -98,6 +98,7 @@ impl<'info> CastVote<'info> {
             abstain_votes_bp,
             vote_timestamp: Clock::get()?.unix_timestamp,
             bump: bumps.vote,
+            tallied: false,
         });
         self.proposal.vote_count += 1;
 

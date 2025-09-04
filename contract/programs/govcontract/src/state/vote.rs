@@ -10,4 +10,5 @@ pub struct Vote {
     pub abstain_votes_bp: u64,
     pub vote_timestamp: i64,
     pub bump: u8,
+    pub tallied: bool,
 }
