@@ -9,6 +9,7 @@ use anchor_lang::{
 use crate::{
     error::GovernanceError,
     state::{Proposal, Support},
+    utils::get_vote_state_values,
 };
 
 #[derive(Accounts)]
@@ -40,18 +41,10 @@ impl<'info> SupportProposal<'info> {
         require!(!self.proposal.finalized, GovernanceError::ProposalFinalized);
 
         let vote_account_data = &self.spl_vote_account.data.borrow();
-
-        let version = u32::from_le_bytes(
-            vote_account_data[0..4]
-                .try_into()
-                .map_err(|_| GovernanceError::InvalidVoteAccountVersion)?,
-        );
-
-        require!(version <= 2, GovernanceError::InvalidVoteAccount);
-
-        // 4 bytes discriminant, 32 bytes node_pubkey
-        let node_pubkey = Pubkey::try_from(&vote_account_data[4..36])
+        let (version, node_pubkey) = get_vote_state_values(&vote_account_data)
             .map_err(|_| GovernanceError::InvalidVoteAccount)?;
+
+        require!(version <= 2, GovernanceError::InvalidVoteAccountVersion);
 
         // Validator identity must be part of the Vote account
         require_keys_eq!(

@@ -8,6 +8,7 @@ use anchor_lang::{
 use crate::{
     error::GovernanceError,
     state::{Proposal, Vote},
+    utils::get_vote_state_values,
 };
 
 #[derive(Accounts)]
@@ -39,17 +40,10 @@ pub struct RefundVote<'info> {
 impl<'info> RefundVote<'info> {
     pub fn refund_vote(&mut self) -> Result<()> {
         let vote_account_data = self.spl_vote_account.data.borrow();
+        let (version, node_pubkey) = get_vote_state_values(&vote_account_data)
+            .map_err(|_| GovernanceError::InvalidVoteAccountVersion)?;
 
-        let version = u32::from_le_bytes(
-            vote_account_data[0..4]
-                .try_into()
-                .map_err(|_| GovernanceError::InvalidVoteAccountVersion)?,
-        );
         require!(version <= 2, GovernanceError::InvalidVoteAccountVersion);
-
-        // 4 bytes discriminant, 32 bytes node_pubkey
-        let node_pubkey = Pubkey::try_from(&vote_account_data[4..36])
-            .map_err(|_| GovernanceError::FailedDeserializeNodePubkey)?;
 
         // Only the original validator can refund their vote
         require_keys_eq!(

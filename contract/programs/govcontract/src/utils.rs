@@ -1,3 +1,5 @@
+use anchor_lang::prelude::*;
+
 /// Calculates the validator's stake weight in basis points (1 bp = 0.01%) relative to the cluster stake.
 ///
 /// This macro uses integer arithmetic to compute the stake weight by multiplying the validator's stake
@@ -33,6 +35,21 @@ macro_rules! stake_weight_bp {
                     .ok_or(ProgramError::ArithmeticOverflow)
             })
     };
+}
+
+/// Extracts version and node public key from VoteState account
+pub fn get_vote_state_values(vote_account_data: &[u8]) -> Result<(u32, Pubkey)> {
+    let version = u32::from_le_bytes(
+        vote_account_data[0..4]
+            .try_into()
+            .map_err(|_| ProgramError::InvalidAccountData)?,
+    );
+
+    // 4 bytes discriminant, 32 bytes node_pubkey
+    let node_pubkey = Pubkey::try_from(&vote_account_data[4..36])
+        .map_err(|_| ProgramError::InvalidAccountData)?;
+
+    Ok((version, node_pubkey))
 }
 
 /// Validates if the input is a well-formed GitHub repository or issue link.

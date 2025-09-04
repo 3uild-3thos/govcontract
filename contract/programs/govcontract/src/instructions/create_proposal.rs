@@ -8,9 +8,9 @@ use anchor_lang::{
 };
 
 use crate::{
-    utils::is_valid_github_link,
-    error::GovernanceError, 
-    stake_weight_bp, 
+    utils::{is_valid_github_link, get_vote_state_values},
+    error::GovernanceError,
+    stake_weight_bp,
     state::{Proposal, ProposalIndex}
 };
 
@@ -72,16 +72,11 @@ impl<'info> CreateProposal<'info> {
         );
 
         let vote_account_data = self.spl_vote_account.data.borrow();
-        let version = u32::from_le_bytes(
-            vote_account_data[0..4]
-                .try_into()
-                .map_err(|_| GovernanceError::InvalidVoteAccount)?,
-        );
-        require!(version <= 2, GovernanceError::InvalidVoteAccount);
+        let (version, node_pubkey) = get_vote_state_values(&vote_account_data)
+            .map_err(|_| GovernanceError::InvalidVoteAccount)?;
 
-        // 4 bytes discriminant, 32 bytes node_pubkey
-        let node_pubkey =
-            Pubkey::try_from(&vote_account_data[4..36]).map_err(|_| GovernanceError::InvalidVoteAccount)?;
+        require!(version <= 2, GovernanceError::InvalidVoteAccountVersion);
+
         // Validator identity must be part of the Vote account
         require_keys_eq!(
             node_pubkey,
