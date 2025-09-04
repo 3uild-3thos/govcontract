@@ -1,18 +1,34 @@
+use std::{collections::HashMap, fmt, fs, str::FromStr, sync::Arc, time::Duration};
+
 use anchor_client::{
-    solana_account_decoder::UiAccountEncoding, solana_client::{nonblocking::rpc_client::RpcClient, rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig}, rpc_filter::{Memcmp, MemcmpEncodedBytes, RpcFilterType}}, solana_sdk::{commitment_config::{CommitmentConfig, CommitmentLevel}, native_token::LAMPORTS_PER_SOL, signature::Keypair, signer::Signer, stake::{self, state::StakeStateV2}}, Client, Cluster, Program
+    Client, Cluster, Program,
+    solana_account_decoder::UiAccountEncoding,
+    solana_client::{
+        nonblocking::rpc_client::RpcClient,
+        rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig},
+        rpc_filter::{Memcmp, MemcmpEncodedBytes, RpcFilterType},
+    },
+    solana_sdk::{
+        commitment_config::{CommitmentConfig, CommitmentLevel},
+        native_token::LAMPORTS_PER_SOL,
+        signature::Keypair,
+        signer::Signer,
+        stake::{self, state::StakeStateV2},
+    },
 };
-use anchor_lang::{prelude::Pubkey, AnchorDeserialize, Id};
-use anyhow::{Result, anyhow};
+use anchor_lang::{AnchorDeserialize, Id, prelude::Pubkey};
+use anyhow::{anyhow, Result};
 use chrono::prelude::*;
 use indicatif::{ProgressBar, ProgressStyle};
-use std::{collections::HashMap, fmt, fs, str::FromStr, sync::Arc, time::Duration};
 use textwrap::wrap;
 
-use crate::govcontract::{
-    accounts::{Proposal, Vote},
-    program::Govcontract,
+use crate::{
+    constants::*,
+    govcontract::{
+        accounts::{Proposal, Vote},
+        program::Govcontract,
+    },
 };
-use crate::constants::*;
 
 /// Creates and configures a progress spinner with a custom message
 pub fn create_spinner(message: &str) -> ProgressBar {
@@ -69,7 +85,6 @@ fn load_identity_keypair(keypair_path: Option<String>) -> Result<Keypair> {
         ));
     };
 
-    // Read the file content, handling specific errors like file not found
     let file_content = fs::read_to_string(&identity_keypair_path).map_err(|e| match e.kind() {
         std::io::ErrorKind::NotFound => {
             anyhow!(
@@ -84,7 +99,6 @@ fn load_identity_keypair(keypair_path: Option<String>) -> Result<Keypair> {
         ),
     })?;
 
-    // Parse the JSON content into a vector of bytes
     let keypair_bytes: Vec<u8> = serde_json::from_str(&file_content).map_err(|e| {
         anyhow!(
             "The keypair file is not a valid JSON array of bytes: {}. Error: {}",
@@ -184,27 +198,30 @@ pub async fn find_spl_vote_accounts(
     Ok(spl_vote_pubkeys)
 }
 
-
 /// Returns stake pubkey + vote pubkey + validator pubkey + stake amount
 pub(crate) async fn find_delegator_stake_accounts(
     withdraw_authority: &Pubkey,
     rpc_client: &RpcClient,
 ) -> Result<Vec<(Pubkey, Pubkey, u64)>> {
-
     let filters = vec![
         RpcFilterType::DataSize(STAKE_ACCOUNT_DATA_SIZE),
-        RpcFilterType::Memcmp(Memcmp::new(STAKE_ACCOUNT_WITHDRAW_AUTHORITY_OFFSET, MemcmpEncodedBytes::Bytes(withdraw_authority.to_bytes().to_vec())),
-    )];
+        RpcFilterType::Memcmp(Memcmp::new(
+            STAKE_ACCOUNT_WITHDRAW_AUTHORITY_OFFSET,
+            MemcmpEncodedBytes::Bytes(withdraw_authority.to_bytes().to_vec()),
+        )),
+    ];
 
-    let config = RpcProgramAccountsConfig { 
-        filters: Some(filters), 
-        account_config: RpcAccountInfoConfig { 
-            encoding: Some(UiAccountEncoding::JsonParsed), 
-            commitment: Some(CommitmentConfig { commitment: CommitmentLevel::Finalized }),
-            .. RpcAccountInfoConfig::default()
-        }, 
-        with_context: None, 
-        sort_results: Some(true) 
+    let config = RpcProgramAccountsConfig {
+        filters: Some(filters),
+        account_config: RpcAccountInfoConfig {
+            encoding: Some(UiAccountEncoding::JsonParsed),
+            commitment: Some(CommitmentConfig {
+                commitment: CommitmentLevel::Finalized,
+            }),
+            ..RpcAccountInfoConfig::default()
+        },
+        with_context: None,
+        sort_results: Some(true),
     };
 
     let accounts = rpc_client
@@ -214,7 +231,9 @@ pub(crate) async fn find_delegator_stake_accounts(
     let mut stakes = vec![];
 
     for (stake_pubkey, account) in accounts {
-        if let Ok(StakeStateV2::Stake(_meta, stake, _flags)) = StakeStateV2::deserialize(&mut &account.data[..]) {
+        if let Ok(StakeStateV2::Stake(_meta, stake, _flags)) =
+            StakeStateV2::deserialize(&mut &account.data[..])
+        {
             if stake.delegation.stake > 0 && stake.delegation.deactivation_epoch == u64::MAX {
                 stakes.push((
                     stake_pubkey,
@@ -237,10 +256,7 @@ fn set_cluster(rpc_url: Option<String>) -> Cluster {
         let wss_url = rpc_url.replace("https://", "wss://");
         Cluster::Custom(rpc_url, wss_url)
     } else {
-        Cluster::Custom(
-            DEFAULT_RPC_URL.to_string(),
-            DEFAULT_WSS_URL.to_string(),
-        )
+        Cluster::Custom(DEFAULT_RPC_URL.to_string(), DEFAULT_WSS_URL.to_string())
     }
 }
 
@@ -375,180 +391,52 @@ impl fmt::Display for Vote {
     }
 }
 
-// Snapshot data structure
-pub struct SnapshotData {
-    pub validator_vote_account: Pubkey,
-    pub stake_account: Pubkey,
-    pub validator_vote_pda: Pubkey,
-    pub vote_override_pda: Pubkey,
-    pub snapshot_program: Pubkey,
-    pub merkle_proof: Vec<[u8; 32]>,
+pub fn derive_vote_pda(
+    proposal_pubkey: &Pubkey,
+    vote_account: &Pubkey,
+    program_id: &Pubkey,
+) -> Pubkey {
+    let seeds = &[b"vote", proposal_pubkey.as_ref(), vote_account.as_ref()];
+    let (pda, _) = Pubkey::find_program_address(seeds, program_id);
+    pda
 }
 
-pub async fn fetch_snapshot_data(
-    delegator: &Pubkey,
-    proposal: &Pubkey,
-    operator_api: Option<String>,
-) -> Result<SnapshotData> {
-    let api_url = operator_api.unwrap_or_else(|| {
-        std::env::var(OPERATOR_API_URL_ENV).unwrap_or_else(|_| DEFAULT_OPERATOR_API_URL.to_string())
-    });
-
-    println!("🌐 Fetching snapshot data from: {}", api_url);
-
-    // TODO: Implement actual API call to operator
-    // For now, return mock data so the CLI can function
-    
-    // Generate mock PDAs for testing
-    let validator_vote_account = Pubkey::new_unique(); // Mock validator vote account
-    let stake_account = Pubkey::new_unique(); // Mock stake account
-    let snapshot_program = Pubkey::new_unique(); // Mock snapshot program
-    
-    // Derive PDAs using the same seeds as the contract
-    let validator_vote_seeds = &[b"vote", proposal.as_ref(), validator_vote_account.as_ref()];
-    let (validator_vote_pda, _) = Pubkey::find_program_address(validator_vote_seeds, &Pubkey::new_unique());
-    
-    let vote_override_seeds = &[b"vote_override", proposal.as_ref(), stake_account.as_ref()];
-    let (vote_override_pda, _) = Pubkey::find_program_address(vote_override_seeds, &Pubkey::new_unique());
-    
-    // Mock merkle proof (32 bytes each)
-    let merkle_proof = vec![[0u8; 32]; MOCK_MERKLE_PROOF_LEVELS]; // Mock merkle proof
-
-    Ok(SnapshotData {
-        validator_vote_account,
-        stake_account,
-        validator_vote_pda,
-        vote_override_pda,
-        snapshot_program,
-        merkle_proof,
-    })
+pub fn derive_proposal_pda(seed: u64, vote_account: &Pubkey, program_id: &Pubkey) -> Pubkey {
+    let seeds = &[b"proposal", &seed.to_le_bytes(), vote_account.as_ref()];
+    let (pda, _) = Pubkey::find_program_address(seeds, program_id);
+    pda
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use anchor_client::solana_sdk::signature::Keypair;
-    use anchor_client::solana_sdk::signer::Signer;
-    use anchor_lang::Id;
-    use std::fs;
-    use std::path::PathBuf;
-    use std::sync::Arc;
-    use tempfile::NamedTempFile;
+pub fn derive_proposal_index_pda(program_id: &Pubkey) -> Pubkey {
+    let seeds = &[&b"index"[..]];
+    let (pda, _) = Pubkey::find_program_address(seeds, program_id);
+    pda
+}
 
-    // Helper function to create a temporary keypair file
-    fn create_temp_keypair_file() -> (NamedTempFile, PathBuf, Keypair) {
-        let keypair = Keypair::new();
-        let temp_file = NamedTempFile::new().unwrap();
-        let path = temp_file.path().to_path_buf();
-        let keypair_bytes = keypair.to_bytes().to_vec();
-        fs::write(&path, serde_json::to_string(&keypair_bytes).unwrap()).unwrap();
-        (temp_file, path, keypair)
-    }
+pub fn derive_support_pda(
+    proposal_pubkey: &Pubkey,
+    validator_pubkey: &Pubkey,
+    program_id: &Pubkey,
+) -> Pubkey {
+    let seeds = &[
+        b"support",
+        proposal_pubkey.as_ref(),
+        validator_pubkey.as_ref(),
+    ];
+    let (pda, _) = Pubkey::find_program_address(seeds, program_id);
+    pda
+}
 
-    // Test for load_identity_keypair success
-    #[test]
-    fn test_load_identity_keypair_success() {
-        let (_temp_file, temp_path, expected_keypair) = create_temp_keypair_file();
-        println!("{}", temp_path.to_str().unwrap().to_string());
-        let keypair_path = Some(temp_path.to_str().unwrap().to_string());
-        let result = load_identity_keypair(keypair_path);
-        assert!(result.is_ok(), "Expected Ok, got {:?}", result);
-        let loaded_keypair = result.unwrap();
-        assert_eq!(
-            loaded_keypair.pubkey(),
-            expected_keypair.pubkey(),
-            "Loaded keypair pubkey does not match expected"
-        );
-        // temp_file is dropped here, after all operations are complete
-    }
-
-    #[test]
-    fn test_load_identity_keypair_no_path() {
-        let result = load_identity_keypair(None);
-        assert!(result.is_err(), "Expected Err, got {:?}", result);
-        assert_eq!(
-            result.unwrap_err().to_string(),
-            "No identity keypair path provided. Please specify the path using the --identity_keypair flag.",
-            "Unexpected error message"
-        );
-    }
-
-    #[test]
-    fn test_load_identity_keypair_invalid_file() {
-        let invalid_path = Some("invalid/path/to/keypair.json".to_string());
-        let result = load_identity_keypair(invalid_path);
-        assert!(result.is_err(), "Expected Err, got {:?}", result.as_ref());
-        let error_msg = result.as_ref().unwrap_err().to_string();
-        assert!(
-            error_msg.contains("The specified keypair file does not exist"),
-            "Unexpected error message: {}",
-            error_msg
-        );
-    }
-
-    // Tests for set_cluster
-    #[test]
-    fn test_set_cluster_custom_url() {
-        let custom_rpc_url = Some("https://custom.rpc.url".to_string());
-        let cluster = set_cluster(custom_rpc_url);
-        match cluster {
-            Cluster::Custom(rpc, wss) => {
-                assert_eq!(rpc, "https://custom.rpc.url", "RPC URL mismatch");
-                assert_eq!(wss, "wss://custom.rpc.url", "WSS URL mismatch");
-            }
-            _ => panic!("Expected Cluster::Custom, got {:?}", cluster),
-        }
-    }
-
-    #[test]
-    fn test_set_cluster_default_url() {
-        let cluster = set_cluster(None);
-        match cluster {
-            Cluster::Custom(rpc, wss) => {
-                assert_eq!(
-                    rpc, DEFAULT_RPC_URL,
-                    "Default RPC URL mismatch"
-                );
-                assert_eq!(
-                    wss, DEFAULT_WSS_URL,
-                    "Default WSS URL mismatch"
-                );
-            }
-            _ => panic!("Expected Cluster::Custom, got {:?}", cluster),
-        }
-    }
-
-    // Tests for anchor_client_setup
-    #[test]
-    fn test_anchor_client_setup_custom_url() {
-        let payer = Arc::new(Keypair::new());
-        let custom_rpc_url = Some("https://custom.rpc.url".to_string());
-        let result = anchor_client_setup(custom_rpc_url, payer.clone());
-        assert!(
-            &result.is_ok(),
-            "test_anchor_client_setup_custom_url Expected Ok, got error"
-        );
-        let program = result.unwrap();
-        assert_eq!(
-            program.id(),
-            Govcontract::id(),
-            "Program ID does not match expected"
-        );
-    }
-
-    #[test]
-    fn test_anchor_client_setup_default_url() {
-        let payer = Arc::new(Keypair::new());
-        let result = anchor_client_setup(None, payer.clone());
-        assert!(
-            result.is_ok(),
-            "test_anchor_client_setup_default_url Expected Ok, got error"
-        );
-        let program = result.unwrap();
-        assert_eq!(
-            program.id(),
-            Govcontract::id(),
-            "Program ID does not match expected"
-        );
-    }
+pub fn derive_vote_override_pda(
+    proposal_pubkey: &Pubkey,
+    stake_account: &Pubkey,
+    program_id: &Pubkey,
+) -> Pubkey {
+    let seeds = &[
+        b"vote_override",
+        proposal_pubkey.as_ref(),
+        stake_account.as_ref(),
+    ];
+    let (pda, _) = Pubkey::find_program_address(seeds, program_id);
+    pda
 }

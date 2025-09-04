@@ -9,11 +9,6 @@
 /// * `validator_stake` - The stake of the validator, voter (u64).
 /// * `cluster_stake` - The total stake in the cluster (u64). Must be non-zero.
 ///
-/// # Returns
-///
-/// * `Result<u64, ProgramError>` - The stake weight in basis points (u64) if successful, or a
-///   `ProgramError::ArithmeticOverflow` if the calculation overflows or if `cluster_stake` is zero.
-///
 /// # Example
 ///
 /// ```rust
@@ -25,20 +20,41 @@
 #[macro_export]
 macro_rules! stake_weight_bp {
     ($validator_stake:expr, $cluster_stake:expr) => {{
-        let validator_stake_u128 = $validator_stake as u128;
-        let cluster_stake_u128 = $cluster_stake as u128;
-
-        validator_stake_u128
+        ($validator_stake as u128)
             .checked_mul(10_000u128)
-            .ok_or(ProgramError::ArithmeticOverflow)
-            .and_then(|mul_result| {
-                mul_result
-                    .checked_div(cluster_stake_u128)
-                    .ok_or(ProgramError::ArithmeticOverflow)
-            })
-            .and_then(|div_result| {
-                u64::try_from(div_result).map_err(|_| ProgramError::ArithmeticOverflow)
-            })
+            .and_then(|product| product.checked_div($cluster_stake as u128))
+            .ok_or(anchor_lang::prelude::ProgramError::ArithmeticOverflow)
+            .map(|result| result as u64)
+    }};
+}
+
+/// Calculates stake-weighted vote amounts from basis points
+///
+/// This macro calculates the vote lamports by multiplying stake amount
+/// by basis points and dividing by 10,000 (the total basis points for 100%).
+/// Uses u128 internally to prevent overflow during multiplication.
+///
+/// # Arguments
+///
+/// * `stake` - The stake amount in lamports (u64)
+/// * `basis_points` - The vote distribution in basis points (u64, 0-10,000)
+///
+/// # Example
+///
+/// ```rust
+/// let stake = 1_000_000u64; // 1 SOL in lamports
+/// let basis_points = 2_500u64; // 25% of stake
+/// let vote_lamports = calculate_vote_lamports!(stake, basis_points)?;
+/// // Returns 250,000 lamports (25% of 1 SOL)
+/// ```
+#[macro_export]
+macro_rules! calculate_vote_lamports {
+    ($stake:expr, $basis_points:expr) => {{
+        ($stake as u128)
+            .checked_mul($basis_points as u128)
+            .and_then(|product| product.checked_div(10_000))
+            .ok_or(anchor_lang::prelude::ProgramError::ArithmeticOverflow)
+            .map(|result| result as u64)
     }};
 }
 

@@ -1,36 +1,25 @@
-use crate::{
-    create_spinner,
-    govcontract::client::{accounts, args},
-    setup_all,
-};
-use anchor_client::solana_sdk::{pubkey::Pubkey, signer::Signer, system_program};
+use anchor_client::solana_sdk::{signer::Signer, system_program};
 use anyhow::Result;
+
+use crate::{
+    govcontract::client::{accounts, args},
+    utils::utils::{
+        create_spinner,
+        derive_proposal_index_pda,
+        setup_all,
+    },
+};
 
 pub async fn initialize_index(
     identity_keypair: Option<String>,
     rpc_url: Option<String>,
 ) -> Result<()> {
-    // Debug: Log before calling setup_all
-    log::debug!(
-        "Calling init_index with identity_keypair={:?}, rpc_url={:?}",
-        identity_keypair,
-        rpc_url
-    );
     let (payer, _vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
 
-    // Derive the index PDA using the seed ["index"]
-    let (proposal_index, _bump) = Pubkey::find_program_address(&[b"index"], &program.id());
-    log::debug!(
-        "Derived index PDA: index_pda={}, bump={}",
-        proposal_index,
-        _bump
-    );
+    let proposal_index = derive_proposal_index_pda(&program.id());
 
-    // Create a spinner for progress indication
     let spinner = create_spinner("Sending init_index transaction...");
 
-    // Debug: Log before sending transaction
-    log::debug!("Building and sending InitializeIndex transaction");
     let sig = program
         .request()
         .args(args::InitializeIndex {})

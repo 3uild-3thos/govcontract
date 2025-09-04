@@ -21,4 +21,4 @@ pub const MOCK_MERKLE_PROOF_LEVELS: usize = 3;
 // Environment variable names
 pub const SVMGOV_KEY_ENV: &str = "SVMGOV_KEY";
 pub const SVMGOV_RPC_ENV: &str = "SVMGOV_RPC";
-pub const OPERATOR_API_URL_ENV: &str = "OPERATOR_API_URL";
+pub const SVMGOV_OPERATOR_URL_ENV: &str = "SVMGOV_OPERATOR_URL";

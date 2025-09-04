@@ -1,7 +1,4 @@
 #![allow(clippy::too_many_arguments)]
-use crate::{
-    error::GovernanceError, stake_weight_bp, state::{Proposal, ProposalIndex}, utils::is_valid_github_link
-};
 
 use anchor_lang::{
     prelude::*,
@@ -9,6 +6,16 @@ use anchor_lang::{
         epoch_stake::{get_epoch_stake_for_vote_account, get_epoch_total_stake},
         vote::{program as vote_program, state::VoteState},
     },
+};
+
+use gov_v1::{MetaMerkleProof, ID as SNAPSHOT_PROGRAM_ID};
+
+use crate::{
+    error::GovernanceError,
+    merkle_helpers::verify_merkle_proof_cpi,
+    stake_weight_bp,
+    state::{Proposal, ProposalIndex},
+    utils::is_valid_github_link,
 };
 
 #[derive(Accounts)]
@@ -36,6 +43,15 @@ pub struct CreateProposal<'info> {
         constraint = spl_vote_account.data_len() == VoteState::size_of() @ GovernanceError::InvalidVoteAccountSize
     )]
     pub spl_vote_account: UncheckedAccount<'info>,
+    /// CHECK:
+    #[account(constraint = snapshot_program.key == &SNAPSHOT_PROGRAM_ID @ GovernanceError::InvalidSnapshotProgram)]
+    pub snapshot_program: UncheckedAccount<'info>,
+    /// CHECK:
+    #[account(constraint = consensus_result.owner == &SNAPSHOT_PROGRAM_ID @ GovernanceError::MustBeOwnedBySnapshotProgram)]
+    pub consensus_result: UncheckedAccount<'info>,
+    /// CHECK:
+    #[account(constraint = meta_merkle_proof.owner == &SNAPSHOT_PROGRAM_ID @ GovernanceError::MustBeOwnedBySnapshotProgram)]
+    pub meta_merkle_proof: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }
 
@@ -64,13 +80,47 @@ impl<'info> CreateProposal<'info> {
             GovernanceError::InvalidVotingLength
         );
 
+        // Deserialize MetaMerkleProof for crosschecking
+        let account_data = self.meta_merkle_proof.try_borrow_data()?;
+        let meta_merkle_proof = MetaMerkleProof::try_from_slice(&account_data[8..])?;
+        let meta_merkle_leaf = meta_merkle_proof.meta_merkle_leaf;
+
+        // Crosscheck consensus result
+        require_eq!(
+            meta_merkle_proof.consensus_result,
+            self.consensus_result.key(),
+            GovernanceError::InvalidConsensusResultPDA
+        );
+
+        // Ensure leaf matches signer and has sufficient stake
+        require_eq!(
+            meta_merkle_leaf.voting_wallet,
+            self.signer.key(),
+            GovernanceError::InvalidVoteAccount
+        );
+
+        require_gte!(
+            meta_merkle_leaf.active_stake,
+            100_000_000_000_u64, // 100k SOL in lamports
+            GovernanceError::NotEnoughStake
+        );
+
+        // Verify merkle proof via CPI
+        verify_merkle_proof_cpi(
+            &self.meta_merkle_proof.to_account_info(),
+            &self.consensus_result.to_account_info(),
+            &self.snapshot_program.to_account_info(),
+            None, // No stake proof for validator proposal creation
+            None, // No stake leaf for validator proposal creation
+        )?;
+
         let clock = Clock::get()?;
 
         // Calculate stake weight basis points
         let cluster_stake = get_epoch_total_stake();
         let proposer_stake = get_epoch_stake_for_vote_account(self.spl_vote_account.key);
         let proposer_stake_weight_bp = stake_weight_bp!(proposer_stake, cluster_stake)?;
-            
+
         // Initialize proposal account
         self.proposal.set_inner(Proposal {
             author: self.signer.key(),

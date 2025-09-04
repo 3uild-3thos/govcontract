@@ -1,26 +1,22 @@
 use anchor_lang::{
     prelude::*,
-    solana_program::{
-        hash::hash, instruction::Instruction, 
-        native_token::LAMPORTS_PER_SOL,
-        program::invoke, 
-        vote::{program as vote_program, state::VoteState},
-    },
+    solana_program::vote::{program as vote_program, state::VoteState},
 };
 
 use crate::{
+    calculate_vote_lamports,
     error::GovernanceError,
-    merkle_helpers::{ConsensusResult, MetaMerkleLeaf},
+    merkle_helpers::verify_merkle_proof_cpi,
     state::{Proposal, Vote},
-    SNAPSHOT_PROGRAM_ID,
 };
+use gov_v1::{MetaMerkleProof, ID as SNAPSHOT_PROGRAM_ID};
 
 #[derive(Accounts)]
 pub struct CastVote<'info> {
     #[account(mut)]
     pub signer: Signer<'info>, // Voter (validator)
     #[account(mut)]
-    pub proposal: Account<'info, Proposal>, // Proposal being voted on
+    pub proposal: Account<'info, Proposal>,
     #[account(
         init,
         payer = signer,
@@ -36,12 +32,16 @@ pub struct CastVote<'info> {
     )]
     pub spl_vote_account: UncheckedAccount<'info>,
     /// CHECK:
-    #[account(constraint = snapshot_program.key() == SNAPSHOT_PROGRAM_ID @ GovernanceError::InvalidSnapshotProgram)]
+    #[account(constraint = snapshot_program.key == &SNAPSHOT_PROGRAM_ID @ GovernanceError::InvalidSnapshotProgram)]
     pub snapshot_program: UncheckedAccount<'info>,
-    // pub snapshot_program: Program<'info, Snapshot>,  // Snapshot Program for verification
-    #[account(seeds = [b"consensus_result"], bump)] // ConsensusResult PDA
-    pub consensus_result: Account<'info, ConsensusResult>, // Holds snapshot_slot and snapshot_hash
-    pub system_program: Program<'info, System>, // For account creation
+    /// CHECK:
+    #[account(constraint = consensus_result.owner == &SNAPSHOT_PROGRAM_ID @ GovernanceError::MustBeOwnedBySnapshotProgram)]
+    pub consensus_result: UncheckedAccount<'info>,
+    /// CHECK:
+    #[account(constraint = meta_merkle_proof.owner == &SNAPSHOT_PROGRAM_ID @ GovernanceError::MustBeOwnedBySnapshotProgram)]
+    pub meta_merkle_proof: UncheckedAccount<'info>,
+
+    pub system_program: Program<'info, System>,
 }
 
 impl<'info> CastVote<'info> {
@@ -50,8 +50,7 @@ impl<'info> CastVote<'info> {
         for_votes_bp: u64,
         against_votes_bp: u64,
         abstain_votes_bp: u64,
-        meta_merkle_proof: Vec<[u8; 32]>, // Merkle proof for validator leaf
-        meta_merkle_leaf: MetaMerkleLeaf, // Validator leaf data
+        // meta_merkle_leaf: MetaMerkleLeaf,
         bumps: &CastVoteBumps,
     ) -> Result<()> {
         // Check that the proposal is open for voting
@@ -77,8 +76,20 @@ impl<'info> CastVote<'info> {
             .ok_or(ProgramError::ArithmeticOverflow)?;
         require!(total_bp == 10_000, GovernanceError::InvalidVoteDistribution);
 
+        // Deserialize MetaMerkleProof for crosschecking
+        let account_data = self.meta_merkle_proof.try_borrow_data()?;
+        let meta_merkle_proof = MetaMerkleProof::try_from_slice(&account_data[8..])?;
+        let meta_merkle_leaf = meta_merkle_proof.meta_merkle_leaf;
+
+        // Crosscheck consensus result
+        require_eq!(
+            meta_merkle_proof.consensus_result,
+            self.consensus_result.key(),
+            GovernanceError::InvalidConsensusResultPDA
+        );
+
         // Ensure leaf matches signer and has sufficient stake
-        require_keys_eq!(
+        require_eq!(
             meta_merkle_leaf.voting_wallet,
             self.signer.key(),
             GovernanceError::InvalidVoteAccount
@@ -89,47 +100,27 @@ impl<'info> CastVote<'info> {
             GovernanceError::NotEnoughStake
         );
 
-        // Get root and slot from ConsensusResult
-        let consensus_root = self.consensus_result.snapshot_hash;
-        let consensus_slot = self.consensus_result.snapshot_slot;
-
-        // Ensure snapshot is correct
-        require!(
-            consensus_slot <= clock.slot,
-            GovernanceError::InvalidSnapshotSlot
-        );
-
-        // CPI to verify Merkle inclusion
-        // let verify_ix = Instruction {
-        //     program_id: SNAPSHOT_PROGRAM_ID,
-        //     accounts: vec![
-        //         AccountMeta::new_readonly(*self.snapshot_program.key, false),
-        //         AccountMeta::new_readonly(*self.consensus_result.key, false),  // Vrify reads ConsensusResult
-        //     ],
-        //     data: snapshot_program::instruction::Verify {
-        //         leaf_hash,
-        //         proof: meta_merkle_proof,
-        //         root,
-        //     }.data(),
-        // };
-        // invoke(&verify_ix, &[self.snapshot_program.to_account_info(), self.consensus_result.to_account_info()])?;
+        verify_merkle_proof_cpi(
+            &self.meta_merkle_proof.to_account_info(),
+            &self.consensus_result.to_account_info(),
+            &self.snapshot_program.to_account_info(),
+            None,
+            None,
+        )?;
 
         // Calculate effective votes for each category based on actual lamports
         let voter_stake = meta_merkle_leaf.active_stake;
-        let for_votes_lamports = (voter_stake as u128)
-            .checked_mul(for_votes_bp as u128)
-            .and_then(|product| product.checked_div(10_000))
-            .ok_or(ProgramError::ArithmeticOverflow)? as u64;
+        let for_votes_lamports = calculate_vote_lamports!(voter_stake, for_votes_bp)?;
+        let against_votes_lamports = calculate_vote_lamports!(voter_stake, against_votes_bp)?;
+        let abstain_votes_lamports = calculate_vote_lamports!(voter_stake, abstain_votes_bp)?;
 
-        let against_votes_lamports = (voter_stake as u128)
-            .checked_mul(against_votes_bp as u128)
-            .and_then(|product| product.checked_div(10_000))
-            .ok_or(ProgramError::ArithmeticOverflow)? as u64;
-
-        let abstain_votes_lamports = (voter_stake as u128)
-            .checked_mul(abstain_votes_bp as u128)
-            .and_then(|product| product.checked_div(10_000))
-            .ok_or(ProgramError::ArithmeticOverflow)? as u64;
+        self.proposal.add_vote_lamports(
+            for_votes_lamports,
+            against_votes_lamports,
+            abstain_votes_lamports,
+        )?;
+        
+        self.proposal.vote_count += 1;
 
         // Store the vote distribution in the Vote PDA
         self.vote.set_inner(Vote {
@@ -146,20 +137,6 @@ impl<'info> CastVote<'info> {
             vote_timestamp: clock.unix_timestamp,
             bump: bumps.vote,
         });
-
-        self.proposal
-            .for_votes_lamports
-            .checked_add(for_votes_lamports)
-            .ok_or(ProgramError::ArithmeticOverflow)?;
-        self.proposal
-            .against_votes_lamports
-            .checked_add(against_votes_lamports)
-            .ok_or(ProgramError::ArithmeticOverflow)?;
-        self.proposal
-            .abstain_votes_lamports
-            .checked_add(abstain_votes_lamports)
-            .ok_or(ProgramError::ArithmeticOverflow)?;
-        self.proposal.vote_count += 1;
 
         Ok(())
     }

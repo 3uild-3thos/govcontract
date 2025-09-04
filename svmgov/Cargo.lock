@@ -1756,6 +1756,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "07e28edb80900c19c28f1072f2e8aeca7fa06b23cd4169cefe1af5aa3260783f"
 
 [[package]]
+name = "gov-v1"
+version = "0.1.0"
+source = "git+https://github.com/exo-tech-xyz/gov-v1#0ddf230185d813381a5335a15aea56fe57bb875f"
+dependencies = [
+ "anchor-lang",
+]
+
+[[package]]
 name = "governor"
 version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6336,9 +6344,11 @@ dependencies = [
  "anchor-client",
  "anchor-lang",
  "anyhow",
+ "bs58",
  "chrono",
  "clap",
  "env_logger 0.11.8",
+ "gov-v1",
  "indicatif 0.18.0",
  "log",
  "rand 0.9.1",

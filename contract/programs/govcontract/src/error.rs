@@ -60,4 +60,9 @@ pub enum GovernanceError {
     InvalidMerkleRoot,
     #[msg("Invalid snapshot slot: snapshot slot must be less past or current slot")]
     InvalidSnapshotSlot,
+    #[msg("Account must be owned by Snapshot program")]
+    MustBeOwnedBySnapshotProgram,
+    #[msg("Invalid consensus result PDA")]
+    InvalidConsensusResultPDA,
+
 }

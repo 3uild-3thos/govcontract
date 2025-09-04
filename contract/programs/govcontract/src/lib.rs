@@ -6,17 +6,13 @@ mod state;
 mod utils;
 use anchor_lang::prelude::*;
 use instructions::*;
-use merkle_helpers::{MetaMerkleLeaf, StakeMerkleLeaf};
+
+use gov_v1::StakeMerkleLeaf;
 
 declare_id!("GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc");
 
-// Snapshot Program ID - replace with actual program ID when deployed
-pub const SNAPSHOT_PROGRAM_ID: Pubkey = pubkey!("Snapshot11111111111111111111111111111111111");
-
 #[program]
 pub mod govcontract {
-    use crate::merkle_helpers::StakeMerkleLeaf;
-
     use super::*;
 
     pub fn initialize_index(ctx: Context<InitializedIndex>) -> Result<()> {
@@ -44,11 +40,9 @@ pub mod govcontract {
 
     pub fn support_proposal(
         ctx: Context<SupportProposal>,
-        meta_merkle_proof: Vec<[u8; 32]>,
-        meta_merkle_leaf: MetaMerkleLeaf,
     ) -> Result<()> {
         ctx.accounts
-            .support_proposal(meta_merkle_proof, meta_merkle_leaf, &ctx.bumps)?;
+            .support_proposal(&ctx.bumps)?;
         Ok(())
     }
 
@@ -62,15 +56,13 @@ pub mod govcontract {
         for_votes_bp: u64,
         against_votes_bp: u64,
         abstain_votes_bp: u64,
-        meta_merkle_proof: Vec<[u8; 32]>,
-        meta_merkle_leaf: MetaMerkleLeaf,
+        // meta_merkle_leaf: MetaMerkleLeaf,
     ) -> Result<()> {
         ctx.accounts.cast_vote(
             for_votes_bp,
             against_votes_bp,
             abstain_votes_bp,
-            meta_merkle_proof,
-            meta_merkle_leaf,
+            // meta_merkle_leaf,
             &ctx.bumps,
         )?;
         Ok(())
@@ -81,11 +73,9 @@ pub mod govcontract {
         for_votes_bp: u64,
         against_votes_bp: u64,
         abstain_votes_bp: u64,
-        meta_merkle_proof: Vec<[u8; 32]>,
-        meta_merkle_leaf: MetaMerkleLeaf,
     ) -> Result<()> {
         ctx.accounts
-            .modify_vote(for_votes_bp, against_votes_bp, abstain_votes_bp, meta_merkle_proof, meta_merkle_leaf)?;
+            .modify_vote(for_votes_bp, against_votes_bp, abstain_votes_bp)?;
         Ok(())
     }
 
@@ -96,8 +86,6 @@ pub mod govcontract {
         abstain_votes_bp: u64,
         stake_merkle_proof: Vec<[u8; 32]>,
         stake_merkle_leaf: StakeMerkleLeaf,
-        meta_merkle_proof: Vec<[u8; 32]>,
-        meta_merkle_leaf: MetaMerkleLeaf,
     ) -> Result<()> {
         ctx.accounts.cast_vote_override(
             for_votes_bp,
@@ -105,8 +93,6 @@ pub mod govcontract {
             abstain_votes_bp,
             stake_merkle_proof,
             stake_merkle_leaf,
-            meta_merkle_proof,
-            meta_merkle_leaf,
             &ctx.bumps,
         )?;
         Ok(())
@@ -120,12 +106,10 @@ pub mod govcontract {
         Ok(())
     }
 
-    pub fn tally_votes<'info>(
-        ctx: Context<'_, '_, 'info, 'info, TallyVotes<'info>>,
-        finalize: bool,
-    ) -> Result<()> {
-        ctx.accounts.tally_votes(ctx.remaining_accounts, finalize)?;
+    pub fn finalize_proposal(ctx: Context<FinalizeProposal>) -> Result<()> {
+        ctx.accounts.finalize_proposal()?;
 
         Ok(())
     }
+
 }

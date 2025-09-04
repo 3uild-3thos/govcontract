@@ -8,6 +8,45 @@
   },
   "instructions": [
     {
+      "name": "add_merkle_root",
+      "discriminator": [
+        235,
+        31,
+        120,
+        49,
+        53,
+        9,
+        197,
+        147
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "proposal",
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "merkle_root_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
       "name": "cast_vote",
       "discriminator": [
         20,
@@ -61,32 +100,10 @@
           "name": "snapshot_program"
         },
         {
-          "name": "consensus_result",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  99,
-                  111,
-                  110,
-                  115,
-                  101,
-                  110,
-                  115,
-                  117,
-                  115,
-                  95,
-                  114,
-                  101,
-                  115,
-                  117,
-                  108,
-                  116
-                ]
-              }
-            ]
-          }
+          "name": "consensus_result"
+        },
+        {
+          "name": "meta_merkle_proof"
         },
         {
           "name": "system_program",
@@ -105,25 +122,6 @@
         {
           "name": "abstain_votes_bp",
           "type": "u64"
-        },
-        {
-          "name": "meta_merkle_proof",
-          "type": {
-            "vec": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          }
-        },
-        {
-          "name": "meta_merkle_leaf",
-          "type": {
-            "defined": {
-              "name": "MetaMerkleLeaf"
-            }
-          }
         }
       ]
     },
@@ -151,6 +149,7 @@
         },
         {
           "name": "validator_vote",
+          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -206,6 +205,10 @@
               {
                 "kind": "account",
                 "path": "spl_stake_account"
+              },
+              {
+                "kind": "account",
+                "path": "validator_vote"
               }
             ]
           }
@@ -217,32 +220,10 @@
           "name": "snapshot_program"
         },
         {
-          "name": "consensus_result",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  99,
-                  111,
-                  110,
-                  115,
-                  101,
-                  110,
-                  115,
-                  117,
-                  115,
-                  95,
-                  114,
-                  101,
-                  115,
-                  117,
-                  108,
-                  116
-                ]
-              }
-            ]
-          }
+          "name": "consensus_result"
+        },
+        {
+          "name": "meta_merkle_proof"
         },
         {
           "name": "system_program",
@@ -278,25 +259,6 @@
           "type": {
             "defined": {
               "name": "StakeMerkleLeaf"
-            }
-          }
-        },
-        {
-          "name": "meta_merkle_proof",
-          "type": {
-            "vec": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          }
-        },
-        {
-          "name": "meta_merkle_leaf",
-          "type": {
-            "defined": {
-              "name": "MetaMerkleLeaf"
             }
           }
         }
@@ -374,32 +336,10 @@
           "name": "snapshot_program"
         },
         {
-          "name": "consensus_result",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  99,
-                  111,
-                  110,
-                  115,
-                  101,
-                  110,
-                  115,
-                  117,
-                  115,
-                  95,
-                  114,
-                  101,
-                  115,
-                  117,
-                  108,
-                  116
-                ]
-              }
-            ]
-          }
+          "name": "consensus_result"
+        },
+        {
+          "name": "meta_merkle_proof"
         },
         {
           "name": "system_program",
@@ -426,27 +366,33 @@
         {
           "name": "voting_length_epochs",
           "type": "u64"
-        },
-        {
-          "name": "meta_merkle_proof",
-          "type": {
-            "vec": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          }
-        },
-        {
-          "name": "meta_merkle_leaf",
-          "type": {
-            "defined": {
-              "name": "MetaMerkleLeaf"
-            }
-          }
         }
       ]
+    },
+    {
+      "name": "finalize_proposal",
+      "discriminator": [
+        23,
+        68,
+        51,
+        167,
+        109,
+        173,
+        187,
+        164
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "proposal",
+          "writable": true
+        }
+      ],
+      "args": []
     },
     {
       "name": "initialize_index",
@@ -510,10 +456,8 @@
           "signer": true
         },
         {
-          "name": "spl_vote_account"
-        },
-        {
-          "name": "proposal"
+          "name": "proposal",
+          "writable": true
         },
         {
           "name": "vote",
@@ -535,10 +479,22 @@
               },
               {
                 "kind": "account",
-                "path": "spl_vote_account"
+                "path": "signer"
               }
             ]
           }
+        },
+        {
+          "name": "spl_vote_account"
+        },
+        {
+          "name": "snapshot_program"
+        },
+        {
+          "name": "consensus_result"
+        },
+        {
+          "name": "meta_merkle_proof"
         },
         {
           "name": "system_program",
@@ -557,25 +513,6 @@
         {
           "name": "abstain_votes_bp",
           "type": "u64"
-        },
-        {
-          "name": "meta_merkle_proof",
-          "type": {
-            "vec": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          }
-        },
-        {
-          "name": "meta_merkle_leaf",
-          "type": {
-            "defined": {
-              "name": "MetaMerkleLeaf"
-            }
-          }
         }
       ]
     },
@@ -633,116 +570,20 @@
           "name": "snapshot_program"
         },
         {
-          "name": "consensus_result",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  99,
-                  111,
-                  110,
-                  115,
-                  101,
-                  110,
-                  115,
-                  117,
-                  115,
-                  95,
-                  114,
-                  101,
-                  115,
-                  117,
-                  108,
-                  116
-                ]
-              }
-            ]
-          }
+          "name": "consensus_result"
+        },
+        {
+          "name": "meta_merkle_proof"
         },
         {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
-      "args": [
-        {
-          "name": "proposal_id",
-          "type": "u64"
-        },
-        {
-          "name": "meta_merkle_proof",
-          "type": {
-            "vec": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          }
-        },
-        {
-          "name": "meta_merkle_leaf",
-          "type": {
-            "defined": {
-              "name": "MetaMerkleLeaf"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "tally_votes",
-      "discriminator": [
-        144,
-        82,
-        0,
-        72,
-        160,
-        132,
-        35,
-        121
-      ],
-      "accounts": [
-        {
-          "name": "signer",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "spl_vote_account"
-        },
-        {
-          "name": "proposal",
-          "writable": true
-        },
-        {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": [
-        {
-          "name": "finalize",
-          "type": "bool"
-        }
-      ]
+      "args": []
     }
   ],
   "accounts": [
-    {
-      "name": "ConsensusResult",
-      "discriminator": [
-        105,
-        121,
-        122,
-        243,
-        100,
-        58,
-        93,
-        161
-      ]
-    },
     {
       "name": "Proposal",
       "discriminator": [
@@ -934,59 +775,39 @@
       "code": 6024,
       "name": "InvalidSnapshotProgram",
       "msg": "Invalid Snapshot program: provided program ID does not match the expected Merkle Verifier Service program"
+    },
+    {
+      "code": 6025,
+      "name": "UnauthorizedMerkleRootUpdate",
+      "msg": "Only the original proposal author can add the merkle root hash"
+    },
+    {
+      "code": 6026,
+      "name": "MerkleRootAlreadySet",
+      "msg": "Merkle root hash is already set for this proposal"
+    },
+    {
+      "code": 6027,
+      "name": "InvalidMerkleRoot",
+      "msg": "Merkle root hash cannot be all zeros"
+    },
+    {
+      "code": 6028,
+      "name": "InvalidSnapshotSlot",
+      "msg": "Invalid snapshot slot: snapshot slot must be less past or current slot"
+    },
+    {
+      "code": 6029,
+      "name": "MustBeOwnedBySnapshotProgram",
+      "msg": "Account must be owned by Snapshot program"
+    },
+    {
+      "code": 6030,
+      "name": "InvalidConsensusResultPDA",
+      "msg": "Invalid consensus result PDA"
     }
   ],
   "types": [
-    {
-      "name": "ConsensusResult",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "snapshot_slot",
-            "type": "u64"
-          },
-          {
-            "name": "snapshot_hash",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "MetaMerkleLeaf",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "voting_wallet",
-            "type": "pubkey"
-          },
-          {
-            "name": "vote_account",
-            "type": "pubkey"
-          },
-          {
-            "name": "stake_merkle_root",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          },
-          {
-            "name": "active_stake",
-            "type": "u64"
-          }
-        ]
-      }
-    },
     {
       "name": "Proposal",
       "type": {
@@ -994,6 +815,9 @@
         "fields": [
           {
             "name": "author",
+            "docs": [
+              "The public key of the validator who created this proposal"
+            ],
             "type": "pubkey"
           },
           {
@@ -1026,14 +850,23 @@
           },
           {
             "name": "for_votes_lamports",
+            "docs": [
+              "Total lamports voted in favor of this proposal"
+            ],
             "type": "u64"
           },
           {
             "name": "against_votes_lamports",
+            "docs": [
+              "Total lamports voted against this proposal"
+            ],
             "type": "u64"
           },
           {
             "name": "abstain_votes_lamports",
+            "docs": [
+              "Total lamports that abstained from voting on this proposal"
+            ],
             "type": "u64"
           },
           {
@@ -1062,15 +895,23 @@
           },
           {
             "name": "merkle_root_hash",
+            "docs": [
+              "Merkle root hash representing the snapshot of validator stakes at proposal creation"
+            ],
             "type": {
-              "array": [
-                "u8",
-                32
-              ]
+              "option": {
+                "array": [
+                  "u8",
+                  32
+                ]
+              }
             }
           },
           {
             "name": "snapshot_slot",
+            "docs": [
+              "Slot number when the validator stake snapshot was taken"
+            ],
             "type": "u64"
           }
         ]
@@ -1207,11 +1048,15 @@
             "type": "pubkey"
           },
           {
+            "name": "validator",
+            "type": "pubkey"
+          },
+          {
             "name": "proposal",
             "type": "pubkey"
           },
           {
-            "name": "validator",
+            "name": "vote_account_validator",
             "type": "pubkey"
           },
           {

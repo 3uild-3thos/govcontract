@@ -26,13 +26,11 @@ impl<'info> AddMerkleRoot<'info> {
         &mut self,
         merkle_root_hash: [u8; 32],
     ) -> Result<()> {
-        // Additional validation - ensure merkle root is not all zeros
         require!(
             merkle_root_hash.iter().any(|&x| x != 0),
             GovernanceError::InvalidMerkleRoot
         );
 
-        // Set the merkle root hash
         self.proposal.merkle_root_hash = Some(merkle_root_hash);
 
         Ok(())

@@ -1,14 +1,30 @@
 use std::str::FromStr;
 
-use crate::{
-    create_spinner,
-    fetch_snapshot_data,
-    govcontract::client::{accounts, args},
-    setup_all,
-};
 use anchor_client::solana_sdk::{pubkey::Pubkey, signer::Signer};
 use anchor_lang::system_program;
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
+use gov_v1::ID as SNAPSHOT_PROGRAM_ID;
+
+use crate::{
+    constants::*,
+    govcontract::client::{accounts, args},
+    utils::{
+        api_helpers::{
+            convert_merkle_proof_strings,
+            convert_stake_merkle_leaf_data_to_idl_type,
+            generate_pdas_from_vote_proof_response,
+            get_stake_account_proof,
+            get_vote_account_proof,
+            get_voter_summary,
+        },
+        utils::{
+            create_spinner,
+            derive_vote_override_pda,
+            derive_vote_pda,
+            setup_all,
+        },
+    },
+};
 
 pub async fn cast_vote_override(
     proposal_id: String,
@@ -17,45 +33,46 @@ pub async fn cast_vote_override(
     abstain_votes: u64,
     identity_keypair: Option<String>,
     rpc_url: Option<String>,
-    operator_api: Option<String>,
+    _operator_api: Option<String>,
 ) -> Result<()> {
-    // Debug: Log input parameters
-    log::debug!(
-        "cast_vote_override: proposal_id={}, for_votes={}, against_votes={}, abstain_votes={}, operator_api={:?}",
-        proposal_id,
-        for_votes,
-        against_votes,
-        abstain_votes,
-        operator_api
-    );
-
-    // Validate that the total basis points sum to 10,000 (100%)
-    if for_votes + against_votes + abstain_votes != 10_000 {
-        log::debug!(
-            "Validation failed: for_votes={} + against_votes={} + abstain_votes={} != 10,000",
-            for_votes,
-            against_votes,
-            abstain_votes
-        );
-        return Err(anyhow!("Total vote basis points must sum to 10,000"));
+    if for_votes + against_votes + abstain_votes != BASIS_POINTS_TOTAL {
+        return Err(anyhow!(
+            "Total vote basis points must sum to {}",
+            BASIS_POINTS_TOTAL
+        ));
     }
 
-    // Parse the proposal ID into a Pubkey
     let proposal_pubkey = Pubkey::from_str(&proposal_id)
         .map_err(|_| anyhow!("Invalid proposal ID: {}", proposal_id))?;
 
     let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
 
-    // Fetch snapshot data from operator API
-    let snapshot_data =
-        fetch_snapshot_data(&payer.pubkey(), &proposal_pubkey, operator_api).await?;
-    println!("📸 Snapshot data retrieved successfully");
+    let voter_summary = get_voter_summary(&payer.pubkey(), None).await?;
+    let stake_account = voter_summary
+        .stake_accounts
+        .first()
+        .ok_or(anyhow!("No stake account found for voter"))?;
 
-    // Create a spinner for progress indication
+    let meta_merkle_proof = get_vote_account_proof(&vote_account.to_string(), None).await?;
+    let stake_merkle_proof = get_stake_account_proof(&stake_account.stake_account, None).await?;
+
+    let (consensus_result_pda, meta_merkle_proof_pda) =
+        generate_pdas_from_vote_proof_response(&meta_merkle_proof)?;
+
+    let validator_vote_pda = derive_vote_pda(&proposal_pubkey, &vote_account, &program.id());
+    let vote_override_pda = derive_vote_override_pda(
+        &proposal_pubkey,
+        &Pubkey::from_str(&stake_account.stake_account)?,
+        &program.id(),
+    );
+
+    let stake_merkle_proof_vec =
+        convert_merkle_proof_strings(&stake_merkle_proof.stake_merkle_proof)?;
+
+    let stake_merkle_leaf =
+        convert_stake_merkle_leaf_data_to_idl_type(&stake_merkle_proof.stake_merkle_leaf)?;
+
     let spinner = create_spinner("Sending vote override transaction...");
-
-    // Debug: Log before sending transaction
-    log::debug!("Building and sending CastVoteOverride transaction");
 
     let sig = program
         .request()
@@ -63,38 +80,28 @@ pub async fn cast_vote_override(
             for_votes_bp: for_votes,
             against_votes_bp: against_votes,
             abstain_votes_bp: abstain_votes,
-            stake_merkle_proof: snapshot_data.merkle_proof,
-            stake_merkle_leaf: snapshot_data,
-            meta_merkle_proof: todo!(),
-            meta_merkle_leaf: todo!(),
+            stake_merkle_proof: stake_merkle_proof_vec,
+            stake_merkle_leaf,
         })
         .accounts(accounts::CastVoteOverride {
             signer: payer.pubkey(),
             spl_vote_account: vote_account,
-            spl_stake_account: snapshot_data.stake_account,
+            spl_stake_account: Pubkey::from_str(&stake_account.stake_account)?,
             proposal: proposal_pubkey,
-            validator_vote: snapshot_data.validator_vote_pda,
-            vote_override: snapshot_data.vote_override_pda,
-            consensus_result: Pubkey::new_unique(), // Mock consensus result
-            snapshot_program: snapshot_data.snapshot_program,
+            validator_vote: validator_vote_pda,
+            vote_override: vote_override_pda,
+            consensus_result: consensus_result_pda,
+            meta_merkle_proof: meta_merkle_proof_pda,
+            snapshot_program: SNAPSHOT_PROGRAM_ID,
             system_program: system_program::ID,
         })
         .send()
         .await?;
-    log::debug!("Transaction sent successfully: signature={}", sig);
-
-    log::debug!("Vote override data prepared:");
-    log::debug!("  - Proposal: {}", proposal_pubkey);
-    log::debug!("  - For votes: {} bp", for_votes);
-    log::debug!("  - Against votes: {} bp", against_votes);
-    log::debug!("  - Abstain votes: {} bp", abstain_votes);
-    log::debug!("  - Snapshot data retrieved successfully");
 
     spinner.finish_with_message(format!(
-        "Vote override sending for proposal {}.",
-        proposal_pubkey
+        "Vote override cast successfully. https://explorer.solana.com/tx/{}",
+        sig
     ));
 
-    log::debug!("cast_vote_override completed successfully");
     Ok(())
 }

@@ -1,11 +1,13 @@
+mod constants;
+mod instructions;
+mod utils;
+
 use anchor_client::anchor_lang::declare_program;
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-mod instructions;
-mod utils;
-use utils::{commands, utils::*};
-mod constants;
+
 use constants::*;
+use utils::{commands, utils::*};
 
 declare_program!(govcontract);
 
@@ -158,16 +160,16 @@ enum Commands {
     },
 
     #[command(
-        about = "Tally votes for a specified proposal",
-        long_about = "This command sends a transaction to tally all votes cast on a specified governance proposal, providing a summary of the voting results. \
+        about = "Finalize a proposal after voting period has ended",
+        long_about = "This command sends a transaction to finalize a governance proposal after its voting period has ended. \
                       It requires the proposal ID and the identity keypair to interact with the chain. \
                       An optional RPC URL can be provided to connect to the chain. \
-                      Ensure the proposal is in a state where tallying is possible (e.g., voting has ended).\n\n\
+                      The proposal must be in a finalized state (voting period ended) to be finalized.\n\n\
                       Example:\n\
-                      $ svmgov --identity-keypair /path/to/key.json --rpc-url https://api.mainnet-beta.solana.com tally-votes --proposal-id \"123\""
+                      $ svmgov --identity-keypair /path/to/key.json --rpc-url https://api.mainnet-beta.solana.com finalize-proposal --proposal-id \"123\""
     )]
-    TallyVotes {
-        /// Proposal ID to tally.
+    FinalizeProposal {
+        /// Proposal ID to finalize.
         #[arg(long, help = "Proposal ID")]
         proposal_id: String,
     },
@@ -354,8 +356,8 @@ async fn handle_command(cli: Cli) -> Result<()> {
             )
             .await?;
         }
-        Commands::TallyVotes { proposal_id } => {
-            instructions::tally_votes(proposal_id.to_string(), cli.identity_keypair, cli.rpc_url)
+        Commands::FinalizeProposal { proposal_id } => {
+            instructions::finalize_proposal(proposal_id.to_string(), cli.identity_keypair, cli.rpc_url)
                 .await?;
         }
         Commands::ListProposals {

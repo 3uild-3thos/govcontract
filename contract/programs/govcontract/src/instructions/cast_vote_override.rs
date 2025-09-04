@@ -1,21 +1,18 @@
-#![allow(clippy::too_many_arguments)]
 use anchor_lang::{
     prelude::*,
     solana_program::{
-        hash::hash,
-        instruction::Instruction,
-        program::invoke,
         stake::{program as stake_program, state::StakeStateV2},
         vote::{program as vote_program, state::VoteState},
     },
 };
 
 use crate::{
+    calculate_vote_lamports,
     error::GovernanceError,
-    merkle_helpers::{ConsensusResult, MetaMerkleLeaf, StakeMerkleLeaf},
+    merkle_helpers::verify_merkle_proof_cpi,
     state::{Proposal, Vote, VoteOverride},
-    SNAPSHOT_PROGRAM_ID,
 };
+use gov_v1::{MetaMerkleProof, StakeMerkleLeaf, ID as SNAPSHOT_PROGRAM_ID};
 
 #[derive(Accounts)]
 pub struct CastVoteOverride<'info> {
@@ -24,6 +21,7 @@ pub struct CastVoteOverride<'info> {
     #[account(mut)]
     pub proposal: Account<'info, Proposal>, // Proposal being voted on
     #[account(
+        mut,
         seeds = [b"vote", proposal.key().as_ref(), spl_vote_account.key.as_ref()],
         bump = validator_vote.bump,
     )]
@@ -38,7 +36,7 @@ pub struct CastVoteOverride<'info> {
         init,
         payer = signer,
         space = 8 + VoteOverride::INIT_SPACE,
-        seeds = [b"vote_override", proposal.key().as_ref(), spl_stake_account.key.as_ref()],
+        seeds = [b"vote_override", proposal.key().as_ref(), spl_stake_account.key.as_ref(), validator_vote.key().as_ref()],
         bump
     )]
     pub vote_override: Account<'info, VoteOverride>, // New override account
@@ -49,11 +47,15 @@ pub struct CastVoteOverride<'info> {
     )]
     pub spl_stake_account: UncheckedAccount<'info>,
     /// CHECK:
-    #[account(constraint = snapshot_program.key() == SNAPSHOT_PROGRAM_ID @ GovernanceError::InvalidSnapshotProgram)]
+    #[account(constraint = snapshot_program.key == &SNAPSHOT_PROGRAM_ID @ GovernanceError::InvalidSnapshotProgram)]
     pub snapshot_program: UncheckedAccount<'info>,
-    // pub snapshot_program: Program<'info, Snapshot>,  // Snapshot Program for verification
-    #[account(seeds = [b"consensus_result"], bump)] // ConsensusResult PDA
-    pub consensus_result: Account<'info, ConsensusResult>, // Holds snapshot_slot and snapshot_hash
+    /// CHECK:
+    #[account(constraint = consensus_result.owner == &SNAPSHOT_PROGRAM_ID @ GovernanceError::MustBeOwnedBySnapshotProgram)]
+    pub consensus_result: UncheckedAccount<'info>,
+    /// CHECK:
+    #[account(constraint = meta_merkle_proof.owner == &SNAPSHOT_PROGRAM_ID @ GovernanceError::MustBeOwnedBySnapshotProgram)]
+    pub meta_merkle_proof: UncheckedAccount<'info>,
+
     pub system_program: Program<'info, System>,
 }
 
@@ -63,10 +65,8 @@ impl<'info> CastVoteOverride<'info> {
         for_votes_bp: u64,
         against_votes_bp: u64,
         abstain_votes_bp: u64,
-        stake_merkle_proof: Vec<[u8; 32]>,  // Proof for stake leaf
-        stake_merkle_leaf: StakeMerkleLeaf, // Staker leaf data
-        meta_merkle_proof: Vec<[u8; 32]>,   // Proof for meta (validator) leaf
-        meta_merkle_leaf: MetaMerkleLeaf,   // Validator leaf data
+        stake_merkle_proof: Vec<[u8; 32]>,
+        stake_merkle_leaf: StakeMerkleLeaf,
         bumps: &CastVoteOverrideBumps,
     ) -> Result<()> {
         // Check that the proposal is open for voting
@@ -85,199 +85,95 @@ impl<'info> CastVoteOverride<'info> {
             GovernanceError::ProposalClosed
         );
 
-        // Validate basis points sum to 10,000 (100%)
+        // Validate that the basis points sum to 10,000 (100%)
         let total_bp = for_votes_bp
             .checked_add(against_votes_bp)
             .and_then(|sum| sum.checked_add(abstain_votes_bp))
             .ok_or(ProgramError::ArithmeticOverflow)?;
         require!(total_bp == 10_000, GovernanceError::InvalidVoteDistribution);
 
-        // Ensure stake leaf matches signer and has stake
-        require_keys_eq!(
+        // Deserialize MetaMerkleProof for crosschecking
+        let meta_account_data = self.meta_merkle_proof.try_borrow_data()?;
+        let meta_merkle_proof = MetaMerkleProof::try_from_slice(&meta_account_data[8..])?;
+        let meta_merkle_leaf = meta_merkle_proof.meta_merkle_leaf;
+
+        require_eq!(
+            meta_merkle_proof.consensus_result,
+            self.consensus_result.key(),
+            GovernanceError::InvalidConsensusResultPDA
+        );
+
+        require_eq!(
             stake_merkle_leaf.voting_wallet,
             self.signer.key(),
             GovernanceError::InvalidStakeAccount
         );
+
         require_gt!(
             stake_merkle_leaf.active_stake,
             0u64,
             GovernanceError::NotEnoughStake
         );
 
-        // Ensure meta leaf matches validator vote account
-        require_keys_eq!(
-            meta_merkle_leaf.vote_account,
-            self.validator_vote.validator,
-            GovernanceError::InvalidVoteAccount
+        // Ensure stake leaf contains the correct stake account
+        require_eq!(
+            stake_merkle_leaf.stake_account,
+            self.spl_stake_account.key(),
+            GovernanceError::InvalidStakeAccount
         );
 
-        // Serialize and hash stake leaf for verification: voting_wallet | stake_account | active_stake
-        let stake_leaf_bytes = stake_merkle_leaf.try_to_vec()?;
-        let stake_leaf_hash = hash(&stake_leaf_bytes).to_bytes();
-
-        // Serialize and hash meta leaf for verification: voting_wallet | vote_account | stake_merkle_root | active_stake
-        let meta_leaf_bytes = meta_merkle_leaf.try_to_vec()?;
-        let meta_leaf_hash = hash(&meta_leaf_bytes).to_bytes();
-
-        // Get root and slot from ConsensusResult
-        let consensus_root = self.consensus_result.snapshot_hash;
-        let consensus_slot = self.consensus_result.snapshot_slot;
-
-        // Ensure snapshot is not stale (adjust delta as needed)
-        require!(
-            consensus_slot <= clock.slot && clock.slot - consensus_slot < 1000,
-            GovernanceError::StaleSnapshot
-        );
-
-        // // CPI to verify stake leaf against validator's stake_merkle_root
-        // let stake_verify_ix = Instruction {
-        //     program_id: SNAPSHOT_PROGRAM_ID,
-        //     accounts: vec![
-        //         AccountMeta::new_readonly(self.snapshot_program.key(), false),
-        //         AccountMeta::new_readonly(self.consensus_result.key(), false),
-        //     ],
-        //     data: snapshot_program::instruction::Verify {
-        //         leaf_hash: stake_leaf_hash,
-        //         proof: stake_merkle_proof,
-        //         root: meta_merkle_leaf.stake_merkle_root, // Validator's stake root
-        //     }
-        //     .data(),
-        // };
-        // invoke(
-        //     &stake_verify_ix,
-        //     &[
-        //         self.snapshot_program.to_account_info(),
-        //         self.consensus_result.to_account_info(),
-        //     ],
-        // )?;
-
-        // // CPI to verify meta leaf against global root
-        // let meta_verify_ix = Instruction {
-        //     program_id: SNAPSHOT_PROGRAM_ID,
-        //     accounts: vec![
-        //         AccountMeta::new_readonly(self.snapshot_program.key(), false),
-        //         AccountMeta::new_readonly(self.consensus_result.key(), false),
-        //     ],
-        //     data: snapshot_program::instruction::Verify {
-        //         leaf_hash: meta_leaf_hash,
-        //         proof: meta_merkle_proof,
-        //         root: global_root, // Proposal's merkle_root_hash (global meta root)
-        //     }
-        //     .data(),
-        // };
-        // invoke(
-        //     &meta_verify_ix,
-        //     &[
-        //         self.snapshot_program.to_account_info(),
-        //         self.consensus_result.to_account_info(),
-        //     ],
-        // )?;
+        verify_merkle_proof_cpi(
+            &self.meta_merkle_proof.to_account_info(),
+            &self.consensus_result.to_account_info(),
+            &self.snapshot_program.to_account_info(),
+            Some(stake_merkle_proof),
+            Some(stake_merkle_leaf.clone()),
+        )?;
 
         // Use verified stake amounts
         let delegator_stake = stake_merkle_leaf.active_stake;
         let validator_stake = meta_merkle_leaf.active_stake;
 
         // Calculate delegator's vote lamports
-        let for_votes_lamports = (delegator_stake as u128)
-            .checked_mul(for_votes_bp as u128)
-            .and_then(|product| product.checked_div(10_000))
-            .ok_or(ProgramError::ArithmeticOverflow)? as u64;
+        let for_votes_lamports = calculate_vote_lamports!(delegator_stake, for_votes_bp)?;
+        let against_votes_lamports = calculate_vote_lamports!(delegator_stake, against_votes_bp)?;
+        let abstain_votes_lamports = calculate_vote_lamports!(delegator_stake, abstain_votes_bp)?;
 
-        let against_votes_lamports = (delegator_stake as u128)
-            .checked_mul(against_votes_bp as u128)
-            .and_then(|product| product.checked_div(10_000))
-            .ok_or(ProgramError::ArithmeticOverflow)? as u64;
-
-        let abstain_votes_lamports = (delegator_stake as u128)
-            .checked_mul(abstain_votes_bp as u128)
-            .and_then(|product| product.checked_div(10_000))
-            .ok_or(ProgramError::ArithmeticOverflow)? as u64;
-
-        // Substract validator's vote
-        self.proposal.for_votes_lamports = self
-            .proposal
-            .for_votes_lamports
-            .checked_sub(self.validator_vote.for_votes_lamports)
-            .ok_or(ProgramError::ArithmeticOverflow)?;
-
-        self.proposal.against_votes_lamports = self
-            .proposal
-            .against_votes_lamports
-            .checked_sub(self.validator_vote.against_votes_lamports)
-            .ok_or(ProgramError::ArithmeticOverflow)?;
-
-        self.proposal.abstain_votes_lamports = self
-            .proposal
-            .abstain_votes_lamports
-            .checked_sub(self.validator_vote.abstain_votes_lamports)
-            .ok_or(ProgramError::ArithmeticOverflow)?;
+        // Subtract validator's vote
+        self.proposal.sub_vote_lamports(
+            self.validator_vote.for_votes_lamports,
+            self.validator_vote.against_votes_lamports,
+            self.validator_vote.abstain_votes_lamports,
+        )?;
 
         // Add delegator's vote
-        self.proposal.for_votes_lamports = self
-            .proposal
-            .for_votes_lamports
-            .checked_add(for_votes_lamports)
-            .ok_or(ProgramError::ArithmeticOverflow)?;
+        self.proposal.add_vote_lamports(
+            for_votes_lamports,
+            against_votes_lamports,
+            abstain_votes_lamports,
+        )?;
 
-        self.proposal.against_votes_lamports = self
-            .proposal
-            .against_votes_lamports
-            .checked_add(against_votes_lamports)
-            .ok_or(ProgramError::ArithmeticOverflow)?;
-
-        self.proposal.abstain_votes_lamports = self
-            .proposal
-            .abstain_votes_lamports
-            .checked_add(abstain_votes_lamports)
-            .ok_or(ProgramError::ArithmeticOverflow)?;
-
-        // Calculate new votes for validator
-        self.validator_vote.override_lamports = delegator_stake;
-
-        let new_weight = validator_stake
+        let new_validator_stake = validator_stake
             .checked_sub(delegator_stake)
             .ok_or(ProgramError::ArithmeticOverflow)?;
 
-        // Calculate new votes for each category based on actual lamports
-        let for_votes_lamports_new = (new_weight as u128)
-            .checked_mul(self.validator_vote.for_votes_bp as u128)
-            .and_then(|product| product.checked_div(10_000))
-            .ok_or(ProgramError::ArithmeticOverflow)? as u64;
-
-        let against_votes_lamports_new = (new_weight as u128)
-            .checked_mul(self.validator_vote.against_votes_bp as u128)
-            .and_then(|product| product.checked_div(10_000))
-            .ok_or(ProgramError::ArithmeticOverflow)?
-            as u64;
-
-        let abstain_votes_lamports_new = (new_weight as u128)
-            .checked_mul(self.validator_vote.abstain_votes_bp as u128)
-            .and_then(|product| product.checked_div(10_000))
-            .ok_or(ProgramError::ArithmeticOverflow)?
-            as u64;
+        // Calculate new validator votes for each category based on actual lamports
+        let for_votes_lamports_new = calculate_vote_lamports!(new_validator_stake, self.validator_vote.for_votes_bp)?;
+        let against_votes_lamports_new = calculate_vote_lamports!(new_validator_stake, self.validator_vote.against_votes_bp)?;
+        let abstain_votes_lamports_new = calculate_vote_lamports!(new_validator_stake, self.validator_vote.abstain_votes_bp)?;
 
         // Add validator's new vote
-        self.proposal.for_votes_lamports = self
-            .proposal
-            .for_votes_lamports
-            .checked_add(for_votes_lamports_new)
-            .ok_or(ProgramError::ArithmeticOverflow)?;
-        self.proposal.against_votes_lamports = self
-            .proposal
-            .against_votes_lamports
-            .checked_add(against_votes_lamports_new)
-            .ok_or(ProgramError::ArithmeticOverflow)?;
-        self.proposal.abstain_votes_lamports = self
-            .proposal
-            .abstain_votes_lamports
-            .checked_add(abstain_votes_lamports_new)
-            .ok_or(ProgramError::ArithmeticOverflow)?;
+        self.proposal.add_vote_lamports(
+            for_votes_lamports_new,
+            against_votes_lamports_new,
+            abstain_votes_lamports_new,
+        )?;
 
         // Store new lamports
         self.validator_vote.for_votes_lamports = for_votes_lamports_new;
         self.validator_vote.against_votes_lamports = against_votes_lamports_new;
         self.validator_vote.abstain_votes_lamports = abstain_votes_lamports_new;
-        self.validator_vote.override_lamports = delegator_stake;
+        self.validator_vote.override_lamports = self.validator_vote.override_lamports.checked_add(delegator_stake).ok_or(ProgramError::ArithmeticOverflow)?;
 
         // Store override
         self.vote_override.set_inner(VoteOverride {
@@ -295,6 +191,7 @@ impl<'info> CastVoteOverride<'info> {
             against_votes_lamports,
             abstain_votes_lamports,
         });
+        
         self.proposal.vote_count += 1;
 
         Ok(())
