@@ -43,7 +43,10 @@ export async function castVoteOverride(params: CastVoteOverrideParams): Promise<
     let stakeAccountStr = stakeAccount;
     if (!stakeAccountStr) {
       try {
-        const voterSummary = await getVoterSummary(wallet.publicKey.toString());
+        const voterSummary = await getVoterSummary(
+          wallet.publicKey.toString(), 
+          params.network || 'mainnet'
+        );
         if (!voterSummary.stake_accounts || voterSummary.stake_accounts.length === 0) {
           throw new Error("No stake account found for voter");
         }
@@ -56,9 +59,10 @@ export async function castVoteOverride(params: CastVoteOverrideParams): Promise<
     const stakeAccountPubkey = new PublicKey(stakeAccountStr);
 
     // Get proofs
+    const network = params.network || 'mainnet';
     const [metaMerkleProof, stakeMerkleProof] = await Promise.all([
-      getVoteAccountProof(splVoteAccount.toString()),
-      getStakeAccountProof(stakeAccountStr),
+      getVoteAccountProof(splVoteAccount.toString(), network),
+      getStakeAccountProof(stakeAccountStr, network),
     ]);
 
     const [consensusResultPda, metaMerkleProofPda] = generatePdasFromVoteProofResponse(metaMerkleProof);

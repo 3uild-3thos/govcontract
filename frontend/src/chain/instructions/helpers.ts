@@ -94,20 +94,33 @@ export function createProgramWithWallet(wallet: any, programId?: PublicKey): Pro
   return new Program(idl, programIdToUse, provider) as Program<Govcontract>;
 }
 
-// API helpers (these would need to be implemented based on your backend)
+// API helpers using the solgov.online service
 export async function getVoteAccountProof(
   voteAccount: string,
-  apiUrl?: string
+  network: string = 'mainnet',
+  slot?: number
 ): Promise<VoteAccountProofResponse> {
-  // This is a placeholder - you'll need to implement the actual API call
-  // based on your backend service
-  const url = apiUrl || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  const baseUrl = 'https://api.solgov.online';
   
   try {
-    const response = await fetch(`${url}/api/vote-account-proof/${voteAccount}`);
+    // Get current slot if not provided
+    let currentSlot = slot;
+    if (!currentSlot) {
+      const metaResponse = await fetch(`${baseUrl}/meta?network=${network}`);
+      if (!metaResponse.ok) {
+        throw new Error(`Failed to get network metadata: ${metaResponse.statusText}`);
+      }
+      const metaData = await metaResponse.json();
+      currentSlot = metaData.slot;
+    }
+    
+    const url = `${baseUrl}/proof/vote_account/${voteAccount}?network=${network}&slot=${currentSlot}`;
+    const response = await fetch(url);
+    
     if (!response.ok) {
       throw new Error(`Failed to get vote account proof: ${response.statusText}`);
     }
+    
     return await response.json();
   } catch (error) {
     throw new Error(`Failed to get vote account proof: ${error}`);
@@ -116,15 +129,30 @@ export async function getVoteAccountProof(
 
 export async function getStakeAccountProof(
   stakeAccount: string,
-  apiUrl?: string
+  network: string = 'mainnet',
+  slot?: number
 ): Promise<StakeAccountProofResponse> {
-  const url = apiUrl || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  const baseUrl = 'https://api.solgov.online';
   
   try {
-    const response = await fetch(`${url}/api/stake-account-proof/${stakeAccount}`);
+    // Get current slot if not provided
+    let currentSlot = slot;
+    if (!currentSlot) {
+      const metaResponse = await fetch(`${baseUrl}/meta?network=${network}`);
+      if (!metaResponse.ok) {
+        throw new Error(`Failed to get network metadata: ${metaResponse.statusText}`);
+      }
+      const metaData = await metaResponse.json();
+      currentSlot = metaData.slot;
+    }
+    
+    const url = `${baseUrl}/proof/stake_account/${stakeAccount}?network=${network}&slot=${currentSlot}`;
+    const response = await fetch(url);
+    
     if (!response.ok) {
       throw new Error(`Failed to get stake account proof: ${response.statusText}`);
     }
+    
     return await response.json();
   } catch (error) {
     throw new Error(`Failed to get stake account proof: ${error}`);
@@ -133,15 +161,30 @@ export async function getStakeAccountProof(
 
 export async function getVoterSummary(
   walletAddress: string,
-  apiUrl?: string
+  network: string = 'mainnet',
+  slot?: number
 ): Promise<VoterSummaryResponse> {
-  const url = apiUrl || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  const baseUrl = 'https://api.solgov.online';
   
   try {
-    const response = await fetch(`${url}/api/voter-summary/${walletAddress}`);
+    // Get current slot if not provided
+    let currentSlot = slot;
+    if (!currentSlot) {
+      const metaResponse = await fetch(`${baseUrl}/meta?network=${network}`);
+      if (!metaResponse.ok) {
+        throw new Error(`Failed to get network metadata: ${metaResponse.statusText}`);
+      }
+      const metaData = await metaResponse.json();
+      currentSlot = metaData.slot;
+    }
+    
+    const url = `${baseUrl}/voter/${walletAddress}?network=${network}&slot=${currentSlot}`;
+    const response = await fetch(url);
+    
     if (!response.ok) {
       throw new Error(`Failed to get voter summary: ${response.statusText}`);
     }
+    
     return await response.json();
   } catch (error) {
     throw new Error(`Failed to get voter summary: ${error}`);
@@ -150,23 +193,33 @@ export async function getVoterSummary(
 
 // Generate PDAs from vote proof response
 export function generatePdasFromVoteProofResponse(
-  proofResponse: VoteAccountProofResponse
+  proofResponse: VoteAccountProofResponse,
+  snapshotProgramId: PublicKey = new PublicKey("gov4qDhw2rBudqwqhyTHXgJEPSaRdNnAZP3vT7BLwgL")
 ): [PublicKey, PublicKey] {
-  // This is a placeholder implementation
-  // You'll need to implement the actual PDA generation based on the proof response
-  // For now, returning dummy PDAs
-  const consensusResultPda = new PublicKey("11111111111111111111111111111111");
-  const metaMerkleProofPda = new PublicKey("11111111111111111111111111111111");
+  // Derive consensus result PDA (this is typically derived from the snapshot slot)
+  const [consensusResultPda] = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("consensus_result"),
+      Buffer.from(proofResponse.snapshot_slot.toString())
+    ],
+    snapshotProgramId
+  );
+  
+  // Derive meta merkle proof PDA (this is typically derived from the vote account)
+  const [metaMerkleProofPda] = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("meta_merkle_proof"),
+      new PublicKey(proofResponse.meta_merkle_leaf.vote_account).toBuffer()
+    ],
+    snapshotProgramId
+  );
   
   return [consensusResultPda, metaMerkleProofPda];
 }
 
 // Convert merkle proof strings to the format expected by the program
-export function convertMerkleProofStrings(proofStrings: string[]): Buffer[] {
-  return proofStrings.map(proof => {
-    const hex = proof.startsWith('0x') ? proof.slice(2) : proof;
-    return Buffer.from(hex, 'hex');
-  });
+export function convertMerkleProofStrings(proofStrings: string[]): PublicKey[] {
+  return proofStrings.map(proof => new PublicKey(proof));
 }
 
 // Convert stake merkle leaf data to IDL type

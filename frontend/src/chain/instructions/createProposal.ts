@@ -44,7 +44,10 @@ export async function createProposal(params: CreateProposalParams): Promise<Tran
     let metaMerkleProofPda: PublicKey;
     
     try {
-      const proofResponse = await getVoteAccountProof(splVoteAccount.toString());
+      const proofResponse = await getVoteAccountProof(
+        splVoteAccount.toString(), 
+        params.network || 'mainnet'
+      );
       
       // Validate that the voting wallet matches the signer
       if (proofResponse.meta_merkle_leaf.voting_wallet !== wallet.publicKey.toString()) {

@@ -17,6 +17,7 @@ export interface CreateProposalParams {
   wallet: any; // Wallet adapter
   voteAccount?: PublicKey;
   programId?: PublicKey;
+  network?: string;
 }
 
 export interface CastVoteParams {
@@ -27,6 +28,7 @@ export interface CastVoteParams {
   wallet: any;
   voteAccount?: PublicKey;
   programId?: PublicKey;
+  network?: string;
 }
 
 export interface ModifyVoteParams {
@@ -37,6 +39,7 @@ export interface ModifyVoteParams {
   wallet: any;
   voteAccount?: PublicKey;
   programId?: PublicKey;
+  network?: string;
 }
 
 export interface CastVoteOverrideParams {
@@ -48,6 +51,7 @@ export interface CastVoteOverrideParams {
   wallet: any;
   voteAccount?: PublicKey;
   programId?: PublicKey;
+  network?: string;
 }
 
 export interface SupportProposalParams {
@@ -55,6 +59,7 @@ export interface SupportProposalParams {
   wallet: any;
   voteAccount?: PublicKey;
   programId?: PublicKey;
+  network?: string;
 }
 
 export interface AddMerkleRootParams {
@@ -62,40 +67,63 @@ export interface AddMerkleRootParams {
   merkleRootHash: string;
   wallet: any;
   programId?: PublicKey;
+  network?: string;
 }
 
 export interface FinalizeProposalParams {
   proposalId: string;
   wallet: any;
   programId?: PublicKey;
+  network?: string;
 }
 
 export interface InitializeIndexParams {
   wallet: any;
   programId?: PublicKey;
+  network?: string;
 }
 
-// API response types (based on CLI)
+// API response types (based on solgov.online API)
 export interface VoteAccountProofResponse {
   meta_merkle_leaf: {
+    active_stake: number;
+    stake_merkle_root: string;
+    vote_account: string;
     voting_wallet: string;
-    [key: string]: any;
   };
-  [key: string]: any;
+  meta_merkle_proof: string[];
+  network: string;
+  snapshot_slot: number;
 }
 
 export interface StakeAccountProofResponse {
-  stake_merkle_proof: string[];
   stake_merkle_leaf: {
     [key: string]: any;
   };
+  stake_merkle_proof: string[];
+  network: string;
+  snapshot_slot: number;
 }
 
 export interface VoterSummaryResponse {
+  network: string;
+  snapshot_slot: number;
   stake_accounts: Array<{
-    stake_account: string;
     [key: string]: any;
   }>;
+  vote_accounts: Array<{
+    active_stake: number;
+    vote_account: string;
+  }>;
+  voting_wallet: string;
+}
+
+export interface NetworkMetaResponse {
+  network: string;
+  slot: number;
+  merkle_root: string;
+  snapshot_hash: string;
+  created_at: string;
 }
 
 // Constants

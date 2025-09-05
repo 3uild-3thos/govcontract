@@ -41,7 +41,10 @@ export async function castVote(params: CastVoteParams): Promise<TransactionResul
     let metaMerkleProofPda: PublicKey;
     
     try {
-      const proofResponse = await getVoteAccountProof(splVoteAccount.toString());
+      const proofResponse = await getVoteAccountProof(
+        splVoteAccount.toString(),
+        params.network || 'mainnet'
+      );
       [consensusResultPda, metaMerkleProofPda] = generatePdasFromVoteProofResponse(proofResponse);
     } catch (error) {
       // Fallback to dummy PDAs if API is not available

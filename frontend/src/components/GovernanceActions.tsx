@@ -25,6 +25,7 @@ export default function GovernanceActions() {
   const [showEndpointConfig, setShowEndpointConfig] = useState(false);
   const [programIdInput, setProgramIdInput] = useState(programIdString);
   const [showProgramIdConfig, setShowProgramIdConfig] = useState(false);
+  const [network, setNetwork] = useState('mainnet');
 
   // Update input when endpoint changes
   useEffect(() => {
@@ -116,7 +117,7 @@ export default function GovernanceActions() {
 
   const handleInitializeIndex = () => {
     handleAction(
-      () => initializeIndex({ wallet, programId }),
+      () => initializeIndex({ wallet, programId, network }),
       "Initializing Index"
     );
   };
@@ -130,6 +131,7 @@ export default function GovernanceActions() {
         votingLengthEpochs: 5,
         wallet,
         programId,
+        network,
       }),
       "Creating Proposal"
     );
@@ -147,6 +149,7 @@ export default function GovernanceActions() {
         abstainVotesBp: 0,
         wallet,
         programId,
+        network,
       }),
       "Casting Vote"
     );
@@ -161,6 +164,7 @@ export default function GovernanceActions() {
         proposalId,
         wallet,
         programId,
+        network,
       }),
       "Supporting Proposal"
     );
@@ -295,6 +299,37 @@ export default function GovernanceActions() {
               </div>
             </div>
           )}
+        </div>
+        
+        {/* Network Configuration */}
+        <div className="border rounded-lg p-4 bg-gray-50">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium">Governance Network</h3>
+          </div>
+          
+          <div className="text-xs text-gray-600 mb-3">
+            Current: {network}
+          </div>
+          
+          <div className="flex gap-2">
+            {['mainnet', 'testnet', 'devnet'].map((net) => (
+              <button
+                key={net}
+                onClick={() => setNetwork(net)}
+                className={`px-3 py-1 text-xs rounded ${
+                  network === net
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-blue-100 hover:bg-blue-200 text-blue-800'
+                }`}
+              >
+                {net.charAt(0).toUpperCase() + net.slice(1)}
+              </button>
+            ))}
+          </div>
+          
+          <p className="text-xs text-gray-500 mt-2">
+            Select the network for governance API calls and merkle proofs
+          </p>
         </div>
       </div>
 
