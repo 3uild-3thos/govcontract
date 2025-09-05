@@ -37,7 +37,7 @@ export async function castVoteOverride(params: CastVoteOverrideParams): Promise<
 
     const proposalPubkey = new PublicKey(proposalId);
     const splVoteAccount = voteAccount || wallet.publicKey;
-    const program = createProgramWithWallet(wallet);
+    const program = createProgramWithWallet(wallet, params.programId);
 
     // Determine stake account to use
     let stakeAccountStr = stakeAccount;

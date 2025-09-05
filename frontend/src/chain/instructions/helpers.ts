@@ -81,13 +81,17 @@ export function deriveVoteOverridePda(
 }
 
 // Create program instance with wallet
-export function createProgramWithWallet(wallet: any): Program<Govcontract> {
+export function createProgramWithWallet(wallet: any, programId?: PublicKey): Program<Govcontract> {
   const provider = new AnchorProvider(
     connection,
     wallet,
     { commitment: "confirmed" }
   );
-  return new Program(idl, provider) as Program<Govcontract>;
+  
+  // Use provided programId or default from IDL
+  const programIdToUse = programId || new PublicKey(idl.address);
+  
+  return new Program(idl, programIdToUse, provider) as Program<Govcontract>;
 }
 
 // API helpers (these would need to be implemented based on your backend)

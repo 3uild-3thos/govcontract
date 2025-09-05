@@ -20,7 +20,7 @@ export async function supportProposal(params: SupportProposalParams): Promise<Tr
 
     const proposalPubkey = new PublicKey(proposalId);
     const splVoteAccount = voteAccount || wallet.publicKey;
-    const program = createProgramWithWallet(wallet);
+    const program = createProgramWithWallet(wallet, params.programId);
 
     // Derive support PDA
     const supportPda = deriveSupportPda(proposalPubkey, splVoteAccount, program.programId);

@@ -33,7 +33,7 @@ export async function createProposal(params: CreateProposalParams): Promise<Tran
     // Use provided vote account or wallet's public key as fallback
     const splVoteAccount = voteAccount || wallet.publicKey;
 
-    const program = createProgramWithWallet(wallet);
+    const program = createProgramWithWallet(wallet, params.programId);
     
     // Derive PDAs
     const proposalPda = deriveProposalPda(seedValue, splVoteAccount, program.programId);

@@ -14,7 +14,7 @@ export async function addMerkleRoot(params: AddMerkleRootParams): Promise<Transa
     }
 
     const proposalPubkey = new PublicKey(proposalId);
-    const program = createProgramWithWallet(wallet);
+    const program = createProgramWithWallet(wallet, params.programId);
 
     // Convert hex string to byte array
     const merkleRootBytes = hexToBytes(merkleRootHash);

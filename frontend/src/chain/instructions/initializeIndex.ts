@@ -13,7 +13,7 @@ export async function initializeIndex(params: InitializeIndexParams): Promise<Tr
       throw new Error("Wallet not connected");
     }
 
-    const program = createProgramWithWallet(wallet);
+    const program = createProgramWithWallet(wallet, params.programId);
     const proposalIndexPda = deriveProposalIndexPda(program.programId);
 
     // Build and send transaction

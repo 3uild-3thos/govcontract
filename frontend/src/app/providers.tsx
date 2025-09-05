@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AppWalletProvider from "../components/AppWalletProvider";
 import { EndpointProvider } from "../contexts/EndpointContext";
+import { ProgramIdProvider } from "../contexts/ProgramIdContext";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -13,9 +14,11 @@ export const queryClient = new QueryClient({
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <EndpointProvider>
-      <AppWalletProvider>
-        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-      </AppWalletProvider>
+      <ProgramIdProvider>
+        <AppWalletProvider>
+          <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        </AppWalletProvider>
+      </ProgramIdProvider>
     </EndpointProvider>
   );
 }

@@ -31,7 +31,7 @@ export async function modifyVote(params: ModifyVoteParams): Promise<TransactionR
 
     const proposalPubkey = new PublicKey(proposalId);
     const splVoteAccount = voteAccount || wallet.publicKey;
-    const program = createProgramWithWallet(wallet);
+    const program = createProgramWithWallet(wallet, params.programId);
 
     // Derive vote PDA
     const votePda = deriveVotePda(proposalPubkey, splVoteAccount, program.programId);

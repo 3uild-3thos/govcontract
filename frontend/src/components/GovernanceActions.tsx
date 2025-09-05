@@ -6,6 +6,7 @@ import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { clusterApiUrl } from "@solana/web3.js";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import { useEndpoint } from "@/contexts/EndpointContext";
+import { useProgramId } from "@/contexts/ProgramIdContext";
 import {
   createProposal,
   castVote,
@@ -17,15 +18,23 @@ import {
 export default function GovernanceActions() {
   const wallet = useWallet();
   const { endpoint, setEndpoint, resetToDefault } = useEndpoint();
+  const { programId, programIdString, setProgramId, resetToDefault: resetProgramId } = useProgramId();
   const [loading, setLoading] = useState<string | null>(null);
   const [result, setResult] = useState<TransactionResult | null>(null);
   const [endpointInput, setEndpointInput] = useState(endpoint);
   const [showEndpointConfig, setShowEndpointConfig] = useState(false);
+  const [programIdInput, setProgramIdInput] = useState(programIdString);
+  const [showProgramIdConfig, setShowProgramIdConfig] = useState(false);
 
   // Update input when endpoint changes
   useEffect(() => {
     setEndpointInput(endpoint);
   }, [endpoint]);
+
+  // Update input when program ID changes
+  useEffect(() => {
+    setProgramIdInput(programIdString);
+  }, [programIdString]);
 
   const handleEndpointSave = () => {
     if (endpointInput.trim()) {
@@ -45,6 +54,35 @@ export default function GovernanceActions() {
       signature: "",
       success: true,
       error: "RPC endpoint reset to default!",
+    });
+  };
+
+  const handleProgramIdSave = () => {
+    try {
+      if (programIdInput.trim()) {
+        setProgramId(programIdInput.trim());
+        setShowProgramIdConfig(false);
+        setResult({
+          signature: "",
+          success: true,
+          error: "Program ID updated successfully!",
+        });
+      }
+    } catch (error) {
+      setResult({
+        signature: "",
+        success: false,
+        error: error instanceof Error ? error.message : "Invalid program ID",
+      });
+    }
+  };
+
+  const handleProgramIdReset = () => {
+    resetProgramId();
+    setResult({
+      signature: "",
+      success: true,
+      error: "Program ID reset to default!",
     });
   };
 
@@ -78,7 +116,7 @@ export default function GovernanceActions() {
 
   const handleInitializeIndex = () => {
     handleAction(
-      () => initializeIndex({ wallet }),
+      () => initializeIndex({ wallet, programId }),
       "Initializing Index"
     );
   };
@@ -91,6 +129,7 @@ export default function GovernanceActions() {
         startEpoch: 600,
         votingLengthEpochs: 5,
         wallet,
+        programId,
       }),
       "Creating Proposal"
     );
@@ -107,6 +146,7 @@ export default function GovernanceActions() {
         againstVotesBp: 5000,
         abstainVotesBp: 0,
         wallet,
+        programId,
       }),
       "Casting Vote"
     );
@@ -120,6 +160,7 @@ export default function GovernanceActions() {
       () => supportProposal({
         proposalId,
         wallet,
+        programId,
       }),
       "Supporting Proposal"
     );
@@ -191,6 +232,62 @@ export default function GovernanceActions() {
                 </button>
                 <button
                   onClick={() => setShowEndpointConfig(false)}
+                  className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {/* Program ID Configuration */}
+        <div className="border rounded-lg p-4 bg-gray-50">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium">Program ID</h3>
+            <button
+              onClick={() => setShowProgramIdConfig(!showProgramIdConfig)}
+              className="text-blue-500 text-sm hover:underline"
+            >
+              {showProgramIdConfig ? "Hide" : "Configure"}
+            </button>
+          </div>
+          
+          <div className="text-xs text-gray-600 break-all">
+            Current: {programIdString}
+          </div>
+          
+          {showProgramIdConfig && (
+            <div className="mt-4 space-y-3">
+              <div>
+                <label className="block text-xs font-medium mb-1">Program ID</label>
+                <input
+                  type="text"
+                  value={programIdInput}
+                  onChange={(e) => setProgramIdInput(e.target.value)}
+                  placeholder="GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc"
+                  className="w-full px-3 py-2 border rounded text-sm font-mono"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Enter the deployed program ID for your governance contract
+                </p>
+              </div>
+              
+              <div className="flex gap-2">
+                <button
+                  onClick={handleProgramIdSave}
+                  className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded"
+                >
+                  Save Program ID
+                </button>
+                <button
+                  onClick={handleProgramIdReset}
+                  className="px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white text-xs rounded"
+                >
+                  Reset to Default
+                </button>
+                <button
+                  onClick={() => setShowProgramIdConfig(false)}
                   className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded"
                 >
                   Cancel

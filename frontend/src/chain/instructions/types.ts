@@ -16,6 +16,7 @@ export interface CreateProposalParams {
   seed?: number;
   wallet: any; // Wallet adapter
   voteAccount?: PublicKey;
+  programId?: PublicKey;
 }
 
 export interface CastVoteParams {
@@ -25,6 +26,7 @@ export interface CastVoteParams {
   abstainVotesBp: number;
   wallet: any;
   voteAccount?: PublicKey;
+  programId?: PublicKey;
 }
 
 export interface ModifyVoteParams {
@@ -34,6 +36,7 @@ export interface ModifyVoteParams {
   abstainVotesBp: number;
   wallet: any;
   voteAccount?: PublicKey;
+  programId?: PublicKey;
 }
 
 export interface CastVoteOverrideParams {
@@ -44,27 +47,32 @@ export interface CastVoteOverrideParams {
   stakeAccount: string;
   wallet: any;
   voteAccount?: PublicKey;
+  programId?: PublicKey;
 }
 
 export interface SupportProposalParams {
   proposalId: string;
   wallet: any;
   voteAccount?: PublicKey;
+  programId?: PublicKey;
 }
 
 export interface AddMerkleRootParams {
   proposalId: string;
   merkleRootHash: string;
   wallet: any;
+  programId?: PublicKey;
 }
 
 export interface FinalizeProposalParams {
   proposalId: string;
   wallet: any;
+  programId?: PublicKey;
 }
 
 export interface InitializeIndexParams {
   wallet: any;
+  programId?: PublicKey;
 }
 
 // API response types (based on CLI)

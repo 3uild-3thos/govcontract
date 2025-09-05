@@ -14,7 +14,7 @@ export async function finalizeProposal(params: FinalizeProposalParams): Promise<
     }
 
     const proposalPubkey = new PublicKey(proposalId);
-    const program = createProgramWithWallet(wallet);
+    const program = createProgramWithWallet(wallet, params.programId);
 
     // Build and send transaction
     const tx = await program.methods
