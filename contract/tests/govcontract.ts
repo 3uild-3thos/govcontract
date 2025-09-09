@@ -1,6 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { Govcontract } from "../target/types/govcontract";
+import { MockGovV1 } from "../target/types/mock_gov_v1";
 import { randomBytes } from "crypto";
 import {
   Connection,
@@ -11,18 +12,15 @@ import {
 } from "@solana/web3.js";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 
-// Constants for snapshot program (dummy for tests)
-const SNAPSHOT_PROGRAM_ID = new PublicKey(
-  "govvZv1y7V6N7X4v5fJzZ5Y5Z5Z5Z5Z5Z5Z5Z5Z5Z5"
-); // Dummy for testnet
-const snapshotSlot = new anchor.BN(1000000); // Dummy snapshot slot
-
 describe("govcontract", () => {
   // Configure the client to use the local cluster.
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 
   const program = anchor.workspace.govcontract as Program<Govcontract>;
+  const mockProgram = anchor.workspace.mock_gov_v1 as Program<MockGovV1>;
+
+  const snapshotSlot = new anchor.BN(1000000); // Dummy snapshot slot
 
   const payer = provider.wallet as NodeWallet;
 
@@ -38,6 +36,11 @@ describe("govcontract", () => {
   console.log("\nProposal Account: ", proposalAccount.toBase58());
 
   const proposalAccounts = program.account.proposal.all(); // returns a promise
+
+  const proposalIndexAccount = anchor.web3.PublicKey.findProgramAddressSync(
+    [Buffer.from("index")],
+    program.programId
+  )[0];
 
   const supportAccount = anchor.web3.PublicKey.findProgramAddressSync(
     [
@@ -87,21 +90,41 @@ describe("govcontract", () => {
 
   // Dummy accounts for testing
   const splVoteAccount = anchor.web3.Keypair.generate();
+  // Note: ballotId will be set in the Setup Mock Gov V1 Accounts test
+  const ballotId = new anchor.BN(12345);
   const consensusResult = anchor.web3.PublicKey.findProgramAddressSync(
     [
-      Buffer.from("consensus_result"),
-      snapshotSlot.toArrayLike(Buffer, "le", 8),
+      Buffer.from("ConsensusResult"),
+      ballotId.toArrayLike(Buffer, "le", 8),
     ],
-    SNAPSHOT_PROGRAM_ID
+    mockProgram.programId
   )[0];
   const metaMerkleProof = anchor.web3.PublicKey.findProgramAddressSync(
     [
-      Buffer.from("meta_merkle_proof"),
+      Buffer.from("MetaMerkleProof"),
       consensusResult.toBuffer(),
-      provider.publicKey.toBuffer(),
+      splVoteAccount.publicKey.toBuffer(),
     ],
-    SNAPSHOT_PROGRAM_ID
+    mockProgram.programId
   )[0];
+
+  it("Initialize Index!", async () => {
+    const tx = await program.methods
+      .initializeIndex()
+      .accountsPartial({
+        signer: provider.publicKey,
+        proposalIndex: proposalIndexAccount,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      })
+      .rpc();
+
+    console.log("\nProposal Index Initialized Successfully!");
+    console.log("Your transaction signature", tx);
+
+    // Verify the index was initialized correctly
+    const indexAccount = await program.account.proposalIndex.fetch(proposalIndexAccount);
+    console.log("Current Index:", indexAccount.currentIndex.toString());
+  });
 
   it("Fund Dummy Validator Accounts!", async () => {
     const connection = provider.connection;
@@ -130,6 +153,43 @@ describe("govcontract", () => {
     console.log("\nDummy Validator Accounts Funded Successfuly!");
   });
 
+  it("Setup Mock Gov V1 Accounts!", async () => {
+    // Create ConsensusResult using mock program
+    const ballotId = new anchor.BN(12345);
+    const metaMerkleRoot = Array.from(randomBytes(32));
+    const snapshotHash = Array.from(randomBytes(32));
+
+    await mockProgram.methods
+      .createConsensusResult(ballotId, metaMerkleRoot, snapshotHash)
+      .accounts({
+        consensusResult: consensusResult,
+        payer: provider.publicKey,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      })
+      .rpc();
+
+    // Create MetaMerkleProof using mock program
+    const leaf = {
+      votingWallet: provider.publicKey,
+      voteAccount: splVoteAccount.publicKey,
+      stakeMerkleRoot: Array.from(randomBytes(32)),
+      activeStake: new anchor.BN(1000000),
+    };
+    const proof = [Array.from(randomBytes(32)), Array.from(randomBytes(32))];
+
+    await mockProgram.methods
+      .initMetaMerkleProof(leaf, proof)
+      .accounts({
+        metaMerkleProof: metaMerkleProof,
+        consensusResult: consensusResult,
+        payer: provider.publicKey,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      })
+      .rpc();
+
+    console.log("\nMock Gov V1 Accounts Setup Successfully!");
+  });
+
   it("Create Proposal!", async () => {
     const tx = await program.methods
       .createProposal(
@@ -142,8 +202,9 @@ describe("govcontract", () => {
       .accountsPartial({
         signer: provider.publicKey,
         proposal: proposalAccount,
+        proposalIndex: proposalIndexAccount,
         splVoteAccount: splVoteAccount.publicKey,
-        snapshotProgram: SNAPSHOT_PROGRAM_ID,
+        snapshotProgram: mockProgram.programId,
         consensusResult,
         metaMerkleProof,
         systemProgram: anchor.web3.SystemProgram.programId,
@@ -161,7 +222,7 @@ describe("govcontract", () => {
         signer: provider.publicKey,
         proposal: proposalAccount,
         support: supportAccount,
-        snapshotProgram: SNAPSHOT_PROGRAM_ID,
+        snapshotProgram: mockProgram.programId,
         consensusResult,
         metaMerkleProof,
         systemProgram: anchor.web3.SystemProgram.programId,
@@ -184,7 +245,7 @@ describe("govcontract", () => {
         proposal: proposalAccount,
         vote: voteAccount,
         splVoteAccount: splVoteAccount.publicKey,
-        snapshotProgram: SNAPSHOT_PROGRAM_ID,
+        snapshotProgram: mockProgram.programId,
         consensusResult,
         metaMerkleProof,
         systemProgram: anchor.web3.SystemProgram.programId,
@@ -207,7 +268,7 @@ describe("govcontract", () => {
         proposal: proposalAccount,
         vote: voteAccount2,
         splVoteAccount: splVoteAccount.publicKey,
-        snapshotProgram: SNAPSHOT_PROGRAM_ID,
+        snapshotProgram: mockProgram.programId,
         consensusResult,
         metaMerkleProof,
         systemProgram: anchor.web3.SystemProgram.programId,
@@ -231,7 +292,7 @@ describe("govcontract", () => {
         proposal: proposalAccount,
         vote: voteAccount3,
         splVoteAccount: splVoteAccount.publicKey,
-        snapshotProgram: SNAPSHOT_PROGRAM_ID,
+        snapshotProgram: mockProgram.programId,
         consensusResult,
         metaMerkleProof,
         systemProgram: anchor.web3.SystemProgram.programId,
@@ -255,7 +316,7 @@ describe("govcontract", () => {
         proposal: proposalAccount,
         vote: voteAccount,
         splVoteAccount: splVoteAccount.publicKey,
-        snapshotProgram: SNAPSHOT_PROGRAM_ID,
+        snapshotProgram: mockProgram.programId,
         consensusResult,
         metaMerkleProof,
         systemProgram: anchor.web3.SystemProgram.programId,

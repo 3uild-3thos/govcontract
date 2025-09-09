@@ -3,7 +3,7 @@ use anchor_lang::{
     solana_program::epoch_stake::get_epoch_total_stake,
 };
 
-use gov_v1::{MetaMerkleProof, ID as SNAPSHOT_PROGRAM_ID};
+use gov_v1::MetaMerkleProof;
 
 use crate::{
     error::GovernanceError,
@@ -26,14 +26,11 @@ pub struct SupportProposal<'info> {
         bump
     )]
     pub support: Account<'info, Support>, // New support account
-    /// CHECK:
-    #[account(constraint = snapshot_program.key == &SNAPSHOT_PROGRAM_ID @ GovernanceError::InvalidSnapshotProgram)]
+    /// CHECK: The snapshot program (gov-v1 or mock)
     pub snapshot_program: UncheckedAccount<'info>,
-    /// CHECK:
-    #[account(constraint = consensus_result.owner == &SNAPSHOT_PROGRAM_ID @ GovernanceError::MustBeOwnedBySnapshotProgram)]
+    /// CHECK: Consensus result account owned by snapshot program
     pub consensus_result: UncheckedAccount<'info>,
-    /// CHECK:
-    #[account(constraint = meta_merkle_proof.owner == &SNAPSHOT_PROGRAM_ID @ GovernanceError::MustBeOwnedBySnapshotProgram)]
+    /// CHECK: Meta merkle proof account owned by snapshot program
     pub meta_merkle_proof: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }
@@ -46,6 +43,16 @@ impl<'info> SupportProposal<'info> {
         // Ensure proposal is eligible for support
         require!(!self.proposal.voting, GovernanceError::ProposalClosed);
         require!(!self.proposal.finalized, GovernanceError::ProposalFinalized);
+
+        // Validate snapshot program ownership
+        require!(
+            self.consensus_result.owner == self.snapshot_program.key,
+            GovernanceError::MustBeOwnedBySnapshotProgram
+        );
+        require!(
+            self.meta_merkle_proof.owner == self.snapshot_program.key,
+            GovernanceError::MustBeOwnedBySnapshotProgram
+        );
 
         // Deserialize MetaMerkleProof for crosschecking
         let account_data = self.meta_merkle_proof.try_borrow_data()?;

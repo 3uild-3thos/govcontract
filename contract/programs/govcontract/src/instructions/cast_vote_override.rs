@@ -13,7 +13,7 @@ use crate::{
     merkle_helpers::verify_merkle_proof_cpi,
     state::{Proposal, Vote, VoteOverride},
 };
-use gov_v1::{MetaMerkleProof, StakeMerkleLeaf, ID as SNAPSHOT_PROGRAM_ID};
+use gov_v1::{MetaMerkleProof, StakeMerkleLeaf};
 
 #[derive(Accounts)]
 pub struct CastVoteOverride<'info> {
@@ -46,14 +46,11 @@ pub struct CastVoteOverride<'info> {
         constraint = spl_stake_account.owner == &stake_program::ID @ ProgramError::InvalidAccountOwner,
     )]
     pub spl_stake_account: UncheckedAccount<'info>,
-    /// CHECK:
-    #[account(constraint = snapshot_program.key == &SNAPSHOT_PROGRAM_ID @ GovernanceError::InvalidSnapshotProgram)]
+    /// CHECK: The snapshot program (gov-v1 or mock)
     pub snapshot_program: UncheckedAccount<'info>,
-    /// CHECK:
-    #[account(constraint = consensus_result.owner == &SNAPSHOT_PROGRAM_ID @ GovernanceError::MustBeOwnedBySnapshotProgram)]
+    /// CHECK: Consensus result account owned by snapshot program
     pub consensus_result: UncheckedAccount<'info>,
-    /// CHECK:
-    #[account(constraint = meta_merkle_proof.owner == &SNAPSHOT_PROGRAM_ID @ GovernanceError::MustBeOwnedBySnapshotProgram)]
+    /// CHECK: Meta merkle proof account owned by snapshot program
     pub meta_merkle_proof: UncheckedAccount<'info>,
 
     pub system_program: Program<'info, System>,
@@ -91,6 +88,16 @@ impl<'info> CastVoteOverride<'info> {
             .and_then(|sum| sum.checked_add(abstain_votes_bp))
             .ok_or(ProgramError::ArithmeticOverflow)?;
         require!(total_bp == 10_000, GovernanceError::InvalidVoteDistribution);
+
+        // Validate snapshot program ownership
+        require!(
+            self.consensus_result.owner == self.snapshot_program.key,
+            GovernanceError::MustBeOwnedBySnapshotProgram
+        );
+        require!(
+            self.meta_merkle_proof.owner == self.snapshot_program.key,
+            GovernanceError::MustBeOwnedBySnapshotProgram
+        );
 
         // Deserialize MetaMerkleProof for crosschecking
         let meta_account_data = self.meta_merkle_proof.try_borrow_data()?;
