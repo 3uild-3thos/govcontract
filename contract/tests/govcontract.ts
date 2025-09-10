@@ -12,6 +12,7 @@ import {
   VersionedTransaction,
   TransactionMessage,
   LAMPORTS_PER_SOL,
+  StakeProgram,
 } from "@solana/web3.js";
 import { VoteInit, VoteProgram } from "@solana/web3.js";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
@@ -226,7 +227,6 @@ describe("govcontract", () => {
     }
 
     console.log("All 5 SPL Vote Accounts Created Successfully!");
-    console.log("Transaction signatures:", signatures);
 
     // Verify all accounts are owned by the Vote program
     for (let i = 0; i < splVoteAccounts.length; i++) {
@@ -241,7 +241,7 @@ describe("govcontract", () => {
       console.log(`SPL Vote Account ${i + 1}: ${account.publicKey.toBase58()}`);
     }
 
-    console.log("All SPL Vote Accounts successfully owned by Vote program!");
+    console.log("All SPL Vote Accounts owned by Vote program!");
   });
 
   it("Initialize Index!", async () => {
@@ -556,7 +556,7 @@ describe("govcontract", () => {
       console.log("- Event slot:", slot);
       console.log("- Proposal ID:", event.proposalId?.toString());
       console.log("- Supporter:", event.supporter?.toString());
-      console.log("- Cluster support lamports:", event.clusterSupportLamports?.toString());
+      console.log(`- Cluster support lamports: ${event.clusterSupportLamports?.toString()} (${Number(event.clusterSupportLamports) / LAMPORTS_PER_SOL} SOL)`);
       console.log("- Voting activated:", event.votingActivated);
 
       eventReceived = true;
@@ -609,11 +609,11 @@ describe("govcontract", () => {
       console.log("\nFetching updated proposal data after support...");
       const updatedProposal = await program.account.proposal.fetch(proposalAccount);
       console.log("Updated Proposal State:");
-      console.log("- Cluster support lamports:", updatedProposal.clusterSupportLamports.toString());
+      console.log(`- Cluster support lamports: ${updatedProposal.clusterSupportLamports.toString()} (${Number(updatedProposal.clusterSupportLamports) / LAMPORTS_PER_SOL} SOL)`);
       console.log("- Voting active:", updatedProposal.voting);
-      console.log("- For votes lamports:", updatedProposal.forVotesLamports.toString());
-      console.log("- Against votes lamports:", updatedProposal.againstVotesLamports.toString());
-      console.log("- Abstain votes lamports:", updatedProposal.abstainVotesLamports.toString());
+      console.log(`- For votes lamports: ${updatedProposal.forVotesLamports.toString()} (${Number(updatedProposal.forVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Against votes lamports: ${updatedProposal.againstVotesLamports.toString()} (${Number(updatedProposal.againstVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Abstain votes lamports: ${updatedProposal.abstainVotesLamports.toString()} (${Number(updatedProposal.abstainVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
 
       // Clean up event listener
       program.removeEventListener(eventListener);
@@ -645,12 +645,12 @@ describe("govcontract", () => {
       console.log("- Proposal ID:", event.proposalId?.toString());
       console.log("- Voter:", event.voter?.toString());
       console.log("- Vote Account:", event.voteAccount?.toString());
-      console.log("- For votes BP:", event.forVotesBp?.toString());
-      console.log("- Against votes BP:", event.againstVotesBp?.toString());
-      console.log("- Abstain votes BP:", event.abstainVotesBp?.toString());
-      console.log("- For votes lamports:", event.forVotesLamports?.toString());
-      console.log("- Against votes lamports:", event.againstVotesLamports?.toString());
-      console.log("- Abstain votes lamports:", event.abstainVotesLamports?.toString());
+      console.log(`- For votes BP: ${event.forVotesBp?.toString()} (${Number(event.forVotesBp) / 100}%)`);
+      console.log(`- Against votes BP: ${event.againstVotesBp?.toString()} (${Number(event.againstVotesBp) / 100}%)`);
+      console.log(`- Abstain votes BP: ${event.abstainVotesBp?.toString()} (${Number(event.abstainVotesBp) / 100}%)`);
+      console.log(`- For votes lamports: ${event.forVotesLamports?.toString()} (${Number(event.forVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Against votes lamports: ${event.againstVotesLamports?.toString()} (${Number(event.againstVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Abstain votes lamports: ${event.abstainVotesLamports?.toString()} (${Number(event.abstainVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
       console.log("- Vote timestamp:", event.voteTimestamp?.toString());
 
       eventReceived = true;
@@ -710,9 +710,9 @@ describe("govcontract", () => {
       console.log("\nFetching updated proposal data after vote...");
       const updatedProposal = await program.account.proposal.fetch(proposalAccount);
       console.log("Updated Proposal State:");
-      console.log("- For votes lamports:", updatedProposal.forVotesLamports.toString());
-      console.log("- Against votes lamports:", updatedProposal.againstVotesLamports.toString());
-      console.log("- Abstain votes lamports:", updatedProposal.abstainVotesLamports.toString());
+      console.log(`- For votes lamports: ${updatedProposal.forVotesLamports.toString()} (${Number(updatedProposal.forVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Against votes lamports: ${updatedProposal.againstVotesLamports.toString()} (${Number(updatedProposal.againstVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Abstain votes lamports: ${updatedProposal.abstainVotesLamports.toString()} (${Number(updatedProposal.abstainVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
       console.log("- Total vote count:", updatedProposal.voteCount.toString());
       console.log("- Voting active:", updatedProposal.voting);
 
@@ -746,12 +746,12 @@ describe("govcontract", () => {
       console.log("- Proposal ID:", event.proposalId?.toString());
       console.log("- Voter:", event.voter?.toString());
       console.log("- Vote Account:", event.voteAccount?.toString());
-      console.log("- For votes BP:", event.forVotesBp?.toString());
-      console.log("- Against votes BP:", event.againstVotesBp?.toString());
-      console.log("- Abstain votes BP:", event.abstainVotesBp?.toString());
-      console.log("- For votes lamports:", event.forVotesLamports?.toString());
-      console.log("- Against votes lamports:", event.againstVotesLamports?.toString());
-      console.log("- Abstain votes lamports:", event.abstainVotesLamports?.toString());
+      console.log(`- For votes BP: ${event.forVotesBp?.toString()} (${Number(event.forVotesBp) / 100}%)`);
+      console.log(`- Against votes BP: ${event.againstVotesBp?.toString()} (${Number(event.againstVotesBp) / 100}%)`);
+      console.log(`- Abstain votes BP: ${event.abstainVotesBp?.toString()} (${Number(event.abstainVotesBp) / 100}%)`);
+      console.log(`- For votes lamports: ${event.forVotesLamports?.toString()} (${Number(event.forVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Against votes lamports: ${event.againstVotesLamports?.toString()} (${Number(event.againstVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Abstain votes lamports: ${event.abstainVotesLamports?.toString()} (${Number(event.abstainVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
       console.log("- Vote timestamp:", event.voteTimestamp?.toString());
 
       eventReceived = true;
@@ -811,9 +811,9 @@ describe("govcontract", () => {
       console.log("\nFetching updated proposal data after vote...");
       const updatedProposal = await program.account.proposal.fetch(proposalAccount);
       console.log("Updated Proposal State:");
-      console.log("- For votes lamports:", updatedProposal.forVotesLamports.toString());
-      console.log("- Against votes lamports:", updatedProposal.againstVotesLamports.toString());
-      console.log("- Abstain votes lamports:", updatedProposal.abstainVotesLamports.toString());
+      console.log(`- For votes lamports: ${updatedProposal.forVotesLamports.toString()} (${Number(updatedProposal.forVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Against votes lamports: ${updatedProposal.againstVotesLamports.toString()} (${Number(updatedProposal.againstVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Abstain votes lamports: ${updatedProposal.abstainVotesLamports.toString()} (${Number(updatedProposal.abstainVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
       console.log("- Total vote count:", updatedProposal.voteCount.toString());
       console.log("- Voting active:", updatedProposal.voting);
 
@@ -847,12 +847,12 @@ describe("govcontract", () => {
       console.log("- Proposal ID:", event.proposalId?.toString());
       console.log("- Voter:", event.voter?.toString());
       console.log("- Vote Account:", event.voteAccount?.toString());
-      console.log("- For votes BP:", event.forVotesBp?.toString());
-      console.log("- Against votes BP:", event.againstVotesBp?.toString());
-      console.log("- Abstain votes BP:", event.abstainVotesBp?.toString());
-      console.log("- For votes lamports:", event.forVotesLamports?.toString());
-      console.log("- Against votes lamports:", event.againstVotesLamports?.toString());
-      console.log("- Abstain votes lamports:", event.abstainVotesLamports?.toString());
+      console.log(`- For votes BP: ${event.forVotesBp?.toString()} (${Number(event.forVotesBp) / 100}%)`);
+      console.log(`- Against votes BP: ${event.againstVotesBp?.toString()} (${Number(event.againstVotesBp) / 100}%)`);
+      console.log(`- Abstain votes BP: ${event.abstainVotesBp?.toString()} (${Number(event.abstainVotesBp) / 100}%)`);
+      console.log(`- For votes lamports: ${event.forVotesLamports?.toString()} (${Number(event.forVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Against votes lamports: ${event.againstVotesLamports?.toString()} (${Number(event.againstVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Abstain votes lamports: ${event.abstainVotesLamports?.toString()} (${Number(event.abstainVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
       console.log("- Vote timestamp:", event.voteTimestamp?.toString());
 
       eventReceived = true;
@@ -912,9 +912,9 @@ describe("govcontract", () => {
       console.log("\nFetching updated proposal data after vote...");
       const updatedProposal = await program.account.proposal.fetch(proposalAccount);
       console.log("Updated Proposal State:");
-      console.log("- For votes lamports:", updatedProposal.forVotesLamports.toString());
-      console.log("- Against votes lamports:", updatedProposal.againstVotesLamports.toString());
-      console.log("- Abstain votes lamports:", updatedProposal.abstainVotesLamports.toString());
+      console.log(`- For votes lamports: ${updatedProposal.forVotesLamports.toString()} (${Number(updatedProposal.forVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Against votes lamports: ${updatedProposal.againstVotesLamports.toString()} (${Number(updatedProposal.againstVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Abstain votes lamports: ${updatedProposal.abstainVotesLamports.toString()} (${Number(updatedProposal.abstainVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
       console.log("- Total vote count:", updatedProposal.voteCount.toString());
       console.log("- Voting active:", updatedProposal.voting);
 
@@ -948,15 +948,15 @@ describe("govcontract", () => {
       console.log("- Proposal ID:", event.proposalId?.toString());
       console.log("- Voter:", event.voter?.toString());
       console.log("- Vote Account:", event.voteAccount?.toString());
-      console.log("- Old For votes BP:", event.oldForVotesBp?.toString());
-      console.log("- Old Against votes BP:", event.oldAgainstVotesBp?.toString());
-      console.log("- Old Abstain votes BP:", event.oldAbstainVotesBp?.toString());
-      console.log("- New For votes BP:", event.newForVotesBp?.toString());
-      console.log("- New Against votes BP:", event.newAgainstVotesBp?.toString());
-      console.log("- New Abstain votes BP:", event.newAbstainVotesBp?.toString());
-      console.log("- For votes lamports:", event.forVotesLamports?.toString());
-      console.log("- Against votes lamports:", event.againstVotesLamports?.toString());
-      console.log("- Abstain votes lamports:", event.abstainVotesLamports?.toString());
+      console.log(`- Old For votes BP: ${event.oldForVotesBp?.toString()} (${Number(event.oldForVotesBp) / 100}%)`);
+      console.log(`- Old Against votes BP: ${event.oldAgainstVotesBp?.toString()} (${Number(event.oldAgainstVotesBp) / 100}%)`);
+      console.log(`- Old Abstain votes BP: ${event.oldAbstainVotesBp?.toString()} (${Number(event.oldAbstainVotesBp) / 100}%)`);
+      console.log(`- New For votes BP: ${event.newForVotesBp?.toString()} (${Number(event.newForVotesBp) / 100}%)`);
+      console.log(`- New Against votes BP: ${event.newAgainstVotesBp?.toString()} (${Number(event.newAgainstVotesBp) / 100}%)`);
+      console.log(`- New Abstain votes BP: ${event.newAbstainVotesBp?.toString()} (${Number(event.newAbstainVotesBp) / 100}%)`);
+      console.log(`- For votes lamports: ${event.forVotesLamports?.toString()} (${Number(event.forVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Against votes lamports: ${event.againstVotesLamports?.toString()} (${Number(event.againstVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Abstain votes lamports: ${event.abstainVotesLamports?.toString()} (${Number(event.abstainVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
       console.log("- Modification timestamp:", event.modificationTimestamp?.toString());
 
       eventReceived = true;
@@ -1016,9 +1016,9 @@ describe("govcontract", () => {
       console.log("\nFetching updated proposal data after vote modification...");
       const updatedProposal = await program.account.proposal.fetch(proposalAccount);
       console.log("Updated Proposal State:");
-      console.log("- For votes lamports:", updatedProposal.forVotesLamports.toString());
-      console.log("- Against votes lamports:", updatedProposal.againstVotesLamports.toString());
-      console.log("- Abstain votes lamports:", updatedProposal.abstainVotesLamports.toString());
+      console.log(`- For votes lamports: ${updatedProposal.forVotesLamports.toString()} (${Number(updatedProposal.forVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Against votes lamports: ${updatedProposal.againstVotesLamports.toString()} (${Number(updatedProposal.againstVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Abstain votes lamports: ${updatedProposal.abstainVotesLamports.toString()} (${Number(updatedProposal.abstainVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
       console.log("- Total vote count:", updatedProposal.voteCount.toString());
       console.log("- Voting active:", updatedProposal.voting);
 
@@ -1031,6 +1031,233 @@ describe("govcontract", () => {
         console.log("Program Logs:");
         error.logs.forEach((log: string) => console.log(log));
       }
+
+      // Clean up event listener even on error
+      program.removeEventListener(eventListener);
+
+      throw error;
+    }
+  });
+
+  it("Cast Vote Override!", async () => {
+    // Create a delegator keypair to override validator 3's vote
+    const delegator = anchor.web3.Keypair.generate();
+
+    // Fund the delegator account
+    await provider.connection.confirmTransaction(
+      await provider.connection.requestAirdrop(delegator.publicKey, 2 * LAMPORTS_PER_SOL)
+    );
+
+    // Create a proper stake account for the delegator
+    const delegatorStakeAccount = anchor.web3.Keypair.generate();
+
+    // Create stake account owned by the stake program
+    const stakeAccountSize = 200; // Size of a stake account
+    const rentExempt = await provider.connection.getMinimumBalanceForRentExemption(stakeAccountSize);
+
+    const createStakeAccountIx = SystemProgram.createAccount({
+      fromPubkey: delegator.publicKey,
+      newAccountPubkey: delegatorStakeAccount.publicKey,
+      lamports: rentExempt + LAMPORTS_PER_SOL, // Rent exempt + some lamports
+      space: stakeAccountSize,
+      programId: StakeProgram.programId,
+    });
+
+    // Initialize the stake account
+    const initializeStakeIx = StakeProgram.initialize({
+      stakePubkey: delegatorStakeAccount.publicKey,
+      authorized: {
+        staker: delegator.publicKey,
+        withdrawer: delegator.publicKey,
+      },
+    });
+
+    // Create and send transaction for stake account creation and initialization
+    await program.provider.sendAndConfirm(
+      new Transaction().add(createStakeAccountIx, initializeStakeIx),
+      [delegator, delegatorStakeAccount]
+    );
+
+    // Delegate the stake to validator 3 (splVoteAccount5)
+    console.log("\nDelegating stake to validator 3...");
+    console.log("Stake account:", delegatorStakeAccount.publicKey.toString());
+    console.log("Validator to delegate to:", splVoteAccount5.publicKey.toString());
+
+    const delegateStakeIx = StakeProgram.delegate({
+      stakePubkey: delegatorStakeAccount.publicKey,
+      authorizedPubkey: delegator.publicKey,
+      votePubkey: splVoteAccount5.publicKey, // Delegate to validator 3
+    });
+
+    // Send delegation transaction
+    await program.provider.sendAndConfirm(
+      new Transaction().add(delegateStakeIx),
+      [delegator]
+    );
+    console.log("Stake delegation completed successfully");
+
+    // Fetch validator 3's vote account before override
+    console.log("\nFetching validator 3's vote account before override...");
+    const voteBefore = await program.account.vote.fetch(voteAccount3);
+    console.log("Vote Account Before Override:");
+    console.log(`- For votes lamports: ${voteBefore.forVotesLamports.toString()} (${Number(voteBefore.forVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+    console.log(`- Against votes lamports: ${voteBefore.againstVotesLamports.toString()} (${Number(voteBefore.againstVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+    console.log(`- Abstain votes lamports: ${voteBefore.abstainVotesLamports.toString()} (${Number(voteBefore.abstainVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+    console.log(`- Override lamports: ${voteBefore.overrideLamports.toString()} (${Number(voteBefore.overrideLamports) / LAMPORTS_PER_SOL} SOL)`);
+    console.log(`- Total stake: ${voteBefore.stake.toString()} (${Number(voteBefore.stake) / LAMPORTS_PER_SOL} SOL)`);
+
+    // Set up event listener for voteOverrideCast event
+    console.log("\nSetting up voteOverrideCast event listener...");
+
+    let eventReceived = false;
+    let eventData: any = null;
+    let eventSlot = 0;
+
+    const eventListener = program.addEventListener('voteOverrideCast', (event: any, slot: number) => {
+      console.log("voteOverrideCast event received");
+      console.log("- Event slot:", slot);
+      console.log("- Proposal ID:", event.proposalId?.toString());
+      console.log("- Delegator:", event.delegator?.toString());
+      console.log("- Stake Account:", event.stakeAccount?.toString());
+      console.log("- Validator:", event.validator?.toString());
+      console.log(`- For votes BP: ${event.forVotesBp?.toString()} (${Number(event.forVotesBp) / 100}%)`);
+      console.log(`- Against votes BP: ${event.againstVotesBp?.toString()} (${Number(event.againstVotesBp) / 100}%)`);
+      console.log(`- Abstain votes BP: ${event.abstainVotesBp?.toString()} (${Number(event.abstainVotesBp) / 100}%)`);
+      console.log(`- For votes lamports: ${event.forVotesLamports?.toString()} (${Number(event.forVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Against votes lamports: ${event.againstVotesLamports?.toString()} (${Number(event.againstVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Abstain votes lamports: ${event.abstainVotesLamports?.toString()} (${Number(event.abstainVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Stake amount: ${event.stakeAmount?.toString()} (${Number(event.stakeAmount) / LAMPORTS_PER_SOL} SOL)`);
+      console.log("- Vote timestamp:", event.voteTimestamp?.toString());
+
+      eventReceived = true;
+      eventData = event;
+      eventSlot = slot;
+    });
+
+    try {
+      // Vote override parameters - delegator votes 70% for, 30% against
+      const forVotesBp = new anchor.BN(7000);
+      const againstVotesBp = new anchor.BN(3000);
+      const abstainVotesBp = new anchor.BN(0);
+
+      // Create StakeMerkleLeaf for the delegator
+      const stakeMerkleLeaf = {
+        votingWallet: delegator.publicKey,
+        stakeAccount: delegatorStakeAccount.publicKey,
+        activeStake: new anchor.BN(500000000), // 0.5 SOL stake
+      };
+
+      // Vote override PDA
+      const voteOverrideAccount = anchor.web3.PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("vote_override"),
+          proposalAccount.toBuffer(),
+          delegatorStakeAccount.publicKey.toBuffer(),
+          voteAccount3.toBuffer(), // Override validator 3's vote
+        ],
+        program.programId
+      )[0];
+
+      console.log("\nCasting vote override for Validator 3...");
+      console.log("Delegator:", delegator.publicKey.toString());
+      console.log("Delegator's stake is delegated to:", splVoteAccount5.publicKey.toString());
+      console.log("Validator being overridden:", splVoteAccount5.publicKey.toString());
+      console.log("Stake account:", delegatorStakeAccount.publicKey.toString());
+      console.log("Vote override account:", voteOverrideAccount.toString());
+
+      await program.methods
+        .castVoteOverride(forVotesBp, againstVotesBp, abstainVotesBp, [], stakeMerkleLeaf) // Empty stake proof for test
+        .accounts({
+          signer: delegator.publicKey,
+          proposal: proposalAccount,
+          validatorVote: voteAccount3, // Validator 3's existing vote
+          splVoteAccount: splVoteAccount5.publicKey, // Validator 3's SPL vote account
+          voteOverride: voteOverrideAccount,
+          splStakeAccount: delegatorStakeAccount.publicKey,
+          snapshotProgram: mockProgram.programId,
+          consensusResult,
+          metaMerkleProof: metaMerkleProof5, // Validator 3's meta merkle proof
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([delegator])
+        .rpc();
+
+      console.log("Vote override cast successfully");
+
+      // Fetch validator 3's vote account after override to show changes
+      console.log("\nFetching validator 3's vote account after override...");
+      const voteAfter = await program.account.vote.fetch(voteAccount3);
+      console.log("Vote Account After Override:");
+      console.log(`- For votes lamports: ${voteAfter.forVotesLamports.toString()} (${Number(voteAfter.forVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Against votes lamports: ${voteAfter.againstVotesLamports.toString()} (${Number(voteAfter.againstVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Abstain votes lamports: ${voteAfter.abstainVotesLamports.toString()} (${Number(voteAfter.abstainVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Override lamports: ${voteAfter.overrideLamports.toString()} (${Number(voteAfter.overrideLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Total stake: ${voteAfter.stake.toString()} (${Number(voteAfter.stake) / LAMPORTS_PER_SOL} SOL)`);
+
+      // Show the changes
+      const forVotesChange = Number(voteAfter.forVotesLamports) - Number(voteBefore.forVotesLamports);
+      const againstVotesChange = Number(voteAfter.againstVotesLamports) - Number(voteBefore.againstVotesLamports);
+      const abstainVotesChange = Number(voteAfter.abstainVotesLamports) - Number(voteBefore.abstainVotesLamports);
+      const overrideChange = Number(voteAfter.overrideLamports) - Number(voteBefore.overrideLamports);
+
+      console.log("\nVote Account Changes:");
+      console.log(`- For votes lamports change: ${forVotesChange.toString()} (${forVotesChange / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Against votes lamports change: ${againstVotesChange.toString()} (${againstVotesChange / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Abstain votes lamports change: ${abstainVotesChange.toString()} (${abstainVotesChange / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Override lamports change: ${overrideChange.toString()} (${overrideChange / LAMPORTS_PER_SOL} SOL)`);
+
+      // Wait a bit for event to be processed
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      if (eventReceived) {
+        console.log(`Event captured at slot ${eventSlot}`);
+
+        // Event validation
+        const checks = [
+          [eventData.proposalId?.equals(proposalAccount), "Proposal ID"],
+          [eventData.delegator?.equals(delegator.publicKey), "Delegator"],
+          [eventData.stakeAccount?.equals(delegatorStakeAccount.publicKey), "Stake Account"],
+          [eventData.validator?.equals(splVoteAccount5.publicKey), "Validator"],
+          [eventData.forVotesBp?.toString() === '7000', "For votes BP"],
+          [eventData.againstVotesBp?.toString() === '3000', "Against votes BP"],
+          [eventData.abstainVotesBp?.toString() === '0', "Abstain votes BP"],
+          [eventData.stakeAmount?.eq(new anchor.BN(500000000)), "Stake amount"]
+        ];
+
+        const failed = checks.filter(([passed]) => !passed).map(([, field]) => field);
+        console.log(failed.length === 0 ? "All event validations passed" :
+          `Warning: Validation failed for ${failed.join(", ")}`);
+      } else {
+        console.log("Warning: VoteOverrideCast event was not received by the listener");
+      }
+
+      // Fetch and display updated proposal data
+      console.log("\nFetching updated proposal data after vote override...");
+      const updatedProposal = await program.account.proposal.fetch(proposalAccount);
+      console.log("Updated Proposal State:");
+      console.log(`- For votes lamports: ${updatedProposal.forVotesLamports.toString()} (${Number(updatedProposal.forVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Against votes lamports: ${updatedProposal.againstVotesLamports.toString()} (${Number(updatedProposal.againstVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Abstain votes lamports: ${updatedProposal.abstainVotesLamports.toString()} (${Number(updatedProposal.abstainVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log("- Total vote count:", updatedProposal.voteCount.toString());
+      console.log("- Voting active:", updatedProposal.voting);
+
+      // Clean up event listener
+      program.removeEventListener(eventListener);
+    } catch (error: any) {
+      console.log("\nCast Vote Override Failed!");
+      console.log("Error:", error.message);
+      if (error.logs) {
+        console.log("Program Logs:");
+        error.logs.forEach((log: string) => console.log(log));
+      }
+
+      // Show the vote account state before the failed override for reference
+      console.log("\nValidator 3's vote account state before failed override:");
+      console.log(`- For votes lamports: ${voteBefore.forVotesLamports.toString()} (${Number(voteBefore.forVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Against votes lamports: ${voteBefore.againstVotesLamports.toString()} (${Number(voteBefore.againstVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Abstain votes lamports: ${voteBefore.abstainVotesLamports.toString()} (${Number(voteBefore.abstainVotesLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Override lamports: ${voteBefore.overrideLamports.toString()} (${Number(voteBefore.overrideLamports) / LAMPORTS_PER_SOL} SOL)`);
+      console.log(`- Total stake: ${voteBefore.stake.toString()} (${Number(voteBefore.stake) / LAMPORTS_PER_SOL} SOL)`);
 
       // Clean up event listener even on error
       program.removeEventListener(eventListener);
