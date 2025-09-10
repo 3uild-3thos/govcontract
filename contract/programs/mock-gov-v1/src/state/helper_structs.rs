@@ -1,7 +1,7 @@
 // https://github.com/exo-tech-xyz/gov-v1/blob/main/programs/gov-v1/src/state/proof.rs
 use anchor_lang::prelude::*;
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace, Debug)]
 pub struct MetaMerkleLeaf {
     /// Wallet designated for governance voting for the vote account.
     pub voting_wallet: Pubkey,
@@ -14,7 +14,7 @@ pub struct MetaMerkleLeaf {
     pub active_stake: u64,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, InitSpace, Debug)]
 pub struct StakeMerkleLeaf {
     /// Wallet designated for governance voting for the stake account.
     pub voting_wallet: Pubkey,

@@ -1,6 +1,7 @@
 use anchor_lang::{
     prelude::*,
     solana_program::{
+        borsh0_10::try_from_slice_unchecked,
         stake::program as stake_program,
         vote::{program as vote_program, state::VoteState},
     },
@@ -101,7 +102,16 @@ impl<'info> CastVoteOverride<'info> {
 
         // Deserialize MetaMerkleProof for crosschecking
         let meta_account_data = self.meta_merkle_proof.try_borrow_data()?;
-        let meta_merkle_proof = MetaMerkleProof::try_from_slice(&meta_account_data[8..])?;
+        let meta_merkle_proof =
+            try_from_slice_unchecked::<MetaMerkleProof>(&meta_account_data[8..]).map_err(|e| {
+                msg!("Error deserializing MetaMerkleProof: {}", e);
+                GovernanceError::CantDeserializeMMPPDA
+            })?;
+        // let meta_merkle_proof = MetaMerkleProof::try_from_slice(&meta_account_data[8..])
+        //     .map_err(|e| {
+        //         msg!("Error deserializing MetaMerkleProof: {}", e);
+        //         GovernanceError::CantDeserializeMMPPDA
+        //     })?;
         let meta_merkle_leaf = meta_merkle_proof.meta_merkle_leaf;
 
         require_eq!(
@@ -130,11 +140,11 @@ impl<'info> CastVoteOverride<'info> {
         );
 
         require_eq!(
-            meta_merkle_leaf.vote_account, 
-            self.spl_vote_account.key(), 
+            meta_merkle_leaf.vote_account,
+            self.spl_vote_account.key(),
             GovernanceError::InvalidVoteAccount
         );
-        
+
         verify_merkle_proof_cpi(
             &self.meta_merkle_proof.to_account_info(),
             &self.consensus_result.to_account_info(),
@@ -171,9 +181,12 @@ impl<'info> CastVoteOverride<'info> {
             .ok_or(ProgramError::ArithmeticOverflow)?;
 
         // Calculate new validator votes for each category based on actual lamports
-        let for_votes_lamports_new = calculate_vote_lamports!(new_validator_stake, self.validator_vote.for_votes_bp)?;
-        let against_votes_lamports_new = calculate_vote_lamports!(new_validator_stake, self.validator_vote.against_votes_bp)?;
-        let abstain_votes_lamports_new = calculate_vote_lamports!(new_validator_stake, self.validator_vote.abstain_votes_bp)?;
+        let for_votes_lamports_new =
+            calculate_vote_lamports!(new_validator_stake, self.validator_vote.for_votes_bp)?;
+        let against_votes_lamports_new =
+            calculate_vote_lamports!(new_validator_stake, self.validator_vote.against_votes_bp)?;
+        let abstain_votes_lamports_new =
+            calculate_vote_lamports!(new_validator_stake, self.validator_vote.abstain_votes_bp)?;
 
         // Add validator's new vote
         self.proposal.add_vote_lamports(
@@ -186,7 +199,11 @@ impl<'info> CastVoteOverride<'info> {
         self.validator_vote.for_votes_lamports = for_votes_lamports_new;
         self.validator_vote.against_votes_lamports = against_votes_lamports_new;
         self.validator_vote.abstain_votes_lamports = abstain_votes_lamports_new;
-        self.validator_vote.override_lamports = self.validator_vote.override_lamports.checked_add(delegator_stake).ok_or(ProgramError::ArithmeticOverflow)?;
+        self.validator_vote.override_lamports = self
+            .validator_vote
+            .override_lamports
+            .checked_add(delegator_stake)
+            .ok_or(ProgramError::ArithmeticOverflow)?;
 
         // Store override
         self.vote_override.set_inner(VoteOverride {

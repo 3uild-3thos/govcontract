@@ -1,6 +1,7 @@
 use anchor_lang::{
     prelude::*,
     solana_program::{
+        borsh0_10::try_from_slice_unchecked,
         vote::{program as vote_program, state::VoteState},
     },
 };
@@ -83,7 +84,16 @@ impl<'info> ModifyVote<'info> {
 
         // Deserialize MetaMerkleProof for crosschecking
         let account_data = self.meta_merkle_proof.try_borrow_data()?;
-        let meta_merkle_proof = MetaMerkleProof::try_from_slice(&account_data[8..])?;
+        let meta_merkle_proof = try_from_slice_unchecked::<MetaMerkleProof>(&account_data[8..])
+            .map_err(|e| {
+                msg!("Error deserializing MetaMerkleProof: {}", e);
+                GovernanceError::CantDeserializeMMPPDA
+            })?;
+        // let meta_merkle_proof = MetaMerkleProof::try_from_slice(&account_data[8..])
+        //     .map_err(|e| {
+        //         msg!("Error deserializing MetaMerkleProof: {}", e);
+        //         GovernanceError::CantDeserializeMMPPDA
+        //     })?;
         let meta_merkle_leaf = meta_merkle_proof.meta_merkle_leaf;
 
         // Crosscheck consensus result

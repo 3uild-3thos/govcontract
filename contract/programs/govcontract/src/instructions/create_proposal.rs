@@ -3,7 +3,10 @@
 use anchor_lang::{
     prelude::*,
     solana_program::{
-        epoch_stake::{get_epoch_stake_for_vote_account, get_epoch_total_stake}, native_token::LAMPORTS_PER_SOL, vote::{program as vote_program, state::VoteState}
+        borsh0_10::try_from_slice_unchecked,
+        epoch_stake::{get_epoch_stake_for_vote_account, get_epoch_total_stake},
+        native_token::LAMPORTS_PER_SOL,
+        vote::{program as vote_program, state::VoteState},
     },
 };
 
@@ -89,7 +92,17 @@ impl<'info> CreateProposal<'info> {
 
         // Deserialize MetaMerkleProof for crosschecking
         let account_data = self.meta_merkle_proof.try_borrow_data()?;
-        let meta_merkle_proof = MetaMerkleProof::try_from_slice(&account_data[8..])?;
+
+        let meta_merkle_proof = try_from_slice_unchecked::<MetaMerkleProof>(&account_data[8..])
+            .map_err(|e| {
+                msg!("Error deserializing MetaMerkleProof: {}", e);
+                GovernanceError::CantDeserializeMMPPDA
+            })?;
+        // let meta_merkle_proof = MetaMerkleProof::try_from_slice(&account_data[8..])
+        //     .map_err(|e| {
+        //         msg!("Error deserializing MetaMerkleProof: {}", e);
+        //         GovernanceError::CantDeserializeMMPPDA
+        //     })?;
         let meta_merkle_leaf = meta_merkle_proof.meta_merkle_leaf;
 
         // Crosscheck consensus result
@@ -122,12 +135,8 @@ impl<'info> CreateProposal<'info> {
         )?;
 
         let clock = Clock::get()?;
-        
-        require_gte!(
-            start_epoch, 
-            clock.epoch, 
-            GovernanceError::InvalidStartEpoch
-        );
+
+        require_gte!(start_epoch, clock.epoch, GovernanceError::InvalidStartEpoch);
 
         // Calculate stake weight basis points
         let cluster_stake = get_epoch_total_stake();

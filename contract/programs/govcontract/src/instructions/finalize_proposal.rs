@@ -1,10 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::{
-    error::GovernanceError,
-    events::ProposalFinalized,
-    state::Proposal,
-};
+use crate::{error::GovernanceError, events::ProposalFinalized, state::Proposal};
 
 #[derive(Accounts)]
 pub struct FinalizeProposal<'info> {
@@ -25,7 +21,6 @@ impl<'info> FinalizeProposal<'info> {
             clock.epoch >= self.proposal.end_epoch,
             GovernanceError::VotingPeriodNotEnded
         );
-
 
         emit!(ProposalFinalized {
             proposal_id: self.proposal.key(),

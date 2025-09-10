@@ -70,7 +70,8 @@ pub fn is_valid_github_link(link: &str) -> bool {
 
     let mut path = &link[PREFIX.len()..];
     if path.ends_with('/') {
-        if path.len() == 1 { // If only '/', path would be empty after trim
+        if path.len() == 1 {
+            // If only '/', path would be empty after trim
             return false;
         }
         path = &path[..path.len() - 1];

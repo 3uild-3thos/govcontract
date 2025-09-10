@@ -19,7 +19,8 @@ pub mod mock_gov_v1 {
         meta_merkle_root: [u8; 32],
         snapshot_hash: [u8; 32],
     ) -> Result<()> {
-        ctx.accounts.create_consensus_result(ballot_id, meta_merkle_root, snapshot_hash )?;
+        ctx.accounts
+            .create_consensus_result(ballot_id, meta_merkle_root, snapshot_hash)?;
         Ok(())
     }
 
@@ -28,7 +29,8 @@ pub mod mock_gov_v1 {
         meta_merkle_leaf: MetaMerkleLeaf,
         meta_merkle_proof: Vec<[u8; 32]>,
     ) -> Result<()> {
-        ctx.accounts.init_meta_merkle_proof(meta_merkle_leaf, meta_merkle_proof)?;
+        ctx.accounts
+            .init_meta_merkle_proof(meta_merkle_leaf, meta_merkle_proof)?;
         Ok(())
     }
 
@@ -41,9 +43,7 @@ pub mod mock_gov_v1 {
         Ok(())
     }
 
-    pub fn close_meta_merkle_proof(
-        ctx: Context<CloseMetaMerkleProof>,
-    ) -> Result<()> {
+    pub fn close_meta_merkle_proof(ctx: Context<CloseMetaMerkleProof>) -> Result<()> {
         ctx.accounts.close_meta_merkle_proof()?;
         Ok(())
     }

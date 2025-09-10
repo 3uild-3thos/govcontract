@@ -40,11 +40,8 @@ pub mod govcontract {
         Ok(())
     }
 
-    pub fn support_proposal(
-        ctx: Context<SupportProposal>,
-    ) -> Result<()> {
-        ctx.accounts
-            .support_proposal(&ctx.bumps)?;
+    pub fn support_proposal(ctx: Context<SupportProposal>) -> Result<()> {
+        ctx.accounts.support_proposal(&ctx.bumps)?;
         Ok(())
     }
 
@@ -100,10 +97,7 @@ pub mod govcontract {
         Ok(())
     }
 
-    pub fn add_merkle_root(
-        ctx: Context<AddMerkleRoot>,
-        merkle_root_hash: [u8; 32],
-    ) -> Result<()> {
+    pub fn add_merkle_root(ctx: Context<AddMerkleRoot>, merkle_root_hash: [u8; 32]) -> Result<()> {
         ctx.accounts.add_merkle_root(merkle_root_hash)?;
         Ok(())
     }
@@ -113,5 +107,4 @@ pub mod govcontract {
 
         Ok(())
     }
-
 }

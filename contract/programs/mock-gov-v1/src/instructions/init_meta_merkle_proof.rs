@@ -1,15 +1,15 @@
+use crate::state::{ConsensusResult, MetaMerkleLeaf, MetaMerkleProof};
 use anchor_lang::prelude::*;
-use crate::state::{ConsensusResult, MetaMerkleProof, MetaMerkleLeaf};
 
 #[derive(Accounts)]
-#[instruction(leaf: MetaMerkleLeaf)]
+#[instruction(leaf: MetaMerkleLeaf, proof: Vec<[u8; 32]>)]
 pub struct InitMetaMerkleProof<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
     #[account(
         init,
         payer = payer,
-        space = 8 + MetaMerkleProof::INIT_SPACE,
+        space = 8 + MetaMerkleProof::init_space(&proof),
         seeds = [b"MetaMerkleProof", consensus_result.key().as_ref(), leaf.vote_account.as_ref()],
         bump
     )]
@@ -19,9 +19,13 @@ pub struct InitMetaMerkleProof<'info> {
 }
 
 impl<'info> InitMetaMerkleProof<'info> {
-    pub fn init_meta_merkle_proof(&mut self, leaf: MetaMerkleLeaf, proof: Vec<[u8; 32]>) -> Result<()> {
+    pub fn init_meta_merkle_proof(
+        &mut self,
+        leaf: MetaMerkleLeaf,
+        proof: Vec<[u8; 32]>,
+    ) -> Result<()> {
         let meta_proof = &mut self.meta_merkle_proof;
-        meta_proof.meta_merkle_leaf = leaf; 
+        meta_proof.meta_merkle_leaf = leaf;
         meta_proof.meta_merkle_proof = proof;
         meta_proof.payer = self.payer.key();
         meta_proof.consensus_result = self.consensus_result.key();

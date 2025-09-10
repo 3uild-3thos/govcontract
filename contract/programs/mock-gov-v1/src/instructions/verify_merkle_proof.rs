@@ -1,5 +1,5 @@
-use anchor_lang::prelude::*;
 use crate::state::{ConsensusResult, MetaMerkleProof, StakeMerkleLeaf};
+use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 pub struct VerifyMerkleProof<'info> {

@@ -4,5 +4,5 @@ use anchor_lang::prelude::*;
 #[derive(InitSpace)]
 pub struct ProposalIndex {
     pub current_index: u32,
-    pub bump: u8
+    pub bump: u8,
 }

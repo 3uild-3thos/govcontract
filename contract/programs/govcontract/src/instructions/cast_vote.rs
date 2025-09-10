@@ -1,6 +1,9 @@
 use anchor_lang::{
     prelude::*,
-    solana_program::vote::{program as vote_program, state::VoteState},
+    solana_program::{
+        borsh0_10::try_from_slice_unchecked,
+        vote::{program as vote_program, state::VoteState},
+    },
 };
 
 use crate::{
@@ -86,7 +89,16 @@ impl<'info> CastVote<'info> {
 
         // Deserialize MetaMerkleProof for crosschecking
         let account_data = self.meta_merkle_proof.try_borrow_data()?;
-        let meta_merkle_proof = MetaMerkleProof::try_from_slice(&account_data[8..])?;
+        let meta_merkle_proof = try_from_slice_unchecked::<MetaMerkleProof>(&account_data[8..])
+            .map_err(|e| {
+                msg!("Error deserializing MetaMerkleProof: {}", e);
+                GovernanceError::CantDeserializeMMPPDA
+            })?;
+        // let meta_merkle_proof = MetaMerkleProof::try_from_slice(&account_data[8..])
+        //     .map_err(|e| {
+        //         msg!("Error deserializing MetaMerkleProof: {}", e);
+        //         GovernanceError::CantDeserializeMMPPDA
+        //     })?;
         let meta_merkle_leaf = meta_merkle_proof.meta_merkle_leaf;
 
         // Crosscheck consensus result
@@ -109,11 +121,11 @@ impl<'info> CastVote<'info> {
         );
 
         require_eq!(
-            meta_merkle_leaf.vote_account, 
-            self.spl_vote_account.key(), 
+            meta_merkle_leaf.vote_account,
+            self.spl_vote_account.key(),
             GovernanceError::InvalidVoteAccount
         );
-        
+
         verify_merkle_proof_cpi(
             &self.meta_merkle_proof.to_account_info(),
             &self.consensus_result.to_account_info(),
@@ -133,7 +145,7 @@ impl<'info> CastVote<'info> {
             against_votes_lamports,
             abstain_votes_lamports,
         )?;
-        
+
         self.proposal.vote_count += 1;
 
         // Store the vote distribution in the Vote PDA

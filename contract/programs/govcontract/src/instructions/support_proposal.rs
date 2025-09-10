@@ -1,6 +1,10 @@
 use anchor_lang::{
     prelude::*,
-    solana_program::epoch_stake::get_epoch_total_stake,
+    solana_program::{
+        borsh0_10::try_from_slice_unchecked,
+        epoch_stake::get_epoch_total_stake,
+        vote::{program as vote_program, state::VoteState},
+    },
 };
 
 use gov_v1::MetaMerkleProof;
@@ -22,10 +26,16 @@ pub struct SupportProposal<'info> {
         init,
         payer = signer,
         space = 8 + Support::INIT_SPACE,
-        seeds = [b"support", proposal.key().as_ref(), signer.key().as_ref()],
+        seeds = [b"support", proposal.key().as_ref(), spl_vote_account.key().as_ref()],
         bump
     )]
     pub support: Account<'info, Support>, // New support account
+    /// CHECK: Vote account is too big to deserialize, so we check on owner and size, then compare node_pubkey with signer
+    #[account(
+        constraint = spl_vote_account.owner == &vote_program::ID @ ProgramError::InvalidAccountOwner,
+        constraint = spl_vote_account.data_len() == VoteState::size_of() @ GovernanceError::InvalidVoteAccountSize
+    )]
+    pub spl_vote_account: UncheckedAccount<'info>,
     /// CHECK: The snapshot program (gov-v1 or mock)
     pub snapshot_program: UncheckedAccount<'info>,
     /// CHECK: Consensus result account owned by snapshot program
@@ -36,10 +46,7 @@ pub struct SupportProposal<'info> {
 }
 
 impl<'info> SupportProposal<'info> {
-    pub fn support_proposal(
-        &mut self,
-        bumps: &SupportProposalBumps,
-    ) -> Result<()> {
+    pub fn support_proposal(&mut self, bumps: &SupportProposalBumps) -> Result<()> {
         // Ensure proposal is eligible for support
         require!(!self.proposal.voting, GovernanceError::ProposalClosed);
         require!(!self.proposal.finalized, GovernanceError::ProposalFinalized);
@@ -56,7 +63,16 @@ impl<'info> SupportProposal<'info> {
 
         // Deserialize MetaMerkleProof for crosschecking
         let account_data = self.meta_merkle_proof.try_borrow_data()?;
-        let meta_merkle_proof = MetaMerkleProof::try_from_slice(&account_data[8..])?;
+        let meta_merkle_proof = try_from_slice_unchecked::<MetaMerkleProof>(&account_data[8..])
+            .map_err(|e| {
+                msg!("Error deserializing MetaMerkleProof: {}", e);
+                GovernanceError::CantDeserializeMMPPDA
+            })?;
+        // let meta_merkle_proof = MetaMerkleProof::try_from_slice(&account_data[8..])
+        //     .map_err(|e| {
+        //         msg!("Error deserializing MetaMerkleProof: {}", e);
+        //         GovernanceError::CantDeserializeMMPPDA
+        //     })?;
         let meta_merkle_leaf = meta_merkle_proof.meta_merkle_leaf;
 
         // Crosscheck consensus result
@@ -84,7 +100,8 @@ impl<'info> SupportProposal<'info> {
         )?;
 
         // Add the supporter's stake (from verified leaf) to the proposal's cluster support
-        self.proposal.add_cluster_support(meta_merkle_leaf.active_stake)?;
+        self.proposal
+            .add_cluster_support(meta_merkle_leaf.active_stake)?;
 
         // Initialize the support account
         self.support.set_inner(Support {
@@ -92,7 +109,6 @@ impl<'info> SupportProposal<'info> {
             validator: self.signer.key(),
             bump: bumps.support,
         });
-
 
         let cluster_stake = get_epoch_total_stake();
         let support_scaled = (self.proposal.cluster_support_lamports as u128) * 100;

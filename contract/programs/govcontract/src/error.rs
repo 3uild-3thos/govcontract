@@ -60,5 +60,6 @@ pub enum GovernanceError {
     MustBeOwnedBySnapshotProgram,
     #[msg("Invalid consensus result PDA")]
     InvalidConsensusResultPDA,
-
+    #[msg("Can't deserialize MetaMerkleProof PDA")]
+    CantDeserializeMMPPDA,
 }

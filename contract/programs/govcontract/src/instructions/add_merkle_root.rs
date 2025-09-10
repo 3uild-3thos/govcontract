@@ -1,10 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::{
-    error::GovernanceError,
-    events::MerkleRootAdded,
-    state::Proposal,
-};
+use crate::{error::GovernanceError, events::MerkleRootAdded, state::Proposal};
 
 #[derive(Accounts)]
 pub struct AddMerkleRoot<'info> {
@@ -21,10 +17,7 @@ pub struct AddMerkleRoot<'info> {
 }
 
 impl<'info> AddMerkleRoot<'info> {
-    pub fn add_merkle_root(
-        &mut self,
-        merkle_root_hash: [u8; 32],
-    ) -> Result<()> {
+    pub fn add_merkle_root(&mut self, merkle_root_hash: [u8; 32]) -> Result<()> {
         require!(
             merkle_root_hash.iter().any(|&x| x != 0),
             GovernanceError::InvalidMerkleRoot
