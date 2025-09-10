@@ -95,6 +95,7 @@ impl<'info> CastVote<'info> {
             vote_timestamp: Clock::get()?.unix_timestamp,
             bump: bumps.vote,
             tallied: false,
+            invalid: false,
         });
         self.proposal.vote_count += 1;
 

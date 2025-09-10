@@ -11,4 +11,5 @@ pub struct Vote {
     pub vote_timestamp: i64,
     pub bump: u8,
     pub tallied: bool,
+    pub invalid: bool,
 }

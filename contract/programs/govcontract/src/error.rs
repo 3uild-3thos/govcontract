@@ -50,4 +50,6 @@ pub enum GovernanceError {
     ProposalNotFinalized,
     #[msg("Vote must be tallied before it can be refunded")]
     VoteNotTallied,
+    #[msg("Vote account must be mutable for this instruction")]
+    VoteImmutable,
 }
