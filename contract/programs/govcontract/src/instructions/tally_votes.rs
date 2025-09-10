@@ -1,8 +1,8 @@
 use anchor_lang::{
     prelude::*,
     solana_program::{
-        epoch_stake::{get_epoch_stake_for_vote_account, get_epoch_total_stake},
-        vote::{self, program as vote_program, state::VoteState},
+        epoch_stake::get_epoch_stake_for_vote_account,
+        vote::{program as vote_program, state::VoteState},
     },
 };
 
@@ -96,7 +96,6 @@ impl<'info> TallyVotes<'info> {
             let chunk_vote_account = vote_chunk
                 .get(1)
                 .ok_or(GovernanceError::NotEnoughAccounts)?;
-
 
             let data = chunk_vote_account.data.borrow();
 
