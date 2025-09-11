@@ -18,6 +18,7 @@ export interface CreateProposalParams {
   voteAccount?: PublicKey;
   programId?: PublicKey;
   network?: string;
+  endpoint?: string;
 }
 
 export interface CastVoteParams {
@@ -29,6 +30,7 @@ export interface CastVoteParams {
   voteAccount?: PublicKey;
   programId?: PublicKey;
   network?: string;
+  endpoint?: string;
 }
 
 export interface ModifyVoteParams {
@@ -60,6 +62,7 @@ export interface SupportProposalParams {
   voteAccount?: PublicKey;
   programId?: PublicKey;
   network?: string;
+  endpoint?: string;
 }
 
 export interface AddMerkleRootParams {
@@ -81,6 +84,7 @@ export interface InitializeIndexParams {
   wallet: any;
   programId?: PublicKey;
   network?: string;
+  endpoint?: string;
 }
 
 // API response types (based on solgov.online API)

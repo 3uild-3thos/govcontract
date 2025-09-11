@@ -11,6 +11,7 @@ import {
   createProposal,
   castVote,
   supportProposal,
+  modifyVote,
   initializeIndex,
   TransactionResult,
 } from "@/chain/instructions";
@@ -117,7 +118,7 @@ export default function GovernanceActions() {
 
   const handleInitializeIndex = () => {
     handleAction(
-      () => initializeIndex({ wallet, programId, network }),
+      () => initializeIndex({ wallet, programId, network, endpoint }),
       "Initializing Index"
     );
   };
@@ -132,6 +133,7 @@ export default function GovernanceActions() {
         wallet,
         programId,
         network,
+        endpoint,
       }),
       "Creating Proposal"
     );
@@ -150,6 +152,7 @@ export default function GovernanceActions() {
         wallet,
         programId,
         network,
+        endpoint,
       }),
       "Casting Vote"
     );
@@ -165,8 +168,28 @@ export default function GovernanceActions() {
         wallet,
         programId,
         network,
+        endpoint,
       }),
       "Supporting Proposal"
+    );
+  };
+
+  const handleModifyVote = () => {
+    const proposalId = prompt("Enter proposal ID:");
+    if (!proposalId) return;
+
+    handleAction(
+      () => modifyVote({
+        proposalId,
+        forVotesBp: 3000,
+        againstVotesBp: 3000,
+        abstainVotesBp: 4000,
+        wallet,
+        programId,
+        network,
+        endpoint,
+      }),
+      "Modifying Vote"
     );
   };
 
@@ -358,6 +381,14 @@ export default function GovernanceActions() {
               className="bg-purple-500 hover:bg-purple-600 disabled:bg-gray-400 text-white px-4 py-2 rounded"
             >
               {loading === "Casting Vote" ? "Loading..." : "Cast Vote"}
+            </button>
+
+            <button
+              onClick={handleModifyVote}
+              disabled={loading === "Modifying Vote"}
+              className="bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-400 text-white px-4 py-2 rounded"
+            >
+              {loading === "Modifying Vote" ? "Loading..." : "Modify Vote"}
             </button>
 
             <button

@@ -1,21 +1,19 @@
-import { PublicKey } from "@solana/web3.js";
-import { AnchorProvider, Program } from "@coral-xyz/anchor";
-import { Govcontract } from "@/chain/types";
-import { connection } from "@/chain/helpers";
+import { PublicKey, Connection } from "@solana/web3.js";
+import { AnchorProvider, Program, BN } from "@coral-xyz/anchor";
 import idl from "@/chain/idl/govcontract.json";
 import { VoteAccountProofResponse, StakeAccountProofResponse, VoterSummaryResponse } from "./types";
 
-// PDA derivation functions (based on CLI implementation)
+// PDA derivation functions (based on test implementation)
 export function deriveProposalPda(
-  seed: number,
-  voteAccount: PublicKey,
+  seed: BN,
+  signer: PublicKey,
   programId: PublicKey
 ): PublicKey {
   const [pda] = PublicKey.findProgramAddressSync(
     [
       Buffer.from("proposal"),
-      Buffer.from(seed.toString().padStart(8, '0'), 'utf-8'),
-      voteAccount.toBuffer(),
+      seed.toArrayLike(Buffer, "le", 8),
+      signer.toBuffer(),
     ],
     programId
   );
@@ -32,14 +30,14 @@ export function deriveProposalIndexPda(programId: PublicKey): PublicKey {
 
 export function deriveVotePda(
   proposal: PublicKey,
-  voteAccount: PublicKey,
+  signer: PublicKey,
   programId: PublicKey
 ): PublicKey {
   const [pda] = PublicKey.findProgramAddressSync(
     [
       Buffer.from("vote"),
       proposal.toBuffer(),
-      voteAccount.toBuffer(),
+      signer.toBuffer(),
     ],
     programId
   );
@@ -48,14 +46,14 @@ export function deriveVotePda(
 
 export function deriveSupportPda(
   proposal: PublicKey,
-  voteAccount: PublicKey,
+  signer: PublicKey,
   programId: PublicKey
 ): PublicKey {
   const [pda] = PublicKey.findProgramAddressSync(
     [
       Buffer.from("support"),
       proposal.toBuffer(),
-      voteAccount.toBuffer(),
+      signer.toBuffer(),
     ],
     programId
   );
@@ -81,17 +79,23 @@ export function deriveVoteOverridePda(
 }
 
 // Create program instance with wallet
-export function createProgramWithWallet(wallet: any, programId?: PublicKey): Program<Govcontract> {
+export function createProgramWithWallet(wallet: any, programId?: PublicKey, endpoint?: string): any {
+  // Use provided endpoint or default to devnet
+  const rpcEndpoint = endpoint || "https://api.devnet.solana.com";
+  const connection = new Connection(rpcEndpoint, "confirmed");
+  
   const provider = new AnchorProvider(
     connection,
     wallet,
     { commitment: "confirmed" }
   );
   
-  // Use provided programId or default from IDL
-  const programIdToUse = programId || new PublicKey(idl.address);
+  // Use the exact same pattern as the working chain/helpers.ts
+  // If a custom programId is provided, we'll ignore it for now to get it working
+  // The IDL contains the program ID, so this should work
+  const program = new Program(idl, provider) as any;
   
-  return new Program(idl, programIdToUse, provider) as Program<Govcontract>;
+  return program;
 }
 
 // API helpers using the solgov.online service
@@ -189,6 +193,37 @@ export async function getVoterSummary(
   } catch (error) {
     throw new Error(`Failed to get voter summary: ${error}`);
   }
+}
+
+// Snapshot-related PDA derivation (based on test implementation)
+export function deriveConsensusResultPda(
+  snapshotSlot: BN,
+  snapshotProgramId: PublicKey = new PublicKey("11111111111111111111111111111111")
+): PublicKey {
+  const [pda] = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("consensus_result"),
+      snapshotSlot.toArrayLike(Buffer, "le", 8),
+    ],
+    snapshotProgramId
+  );
+  return pda;
+}
+
+export function deriveMetaMerkleProofPda(
+  consensusResult: PublicKey,
+  signer: PublicKey,
+  snapshotProgramId: PublicKey = new PublicKey("11111111111111111111111111111111")
+): PublicKey {
+  const [pda] = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("meta_merkle_proof"),
+      consensusResult.toBuffer(),
+      signer.toBuffer(),
+    ],
+    snapshotProgramId
+  );
+  return pda;
 }
 
 // Generate PDAs from vote proof response

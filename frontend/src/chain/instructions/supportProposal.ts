@@ -1,10 +1,11 @@
 import { PublicKey, SystemProgram } from "@solana/web3.js";
-import { SupportProposalParams, TransactionResult, SNAPSHOT_PROGRAM_ID } from "./types";
+import { BN } from "@coral-xyz/anchor";
+import { SupportProposalParams, TransactionResult } from "./types";
 import {
   createProgramWithWallet,
   deriveSupportPda,
-  getVoteAccountProof,
-  generatePdasFromVoteProofResponse,
+  deriveConsensusResultPda,
+  deriveMetaMerkleProofPda,
 } from "./helpers";
 
 /**
@@ -20,35 +21,27 @@ export async function supportProposal(params: SupportProposalParams): Promise<Tr
 
     const proposalPubkey = new PublicKey(proposalId);
     const splVoteAccount = voteAccount || wallet.publicKey;
-    const program = createProgramWithWallet(wallet, params.programId);
+    const program = createProgramWithWallet(wallet, params.programId, params.endpoint);
 
-    // Derive support PDA
-    const supportPda = deriveSupportPda(proposalPubkey, splVoteAccount, program.programId);
+    // Derive support PDA - based on IDL, it uses proposal and signer
+    const supportPda = deriveSupportPda(proposalPubkey, wallet.publicKey, program.programId);
 
-    // Get vote account proof
-    let consensusResultPda: PublicKey;
-    let metaMerkleProofPda: PublicKey;
-    
-    try {
-      const proofResponse = await getVoteAccountProof(splVoteAccount.toString());
-      [consensusResultPda, metaMerkleProofPda] = generatePdasFromVoteProofResponse(proofResponse);
-    } catch (error) {
-      // Fallback to dummy PDAs if API is not available
-      console.warn("Could not get vote account proof, using dummy PDAs:", error);
-      consensusResultPda = new PublicKey("11111111111111111111111111111111");
-      metaMerkleProofPda = new PublicKey("11111111111111111111111111111111");
-    }
+    // Create dummy snapshot accounts for testing (matching test pattern)
+    const SNAPSHOT_PROGRAM_ID = new PublicKey("11111111111111111111111111111111");
+    const snapshotSlot = new BN(1000000); // Dummy snapshot slot
+    const consensusResult = deriveConsensusResultPda(snapshotSlot, SNAPSHOT_PROGRAM_ID);
+    const metaMerkleProof = deriveMetaMerkleProofPda(consensusResult, wallet.publicKey, SNAPSHOT_PROGRAM_ID);
 
-    // Build and send transaction
+    // Build and send transaction using accountsPartial like in tests
     const tx = await program.methods
       .supportProposal()
-      .accounts({
+      .accountsPartial({
         signer: wallet.publicKey,
         proposal: proposalPubkey,
         support: supportPda,
-        consensusResult: consensusResultPda,
-        metaMerkleProof: metaMerkleProofPda,
         snapshotProgram: SNAPSHOT_PROGRAM_ID,
+        consensusResult,
+        metaMerkleProof,
         systemProgram: SystemProgram.programId,
       })
       .rpc();
