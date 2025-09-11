@@ -97,12 +97,16 @@ impl<'info> TallyVotes<'info> {
                 .get(1)
                 .ok_or(GovernanceError::NotEnoughAccounts)?;
 
+            // Validator stake
+            let validator_stake = get_epoch_stake_for_vote_account(chunk_vote_account.key);
+
             let data = chunk_vote_account.data.borrow();
 
             if chunk_vote_account.lamports() == 0
                 || chunk_vote_account.owner != &vote_program::ID
                 || data.len() != VoteState::size_of()
                 || data.iter().all(|&byte| byte == 0)
+                || validator_stake == 0
             {
                 vote.invalid = true;
                 vote.tallied = true;
@@ -129,10 +133,6 @@ impl<'info> TallyVotes<'info> {
                 vote.validator,
                 GovernanceError::VoteNodePubkeyMismatch
             );
-
-            // Validator stake
-            let validator_stake = get_epoch_stake_for_vote_account(chunk_vote_account.key);
-            require_gt!(validator_stake, 0u64, GovernanceError::NotEnoughStake);
 
             // Calculate effective votes for each category based on actual lamports
             // Use u128 to avoid overflow in multiplication, then divide by BASIS_POINTS_DIVISOR
