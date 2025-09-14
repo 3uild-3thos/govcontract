@@ -15,6 +15,7 @@ import {
 } from "@/components";
 import { useIsBelowMd } from "@/hooks";
 import { TopVotersMobile } from "@/components/TopVotersMobile";
+import GovernanceActions from "@/components/GovernanceActions";
 
 export default function Home() {
   const belowMd = useIsBelowMd();
@@ -79,6 +80,7 @@ export default function Home() {
             <TopVotersMobile />
           </Card>
         )}
+        <GovernanceActions />
       </main>
       <footer>
         <Footer />
