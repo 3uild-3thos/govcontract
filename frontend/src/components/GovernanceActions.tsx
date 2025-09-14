@@ -12,7 +12,6 @@ import {
   castVote,
   supportProposal,
   modifyVote,
-  initializeIndex,
   TransactionResult,
 } from "@/chain/instructions";
 
@@ -116,12 +115,6 @@ export default function GovernanceActions() {
     }
   };
 
-  const handleInitializeIndex = () => {
-    handleAction(
-      () => initializeIndex({ wallet, programId, network, endpoint }),
-      "Initializing Index"
-    );
-  };
 
   const handleCreateProposal = () => {
     handleAction(
@@ -187,7 +180,6 @@ export default function GovernanceActions() {
         wallet,
         programId,
         network,
-        endpoint,
       }),
       "Modifying Vote"
     );
@@ -359,14 +351,6 @@ export default function GovernanceActions() {
       {wallet.connected && (
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <button
-              onClick={handleInitializeIndex}
-              disabled={loading === "Initializing Index"}
-              className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white px-4 py-2 rounded"
-            >
-              {loading === "Initializing Index" ? "Loading..." : "Initialize Index"}
-            </button>
-
             <button
               onClick={handleCreateProposal}
               disabled={loading === "Creating Proposal"}

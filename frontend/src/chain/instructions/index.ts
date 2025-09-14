@@ -6,7 +6,6 @@ export { castVoteOverride } from "./castVoteOverride";
 export { supportProposal } from "./supportProposal";
 export { addMerkleRoot } from "./addMerkleRoot";
 export { finalizeProposal } from "./finalizeProposal";
-export { initializeIndex } from "./initializeIndex";
 
 // Export types and helpers
 export * from "./types";
@@ -21,5 +20,4 @@ export {
   supportProposal as endorseProposal,
   addMerkleRoot as addProposalMerkleRoot,
   finalizeProposal as closeProposal,
-  initializeIndex as setupProposalIndex,
 };

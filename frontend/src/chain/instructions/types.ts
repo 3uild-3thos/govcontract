@@ -80,12 +80,6 @@ export interface FinalizeProposalParams {
   network?: string;
 }
 
-export interface InitializeIndexParams {
-  wallet: any;
-  programId?: PublicKey;
-  network?: string;
-  endpoint?: string;
-}
 
 // API response types (based on solgov.online API)
 export interface VoteAccountProofResponse {

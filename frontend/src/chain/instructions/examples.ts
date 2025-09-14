@@ -12,7 +12,6 @@ import {
   supportProposal,
   addMerkleRoot,
   finalizeProposal,
-  initializeIndex,
   TransactionResult,
 } from "./index";
 
@@ -24,21 +23,6 @@ interface WalletAdapter {
   signAllTransactions?: any;
 }
 
-/**
- * Example: Initialize the proposal index (usually done once)
- */
-export async function exampleInitializeIndex(wallet: WalletAdapter): Promise<void> {
-  console.log("Initializing proposal index...");
-  
-  const result = await initializeIndex({ wallet });
-  
-  if (result.success) {
-    console.log("✅ Proposal index initialized successfully!");
-    console.log("Transaction:", `https://explorer.solana.com/tx/${result.signature}`);
-  } else {
-    console.error("❌ Failed to initialize proposal index:", result.error);
-  }
-}
 
 /**
  * Example: Create a new proposal
@@ -221,8 +205,6 @@ export async function exampleCompleteWorkflow(wallet: WalletAdapter): Promise<vo
   console.log("🚀 Starting complete proposal workflow...");
   
   try {
-    // 1. Initialize index (if not already done)
-    await exampleInitializeIndex(wallet);
     
     // 2. Create a proposal
     const proposalId = await exampleCreateProposal(wallet);
