@@ -10,9 +10,10 @@ use anchor_lang::{
     },
 };
 
-use gov_v1::MetaMerkleProof;
+use gov_v1::{ConsensusResult, MetaMerkleProof};
 
 use crate::{
+    constants::*,
     error::GovernanceError,
     events::ProposalCreated,
     merkle_helpers::verify_merkle_proof_cpi,
@@ -65,9 +66,14 @@ impl<'info> CreateProposal<'info> {
         bumps: &CreateProposalBumps,
     ) -> Result<()> {
         // Validate proposal inputs
-        require!(title.len() <= 50, GovernanceError::TitleTooLong);
+        require!(!title.is_empty(), GovernanceError::TitleEmpty);
         require!(
-            description.len() <= 250,
+            title.len() <= MAX_TITLE_LENGTH,
+            GovernanceError::TitleTooLong
+        );
+        require!(!description.is_empty(), GovernanceError::DescriptionEmpty);
+        require!(
+            description.len() <= MAX_DESCRIPTION_LENGTH,
             GovernanceError::DescriptionTooLong
         );
         require!(
@@ -78,6 +84,10 @@ impl<'info> CreateProposal<'info> {
             voting_length_epochs,
             0u64,
             GovernanceError::InvalidVotingLength
+        );
+        require!(
+            voting_length_epochs <= MAX_VOTING_EPOCHS,
+            GovernanceError::VotingLengthTooLong
         );
 
         // Validate snapshot program ownership
@@ -90,6 +100,17 @@ impl<'info> CreateProposal<'info> {
             GovernanceError::MustBeOwnedBySnapshotProgram
         );
 
+        // let consensus_result_data = self.consensus_result.try_borrow_data()?;
+        // let consensus_result = try_from_slice_unchecked::<ConsensusResult>(&consensus_result_data[8..])
+        //     .map_err(|e| {
+        //         msg!("Error deserializing ConsensusResult: {}", e);
+        //         GovernanceError::CantDeserializeConsensusResult
+        //     })?;
+
+        // require!(
+        //     consensus_result.ballot.meta_merkle_root == self.proposal.merkle_root_hash.unwrap(),
+        //     GovernanceError::InvalidMerkleRoot
+        // );
         // Deserialize MetaMerkleProof for crosschecking
         let account_data = self.meta_merkle_proof.try_borrow_data()?;
 
@@ -121,7 +142,7 @@ impl<'info> CreateProposal<'info> {
 
         require_gte!(
             meta_merkle_leaf.active_stake,
-            100_000 * LAMPORTS_PER_SOL, // 100k SOL in lamports
+            MIN_PROPOSAL_STAKE_LAMPORTS, // 100k SOL
             GovernanceError::NotEnoughStake
         );
 
@@ -152,7 +173,7 @@ impl<'info> CreateProposal<'info> {
             start_epoch,
             end_epoch: start_epoch
                 .checked_add(voting_length_epochs)
-                .ok_or(ProgramError::ArithmeticOverflow)?,
+                .ok_or(GovernanceError::ArithmeticOverflow)?,
             proposer_stake_weight_bp,
             proposal_bump: bumps.proposal,
             creation_timestamp: clock.unix_timestamp,

@@ -4,8 +4,12 @@ use anchor_lang::prelude::*;
 pub enum GovernanceError {
     #[msg("Minimum stake required to create proposal is 100k")]
     NotEnoughStake,
+    #[msg("The title of the proposal cannot be empty")]
+    TitleEmpty,
     #[msg("The title of the proposal is too long, max 50 char")]
     TitleTooLong,
+    #[msg("The description of the proposal cannot be empty")]
+    DescriptionEmpty,
     #[msg("The description of the proposal is too long, max 250 char")]
     DescriptionTooLong,
     #[msg("The description of the proposal must point to a github link")]
@@ -62,4 +66,14 @@ pub enum GovernanceError {
     InvalidConsensusResultPDA,
     #[msg("Can't deserialize MetaMerkleProof PDA")]
     CantDeserializeMMPPDA,
+    #[msg("Can't deserialize ConsensusResult")]
+    CantDeserializeConsensusResult,
+    #[msg("Cannot modify proposal after voting has started")]
+    CannotModifyAfterStart,
+    #[msg("Voting length exceeds maximum allowed epochs")]
+    VotingLengthTooLong,
+    #[msg("Arithmetic overflow occurred")]
+    ArithmeticOverflow,
+    #[msg("Snapshot program has been upgraded, update protection triggered")]
+    SnapshotProgramUpgraded,
 }

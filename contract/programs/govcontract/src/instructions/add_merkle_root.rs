@@ -11,13 +11,19 @@ pub struct AddMerkleRoot<'info> {
         mut,
         constraint = proposal.author == signer.key() @ GovernanceError::UnauthorizedMerkleRootUpdate,
         constraint = !proposal.finalized @ GovernanceError::ProposalFinalized,
-        constraint = proposal.merkle_root_hash.is_some() @ GovernanceError::MerkleRootAlreadySet
+        constraint = proposal.merkle_root_hash.is_none() @ GovernanceError::MerkleRootAlreadySet
     )]
     pub proposal: Account<'info, Proposal>,
 }
 
 impl<'info> AddMerkleRoot<'info> {
     pub fn add_merkle_root(&mut self, merkle_root_hash: [u8; 32]) -> Result<()> {
+        let clock = Clock::get()?;
+        require!(
+            clock.epoch <= self.proposal.start_epoch,
+            GovernanceError::CannotModifyAfterStart
+        );
+
         require!(
             merkle_root_hash.iter().any(|&x| x != 0),
             GovernanceError::InvalidMerkleRoot

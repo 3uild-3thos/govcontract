@@ -1,3 +1,4 @@
+
 /// Calculates the validator's stake weight in basis points (1 bp = 0.01%) relative to the cluster stake.
 ///
 /// This macro uses integer arithmetic to compute the stake weight by multiplying the validator's stake
@@ -21,9 +22,9 @@
 macro_rules! stake_weight_bp {
     ($validator_stake:expr, $cluster_stake:expr) => {{
         ($validator_stake as u128)
-            .checked_mul(10_000u128)
+            .checked_mul($crate::constants::BASIS_POINTS_MAX as u128)
             .and_then(|product| product.checked_div($cluster_stake as u128))
-            .ok_or(anchor_lang::prelude::ProgramError::ArithmeticOverflow)
+            .ok_or($crate::error::GovernanceError::ArithmeticOverflow)
             .map(|result| result as u64)
     }};
 }
@@ -52,8 +53,8 @@ macro_rules! calculate_vote_lamports {
     ($stake:expr, $basis_points:expr) => {{
         ($stake as u128)
             .checked_mul($basis_points as u128)
-            .and_then(|product| product.checked_div(10_000))
-            .ok_or(anchor_lang::prelude::ProgramError::ArithmeticOverflow)
+            .and_then(|product| product.checked_div($crate::constants::BASIS_POINTS_MAX as u128))
+            .ok_or($crate::error::GovernanceError::ArithmeticOverflow)
             .map(|result| result as u64)
     }};
 }

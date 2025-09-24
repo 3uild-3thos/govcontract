@@ -5,6 +5,7 @@ mod instructions;
 mod merkle_helpers;
 mod state;
 mod utils;
+mod constants;
 use anchor_lang::prelude::*;
 use instructions::*;
 

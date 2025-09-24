@@ -9,12 +9,13 @@ use anchor_lang::{
 
 use crate::{
     calculate_vote_lamports,
+    constants::*,
     error::GovernanceError,
     events::VoteOverrideCast,
     merkle_helpers::verify_merkle_proof_cpi,
     state::{Proposal, Vote, VoteOverride},
 };
-use gov_v1::{MetaMerkleProof, StakeMerkleLeaf};
+use gov_v1::{ConsensusResult, MetaMerkleProof, StakeMerkleLeaf};
 
 #[derive(Accounts)]
 pub struct CastVoteOverride<'info> {
@@ -87,8 +88,8 @@ impl<'info> CastVoteOverride<'info> {
         let total_bp = for_votes_bp
             .checked_add(against_votes_bp)
             .and_then(|sum| sum.checked_add(abstain_votes_bp))
-            .ok_or(ProgramError::ArithmeticOverflow)?;
-        require!(total_bp == 10_000, GovernanceError::InvalidVoteDistribution);
+            .ok_or(GovernanceError::ArithmeticOverflow)?;
+        require!(total_bp == BASIS_POINTS_MAX, GovernanceError::InvalidVoteDistribution);
 
         // Validate snapshot program ownership
         require!(
@@ -98,6 +99,18 @@ impl<'info> CastVoteOverride<'info> {
         require!(
             self.meta_merkle_proof.owner == self.snapshot_program.key,
             GovernanceError::MustBeOwnedBySnapshotProgram
+        );
+
+        let consensus_result_data = self.consensus_result.try_borrow_data()?;
+        let consensus_result = try_from_slice_unchecked::<ConsensusResult>(&consensus_result_data[8..])
+            .map_err(|e| {
+                msg!("Error deserializing ConsensusResult: {}", e);
+                GovernanceError::CantDeserializeConsensusResult
+            })?;
+
+        require!(
+            consensus_result.ballot.meta_merkle_root == self.proposal.merkle_root_hash.unwrap(),
+            GovernanceError::InvalidMerkleRoot
         );
 
         // Deserialize MetaMerkleProof for crosschecking
@@ -178,7 +191,7 @@ impl<'info> CastVoteOverride<'info> {
 
         let new_validator_stake = validator_stake
             .checked_sub(delegator_stake)
-            .ok_or(ProgramError::ArithmeticOverflow)?;
+            .ok_or(GovernanceError::ArithmeticOverflow)?;
 
         // Calculate new validator votes for each category based on actual lamports
         let for_votes_lamports_new =
@@ -203,7 +216,7 @@ impl<'info> CastVoteOverride<'info> {
             .validator_vote
             .override_lamports
             .checked_add(delegator_stake)
-            .ok_or(ProgramError::ArithmeticOverflow)?;
+            .ok_or(GovernanceError::ArithmeticOverflow)?;
 
         // Store override
         self.vote_override.set_inner(VoteOverride {

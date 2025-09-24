@@ -7,9 +7,10 @@ use anchor_lang::{
     },
 };
 
-use gov_v1::MetaMerkleProof;
+use gov_v1::{ConsensusResult, MetaMerkleProof};
 
 use crate::{
+    constants::*,
     error::GovernanceError,
     events::ProposalSupported,
     merkle_helpers::verify_merkle_proof_cpi,
@@ -59,6 +60,18 @@ impl<'info> SupportProposal<'info> {
         require!(
             self.meta_merkle_proof.owner == self.snapshot_program.key,
             GovernanceError::MustBeOwnedBySnapshotProgram
+        );
+
+        let consensus_result_data = self.consensus_result.try_borrow_data()?;
+        let consensus_result = try_from_slice_unchecked::<ConsensusResult>(&consensus_result_data[8..])
+            .map_err(|e| {
+                msg!("Error deserializing ConsensusResult: {}", e);
+                GovernanceError::CantDeserializeConsensusResult
+            })?;
+
+        require!(
+            consensus_result.ballot.meta_merkle_root == self.proposal.merkle_root_hash.unwrap(),
+            GovernanceError::InvalidMerkleRoot
         );
 
         // Deserialize MetaMerkleProof for crosschecking
@@ -111,8 +124,8 @@ impl<'info> SupportProposal<'info> {
         });
 
         let cluster_stake = get_epoch_total_stake();
-        let support_scaled = (self.proposal.cluster_support_lamports as u128) * 100;
-        let cluster_scaled = (cluster_stake as u128) * 5;
+        let support_scaled = (self.proposal.cluster_support_lamports as u128) * CLUSTER_SUPPORT_MULTIPLIER;
+        let cluster_scaled = (cluster_stake as u128) * CLUSTER_STAKE_MULTIPLIER;
         let voting_activated = if support_scaled >= cluster_scaled {
             // Activate voting if threshold met
             self.proposal.voting = true;

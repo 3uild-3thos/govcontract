@@ -1,13 +1,14 @@
 use anchor_lang::prelude::*;
+use crate::{constants::*, error::GovernanceError};
 
 #[account]
 #[derive(InitSpace, Default)]
 pub struct Proposal {
     /// The public key of the validator who created this proposal
     pub author: Pubkey,
-    #[max_len(50)]
+    #[max_len(MAX_TITLE_LENGTH)]
     pub title: String,
-    #[max_len(250)]
+    #[max_len(MAX_DESCRIPTION_LENGTH)]
     pub description: String,
     pub creation_epoch: u64,
     pub start_epoch: u64,
@@ -42,17 +43,17 @@ impl Proposal {
         self.for_votes_lamports = self
             .for_votes_lamports
             .checked_add(for_votes)
-            .ok_or(ProgramError::ArithmeticOverflow)?;
+            .ok_or(GovernanceError::ArithmeticOverflow)?;
 
         self.against_votes_lamports = self
             .against_votes_lamports
             .checked_add(against_votes)
-            .ok_or(ProgramError::ArithmeticOverflow)?;
+            .ok_or(GovernanceError::ArithmeticOverflow)?;
 
         self.abstain_votes_lamports = self
             .abstain_votes_lamports
             .checked_add(abstain_votes)
-            .ok_or(ProgramError::ArithmeticOverflow)?;
+            .ok_or(GovernanceError::ArithmeticOverflow)?;
 
         Ok(())
     }
@@ -66,17 +67,17 @@ impl Proposal {
         self.for_votes_lamports = self
             .for_votes_lamports
             .checked_sub(for_votes)
-            .ok_or(ProgramError::ArithmeticOverflow)?;
+            .ok_or(GovernanceError::ArithmeticOverflow)?;
 
         self.against_votes_lamports = self
             .against_votes_lamports
             .checked_sub(against_votes)
-            .ok_or(ProgramError::ArithmeticOverflow)?;
+            .ok_or(GovernanceError::ArithmeticOverflow)?;
 
         self.abstain_votes_lamports = self
             .abstain_votes_lamports
             .checked_sub(abstain_votes)
-            .ok_or(ProgramError::ArithmeticOverflow)?;
+            .ok_or(GovernanceError::ArithmeticOverflow)?;
 
         Ok(())
     }
@@ -85,7 +86,7 @@ impl Proposal {
         self.cluster_support_lamports = self
             .cluster_support_lamports
             .checked_add(support_lamports)
-            .ok_or(ProgramError::ArithmeticOverflow)?;
+            .ok_or(GovernanceError::ArithmeticOverflow)?;
 
         Ok(())
     }
