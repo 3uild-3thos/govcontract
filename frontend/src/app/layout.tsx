@@ -1,46 +1,28 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import type { Metadata } from "next";
+import { Inter, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import Footer from "@/components/Footer";
+import Navbar from "@/components/Navbar";
 import Providers from "./providers";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const plusJakartaSans = Plus_Jakarta_Sans({
+  variable: "--font-plus-jakarta-sans",
+  subsets: ["latin"],
+});
+
+const jetBrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "SPLGOV",
-  description:
-    "Check the latest proposal, see the live results and signal your opinion to the Solana Network.",
-  openGraph: {
-    title: "SPLGOV",
-    description:
-      "Check the latest proposal, see the live results and signal your opinion to the Solana Network.",
-    type: "website",
-    images: [
-      {
-        url: "/images/icons/realms.png",
-        width: 1000,
-        height: 1000,
-        alt: "SPLGOV",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "SPLGOV",
-    description:
-      "Check the latest proposal, see the live results and signal your opinion to the Solana Network.",
-    images: ["/images/icons/realms.png"],
-  },
-  icons: {
-    icon: "/favicon.ico",
-  },
+  title: "Solana Validator Governance",
+  description: "Vote and participate in Solana validator governance",
 };
 
 export default function RootLayout({
@@ -49,11 +31,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.variable} ${plusJakartaSans.variable} ${jetBrainsMono.variable} antialiased`}
       >
-        <Providers>{children}</Providers>
+        <Providers>
+          <Navbar />
+          <div className="w-full overflow-x-hidden">
+            <div className="max-w-7xl mx-auto px-4 sm:px-8">{children}</div>
+          </div>
+        </Providers>
+        <Footer />
       </body>
     </html>
   );
