@@ -1,34 +1,37 @@
 # Solana Governance Contract
+
 A decentralized governance system built on the Solana blockchain.
 
 ## Overview
+
 This repository contains a Solana program that enables a decentralized governance system. The contract allows validators to create proposals, vote on them, and tally the results.
 
 ## Features
 
-* **Proposal creation**: Validators can create new proposals with a title, description, and voting period, with merkle proof verification for stake validation.
-* **Proposal support**: Validators can show support for a proposal, which helps to activate voting with enhanced stake verification.
-* **Voting**: Validators can cast votes on a proposal, with their vote weight determined by their stake, including vote override functionality for delegators.
-* **Vote override**: Delegators can override their validator's vote using stake account verification and merkle proofs.
-* **Merkle proof verification**: Comprehensive integration with external snapshot programs for stake verification.
-* **PDA utilities**: Robust program-derived address derivation for all contract accounts.
-* **Enhanced validation**: Improved error handling and input validation throughout the contract.
+- **Proposal creation**: Validators with minimum 100,000 SOL stake can create new proposals with a title, description (must be a valid GitHub link), and voting period in epochs.
+- **Merkle root addition**: Proposal authors must add a merkle root hash representing the validator stake snapshot before voting can begin.
+- **Proposal support**: Validators can show support for a proposal using merkle proof verification. When total supporting stake reaches 5% of cluster stake, voting is activated.
+- **Voting**: Validators can cast votes on active proposals, with their vote weight determined by their stake. Votes are distributed across For/Against/Abstain in basis points (totaling 10,000).
+- **Vote modification**: Validators can modify their existing votes before proposal finalization.
+- **Vote override**: Delegators can override their validator's vote using stake account verification and merkle proofs, effectively splitting the validator's voting power.
+- **Merkle proof verification**: Comprehensive integration with external snapshot programs for stake verification during support, voting, and vote override operations.
+- **PDA utilities**: Robust program-derived address derivation for all contract accounts.
+- **Enhanced validation**: Improved error handling and input validation throughout the contract, including stake requirements, voting period limits (max 10 epochs), and GitHub link validation.
 
 ## Contract Structure
 
 The contract is organized into several modules:
 
-* `error.rs`: Defines custom error codes used throughout the contract with enhanced validation messages.
-* `lib.rs`: Contains the main program logic, including functions for creating proposals, casting votes, and finalizing results.
-* `merkle_helpers.rs`: Provides utilities for merkle proof verification and cross-program invocation.
-* `utils.rs`: Provides utility functions, such as calculating stake weights in basis points and PDA derivation.
-* `state`: Defines the data structures used to store proposal, vote, and vote override information.
-* `instructions`: Contains the implementation of each instruction, including create proposal, cast vote, cast vote override, modify vote, support proposal, finalize proposal, and add merkle root.
-
+- `error.rs`: Defines custom error codes used throughout the contract with enhanced validation messages.
+- `lib.rs`: Contains the main program logic, including functions for creating proposals, casting votes, and finalizing results.
+- `merkle_helpers.rs`: Provides utilities for merkle proof verification and cross-program invocation.
+- `utils.rs`: Provides utility functions, such as calculating stake weights in basis points and PDA derivation.
+- `state`: Defines the data structures used to store proposal, vote, and vote override information.
+- `instructions`: Contains the implementation of each instruction, including create proposal, cast vote, cast vote override, modify vote, support proposal, finalize proposal, and add merkle root.
 
 ## CLI Interface
 
-This repository also includes a command-line interface (CLI) program, `svmgov`, which provides a convenient way to interact with the contract. The `svmgov` CLI allows validators and delegators to create proposals, cast votes, override votes, and perform other actions on the contract with a simple CLI interface. The validator/delegator identity keypair is necessary for most commands, and supports API integration for real-time stake verification.
+This repository also includes a command-line interface (CLI) program, `svmgov`, which provides a convenient way to interact with the contract. The `svmgov` CLI allows validators and delegators to create proposals, add merkle roots, cast votes, override votes, modify votes, and perform other actions on the contract with a simple CLI interface. The validator/delegator identity keypair is necessary for most commands, and supports API integration for real-time stake verification.
 
 ## Usage
 
@@ -36,19 +39,44 @@ To use this contract, you'll need to:
 
 1. **Build and deploy**: Build the contract using `anchor build` and deploy it to a Solana cluster.
 2. **Initialize index**: Use the `initialize_index` instruction to set up the proposal index PDA.
-3. **Create a proposal**: Use the `create_proposal` instruction to create a new proposal with merkle proof verification for stake validation.
-4. **Support a proposal**: Use the `support_proposal` instruction to show support for a proposal with stake verification.
-5. **Cast a vote**: Use the `cast_vote` instruction to cast a validator vote on a proposal.
-6. **Cast vote override**: Use the `cast_vote_override` instruction for delegators to override their validator's vote.
-7. **Modify vote**: Use the `modify_vote` instruction to update an existing vote.
-8. **Add merkle root**: Use the `add_merkle_root` instruction to set the merkle root hash for a proposal.
-9. **Finalize proposal**: Use the `finalize_proposal` instruction to determine the outcome after voting ends.
+3. **Create a proposal**: Use the `create_proposal` instruction to create a new proposal. Requires minimum 100,000 SOL stake and a valid GitHub link description.
+4. **Add merkle root**: Use the `add_merkle_root` instruction to set the merkle root hash representing the validator stake snapshot (must be done before voting starts).
+5. **Support a proposal**: Use the `support_proposal` instruction to show support for a proposal with merkle proof verification. Accumulate 5% of total cluster stake to activate voting.
+6. **Cast a vote**: Use the `cast_vote` instruction to cast a validator vote on an active proposal (voting must be activated first).
+7. **Cast vote override**: Use the `cast_vote_override` instruction for delegators to override their validator's vote using stake account verification and merkle proofs.
+8. **Modify vote**: Use the `modify_vote` instruction to update an existing validator vote before finalization.
+9. **Finalize proposal**: Use the `finalize_proposal` instruction to determine the outcome after the voting period ends (anyone can call this).
+
+## Requirements and Constraints
+
+### Proposal Creation
+
+- **Minimum Stake**: 100,000 SOL required to create proposals
+- **Description**: Must be a valid GitHub link (https://github.com/... or https://www.github.com/...)
+- **Title Length**: Maximum 50 characters
+- **Description Length**: Maximum 250 characters
+- **Voting Period**: 1-10 epochs maximum
+
+### Voting Mechanics
+
+- **Activation Threshold**: 5% of total cluster stake must support a proposal to activate voting
+- **Vote Distribution**: For/Against/Abstain percentages must total 100% (10,000 basis points)
+- **Timing**: Voting occurs within specified epoch ranges, not slot-based
+- **Validator Voting**: Each validator can vote once, but can modify their vote
+- **Vote Override**: Delegators can override validator votes using stake accounts and merkle proofs
+
+### Merkle Proof Verification
+
+- All stake-related operations (support, voting, vote override) require valid merkle proofs
+- Proofs are verified against external snapshot programs
+- Consensus results and meta merkle proofs must be owned by the snapshot program
 
 ## Events
 
 The contract emits comprehensive events for all major governance actions. Frontend applications and external services can listen to these events to track governance activity in real-time. All events are automatically included in the generated IDL.
 
 ### ProposalCreated
+
 Emitted when a new proposal is created.
 
 <details>
@@ -60,12 +88,13 @@ Emitted when a new proposal is created.
 - `description: String` - The proposal description
 - `start_epoch: u64` - The epoch when voting begins
 - `end_epoch: u64` - The epoch when voting ends
-- `snapshot_slot: u64` - The slot when the validator stake snapshot was taken
+- `snapshot_slot: u64` - The slot when the proposal was created (used for stake snapshot reference)
 - `creation_timestamp: i64` - Unix timestamp of proposal creation
 
 </details>
 
 ### ProposalSupported
+
 Emitted when a validator supports a proposal.
 
 <details>
@@ -79,6 +108,7 @@ Emitted when a validator supports a proposal.
 </details>
 
 ### VoteCast
+
 Emitted when a validator casts their vote.
 
 <details>
@@ -98,6 +128,7 @@ Emitted when a validator casts their vote.
 </details>
 
 ### VoteOverrideCast
+
 Emitted when a delegator overrides their validator's vote.
 
 <details>
@@ -119,6 +150,7 @@ Emitted when a delegator overrides their validator's vote.
 </details>
 
 ### VoteModified
+
 Emitted when a validator modifies their existing vote.
 
 <details>
@@ -141,6 +173,7 @@ Emitted when a validator modifies their existing vote.
 </details>
 
 ### MerkleRootAdded
+
 Emitted when a merkle root hash is added to a proposal.
 
 <details>
@@ -153,6 +186,7 @@ Emitted when a merkle root hash is added to a proposal.
 </details>
 
 ### ProposalFinalized
+
 Emitted when a proposal is finalized after voting ends.
 
 <details>
@@ -173,35 +207,40 @@ Emitted when a proposal is finalized after voting ends.
 Frontend applications can listen to these events using Anchor's event system:
 
 ```javascript
-import * as anchor from '@coral-xyz/anchor';
+import * as anchor from "@coral-xyz/anchor";
 
 // Initialize program
 const program = new anchor.Program(IDL, PROGRAM_ID, provider);
 
 // Listen for proposal creation
-const proposalListener = program.addEventListener('ProposalCreated', (event, slot) => {
-  console.log('New proposal:', event.title);
-  // Update proposals list in UI
-});
+const proposalListener = program.addEventListener(
+  "ProposalCreated",
+  (event, slot) => {
+    console.log("New proposal:", event.title);
+    // Update proposals list in UI
+  }
+);
 
 // Listen for votes
-const voteListener = program.addEventListener('VoteCast', (event, slot) => {
-  console.log('Vote cast:', event.forVotesBp, 'basis points');
+const voteListener = program.addEventListener("VoteCast", (event, slot) => {
+  console.log("Vote cast:", event.forVotesBp, "basis points");
   // Update voting results in real-time
 });
 
 // Listen for vote overrides
-const overrideListener = program.addEventListener('VoteOverrideCast', (event, slot) => {
-  console.log('Vote override by delegator');
-  // Update delegator voting status
-});
+const overrideListener = program.addEventListener(
+  "VoteOverrideCast",
+  (event, slot) => {
+    console.log("Vote override by delegator");
+    // Update delegator voting status
+  }
+);
 
 // Cleanup listeners when component unmounts
 // program.removeEventListener(proposalListener);
 ```
 
 Events are strongly typed and included in the generated TypeScript types from the IDL.
-
 
 ## Development
 

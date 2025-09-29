@@ -13,7 +13,7 @@ pub const MIN_PROPOSAL_STAKE_LAMPORTS: u64 = 100_000 * 1_000_000_000; // 100k SO
 // Program upgrade protection
 // Set this to the slot where the current snapshot program was deployed
 // Updates to the program after this slot will be rejected
-pub const SNAPSHOT_PROGRAM_DEPLOY_SLOT: u64 = 0; // Set to actual deploy slot
+// pub const SNAPSHOT_PROGRAM_DEPLOY_SLOT: u64 = 0; // Set to actual deploy slot
 
 // Cluster stake calculation multipliers
 pub const CLUSTER_SUPPORT_MULTIPLIER: u128 = 100;

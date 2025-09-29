@@ -22,6 +22,9 @@ impl<'info> FinalizeProposal<'info> {
             GovernanceError::VotingPeriodNotEnded
         );
 
+        self.proposal.finalized = true;
+        self.proposal.voting = false;
+        
         emit!(ProposalFinalized {
             proposal_id: self.proposal.key(),
             finalizer: self.signer.key(),
@@ -31,10 +34,7 @@ impl<'info> FinalizeProposal<'info> {
             total_votes_count: self.proposal.vote_count,
             finalization_timestamp: clock.unix_timestamp,
         });
-
-        self.proposal.finalized = true;
-        self.proposal.voting = false;
-
+        
         Ok(())
     }
 }

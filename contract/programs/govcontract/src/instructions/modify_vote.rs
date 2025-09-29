@@ -1,10 +1,4 @@
-use anchor_lang::{
-    prelude::*,
-    solana_program::{
-        borsh0_10::try_from_slice_unchecked,
-        vote::{program as vote_program, state::VoteState},
-    },
-};
+use anchor_lang::prelude::*;
 
 use crate::{
     calculate_vote_lamports,
@@ -14,45 +8,52 @@ use crate::{
     merkle_helpers::verify_merkle_proof_cpi,
     state::{Proposal, Vote},
 };
-use gov_v1::{ConsensusResult, MetaMerkleProof};
+
+#[cfg(feature = "production")]
+use gov_v1::{ConsensusResult, MetaMerkleProof, ID as GOV_V1_ID };
+#[cfg(feature = "testing")]
+use mock_gov_v1::{ConsensusResult, MetaMerkleProof, ID as GOV_V1_ID };
 
 #[derive(Accounts)]
+#[instruction(spl_vote_account: Pubkey)]
 pub struct ModifyVote<'info> {
     #[account(mut)]
     pub signer: Signer<'info>, // Voter (validator)
     #[account(mut)]
     pub proposal: Account<'info, Proposal>, // Proposal being modified
     #[account(
-        mut,
-        seeds = [b"vote", proposal.key().as_ref(), spl_vote_account.key().as_ref()],
-        bump = vote.bump,
+        init_if_needed,
+        payer = signer,
+        space = 8 + Vote::INIT_SPACE,
+        seeds = [b"vote", proposal.key().as_ref(), spl_vote_account.as_ref()],
+        bump
     )]
-    pub vote: Account<'info, Vote>, // Existing vote to modify
-    /// CHECK: Vote account is too big to deserialize, so we check on owner and size, then compare node_pubkey with signer
-    #[account(
-        constraint = spl_vote_account.owner == &vote_program::ID @ ProgramError::InvalidAccountOwner,
-        constraint = spl_vote_account.data_len() == VoteState::size_of() @ GovernanceError::InvalidVoteAccountSize
-    )]
-    pub spl_vote_account: UncheckedAccount<'info>,
+    pub vote: Account<'info, Vote>,
     /// CHECK: The snapshot program (gov-v1 or mock)
+    #[account(
+        constraint = snapshot_program.key == &GOV_V1_ID @ GovernanceError::InvalidSnapshotProgram
+    )]
     pub snapshot_program: UncheckedAccount<'info>,
-    /// CHECK: Consensus result account owned by snapshot program
-    pub consensus_result: UncheckedAccount<'info>,
-    /// CHECK: Meta merkle proof account owned by snapshot program
-    pub meta_merkle_proof: UncheckedAccount<'info>,
+    pub consensus_result: Account<'info, ConsensusResult>,
+    pub meta_merkle_proof: Account<'info, MetaMerkleProof>,
     pub system_program: Program<'info, System>, // For account operations
 }
 
 impl<'info> ModifyVote<'info> {
     pub fn modify_vote(
         &mut self,
+        spl_vote_account: Pubkey,
         for_votes_bp: u64,
         against_votes_bp: u64,
         abstain_votes_bp: u64,
+        bumps: &ModifyVoteBumps,
     ) -> Result<()> {
         // Check that the proposal is open for voting
         require!(self.proposal.voting, GovernanceError::ProposalClosed);
         require!(!self.proposal.finalized, GovernanceError::ProposalFinalized);
+
+        // Require that validator has already voted
+        require!(self.vote.has_voted, GovernanceError::ValidatorHasNotVoted);
 
         // Get the current epoch from the Clock sysvar
         let clock = Clock::get()?;
@@ -73,45 +74,17 @@ impl<'info> ModifyVote<'info> {
             .ok_or(GovernanceError::ArithmeticOverflow)?;
         require!(total_bp == BASIS_POINTS_MAX, GovernanceError::InvalidVoteDistribution);
 
-        // Validate snapshot program ownership
-        require!(
-            self.consensus_result.owner == self.snapshot_program.key,
-            GovernanceError::MustBeOwnedBySnapshotProgram
-        );
-        require!(
-            self.meta_merkle_proof.owner == self.snapshot_program.key,
-            GovernanceError::MustBeOwnedBySnapshotProgram
-        );
-
-        let consensus_result_data = self.consensus_result.try_borrow_data()?;
-        let consensus_result = try_from_slice_unchecked::<ConsensusResult>(&consensus_result_data[8..])
-            .map_err(|e| {
-                msg!("Error deserializing ConsensusResult: {}", e);
-                GovernanceError::CantDeserializeConsensusResult
-            })?;
 
         require!(
-            consensus_result.ballot.meta_merkle_root == self.proposal.merkle_root_hash.unwrap(),
+            self.consensus_result.ballot.meta_merkle_root == self.proposal.meta_merkle_root.unwrap_or_default(),
             GovernanceError::InvalidMerkleRoot
         );
 
-        // Deserialize MetaMerkleProof for crosschecking
-        let account_data = self.meta_merkle_proof.try_borrow_data()?;
-        let meta_merkle_proof = try_from_slice_unchecked::<MetaMerkleProof>(&account_data[8..])
-            .map_err(|e| {
-                msg!("Error deserializing MetaMerkleProof: {}", e);
-                GovernanceError::CantDeserializeMMPPDA
-            })?;
-        // let meta_merkle_proof = MetaMerkleProof::try_from_slice(&account_data[8..])
-        //     .map_err(|e| {
-        //         msg!("Error deserializing MetaMerkleProof: {}", e);
-        //         GovernanceError::CantDeserializeMMPPDA
-        //     })?;
-        let meta_merkle_leaf = meta_merkle_proof.meta_merkle_leaf;
+        let meta_merkle_leaf = &self.meta_merkle_proof.meta_merkle_leaf;
 
         // Crosscheck consensus result
         require_eq!(
-            meta_merkle_proof.consensus_result,
+            self.meta_merkle_proof.consensus_result,
             self.consensus_result.key(),
             GovernanceError::InvalidConsensusResultPDA
         );
@@ -122,10 +95,11 @@ impl<'info> ModifyVote<'info> {
             self.signer.key(),
             GovernanceError::InvalidVoteAccount
         );
-        // Ensure the proof's vote_account matches the provided SPL vote account
+        
+        // Verify SPL vote account
         require_eq!(
             meta_merkle_leaf.vote_account,
-            self.spl_vote_account.key(),
+            spl_vote_account,
             GovernanceError::InvalidVoteAccount
         );
         require_gt!(
@@ -142,7 +116,7 @@ impl<'info> ModifyVote<'info> {
             None,
         )?;
 
-        // Subtract old lamports from proposal totals
+        // Subtract old vote (guaranteed since has_voted is true)
         self.proposal.sub_vote_lamports(
             self.vote.for_votes_lamports,
             self.vote.against_votes_lamports,
@@ -150,10 +124,12 @@ impl<'info> ModifyVote<'info> {
         )?;
 
         // Calculate new effective votes for each category based on actual lamports
-        let voter_stake = meta_merkle_leaf.active_stake;
-        let for_votes_lamports = calculate_vote_lamports!(voter_stake, for_votes_bp)?;
-        let against_votes_lamports = calculate_vote_lamports!(voter_stake, against_votes_bp)?;
-        let abstain_votes_lamports = calculate_vote_lamports!(voter_stake, abstain_votes_bp)?;
+        let effective_stake = self.vote.stake
+            .checked_sub(self.vote.override_lamports)
+            .ok_or(GovernanceError::ArithmeticOverflow)?;
+        let for_votes_lamports = calculate_vote_lamports!(effective_stake, for_votes_bp)?;
+        let against_votes_lamports = calculate_vote_lamports!(effective_stake, against_votes_bp)?;
+        let abstain_votes_lamports = calculate_vote_lamports!(effective_stake, abstain_votes_bp)?;
 
         // Add new lamports to proposal totals
         self.proposal.add_vote_lamports(
@@ -162,10 +138,20 @@ impl<'info> ModifyVote<'info> {
             abstain_votes_lamports,
         )?;
 
+        // Update vote
+        self.vote.for_votes_bp = for_votes_bp;
+        self.vote.against_votes_bp = against_votes_bp;
+        self.vote.abstain_votes_bp = abstain_votes_bp;
+        self.vote.for_votes_lamports = for_votes_lamports;
+        self.vote.against_votes_lamports = against_votes_lamports;
+        self.vote.abstain_votes_lamports = abstain_votes_lamports;
+        self.vote.stake = effective_stake;
+        self.vote.vote_timestamp = clock.unix_timestamp;
+
         emit!(VoteModified {
             proposal_id: self.proposal.key(),
             voter: self.signer.key(),
-            vote_account: self.spl_vote_account.key(),
+            vote_account: spl_vote_account,
             old_for_votes_bp: self.vote.for_votes_bp,
             old_against_votes_bp: self.vote.against_votes_bp,
             old_abstain_votes_bp: self.vote.abstain_votes_bp,
@@ -177,15 +163,6 @@ impl<'info> ModifyVote<'info> {
             abstain_votes_lamports,
             modification_timestamp: clock.unix_timestamp,
         });
-
-        // Update the vote account with new distribution and lamports
-        self.vote.for_votes_bp = for_votes_bp;
-        self.vote.against_votes_bp = against_votes_bp;
-        self.vote.abstain_votes_bp = abstain_votes_bp;
-        self.vote.for_votes_lamports = for_votes_lamports;
-        self.vote.against_votes_lamports = against_votes_lamports;
-        self.vote.abstain_votes_lamports = abstain_votes_lamports;
-        self.vote.vote_timestamp = clock.unix_timestamp;
 
         Ok(())
     }

@@ -1,3 +1,4 @@
+#![allow(clippy::too_many_arguments)]
 mod constants;
 mod instructions;
 mod utils;
@@ -10,6 +11,7 @@ use constants::*;
 use utils::{commands, utils::*};
 
 declare_program!(govcontract);
+declare_program!(gov_v1);
 
 // anchor idl init --provider.cluster http://86.109.14.141:8899 --provider.wallet /path/to/wallet.json -f target/idl/my_program.json 4igPvJuaCVUCwqaQ3q7L8Y5JL5G1vsDCfLGMMoNthmSt
 
@@ -100,6 +102,13 @@ enum Commands {
     SupportProposal {
         #[arg(long, help = "Proposal ID")]
         proposal_id: String,
+
+        /// Optional specific vote account to use for support
+        #[arg(
+            long,
+            help = "Vote account to use for support (base58 pubkey). If omitted, the first vote account from the voter summary will be used."
+        )]
+        spl_vote_account: Option<String>,
     },
 
     #[command(
@@ -131,6 +140,13 @@ enum Commands {
         /// Basis points for 'Abstain' vote.
         #[arg(long, help = "Basis points for 'Abstain'")]
         abstain_votes: u64,
+
+        /// Optional specific vote account to use for vote
+        #[arg(
+            long,
+            help = "Vote account to use for vote (base58 pubkey). If omitted, the first vote account from the voter summary will be used."
+        )]
+        spl_vote_account: Option<String>,
     },
 
     #[command(
@@ -157,6 +173,13 @@ enum Commands {
         /// Basis points for 'Abstain' vote.
         #[arg(long, help = "Basis points for 'Abstain'")]
         abstain_votes: u64,
+
+        /// Optional specific vote account to use for modify vote
+        #[arg(
+            long,
+            help = "Vote account to use for modify vote (base58 pubkey). If omitted, the first vote account from the voter summary will be used."
+        )]
+        spl_vote_account: Option<String>,
     },
 
     #[command(
@@ -292,31 +315,37 @@ enum Commands {
         )]
         abstain_votes: u64,
 
-        /// Operator API endpoint (optional, uses env var by default)
-        #[arg(long, help = "Operator API endpoint for snapshot data")]
-        operator_api: Option<String>,
-
         /// Optional specific stake account to use for override
-        #[arg(long, help = "Stake account to use for override (base58 pubkey). If omitted, the first stake account from the voter summary will be used.")]
-        stake_account: Option<String>,
+        #[arg(
+            long,
+            help = "Stake account to use for override (base58 pubkey). If omitted, the first stake account from the voter summary will be used."
+        )]
+        spl_stake_account: Option<String>,
+
+        /// Optional specific vote account to use for override
+        #[arg(
+            long,
+            help = "Vote account to use for override (base58 pubkey). If omitted, the first vote account from the voter summary will be used."
+        )]
+        spl_vote_account: Option<String>,
     },
 
     #[command(
         about = "Add merkle root hash to a proposal for verification",
-        long_about = "This command adds a merkle root hash to a proposal for stake verification. \
-                      It requires the proposal ID and the merkle root hash as a hex string. \
+        long_about = "This command adds a merkle root hash and consensus result PDA to a proposal for stake verification. \
+                      It requires the proposal ID and the consensus result PDA associated with the proposal in base58. \
                       Only the original proposal author can call this command.\n\n\
                       Example:\n\
-                      $ svmgov --identity-keypair /path/to/key.json add-merkle-root --proposal-id \"123\" --merkle-root \"0x1234567890abcdef...\""
+                      $ svmgov --identity-keypair /path/to/key.json add-merkle-root --proposal-id \"123\" --consensus-result \"<CONSENSUS_RESULT_PDA>\""
     )]
     AddMerkleRoot {
         /// Proposal ID to add the merkle root to
         #[arg(long, help = "Proposal ID")]
         proposal_id: String,
 
-        /// Merkle root hash as a hex string
-        #[arg(long, help = "Merkle root hash (hex string)")]
-        merkle_root: String,
+        /// Consensus result PDA associated with proposal
+        #[arg(long, help = "Consensus result PDA associated with proposal")]
+        consensus_result: String,
     },
 }
 
@@ -347,11 +376,12 @@ async fn handle_command(cli: Cli) -> Result<()> {
             )
             .await?;
         }
-        Commands::SupportProposal { proposal_id } => {
+        Commands::SupportProposal { proposal_id, spl_vote_account } => {
             instructions::support_proposal(
                 proposal_id.to_string(),
                 cli.identity_keypair,
                 cli.rpc_url,
+                spl_vote_account.clone(),
             )
             .await?;
         }
@@ -360,6 +390,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
             for_votes,
             against_votes,
             abstain_votes,
+            spl_vote_account,
         } => {
             instructions::cast_vote(
                 proposal_id.to_string(),
@@ -368,6 +399,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 *abstain_votes,
                 cli.identity_keypair,
                 cli.rpc_url,
+                spl_vote_account.clone(),
             )
             .await?;
         }
@@ -376,6 +408,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
             for_votes,
             against_votes,
             abstain_votes,
+            spl_vote_account,
         } => {
             instructions::modify_vote(
                 proposal_id.to_string(),
@@ -384,6 +417,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 *abstain_votes,
                 cli.identity_keypair,
                 cli.rpc_url,
+                spl_vote_account.clone(),
             )
             .await?;
         }
@@ -429,8 +463,8 @@ async fn handle_command(cli: Cli) -> Result<()> {
             for_votes,
             against_votes,
             abstain_votes,
-            operator_api,
-            stake_account,
+            spl_vote_account,
+            spl_stake_account,
         } => {
             instructions::cast_vote_override(
                 proposal_id.to_string(),
@@ -439,21 +473,21 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 *abstain_votes,
                 cli.identity_keypair,
                 cli.rpc_url,
-                operator_api.clone(),
-                stake_account.clone(),
+                spl_vote_account.clone(),
+                spl_stake_account.clone(),
             )
             .await?;
         }
         Commands::AddMerkleRoot {
             proposal_id,
-            merkle_root,
+            consensus_result,
         } => {
             instructions::add_merkle_root(
                 proposal_id.to_string(),
-                merkle_root.to_string(),
                 cli.identity_keypair,
                 cli.rpc_url,
-            )
+                consensus_result.to_string(),
+                )
             .await?;
         }
     }

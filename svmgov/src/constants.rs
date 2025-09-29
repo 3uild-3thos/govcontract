@@ -6,17 +6,10 @@ pub const DEFAULT_WSS_URL: &str = "wss://api.mainnet-beta.solana.com";
 pub const BASIS_POINTS_TOTAL: u64 = 10_000;
 
 // Default operator API
-pub const DEFAULT_OPERATOR_API_URL: &str = "https://api.operator.com";
+pub const OPERATOR_API_URL: &str = "https://api.solgov.online";
 
 // UI constants
 pub const SPINNER_TICK_DURATION_MS: u64 = 100;
-
-// Stake account constants
-pub const STAKE_ACCOUNT_DATA_SIZE: u64 = 200;
-pub const STAKE_ACCOUNT_WITHDRAW_AUTHORITY_OFFSET: usize = 44;
-
-// Mock data constants
-pub const MOCK_MERKLE_PROOF_LEVELS: usize = 3;
 
 // Environment variable names
 pub const SVMGOV_KEY_ENV: &str = "SVMGOV_KEY";

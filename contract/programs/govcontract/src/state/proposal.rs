@@ -28,7 +28,8 @@ pub struct Proposal {
     pub vote_count: u32,
     pub index: u32,
     /// Merkle root hash representing the snapshot of validator stakes at proposal creation
-    pub merkle_root_hash: Option<[u8; 32]>,
+    pub meta_merkle_root: Option<[u8; 32]>,
+    pub consensus_result_pda: Option<Pubkey>,
     /// Slot number when the validator stake snapshot was taken
     pub snapshot_slot: u64,
 }

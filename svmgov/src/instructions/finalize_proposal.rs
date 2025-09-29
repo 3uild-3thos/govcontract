@@ -1,11 +1,11 @@
 use std::str::FromStr;
 
 use anchor_client::solana_sdk::{pubkey::Pubkey, signer::Signer};
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 
 use crate::{
     govcontract::client::{accounts, args},
-    utils::utils::{create_spinner, setup_all},
+    utils::utils::{create_spinner, load_identity_keypair, program_setup_govcontract},
 };
 
 pub async fn finalize_proposal(
@@ -16,7 +16,8 @@ pub async fn finalize_proposal(
     let proposal_pubkey = Pubkey::from_str(&proposal_id)
         .map_err(|_| anyhow!("Invalid proposal ID: {}", proposal_id))?;
 
-    let (payer, _vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
+    let identity_keypair = load_identity_keypair(identity_keypair)?;
+    let program = program_setup_govcontract(identity_keypair.clone(), rpc_url.clone()).await?;
 
     let spinner = create_spinner("Finalizing proposal...");
 
@@ -24,7 +25,7 @@ pub async fn finalize_proposal(
         .request()
         .args(args::FinalizeProposal {})
         .accounts(accounts::FinalizeProposal {
-            signer: payer.pubkey(),
+            signer: identity_keypair.pubkey(),
             proposal: proposal_pubkey,
         })
         .send()

@@ -36,7 +36,7 @@ describe("mock_gov_v1", () => {
         try {
             await program.methods
                 .createConsensusResult(ballotId, metaMerkleRoot, snapshotHash)
-                .accounts({
+                .accountsStrict({
                     consensusResult: consensusResultPda,
                     payer: provider.publicKey,
                     systemProgram: anchor.web3.SystemProgram.programId,
@@ -62,7 +62,7 @@ describe("mock_gov_v1", () => {
 
         await program.methods
             .initMetaMerkleProof(leaf, proof)
-            .accounts({
+            .accountsStrict({
                 payer: provider.publicKey,
                 metaMerkleProof: metaMerkleProofPda,
                 consensusResult: consensusResultPda,
@@ -84,7 +84,7 @@ describe("mock_gov_v1", () => {
 
         await program.methods
             .verifyMerkleProof(stakeProof, stakeLeaf)
-            .accounts({
+            .accountsStrict({
                 metaMerkleProof: metaMerkleProofPda,
                 consensusResult: consensusResultPda,
             })
@@ -92,7 +92,7 @@ describe("mock_gov_v1", () => {
 
         // await program.methods
         //     .verifyMerkleProof(null, null)
-        //     .accounts({
+        //     .accountsStrict({
         //         metaMerkleProof: metaMerkleProofPda,
         //         consensusResult: consensusResultPda,
         //     })
@@ -106,7 +106,7 @@ describe("mock_gov_v1", () => {
 
         await program.methods
             .closeMetaMerkleProof()
-            .accounts({
+            .accountsStrict({
                 metaMerkleProof: metaMerkleProofPda,
                 payer: provider.publicKey,
             })

@@ -1,53 +1,53 @@
 use std::str::FromStr;
 
 use anchor_client::solana_sdk::{pubkey::Pubkey, signer::Signer};
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
+use gov_v1::ConsensusResult;
 
 use crate::{
     govcontract::client::{accounts, args},
-    utils::utils::{create_spinner, setup_all},
+    utils::utils::{
+        create_spinner, load_identity_keypair, program_setup_gov_v1, program_setup_govcontract,
+    },
 };
 
 pub async fn add_merkle_root(
     proposal_id: String,
-    merkle_root_hash: String,
     identity_keypair: Option<String>,
     rpc_url: Option<String>,
+    consensus_result_pda: String,
 ) -> Result<()> {
     let spinner = create_spinner("Adding merkle root hash to proposal...");
 
-    let (payer, _payer_pubkey, program) = setup_all(identity_keypair, rpc_url).await?;
-
     let proposal_pubkey = Pubkey::from_str(&proposal_id)
-        .map_err(|_| anyhow!("Invalid proposal ID format"))?;
+        .map_err(|_| anyhow!("Invalid proposal ID: {}", proposal_id))?;
 
-    // Convert hex string to [u8; 32] array
-    let merkle_root_bytes = if merkle_root_hash.starts_with("0x") {
-        hex::decode(&merkle_root_hash[2..])
-    } else {
-        hex::decode(&merkle_root_hash)
-    }.map_err(|_| anyhow!("Invalid merkle root hash format - must be hex string"))?;
-
-    if merkle_root_bytes.len() != 32 {
-        return Err(anyhow!("Merkle root hash must be exactly 32 bytes"));
-    }
-
-    let mut merkle_root_array = [0u8; 32];
-    merkle_root_array.copy_from_slice(&merkle_root_bytes);
+    let identity_keypair = load_identity_keypair(identity_keypair)?;
+    let program = program_setup_govcontract(identity_keypair.clone(), rpc_url.clone()).await?;
+    let gov_v1_program = program_setup_gov_v1(identity_keypair.clone(), rpc_url.clone()).await?;
+    let _consensus_result = gov_v1_program
+        .account::<ConsensusResult>(
+            Pubkey::from_str(&consensus_result_pda)
+                .map_err(|_| anyhow!("Invalid consensus result PDA: {}", consensus_result_pda))?,
+        )
+        .await
+        .map_err(|_| anyhow!("Consensus result not found"))?;
 
     let signature = program
         .request()
-        .args(args::AddMerkleRoot {
-            merkle_root_hash: merkle_root_array,
-        })
+        .args(args::AddMerkleRoot {})
         .accounts(accounts::AddMerkleRoot {
-            signer: payer.pubkey(),
+            signer: identity_keypair.pubkey(),
             proposal: proposal_pubkey,
+            consensus_result: Pubkey::from_str(&consensus_result_pda)?,
         })
         .send()
         .await?;
 
-    spinner.finish_with_message(format!("Merkle root hash added successfully! Signature: {}", signature));
+    spinner.finish_with_message(format!(
+        "Merkle root hash added successfully! Signature: {}",
+        signature
+    ));
 
     Ok(())
 }

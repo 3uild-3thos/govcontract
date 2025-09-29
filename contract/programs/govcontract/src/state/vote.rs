@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
 #[account]
-#[derive(InitSpace)]
+#[derive(InitSpace, Default)]
 pub struct Vote {
     pub validator: Pubkey,
     pub proposal: Pubkey,
@@ -14,5 +14,6 @@ pub struct Vote {
     pub stake: u64,
     pub override_lamports: u64,
     pub vote_timestamp: i64,
+    pub has_voted: bool,
     pub bump: u8,
 }

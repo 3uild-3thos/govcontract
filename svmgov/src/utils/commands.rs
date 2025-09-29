@@ -10,9 +10,60 @@ use anyhow::{Result, anyhow};
 use serde_json::{Value, json};
 
 use crate::{
-    anchor_client_setup, create_spinner, find_delegator_stake_accounts,
+    create_spinner,
     govcontract::accounts::{Proposal, Vote},
+    utils::utils::program_setup_govcontract,
 };
+
+/// Validate that a string can be parsed as a valid Solana pubkey
+pub fn validate_pubkey_input(input: &str) -> Result<Pubkey> {
+    Pubkey::from_str(input).map_err(|_| {
+        anyhow!(
+            "Invalid pubkey format: '{}'. Expected a base58-encoded Solana public key.",
+            input
+        )
+    })
+}
+
+/// Validate proposal filter parameter
+pub fn validate_proposal_filter(filter: &str) -> Result<()> {
+    match filter {
+        "active" => Ok(()),
+        _ => Err(anyhow!(
+            "Invalid filter '{}'. Supported filters: 'active'",
+            filter
+        )),
+    }
+}
+
+/// Validate limit parameter (must be positive)
+pub fn validate_limit(limit: usize) -> Result<()> {
+    if limit == 0 {
+        Err(anyhow!("Limit must be greater than 0"))
+    } else if limit > 1000 {
+        Err(anyhow!("Limit cannot exceed 1000"))
+    } else {
+        Ok(())
+    }
+}
+
+/// Validate that a proposal ID exists and is accessible
+pub async fn validate_proposal_exists(
+    proposal_id: &str,
+    rpc_url: Option<String>,
+) -> Result<Proposal> {
+    let proposal_pubkey = validate_pubkey_input(proposal_id)?;
+
+    let mock_payer = Arc::new(Keypair::new());
+    let program = program_setup_govcontract(mock_payer, rpc_url)
+        .await
+        .map_err(|e| anyhow!("Failed to connect to Solana network: {}", e))?;
+
+    program
+        .account::<Proposal>(proposal_pubkey)
+        .await
+        .map_err(|_| anyhow!("Proposal '{}' not found or not accessible", proposal_id))
+}
 
 pub async fn list_proposals(
     rpc_url: Option<String>,
@@ -24,7 +75,9 @@ pub async fn list_proposals(
     let mock_payer = Arc::new(Keypair::new());
 
     // Create the Anchor client
-    let program = anchor_client_setup(rpc_url, mock_payer)?;
+    let program = program_setup_govcontract(mock_payer, rpc_url)
+        .await
+        .map_err(|e| anyhow!("Failed to connect to Solana network: {}", e))?;
 
     // Create a spinner for progress indication
     let spinner = create_spinner("Getting all proposals...");
@@ -92,14 +145,20 @@ pub async fn list_votes(
     limit: Option<usize>,
     json_output: bool,
 ) -> Result<()> {
-    // Parse the proposal ID into a Pubkey
-    let proposal_pubkey = Pubkey::from_str(proposal_id)
-        .map_err(|_| anyhow!("Invalid proposal ID: {}", proposal_id))?;
+    // Validate the proposal ID
+    let proposal_pubkey = validate_pubkey_input(proposal_id).map_err(|e| anyhow!(e))?;
+
+    // Validate limit if provided
+    if let Some(lim) = limit {
+        validate_limit(lim).map_err(|e| anyhow!(e))?;
+    }
     // Create a mock Payer
     let mock_payer = Arc::new(Keypair::new());
 
     // Create the Anchor client
-    let program = anchor_client_setup(rpc_url, mock_payer)?;
+    let program = program_setup_govcontract(mock_payer, rpc_url)
+        .await
+        .map_err(|e| anyhow!("Failed to connect to Solana network: {}", e))?;
 
     // Rpc filter to get Vote accounts for this proposal
     let filter = vec![RpcFilterType::Memcmp(Memcmp::new(
@@ -156,38 +215,145 @@ pub async fn list_votes(
 }
 
 pub async fn get_proposal(rpc_url: Option<String>, proposal_id: &String) -> Result<()> {
-    // Parse the proposal ID into a Pubkey
-    let proposal_pubkey = Pubkey::from_str(proposal_id)
-        .map_err(|_| anyhow!("Invalid proposal ID: {}", proposal_id))?;
-    // Create a mock Payer
-    let mock_payer = Arc::new(Keypair::new());
+    // Validate the proposal ID and get the proposal data
+    let proposal = validate_proposal_exists(proposal_id, rpc_url)
+        .await
+        .map_err(|e| anyhow!(e))?;
 
-    // Create the Anchor client
-    let program = anchor_client_setup(rpc_url, mock_payer)?;
-
-    let proposal_acc = program.account::<Proposal>(proposal_pubkey).await?;
-
-    println!("Proposal id:  {} \n{}", proposal_id, proposal_acc);
+    println!("Proposal id:  {} \n{}", proposal_id, proposal);
 
     Ok(())
 }
 
-pub async fn list_stake_accounts(rpc_url: Option<String>, delegator_wallet: Pubkey) -> Result<()> {
-    // Create a mock Payer
-    let mock_payer = Arc::new(Keypair::new());
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    // Set up RPC client via anchor setup (consistent with other commands)
-    let program = anchor_client_setup(rpc_url, mock_payer)?;
-    let rpc_client = program.rpc();
+    #[test]
+    fn test_validate_pubkey_input_valid() {
+        // Test with a valid pubkey
+        let valid_pubkey = "11111111111111111111111111111112";
+        let result = validate_pubkey_input(valid_pubkey);
+        assert!(result.is_ok(), "Valid pubkey should be accepted");
 
-    // Fetch and log
-    let stakes = find_delegator_stake_accounts(&delegator_wallet, &rpc_client).await?;
-    for (stake_pk, vote_pk, active_stake) in stakes {
-        println!(
-            "Stake Account: {}, Vote Account: {}, Active Stake: {}",
-            stake_pk, vote_pk, active_stake
+        let pubkey = result.unwrap();
+        assert_eq!(pubkey.to_string(), valid_pubkey);
+    }
+
+    #[test]
+    fn test_validate_pubkey_input_invalid_empty() {
+        let result = validate_pubkey_input("");
+        assert!(result.is_err(), "Empty string should be rejected");
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Invalid pubkey format")
         );
     }
 
-    Ok(())
+    #[test]
+    fn test_validate_pubkey_input_invalid_too_short() {
+        let result = validate_pubkey_input("1111111111111111111111111111111"); // 31 chars
+        assert!(result.is_err(), "Too short pubkey should be rejected");
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Invalid pubkey format")
+        );
+    }
+
+    #[test]
+    fn test_validate_pubkey_input_invalid_too_long() {
+        let result = validate_pubkey_input(
+            "111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+        ); // way too long
+        assert!(result.is_err(), "Too long pubkey should be rejected");
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Invalid pubkey format")
+        );
+    }
+
+    #[test]
+    fn test_validate_pubkey_input_invalid_characters() {
+        let result = validate_pubkey_input("zzzz111111111111111111111111111111"); // invalid base58
+        assert!(
+            result.is_err(),
+            "Invalid base58 characters should be rejected"
+        );
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Invalid pubkey format")
+        );
+    }
+
+    #[test]
+    fn test_validate_proposal_filter_valid() {
+        let result = validate_proposal_filter("active");
+        assert!(result.is_ok(), "Valid filter should be accepted");
+    }
+
+    #[test]
+    fn test_validate_proposal_filter_invalid() {
+        let result = validate_proposal_filter("invalid");
+        assert!(result.is_err(), "Invalid filter should be rejected");
+
+        let error_msg = result.unwrap_err();
+        assert!(error_msg.to_string().contains("Invalid filter"));
+        assert!(error_msg.to_string().contains("active"));
+    }
+
+    #[test]
+    fn test_validate_proposal_filter_case_sensitive() {
+        let result = validate_proposal_filter("Active");
+        assert!(
+            result.is_err(),
+            "Case-sensitive filter should reject uppercase"
+        );
+    }
+
+    #[test]
+    fn test_validate_limit_valid() {
+        assert!(validate_limit(1).is_ok(), "Limit of 1 should be valid");
+        assert!(validate_limit(100).is_ok(), "Limit of 100 should be valid");
+        assert!(
+            validate_limit(1000).is_ok(),
+            "Limit of 1000 should be valid"
+        );
+    }
+
+    #[test]
+    fn test_validate_limit_zero() {
+        let result = validate_limit(0);
+        assert!(result.is_err(), "Zero limit should be rejected");
+        assert!(result.unwrap_err().to_string().contains("greater than 0"));
+    }
+
+    #[test]
+    fn test_validate_limit_too_large() {
+        let result = validate_limit(1001);
+        assert!(result.is_err(), "Limit > 1000 should be rejected");
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("cannot exceed 1000")
+        );
+    }
+
+    #[test]
+    fn test_validate_limit_boundary_values() {
+        // Test edge cases
+        assert!(validate_limit(999).is_ok(), "Limit of 999 should be valid");
+        assert!(
+            validate_limit(1001).is_err(),
+            "Limit of 1001 should be invalid"
+        );
+    }
 }

@@ -1,13 +1,9 @@
 use anchor_lang::{
     prelude::*,
     solana_program::{
-        borsh0_10::try_from_slice_unchecked,
-        epoch_stake::get_epoch_total_stake,
-        vote::{program as vote_program, state::VoteState},
+        epoch_stake::get_epoch_total_stake
     },
 };
-
-use gov_v1::{ConsensusResult, MetaMerkleProof};
 
 use crate::{
     constants::*,
@@ -17,7 +13,13 @@ use crate::{
     state::{Proposal, Support},
 };
 
+#[cfg(feature = "production")]
+use gov_v1::{ConsensusResult, MetaMerkleProof, ID as GOV_V1_ID };
+#[cfg(feature = "testing")]
+use mock_gov_v1::{ConsensusResult, MetaMerkleProof, ID as GOV_V1_ID };
+
 #[derive(Accounts)]
+#[instruction(spl_vote_account: Pubkey)]
 pub struct SupportProposal<'info> {
     #[account(mut)]
     pub signer: Signer<'info>, // Proposal supporter (validator)
@@ -27,70 +29,36 @@ pub struct SupportProposal<'info> {
         init,
         payer = signer,
         space = 8 + Support::INIT_SPACE,
-        seeds = [b"support", proposal.key().as_ref(), spl_vote_account.key().as_ref()],
+        seeds = [b"support", proposal.key().as_ref(), spl_vote_account.as_ref()],
         bump
     )]
     pub support: Account<'info, Support>, // New support account
-    /// CHECK: Vote account is too big to deserialize, so we check on owner and size, then compare node_pubkey with signer
-    #[account(
-        constraint = spl_vote_account.owner == &vote_program::ID @ ProgramError::InvalidAccountOwner,
-        constraint = spl_vote_account.data_len() == VoteState::size_of() @ GovernanceError::InvalidVoteAccountSize
-    )]
-    pub spl_vote_account: UncheckedAccount<'info>,
     /// CHECK: The snapshot program (gov-v1 or mock)
+    #[account(
+        constraint = snapshot_program.key == &GOV_V1_ID @ GovernanceError::InvalidSnapshotProgram
+    )]
     pub snapshot_program: UncheckedAccount<'info>,
-    /// CHECK: Consensus result account owned by snapshot program
-    pub consensus_result: UncheckedAccount<'info>,
-    /// CHECK: Meta merkle proof account owned by snapshot program
-    pub meta_merkle_proof: UncheckedAccount<'info>,
+    pub consensus_result: Account<'info, ConsensusResult>,
+    pub meta_merkle_proof: Account<'info, MetaMerkleProof>,
     pub system_program: Program<'info, System>,
 }
 
 impl<'info> SupportProposal<'info> {
-    pub fn support_proposal(&mut self, bumps: &SupportProposalBumps) -> Result<()> {
+    pub fn support_proposal(&mut self, spl_vote_account: Pubkey, bumps: &SupportProposalBumps) -> Result<()> {
         // Ensure proposal is eligible for support
         require!(!self.proposal.voting, GovernanceError::ProposalClosed);
         require!(!self.proposal.finalized, GovernanceError::ProposalFinalized);
 
-        // Validate snapshot program ownership
         require!(
-            self.consensus_result.owner == self.snapshot_program.key,
-            GovernanceError::MustBeOwnedBySnapshotProgram
-        );
-        require!(
-            self.meta_merkle_proof.owner == self.snapshot_program.key,
-            GovernanceError::MustBeOwnedBySnapshotProgram
-        );
-
-        let consensus_result_data = self.consensus_result.try_borrow_data()?;
-        let consensus_result = try_from_slice_unchecked::<ConsensusResult>(&consensus_result_data[8..])
-            .map_err(|e| {
-                msg!("Error deserializing ConsensusResult: {}", e);
-                GovernanceError::CantDeserializeConsensusResult
-            })?;
-
-        require!(
-            consensus_result.ballot.meta_merkle_root == self.proposal.merkle_root_hash.unwrap(),
+            self.consensus_result.ballot.meta_merkle_root == self.proposal.meta_merkle_root.unwrap_or_default(),
             GovernanceError::InvalidMerkleRoot
         );
 
-        // Deserialize MetaMerkleProof for crosschecking
-        let account_data = self.meta_merkle_proof.try_borrow_data()?;
-        let meta_merkle_proof = try_from_slice_unchecked::<MetaMerkleProof>(&account_data[8..])
-            .map_err(|e| {
-                msg!("Error deserializing MetaMerkleProof: {}", e);
-                GovernanceError::CantDeserializeMMPPDA
-            })?;
-        // let meta_merkle_proof = MetaMerkleProof::try_from_slice(&account_data[8..])
-        //     .map_err(|e| {
-        //         msg!("Error deserializing MetaMerkleProof: {}", e);
-        //         GovernanceError::CantDeserializeMMPPDA
-        //     })?;
-        let meta_merkle_leaf = meta_merkle_proof.meta_merkle_leaf;
+        let meta_merkle_leaf = &self.meta_merkle_proof.meta_merkle_leaf;
 
         // Crosscheck consensus result
         require_eq!(
-            meta_merkle_proof.consensus_result,
+            self.meta_merkle_proof.consensus_result,
             self.consensus_result.key(),
             GovernanceError::InvalidConsensusResultPDA
         );

@@ -612,6 +612,7 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "gov-v1",
+ "mock_gov_v1",
 ]
 
 [[package]]

@@ -1,5 +1,5 @@
 {
-  "address": "GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc",
+  "address": "AXnkQnEEMBsKcJ1gSXP1aW6tZMGWodzEaoB6b3bRib2r",
   "metadata": {
     "name": "govcontract",
     "version": "0.1.0",
@@ -28,19 +28,12 @@
         {
           "name": "proposal",
           "writable": true
+        },
+        {
+          "name": "consensus_result"
         }
       ],
-      "args": [
-        {
-          "name": "merkle_root_hash",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        }
-      ]
+      "args": []
     },
     {
       "name": "cast_vote",
@@ -83,14 +76,11 @@
                 "path": "proposal"
               },
               {
-                "kind": "account",
+                "kind": "arg",
                 "path": "spl_vote_account"
               }
             ]
           }
-        },
-        {
-          "name": "spl_vote_account"
         },
         {
           "name": "snapshot_program"
@@ -107,6 +97,10 @@
         }
       ],
       "args": [
+        {
+          "name": "spl_vote_account",
+          "type": "pubkey"
+        },
         {
           "name": "for_votes_bp",
           "type": "u64"
@@ -162,14 +156,11 @@
                 "path": "proposal"
               },
               {
-                "kind": "account",
+                "kind": "arg",
                 "path": "spl_vote_account"
               }
             ]
           }
-        },
-        {
-          "name": "spl_vote_account"
         },
         {
           "name": "vote_override",
@@ -199,7 +190,7 @@
                 "path": "proposal"
               },
               {
-                "kind": "account",
+                "kind": "arg",
                 "path": "spl_stake_account"
               },
               {
@@ -208,9 +199,6 @@
               }
             ]
           }
-        },
-        {
-          "name": "spl_stake_account"
         },
         {
           "name": "snapshot_program"
@@ -227,6 +215,14 @@
         }
       ],
       "args": [
+        {
+          "name": "spl_vote_account",
+          "type": "pubkey"
+        },
+        {
+          "name": "spl_stake_account",
+          "type": "pubkey"
+        },
         {
           "name": "for_votes_bp",
           "type": "u64"
@@ -327,15 +323,6 @@
         },
         {
           "name": "spl_vote_account"
-        },
-        {
-          "name": "snapshot_program"
-        },
-        {
-          "name": "consensus_result"
-        },
-        {
-          "name": "meta_merkle_proof"
         },
         {
           "name": "system_program",
@@ -474,14 +461,11 @@
                 "path": "proposal"
               },
               {
-                "kind": "account",
+                "kind": "arg",
                 "path": "spl_vote_account"
               }
             ]
           }
-        },
-        {
-          "name": "spl_vote_account"
         },
         {
           "name": "snapshot_program"
@@ -498,6 +482,10 @@
         }
       ],
       "args": [
+        {
+          "name": "spl_vote_account",
+          "type": "pubkey"
+        },
         {
           "name": "for_votes_bp",
           "type": "u64"
@@ -556,8 +544,8 @@
                 "path": "proposal"
               },
               {
-                "kind": "account",
-                "path": "signer"
+                "kind": "arg",
+                "path": "spl_vote_account"
               }
             ]
           }
@@ -576,10 +564,41 @@
           "address": "11111111111111111111111111111111"
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "spl_vote_account",
+          "type": "pubkey"
+        }
+      ]
     }
   ],
   "accounts": [
+    {
+      "name": "ConsensusResult",
+      "discriminator": [
+        105,
+        121,
+        122,
+        243,
+        100,
+        58,
+        93,
+        161
+      ]
+    },
+    {
+      "name": "MetaMerkleProof",
+      "discriminator": [
+        130,
+        55,
+        141,
+        26,
+        195,
+        58,
+        18,
+        178
+      ]
+    },
     {
       "name": "Proposal",
       "discriminator": [
@@ -743,155 +762,210 @@
     {
       "code": 6000,
       "name": "NotEnoughStake",
-      "msg": "Minimum stake required to create proposal is 100k"
+      "msg": "Not enough stake for the instruction"
     },
     {
       "code": 6001,
-      "name": "TitleTooLong",
-      "msg": "The title of the proposal is too long, max 50 char"
+      "name": "TitleEmpty",
+      "msg": "The title of the proposal cannot be empty"
     },
     {
       "code": 6002,
-      "name": "DescriptionTooLong",
-      "msg": "The description of the proposal is too long, max 250 char"
+      "name": "TitleTooLong",
+      "msg": "The title of the proposal is too long, max {MAX_TITLE_LENGTH} char"
     },
     {
       "code": 6003,
+      "name": "DescriptionEmpty",
+      "msg": "The description of the proposal cannot be empty"
+    },
+    {
+      "code": 6004,
+      "name": "DescriptionTooLong",
+      "msg": "The description of the proposal is too long, max {MAX_DESCRIPTION_LENGTH} char"
+    },
+    {
+      "code": 6005,
       "name": "DescriptionInvalid",
       "msg": "The description of the proposal must point to a github link"
     },
     {
-      "code": 6004,
-      "name": "InvalidProposalId",
-      "msg": "Invalid proposal ID"
-    },
-    {
-      "code": 6005,
+      "code": 6006,
       "name": "VotingNotStarted",
       "msg": "Voting on proposal not yet started"
     },
     {
-      "code": 6006,
+      "code": 6007,
       "name": "ProposalClosed",
       "msg": "Proposal closed"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "ProposalFinalized",
       "msg": "Proposal finalized"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "InvalidVoteDistribution",
       "msg": "Vote distribution must add up to 100% in Basis Points"
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "VotingPeriodNotEnded",
       "msg": "Voting period not yet ended"
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "InvalidVoteAccount",
       "msg": "Invalid vote account, proposal id mismatch"
     },
     {
-      "code": 6011,
-      "name": "FailedDeserializeNodePubkey",
-      "msg": "Failed to deserialize node_pubkey from Vote account"
-    },
-    {
       "code": 6012,
-      "name": "VoteNodePubkeyMismatch",
-      "msg": "Deserialized node_pubkey from Vote accounts does not match"
-    },
-    {
-      "code": 6013,
-      "name": "NotEnoughAccounts",
-      "msg": "Not enough accounts for tally"
-    },
-    {
-      "code": 6014,
-      "name": "InvalidClusterStake",
-      "msg": "Cluster stake cannot be zero"
-    },
-    {
-      "code": 6015,
       "name": "InvalidStartEpoch",
       "msg": "Start epoch must be current or future epoch"
     },
     {
-      "code": 6016,
+      "code": 6013,
       "name": "InvalidVotingLength",
       "msg": "Voting length must be bigger than 0"
     },
     {
-      "code": 6017,
-      "name": "InvalidVoteAccountVersion",
-      "msg": "Invalid Vote account version"
-    },
-    {
-      "code": 6018,
+      "code": 6014,
       "name": "InvalidVoteAccountSize",
       "msg": "Invalid Vote account size"
     },
     {
-      "code": 6019,
-      "name": "AllVotesCount",
-      "msg": "All votes cast on the proposal must be counted to finalize"
-    },
-    {
-      "code": 6020,
+      "code": 6015,
       "name": "InvalidStakeAccount",
       "msg": "Stake account invalid"
     },
     {
-      "code": 6021,
-      "name": "InvalidStakeState",
-      "msg": "Stake account invalid"
-    },
-    {
-      "code": 6022,
-      "name": "InvalidStakeAccountSize",
-      "msg": "Invalid Stake account size"
-    },
-    {
-      "code": 6023,
-      "name": "InvalidSnapshotProgram",
-      "msg": "Invalid Snapshot program: provided program ID does not match the expected Merkle Verifier Service program"
-    },
-    {
-      "code": 6024,
+      "code": 6016,
       "name": "UnauthorizedMerkleRootUpdate",
       "msg": "Only the original proposal author can add the merkle root hash"
     },
     {
-      "code": 6025,
+      "code": 6017,
       "name": "MerkleRootAlreadySet",
       "msg": "Merkle root hash is already set for this proposal"
     },
     {
-      "code": 6026,
+      "code": 6018,
       "name": "InvalidMerkleRoot",
       "msg": "Merkle root hash cannot be all zeros"
     },
     {
-      "code": 6027,
-      "name": "InvalidSnapshotSlot",
-      "msg": "Invalid snapshot slot: snapshot slot must be less past or current slot"
-    },
-    {
-      "code": 6028,
+      "code": 6019,
       "name": "MustBeOwnedBySnapshotProgram",
       "msg": "Account must be owned by Snapshot program"
     },
     {
-      "code": 6029,
+      "code": 6020,
       "name": "InvalidConsensusResultPDA",
       "msg": "Invalid consensus result PDA"
+    },
+    {
+      "code": 6021,
+      "name": "CantDeserializeMMPPDA",
+      "msg": "Can't deserialize MetaMerkleProof PDA"
+    },
+    {
+      "code": 6022,
+      "name": "CantDeserializeConsensusResult",
+      "msg": "Can't deserialize ConsensusResult"
+    },
+    {
+      "code": 6023,
+      "name": "CannotModifyAfterStart",
+      "msg": "Cannot modify proposal after voting has started"
+    },
+    {
+      "code": 6024,
+      "name": "VotingLengthTooLong",
+      "msg": "Voting length exceeds maximum allowed epochs ({MAX_VOTING_EPOCHS})"
+    },
+    {
+      "code": 6025,
+      "name": "ArithmeticOverflow",
+      "msg": "Arithmetic overflow occurred"
+    },
+    {
+      "code": 6026,
+      "name": "InvalidSnapshotProgram",
+      "msg": "Invalid snapshot program"
+    },
+    {
+      "code": 6027,
+      "name": "SnapshotProgramUpgraded",
+      "msg": "Snapshot program has been upgraded, update protection triggered"
+    },
+    {
+      "code": 6028,
+      "name": "ValidatorAlreadyVoted",
+      "msg": "Validator has already voted; use modify_vote to change"
+    },
+    {
+      "code": 6029,
+      "name": "ValidatorHasNotVoted",
+      "msg": "Validator has not voted yet; use cast_vote first"
     }
   ],
   "types": [
+    {
+      "name": "Ballot",
+      "docs": [
+        "Inner struct of BallotBox"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "meta_merkle_root",
+            "docs": [
+              "The merkle root of the meta merkle tree"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "snapshot_hash",
+            "docs": [
+              "SHA256 hash of borsh serialized snapshot. Optional."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ConsensusResult",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "ballot_id",
+            "type": "u64"
+          },
+          {
+            "name": "ballot",
+            "type": {
+              "defined": {
+                "name": "Ballot"
+              }
+            }
+          }
+        ]
+      }
+    },
     {
       "name": "MerkleRootAdded",
       "type": {
@@ -913,6 +987,87 @@
                 32
               ]
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "MetaMerkleLeaf",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "voting_wallet",
+            "docs": [
+              "Wallet designated for governance voting for the vote account."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "vote_account",
+            "docs": [
+              "Validator's vote account."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "stake_merkle_root",
+            "docs": [
+              "Root hash of the StakeMerkleTree, representing all active stake accounts",
+              "delegated to the current vote account."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "active_stake",
+            "docs": [
+              "Total active delegated stake under this vote account."
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MetaMerkleProof",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "payer",
+            "type": "pubkey"
+          },
+          {
+            "name": "consensus_result",
+            "type": "pubkey"
+          },
+          {
+            "name": "meta_merkle_leaf",
+            "type": {
+              "defined": {
+                "name": "MetaMerkleLeaf"
+              }
+            }
+          },
+          {
+            "name": "meta_merkle_proof",
+            "type": {
+              "vec": {
+                "array": [
+                  "u8",
+                  32
+                ]
+              }
+            }
+          },
+          {
+            "name": "close_timestamp",
+            "type": "i64"
           }
         ]
       }
@@ -1003,7 +1158,7 @@
             "type": "u32"
           },
           {
-            "name": "merkle_root_hash",
+            "name": "meta_merkle_root",
             "docs": [
               "Merkle root hash representing the snapshot of validator stakes at proposal creation"
             ],
@@ -1014,6 +1169,12 @@
                   32
                 ]
               }
+            }
+          },
+          {
+            "name": "consensus_result_pda",
+            "type": {
+              "option": "pubkey"
             }
           },
           {
@@ -1239,6 +1400,10 @@
           {
             "name": "vote_timestamp",
             "type": "i64"
+          },
+          {
+            "name": "has_voted",
+            "type": "bool"
           },
           {
             "name": "bump",

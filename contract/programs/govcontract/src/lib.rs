@@ -9,7 +9,10 @@ mod constants;
 use anchor_lang::prelude::*;
 use instructions::*;
 
+#[cfg(feature = "production")]
 use gov_v1::StakeMerkleLeaf;
+#[cfg(feature = "testing")]
+use mock_gov_v1::StakeMerkleLeaf;
 
 // declare_id!("GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc");
 declare_id!("AXnkQnEEMBsKcJ1gSXP1aW6tZMGWodzEaoB6b3bRib2r");
@@ -41,8 +44,8 @@ pub mod govcontract {
         Ok(())
     }
 
-    pub fn support_proposal(ctx: Context<SupportProposal>) -> Result<()> {
-        ctx.accounts.support_proposal(&ctx.bumps)?;
+    pub fn support_proposal(ctx: Context<SupportProposal>, spl_vote_account: Pubkey) -> Result<()> {
+        ctx.accounts.support_proposal(spl_vote_account, &ctx.bumps)?;
         Ok(())
     }
 
@@ -53,16 +56,16 @@ pub mod govcontract {
 
     pub fn cast_vote(
         ctx: Context<CastVote>,
+        spl_vote_account: Pubkey,
         for_votes_bp: u64,
         against_votes_bp: u64,
         abstain_votes_bp: u64,
-        // meta_merkle_leaf: MetaMerkleLeaf,
     ) -> Result<()> {
         ctx.accounts.cast_vote(
+            spl_vote_account,
             for_votes_bp,
             against_votes_bp,
             abstain_votes_bp,
-            // meta_merkle_leaf,
             &ctx.bumps,
         )?;
         Ok(())
@@ -70,17 +73,20 @@ pub mod govcontract {
 
     pub fn modify_vote(
         ctx: Context<ModifyVote>,
+        spl_vote_account: Pubkey,
         for_votes_bp: u64,
         against_votes_bp: u64,
         abstain_votes_bp: u64,
     ) -> Result<()> {
         ctx.accounts
-            .modify_vote(for_votes_bp, against_votes_bp, abstain_votes_bp)?;
+            .modify_vote(spl_vote_account, for_votes_bp, against_votes_bp, abstain_votes_bp, &ctx.bumps)?;
         Ok(())
     }
 
     pub fn cast_vote_override(
         ctx: Context<CastVoteOverride>,
+        spl_vote_account: Pubkey,
+        spl_stake_account: Pubkey,
         for_votes_bp: u64,
         against_votes_bp: u64,
         abstain_votes_bp: u64,
@@ -88,6 +94,8 @@ pub mod govcontract {
         stake_merkle_leaf: StakeMerkleLeaf,
     ) -> Result<()> {
         ctx.accounts.cast_vote_override(
+            spl_vote_account,
+            spl_stake_account,
             for_votes_bp,
             against_votes_bp,
             abstain_votes_bp,
@@ -98,8 +106,8 @@ pub mod govcontract {
         Ok(())
     }
 
-    pub fn add_merkle_root(ctx: Context<AddMerkleRoot>, merkle_root_hash: [u8; 32]) -> Result<()> {
-        ctx.accounts.add_merkle_root(merkle_root_hash)?;
+    pub fn add_merkle_root(ctx: Context<AddMerkleRoot>) -> Result<()> {
+        ctx.accounts.add_merkle_root()?;
         Ok(())
     }
 

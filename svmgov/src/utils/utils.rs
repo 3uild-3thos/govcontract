@@ -1,16 +1,7 @@
-use std::{
-    collections::HashMap,
-    fmt,
-    fs,
-    str::FromStr,
-    sync::Arc,
-    time::Duration,
-};
+use std::{collections::HashMap, fmt, fs, str::FromStr, sync::Arc, time::Duration};
 
 use anchor_client::{
-    Client,
-    Cluster,
-    Program,
+    Client, Cluster, Program,
     solana_account_decoder::UiAccountEncoding,
     solana_client::{
         nonblocking::rpc_client::RpcClient,
@@ -26,16 +17,26 @@ use anchor_client::{
     },
 };
 use anchor_lang::{AnchorDeserialize, Id, prelude::Pubkey};
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use chrono::prelude::*;
 use indicatif::{ProgressBar, ProgressStyle};
 use textwrap::wrap;
 
 use crate::{
     constants::*,
+    gov_v1::{
+        client::{accounts as gov_v1_accounts, args as gov_v1_args},
+    },
     govcontract::{
+        self,
         accounts::{Proposal, Vote},
         program::Govcontract,
+    },
+    utils::{
+        api_helpers::{
+            VoteAccountProofAPI, convert_merkle_proof_strings, derive_meta_merkle_proof_pda,
+        },
+        commands::validate_proposal_exists,
     },
 };
 
@@ -53,38 +54,23 @@ pub fn create_spinner(message: &str) -> ProgressBar {
     spinner
 }
 
-pub async fn setup_all(
-    keypair_path: Option<String>,
+pub async fn program_setup_govcontract(
+    identity_keypair: Arc<Keypair>,
     rpc_url: Option<String>,
-) -> Result<(Arc<Keypair>, Pubkey, Program<Arc<Keypair>>)> {
-    // Step 1: Load the identity keypair
-    let identity_keypair = load_identity_keypair(keypair_path)?;
-    let identity_keypair_arc = Arc::new(identity_keypair);
-
-    // Step 2: Set the cluster
+) -> Result<Program<Arc<Keypair>>> {
     let cluster = set_cluster(rpc_url);
-
-    // Step 3: Create the Anchor client and program
-    let client = Client::new(cluster.clone(), identity_keypair_arc.clone());
+    let client = Client::new(cluster, identity_keypair.clone());
     let program = client.program(Govcontract::id())?;
 
-    // Step 4: Find the vote account using the program's RpcClient
-    let rpc_client = program.rpc();
-    let validator_identity = identity_keypair_arc.pubkey();
-    let vote_account = find_spl_vote_account(&validator_identity, &rpc_client).await?;
-
-    // Step 5: Log the setup completion
     log::debug!(
-        "setup_all completed successfully: payer_pubkey={}, vote_account={}",
-        identity_keypair_arc.pubkey(),
-        vote_account
+        "program_setup_govcontract completed successfully: program_pubkey={}",
+        program.id(),
     );
 
-    // Return all variables
-    Ok((identity_keypair_arc, vote_account, program))
+    Ok(program)
 }
 
-fn load_identity_keypair(keypair_path: Option<String>) -> Result<Keypair> {
+pub fn load_identity_keypair(keypair_path: Option<String>) -> Result<Arc<Keypair>> {
     // Check if the keypair path is provided
     let identity_keypair_path = if let Some(path) = keypair_path {
         path
@@ -129,10 +115,10 @@ fn load_identity_keypair(keypair_path: Option<String>) -> Result<Keypair> {
         identity_keypair.pubkey()
     );
 
-    Ok(identity_keypair)
+    Ok(Arc::new(identity_keypair))
 }
 
-async fn find_spl_vote_account(
+pub async fn find_spl_vote_account(
     validator_identity: &Pubkey,
     rpc_client: &RpcClient,
 ) -> Result<Pubkey> {
@@ -207,59 +193,6 @@ pub async fn find_spl_vote_accounts(
     Ok(spl_vote_pubkeys)
 }
 
-/// Returns stake pubkey + vote pubkey + validator pubkey + stake amount
-pub(crate) async fn find_delegator_stake_accounts(
-    withdraw_authority: &Pubkey,
-    rpc_client: &RpcClient,
-) -> Result<Vec<(Pubkey, Pubkey, u64)>> {
-    let filters = vec![
-        RpcFilterType::DataSize(STAKE_ACCOUNT_DATA_SIZE),
-        RpcFilterType::Memcmp(Memcmp::new(
-            STAKE_ACCOUNT_WITHDRAW_AUTHORITY_OFFSET,
-            MemcmpEncodedBytes::Bytes(withdraw_authority.to_bytes().to_vec()),
-        )),
-    ];
-
-    let config = RpcProgramAccountsConfig {
-        filters: Some(filters),
-        account_config: RpcAccountInfoConfig {
-            encoding: Some(UiAccountEncoding::JsonParsed),
-            commitment: Some(CommitmentConfig {
-                commitment: CommitmentLevel::Finalized,
-            }),
-            ..RpcAccountInfoConfig::default()
-        },
-        with_context: None,
-        sort_results: Some(true),
-    };
-
-    let accounts = rpc_client
-        .get_program_accounts_with_config(&stake::program::id(), config)
-        .await?;
-
-    let mut stakes = vec![];
-
-    for (stake_pubkey, account) in accounts {
-        if let Ok(StakeStateV2::Stake(_meta, stake, _flags)) =
-            StakeStateV2::deserialize(&mut &account.data[..])
-        {
-            if stake.delegation.stake > 0 && stake.delegation.deactivation_epoch == u64::MAX {
-                stakes.push((
-                    stake_pubkey,
-                    stake.delegation.voter_pubkey,
-                    stake.delegation.stake,
-                ));
-            }
-        }
-    }
-
-    if stakes.is_empty() {
-        return Err(anyhow!("No active stake accounts found for this delegator"));
-    }
-
-    Ok(stakes)
-}
-
 fn set_cluster(rpc_url: Option<String>) -> Cluster {
     if let Some(rpc_url) = rpc_url {
         let wss_url = rpc_url.replace("https://", "wss://");
@@ -269,16 +202,85 @@ fn set_cluster(rpc_url: Option<String>) -> Cluster {
     }
 }
 
-pub fn anchor_client_setup(
+/// Initialize a MetaMerkleProof PDA for the gov-v1 program
+/// This is required before the contract can verify merkle proofs
+pub async fn ensure_meta_merkle_proof_initialized(
+    proposal_id: &str,
+    validator_vote_proof: &VoteAccountProofAPI,
+    close_timestamp: i64,
+    identity_keypair: Arc<Keypair>,
     rpc_url: Option<String>,
-    payer: Arc<Keypair>,
+) -> Result<(Pubkey, Pubkey)> {
+    log::debug!("Ensuring MetaMerkleProof PDA is initialized...");
+
+    let proposal = validate_proposal_exists(proposal_id, rpc_url.clone()).await?;
+    let gov_v1_program = program_setup_gov_v1(identity_keypair.clone(), rpc_url).await?;
+    let consensus_result_pda = proposal
+        .consensus_result_pda
+        .ok_or(anyhow!("Consensus result PDA not found"))?;
+    // let consensus_result_data: ConsensusResult = gov_v1_program.account::<ConsensusResult>(consensus_result_pda).await?;
+
+    // Convert base58 proof strings to bytes
+    let meta_merkle_proof_bytes =
+        convert_merkle_proof_strings(&validator_vote_proof.meta_merkle_proof)?;
+
+    let meta_merkle_proof_pda = derive_meta_merkle_proof_pda(
+        &consensus_result_pda,
+        &Pubkey::from_str(&validator_vote_proof.meta_merkle_leaf.vote_account)?,
+    )?;
+
+    // Check if the PDA already exists
+    if gov_v1_program
+        .rpc()
+        .get_account(&meta_merkle_proof_pda)
+        .await
+        .is_ok()
+    {
+        log::debug!("MetaMerkleProof PDA already exists, skipping initialization");
+        return Ok((consensus_result_pda, meta_merkle_proof_pda));
+    }
+
+    let spinner = create_spinner("Initializing MetaMerkleProof PDA...");
+
+    // Call the gov-v1 program's init_meta_merkle_proof instruction
+    let sig = gov_v1_program
+        .request()
+        .accounts(gov_v1_accounts::InitMetaMerkleProof {
+            payer: identity_keypair.pubkey(),
+            merkle_proof: meta_merkle_proof_pda,
+            consensus_result: consensus_result_pda,
+            system_program: anchor_lang::system_program::ID,
+        })
+        .args(gov_v1_args::InitMetaMerkleProof {
+            meta_merkle_leaf: (&validator_vote_proof.meta_merkle_leaf).try_into()?,
+            meta_merkle_proof: meta_merkle_proof_bytes,
+            close_timestamp,
+        })
+        .send()
+        .await?;
+
+    log::debug!("MetaMerkleProof PDA initialized: signature={}", sig);
+
+    spinner.finish_with_message(format!(
+        "MetaMerkleProof PDA initialized. https://explorer.solana.com/tx/{}",
+        sig
+    ));
+
+    Ok((consensus_result_pda, meta_merkle_proof_pda))
+}
+
+/// Setup gov_v1 program anchor client
+pub async fn program_setup_gov_v1(
+    identity_keypair: Arc<Keypair>,
+    rpc_url: Option<String>,
 ) -> Result<Program<Arc<Keypair>>> {
     // Set up the cluster
     let cluster = set_cluster(rpc_url);
 
-    // Create the Anchor client
-    let client = Client::new(cluster, payer.clone());
-    let program = client.program(Govcontract::id())?;
+    // Create the Anchor client for gov-v1 program
+    let client = Client::new(cluster, identity_keypair.clone());
+    let program = client.program(gov_v1::ID)?;
+
     Ok(program)
 }
 
@@ -400,54 +402,50 @@ impl fmt::Display for Vote {
     }
 }
 
-pub fn derive_vote_pda(
-    proposal_pubkey: &Pubkey,
-    vote_account: &Pubkey,
-    program_id: &Pubkey,
-) -> Pubkey {
-    let seeds = &[b"vote", proposal_pubkey.as_ref(), vote_account.as_ref()];
-    let (pda, _) = Pubkey::find_program_address(seeds, program_id);
-    pda
+pub fn derive_vote_pda(proposal_pubkey: &Pubkey, validator_spl_vote_pubkey: &Pubkey) -> Pubkey {
+    let seeds = &[
+        b"vote",
+        proposal_pubkey.as_ref(),
+        validator_spl_vote_pubkey.as_ref(),
+    ];
+    Pubkey::find_program_address(seeds, &govcontract::ID).0
 }
 
-pub fn derive_proposal_pda(seed: u64, vote_account: &Pubkey, program_id: &Pubkey) -> Pubkey {
-    let seeds = &[b"proposal", &seed.to_le_bytes(), vote_account.as_ref()];
-    let (pda, _) = Pubkey::find_program_address(seeds, program_id);
-    pda
+pub fn derive_proposal_pda(seed: u64, validator_spl_vote_pubkey: &Pubkey) -> Pubkey {
+    let seeds = &[
+        b"proposal",
+        &seed.to_le_bytes(),
+        validator_spl_vote_pubkey.as_ref(),
+    ];
+    Pubkey::find_program_address(seeds, &govcontract::ID).0
 }
 
-pub fn derive_proposal_index_pda(program_id: &Pubkey) -> Pubkey {
-    let seeds = &[&b"index"[..]];
-    let (pda, _) = Pubkey::find_program_address(seeds, program_id);
-    pda
+pub fn derive_proposal_index_pda() -> Pubkey {
+    let seeds: &[&[u8]] = &[b"index"];
+    Pubkey::find_program_address(seeds, &govcontract::ID).0
 }
 
-pub fn derive_support_pda(
-    proposal_pubkey: &Pubkey,
-    validator_pubkey: &Pubkey,
-    program_id: &Pubkey,
-) -> Pubkey {
+/// Derive the support PDA for a given proposal and validator SPL vote account
+pub fn derive_support_pda(proposal_pubkey: &Pubkey, validator_spl_vote_pubkey: &Pubkey) -> Pubkey {
     let seeds = &[
         b"support",
         proposal_pubkey.as_ref(),
-        validator_pubkey.as_ref(),
+        validator_spl_vote_pubkey.as_ref(),
     ];
-    let (pda, _) = Pubkey::find_program_address(seeds, program_id);
-    pda
+    Pubkey::find_program_address(seeds, &govcontract::ID).0
 }
 
+/// Derive the vote override PDA for a given proposal, delegator stake account, and validator vote account
 pub fn derive_vote_override_pda(
     proposal_pubkey: &Pubkey,
-    stake_account: &Pubkey,
+    delegator_spl_stake_account: &Pubkey,
     validator_vote_pda: &Pubkey,
-    program_id: &Pubkey,
 ) -> Pubkey {
     let seeds = &[
         b"vote_override",
         proposal_pubkey.as_ref(),
-        stake_account.as_ref(),
+        delegator_spl_stake_account.as_ref(),
         validator_vote_pda.as_ref(),
     ];
-    let (pda, _) = Pubkey::find_program_address(seeds, program_id);
-    pda
+    Pubkey::find_program_address(seeds, &govcontract::ID).0
 }

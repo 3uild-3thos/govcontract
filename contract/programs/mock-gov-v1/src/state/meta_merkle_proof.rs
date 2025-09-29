@@ -16,7 +16,7 @@ pub struct MetaMerkleProof {
 }
 
 impl MetaMerkleProof {
-    pub fn init_space(meta_merkle_proof: &Vec<[u8; 32]>) -> usize {
+    pub fn init_space(meta_merkle_proof: &[[u8; 32]]) -> usize {
         8 +  // discriminator
         32 + // payer
         32 + // consensus_result

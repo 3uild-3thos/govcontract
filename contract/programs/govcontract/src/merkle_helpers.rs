@@ -1,6 +1,13 @@
 use anchor_lang::prelude::*;
 
+#[cfg(feature = "production")]
 use gov_v1::{
+    cpi::{accounts::VerifyMerkleProof, verify_merkle_proof},
+    StakeMerkleLeaf,
+};
+
+#[cfg(feature = "testing")]
+use mock_gov_v1::{
     cpi::{accounts::VerifyMerkleProof, verify_merkle_proof},
     StakeMerkleLeaf,
 };
@@ -21,7 +28,6 @@ pub fn verify_merkle_proof_cpi<'info>(
 
     let cpi_ctx = CpiContext::new(gov_v1_program.clone(), cpi_accounts);
 
-    // Call verify_merkle_proof from gov-v1 program
     verify_merkle_proof(cpi_ctx, stake_merkle_proof, stake_merkle_leaf)?;
 
     Ok(())

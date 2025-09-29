@@ -1,15 +1,14 @@
-use std::str::FromStr;
-
-use anchor_client::solana_sdk::{pubkey::Pubkey, signer::Signer};
+use anchor_client::solana_sdk::signer::Signer;
 use anchor_lang::system_program;
 use anyhow::Result;
-use gov_v1::ID as SNAPSHOT_PROGRAM_ID;
 
 use crate::{
     govcontract::client::{accounts, args},
     utils::{
-        api_helpers::{generate_pdas_from_vote_proof_response, get_vote_account_proof},
-        utils::{create_spinner, derive_proposal_index_pda, derive_proposal_pda, setup_all},
+        utils::{
+            create_spinner, derive_proposal_index_pda, derive_proposal_pda, load_identity_keypair,
+            program_setup_govcontract, find_spl_vote_account,
+        },
     },
 };
 
@@ -33,27 +32,17 @@ pub async fn create_proposal(
         length
     );
 
-    let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
+    let identity_keypair = load_identity_keypair(identity_keypair)?;
+
+    let program = program_setup_govcontract(identity_keypair.clone(), rpc_url.clone()).await?;
+    
+    let spl_vote_account = find_spl_vote_account(&identity_keypair.pubkey(), &program.rpc()).await?;
 
     let seed_value = seed.unwrap_or_else(rand::random::<u64>);
 
-    let proposal_pda = derive_proposal_pda(seed_value, &vote_account, &program.id());
+    let proposal_pda = derive_proposal_pda(seed_value, &spl_vote_account);
 
-    let proposal_index_pda = derive_proposal_index_pda(&program.id());
-
-    let proof_response = get_vote_account_proof(&vote_account.to_string(), None).await?;
-
-    let (consensus_result_pda, meta_merkle_proof_pda) =
-        generate_pdas_from_vote_proof_response(&proof_response)?;
-    let voting_wallet = Pubkey::from_str(&proof_response.meta_merkle_leaf.voting_wallet)
-        .map_err(|e| anyhow::anyhow!("Invalid voting wallet in proof: {}", e))?;
-    if voting_wallet != payer.pubkey() {
-        return Err(anyhow::anyhow!(
-            "Voting wallet in proof ({}) doesn't match signer ({})",
-            voting_wallet,
-            payer.pubkey()
-        ));
-    }
+    let proposal_index_pda = derive_proposal_index_pda();
 
     let spinner = create_spinner("Creating proposal...");
 
@@ -67,13 +56,10 @@ pub async fn create_proposal(
             seed: seed_value,
         })
         .accounts(accounts::CreateProposal {
-            signer: payer.pubkey(),
-            spl_vote_account: vote_account,
+            signer: identity_keypair.pubkey(),
+            spl_vote_account,
             proposal: proposal_pda,
             proposal_index: proposal_index_pda,
-            snapshot_program: SNAPSHOT_PROGRAM_ID,
-            consensus_result: consensus_result_pda,
-            meta_merkle_proof: meta_merkle_proof_pda,
             system_program: system_program::ID,
         })
         .send()

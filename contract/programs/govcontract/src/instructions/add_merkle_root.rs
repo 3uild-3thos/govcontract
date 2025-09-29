@@ -1,4 +1,8 @@
 use anchor_lang::prelude::*;
+#[cfg(feature = "production")]
+use gov_v1::ConsensusResult;
+#[cfg(feature = "testing")]
+use mock_gov_v1::ConsensusResult;
 
 use crate::{error::GovernanceError, events::MerkleRootAdded, state::Proposal};
 
@@ -11,13 +15,14 @@ pub struct AddMerkleRoot<'info> {
         mut,
         constraint = proposal.author == signer.key() @ GovernanceError::UnauthorizedMerkleRootUpdate,
         constraint = !proposal.finalized @ GovernanceError::ProposalFinalized,
-        constraint = proposal.merkle_root_hash.is_none() @ GovernanceError::MerkleRootAlreadySet
+        constraint = proposal.meta_merkle_root.is_none() @ GovernanceError::MerkleRootAlreadySet
     )]
     pub proposal: Account<'info, Proposal>,
+    pub consensus_result: Account<'info, ConsensusResult>,
 }
 
 impl<'info> AddMerkleRoot<'info> {
-    pub fn add_merkle_root(&mut self, merkle_root_hash: [u8; 32]) -> Result<()> {
+    pub fn add_merkle_root(&mut self) -> Result<()> {
         let clock = Clock::get()?;
         require!(
             clock.epoch <= self.proposal.start_epoch,
@@ -25,16 +30,17 @@ impl<'info> AddMerkleRoot<'info> {
         );
 
         require!(
-            merkle_root_hash.iter().any(|&x| x != 0),
+            self.consensus_result.ballot.meta_merkle_root.iter().any(|&x| x != 0),
             GovernanceError::InvalidMerkleRoot
         );
 
-        self.proposal.merkle_root_hash = Some(merkle_root_hash);
-
+        self.proposal.meta_merkle_root = Some(self.consensus_result.ballot.meta_merkle_root);
+        self.proposal.consensus_result_pda = Some(self.consensus_result.key());
+        
         emit!(MerkleRootAdded {
             proposal_id: self.proposal.key(),
             author: self.signer.key(),
-            merkle_root_hash,
+            merkle_root_hash: self.consensus_result.ballot.meta_merkle_root,
         });
 
         Ok(())
