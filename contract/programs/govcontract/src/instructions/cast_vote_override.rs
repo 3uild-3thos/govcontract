@@ -67,16 +67,20 @@ impl<'info> CastVoteOverride<'info> {
         // Get the current epoch from the Clock sysvar
         let clock = Clock::get()?;
         let current_epoch = clock.epoch;
+
+        // Verify proposal start epoch is already passed
         require!(
             self.proposal.start_epoch <= current_epoch,
             GovernanceError::VotingNotStarted
         );
+
+        // Verify proposal voting period is not ended
         require!(
             current_epoch < self.proposal.end_epoch,
             GovernanceError::ProposalClosed
         );
 
-        // Validate that the basis points sum to 10,000 (100%)
+        // Verify that the basis points sum to 10,000 (100%)
         let total_bp = for_votes_bp
             .checked_add(against_votes_bp)
             .and_then(|sum| sum.checked_add(abstain_votes_bp))
@@ -86,6 +90,7 @@ impl<'info> CastVoteOverride<'info> {
             GovernanceError::InvalidVoteDistribution
         );
 
+        // Verify consensus result merkle root matches proposal merkle root
         require!(
             self.consensus_result.ballot.meta_merkle_root
                 == self.proposal.meta_merkle_root.unwrap_or_default(),
@@ -94,31 +99,35 @@ impl<'info> CastVoteOverride<'info> {
 
         let meta_merkle_leaf = &self.meta_merkle_proof.meta_merkle_leaf;
 
+        // Verify consensus result PDA passed in matches consensus result PDA in proposal
         require_eq!(
             self.meta_merkle_proof.consensus_result,
             self.consensus_result.key(),
             GovernanceError::InvalidConsensusResultPDA
         );
 
+        // Verify stake leaf matches signer for override
         require_eq!(
             stake_merkle_leaf.voting_wallet,
             self.signer.key(),
             GovernanceError::InvalidStakeAccount
         );
 
+        // Verify stake leaf has sufficient stake
         require_gt!(
             stake_merkle_leaf.active_stake,
             0u64,
             GovernanceError::NotEnoughStake
         );
 
-        // Ensure stake leaf contains the correct stake account
+        // Verify stake leaf passed in contains the correct stake account
         require_eq!(
             stake_merkle_leaf.stake_account,
             spl_stake_account,
             GovernanceError::InvalidStakeAccount
         );
 
+        // Verify stake leaf passed in contains the correct validator vote account
         require_eq!(
             meta_merkle_leaf.vote_account,
             spl_vote_account,
@@ -133,16 +142,16 @@ impl<'info> CastVoteOverride<'info> {
             Some(stake_merkle_leaf.clone()),
         )?;
 
-        // Use verified stake amounts
+        // Use verified stake amounts from stake leaf and meta merkle leaf for vote lamports calculation
         let delegator_stake = stake_merkle_leaf.active_stake;
         let validator_stake = meta_merkle_leaf.active_stake;
 
-        // Calculate delegator's vote lamports
+        // Calculate delegator's vote lamports based on their stake from stake leaf
         let for_votes_lamports = calculate_vote_lamports!(delegator_stake, for_votes_bp)?;
         let against_votes_lamports = calculate_vote_lamports!(delegator_stake, against_votes_bp)?;
         let abstain_votes_lamports = calculate_vote_lamports!(delegator_stake, abstain_votes_bp)?;
 
-        // Add delegator's vote to proposal
+        // Add delegator's vote lamports to proposal
         self.proposal.add_vote_lamports(
             for_votes_lamports,
             against_votes_lamports,
@@ -162,6 +171,7 @@ impl<'info> CastVoteOverride<'info> {
         }
 
         // If validator has already voted, adjust validator values in vote and proposal
+        // Otherwise don't touch validator values, besides validator_vote.override_lamports, as they are 0 (default)
         if self.validator_vote.has_voted {
             // Substract validator vote lamports from proposal
             self.proposal.sub_vote_lamports(
@@ -195,7 +205,7 @@ impl<'info> CastVoteOverride<'info> {
                 abstain_votes_lamports_new,
             )?;
 
-            // Store new validator vote lamports
+            // Store new validator vote lamports in validator vote account
             self.validator_vote.for_votes_lamports = for_votes_lamports_new;
             self.validator_vote.against_votes_lamports = against_votes_lamports_new;
             self.validator_vote.abstain_votes_lamports = abstain_votes_lamports_new;
@@ -203,14 +213,14 @@ impl<'info> CastVoteOverride<'info> {
 
         self.proposal.vote_count += 1;
 
-        // Store override lamports in vote account
+        // Store override lamports in validator vote account
         self.validator_vote.override_lamports = self
             .validator_vote
             .override_lamports
             .checked_add(delegator_stake)
             .ok_or(GovernanceError::ArithmeticOverflow)?;
 
-        // Store override
+        // Store override values in vote override account
         self.vote_override.set_inner(VoteOverride {
             stake_account: stake_merkle_leaf.stake_account,
             validator: meta_merkle_leaf.vote_account,

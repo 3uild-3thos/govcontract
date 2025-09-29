@@ -48,26 +48,30 @@ impl<'info> ModifyVote<'info> {
         abstain_votes_bp: u64,
         bumps: &ModifyVoteBumps,
     ) -> Result<()> {
-        // Check that the proposal is open for voting
+        // Check that the proposal is open for voting and not finalized
         require!(self.proposal.voting, GovernanceError::ProposalClosed);
         require!(!self.proposal.finalized, GovernanceError::ProposalFinalized);
 
-        // Require that validator has already voted
+        // Verify validator has already voted
         require!(self.vote.has_voted, GovernanceError::ValidatorHasNotVoted);
 
         // Get the current epoch from the Clock sysvar
         let clock = Clock::get()?;
         let current_epoch = clock.epoch;
+
+        // Verify proposal start epoch is already passed
         require!(
             self.proposal.start_epoch <= current_epoch,
             GovernanceError::VotingNotStarted
         );
+
+        // Verify proposal voting period is not ended
         require!(
             current_epoch < self.proposal.end_epoch,
             GovernanceError::ProposalClosed
         );
 
-        // Validate that the basis points sum to 10,000 (100%)
+        // Verify that the basis points sum to 10,000 (100%)
         let total_bp = for_votes_bp
             .checked_add(against_votes_bp)
             .and_then(|sum| sum.checked_add(abstain_votes_bp))
@@ -77,6 +81,7 @@ impl<'info> ModifyVote<'info> {
             GovernanceError::InvalidVoteDistribution
         );
 
+        // Verify consensus result merkle root matches proposal merkle root
         require!(
             self.consensus_result.ballot.meta_merkle_root
                 == self.proposal.meta_merkle_root.unwrap_or_default(),
@@ -85,26 +90,28 @@ impl<'info> ModifyVote<'info> {
 
         let meta_merkle_leaf = &self.meta_merkle_proof.meta_merkle_leaf;
 
-        // Crosscheck consensus result
+        // Verify consensus result PDA passed in matches consensus result PDA in proposal
         require_eq!(
             self.meta_merkle_proof.consensus_result,
             self.consensus_result.key(),
             GovernanceError::InvalidConsensusResultPDA
         );
 
-        // Ensure leaf matches signer and has sufficient stake
+        // Verify leaf matches signer
         require_eq!(
             meta_merkle_leaf.voting_wallet,
             self.signer.key(),
             GovernanceError::InvalidVoteAccount
         );
 
-        // Verify SPL vote account
+        // Verify leaf contains the correct validator vote account
         require_eq!(
             meta_merkle_leaf.vote_account,
             spl_vote_account,
             GovernanceError::InvalidVoteAccount
         );
+
+        // Verify leaf has sufficient stake
         require_gt!(
             meta_merkle_leaf.active_stake,
             0u64,
@@ -119,31 +126,33 @@ impl<'info> ModifyVote<'info> {
             None,
         )?;
 
-        // Subtract old vote (guaranteed since has_voted is true)
+        // Subtract old vote lamports from proposal totals
         self.proposal.sub_vote_lamports(
             self.vote.for_votes_lamports,
             self.vote.against_votes_lamports,
             self.vote.abstain_votes_lamports,
         )?;
 
-        // Calculate new effective votes for each category based on actual lamports
+        // Calculate new effective stake substracting possible override lamports
         let effective_stake = self
             .vote
             .stake
             .checked_sub(self.vote.override_lamports)
             .ok_or(GovernanceError::ArithmeticOverflow)?;
+
+        // Calculate new vote lamports based on effective stake
         let for_votes_lamports = calculate_vote_lamports!(effective_stake, for_votes_bp)?;
         let against_votes_lamports = calculate_vote_lamports!(effective_stake, against_votes_bp)?;
         let abstain_votes_lamports = calculate_vote_lamports!(effective_stake, abstain_votes_bp)?;
 
-        // Add new lamports to proposal totals
+        // Add new vote lamports to proposal totals
         self.proposal.add_vote_lamports(
             for_votes_lamports,
             against_votes_lamports,
             abstain_votes_lamports,
         )?;
 
-        // Update vote
+        // Update vote account
         self.vote.for_votes_bp = for_votes_bp;
         self.vote.against_votes_bp = against_votes_bp;
         self.vote.abstain_votes_bp = abstain_votes_bp;

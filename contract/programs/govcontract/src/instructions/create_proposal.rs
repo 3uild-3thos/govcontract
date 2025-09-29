@@ -54,26 +54,38 @@ impl<'info> CreateProposal<'info> {
         voting_length_epochs: u64,
         bumps: &CreateProposalBumps,
     ) -> Result<()> {
-        // Validate proposal inputs
+        // Verify title is not empty
         require!(!title.is_empty(), GovernanceError::TitleEmpty);
+
+        // Verify title is not too long
         require!(
             title.len() <= MAX_TITLE_LENGTH,
             GovernanceError::TitleTooLong
         );
+
+        // Verify description is not empty
         require!(!description.is_empty(), GovernanceError::DescriptionEmpty);
+
+        // Verify description is not too long
         require!(
             description.len() <= MAX_DESCRIPTION_LENGTH,
             GovernanceError::DescriptionTooLong
         );
+
+        // Verify description is a valid GitHub link
         require!(
             is_valid_github_link(&description),
             GovernanceError::DescriptionInvalid
         );
+
+        // Verify voting length is greater than 0
         require_gt!(
             voting_length_epochs,
             0u64,
             GovernanceError::InvalidVotingLength
         );
+        
+        // Verify voting length is not too long (MAX_VOTING_EPOCHS)
         require!(
             voting_length_epochs <= MAX_VOTING_EPOCHS,
             GovernanceError::VotingLengthTooLong
@@ -81,20 +93,22 @@ impl<'info> CreateProposal<'info> {
 
         let clock = Clock::get()?;
 
+        // Verify start epoch is not before current epoch
         require_gte!(start_epoch, clock.epoch, GovernanceError::InvalidStartEpoch);
 
-        // Calculate stake weight basis points
+        // Calculate stake weight basis points based on proposer's stake in the cluster
         let cluster_stake = get_epoch_total_stake();
         let proposer_stake = get_epoch_stake_for_vote_account(self.spl_vote_account.key);
         let proposer_stake_weight_bp = stake_weight_bp!(proposer_stake, cluster_stake)?;
 
+        // Verify proposer has sufficient stake to create a proposal (MIN_PROPOSAL_STAKE_LAMPORTS)
         require_gte!(
             proposer_stake,
             MIN_PROPOSAL_STAKE_LAMPORTS,
             GovernanceError::NotEnoughStake
         );
 
-        // Initialize proposal account
+        // Initialize proposal account with verified inputs and increment proposal index
         self.proposal.set_inner(Proposal {
             author: self.signer.key(),
             title,

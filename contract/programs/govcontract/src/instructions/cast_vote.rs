@@ -57,10 +57,14 @@ impl<'info> CastVote<'info> {
         // Get the current epoch from the Clock sysvar
         let clock = Clock::get()?;
         let current_epoch = clock.epoch;
+
+        // Verify proposal start epoch is already passed
         require!(
             self.proposal.start_epoch <= current_epoch,
             GovernanceError::VotingNotStarted
         );
+
+        // Verify proposal voting period is not ended
         require!(
             current_epoch < self.proposal.end_epoch,
             GovernanceError::ProposalClosed
@@ -69,7 +73,7 @@ impl<'info> CastVote<'info> {
         // Prevent recasting if already voted
         require!(!self.vote.has_voted, GovernanceError::ValidatorAlreadyVoted);
 
-        // Validate that the basis points sum to 10,000 (100%)
+        // Verify that the basis points sum to 10,000 (100%)
         let total_bp = for_votes_bp
             .checked_add(against_votes_bp)
             .and_then(|sum| sum.checked_add(abstain_votes_bp))
@@ -79,6 +83,7 @@ impl<'info> CastVote<'info> {
             GovernanceError::InvalidVoteDistribution
         );
 
+        // Verify consensus result merkle root matches proposal merkle root
         require!(
             self.consensus_result.ballot.meta_merkle_root
                 == self.proposal.meta_merkle_root.unwrap_or_default(),
@@ -86,26 +91,28 @@ impl<'info> CastVote<'info> {
         );
         let meta_merkle_leaf = &self.meta_merkle_proof.meta_merkle_leaf;
 
-        // Crosscheck consensus result
+        // Verify consensus result PDA passed in matches consensus result PDA in proposal
         require_eq!(
             self.meta_merkle_proof.consensus_result,
             self.consensus_result.key(),
             GovernanceError::InvalidConsensusResultPDA
         );
 
-        // Ensure leaf matches signer and has sufficient stake
+        // Verify leaf matches signer
         require_eq!(
             meta_merkle_leaf.voting_wallet,
             self.signer.key(),
             GovernanceError::InvalidVoteAccount
         );
 
+        // Verify leaf has sufficient stake
         require_gt!(
             meta_merkle_leaf.active_stake,
             0u64,
             GovernanceError::NotEnoughStake
         );
 
+        // Verify leaf contains the correct validator vote account
         require_eq!(
             meta_merkle_leaf.vote_account,
             spl_vote_account,
@@ -122,14 +129,17 @@ impl<'info> CastVote<'info> {
 
         let validator_stake = meta_merkle_leaf.active_stake;
 
+        // Calculate effective stake substracting possible override lamports
         let effective_stake = validator_stake
             .checked_sub(self.vote.override_lamports)
             .ok_or(GovernanceError::ArithmeticOverflow)?;
 
+        // Calculate vote lamports based on effective stake
         let for_votes_lamports = calculate_vote_lamports!(effective_stake, for_votes_bp)?;
         let against_votes_lamports = calculate_vote_lamports!(effective_stake, against_votes_bp)?;
         let abstain_votes_lamports = calculate_vote_lamports!(effective_stake, abstain_votes_bp)?;
-
+        
+        // Add validator vote lamports to proposal
         self.proposal.add_vote_lamports(
             for_votes_lamports,
             against_votes_lamports,
@@ -138,6 +148,7 @@ impl<'info> CastVote<'info> {
 
         self.proposal.vote_count += 1;
 
+        // Initialize validator vote account, accounting for possible override lamports already set
         self.vote.set_inner(Vote {
             validator: self.signer.key(),
             proposal: self.proposal.key(),

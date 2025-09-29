@@ -29,6 +29,7 @@ impl<'info> AddMerkleRoot<'info> {
             GovernanceError::CannotModifyAfterStart
         );
 
+        // Verify merkle root is not full of 0s
         require!(
             self.consensus_result
                 .ballot
@@ -38,6 +39,7 @@ impl<'info> AddMerkleRoot<'info> {
             GovernanceError::InvalidMerkleRoot
         );
 
+        // Add meta merkle root and consensusresult pda to proposal
         self.proposal.meta_merkle_root = Some(self.consensus_result.ballot.meta_merkle_root);
         self.proposal.consensus_result_pda = Some(self.consensus_result.key());
 

@@ -17,6 +17,8 @@ impl<'info> FinalizeProposal<'info> {
     pub fn finalize_proposal(&mut self) -> Result<()> {
         // Check if the voting period has ended
         let clock = Clock::get()?;
+
+        // Verify voting period has ended
         require!(
             clock.epoch >= self.proposal.end_epoch,
             GovernanceError::VotingPeriodNotEnded

@@ -131,8 +131,7 @@ pub async fn get_voter_summary(
     validator_pubkey: &str,
     snapshot_slot: Option<u64>,
 ) -> Result<VoterSummaryAPI> {
-    let base_url = get_api_base_url();
-    let mut url = format!("{}/voter/{}", base_url, validator_pubkey);
+    let mut url = format!("{}/voter/{}", get_api_base_url(), validator_pubkey);
 
     if let Some(slot) = snapshot_slot {
         url.push_str(&format!("?network=mainnet&slot={}", slot));
@@ -159,7 +158,7 @@ pub async fn get_vote_account_proof(
     vote_account: &Pubkey,
     snapshot_slot: Option<u64>,
 ) -> Result<VoteAccountProofAPI> {
-    let mut url = format!("{}/proof/vote_account/{}", OPERATOR_API_URL, vote_account);
+    let mut url = format!("{}/proof/vote_account/{}", get_api_base_url(), vote_account);
 
     if let Some(slot) = snapshot_slot {
         url.push_str(&format!("?network=mainnet&slot={}", slot));
@@ -185,7 +184,7 @@ pub async fn get_stake_account_proof(
     stake_account: &Pubkey,
     snapshot_slot: Option<u64>,
 ) -> Result<StakeAccountProofAPI> {
-    let mut url = format!("{}/proof/stake_account/{}", OPERATOR_API_URL, stake_account);
+    let mut url = format!("{}/proof/stake_account/{}", get_api_base_url(), stake_account);
 
     if let Some(slot) = snapshot_slot {
         url.push_str(&format!("?network=mainnet&slot={}", slot));
@@ -205,7 +204,7 @@ pub async fn get_stake_account_proof(
     Ok(proof)
 }
 
-/// Get the base API URL from environment or default
+/// Get the base API URL from environment or default, making it an optional arg 
 fn get_api_base_url() -> String {
     std::env::var(SVMGOV_OPERATOR_URL_ENV).unwrap_or_else(|_| OPERATOR_API_URL.to_string())
 }
