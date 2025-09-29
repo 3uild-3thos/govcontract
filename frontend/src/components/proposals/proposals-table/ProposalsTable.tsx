@@ -101,13 +101,20 @@ export default function ProposalsTable({ title }: { title: string }) {
     [],
   );
 
+  const getDefaultExpanded = React.useCallback((): ExpandedState => {
+    if (data.length === 0) {
+      return {};
+    }
+
+    return { [data[0].id]: true } satisfies ExpandedState;
+  }, [data]);
+
   React.useEffect(() => {
     // Only expand first row on client side after mount
     if (data.length > 0 && Object.keys(expanded).length === 0) {
-      setExpanded({ [data[0].id]: true });
+      setExpanded(getDefaultExpanded());
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [data, expanded, getDefaultExpanded]);
 
   const table = useReactTable({
     data,
@@ -131,6 +138,15 @@ export default function ProposalsTable({ title }: { title: string }) {
       },
     },
   });
+
+  const handleReset = React.useCallback(() => {
+    setSorting([]);
+    setColumnFilters([]);
+    setStatusFilter("all");
+    setShowEligibleOnly(false);
+    setExpanded(getDefaultExpanded());
+    table.setPageIndex(0);
+  }, [getDefaultExpanded, table]);
 
   React.useEffect(() => {
     if (statusFilter !== "all") {
@@ -191,7 +207,7 @@ export default function ProposalsTable({ title }: { title: string }) {
                 onValueChange={setStatusFilter}
               >
                 <DropdownMenuRadioItem value="all" className="text-white/80">
-                  All statuses
+                  All Status
                 </DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="active" className="text-white/80">
                   Active
@@ -211,6 +227,13 @@ export default function ProposalsTable({ title }: { title: string }) {
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
+          <AppButton
+            variant="outline"
+            size="sm"
+            text="Reset"
+            onClick={handleReset}
+            className="text-xs"
+          />
         </div>
       </div>
       <div className="overflow-hidden rounded-2xl border border-white/10 glass-card">
@@ -307,7 +330,7 @@ export default function ProposalsTable({ title }: { title: string }) {
                 </React.Fragment>
               ))
             ) : (
-              <TableRow>
+              <TableRow className="hover:bg-transparent">
                 <TableCell
                   colSpan={table.getAllColumns().length}
                   className="h-24 text-center text-sm text-white/60"

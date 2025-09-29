@@ -2,11 +2,12 @@
 
 import type { ProposalRow } from "@/components/proposals/proposals-table/ProposalsTable";
 import { ColumnDef } from "@tanstack/react-table";
-import { ChevronDown, ArrowUp, ArrowDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import StatusBadge from "@/components/ui/StatusBadge";
 import LifecycleIndicator from "@/components/ui/LifecycleIndicator";
 import { formatDate, calculateVotingEndsIn, formatNumber } from "@/helpers";
 import { useMounted } from "@/hooks/useMounted";
+import { SortableHeaderButton } from "@/components/SortableHeaderButton";
 
 function VotingEndsInCell({ votingEndsIn }: { votingEndsIn: string }) {
   const mounted = useMounted();
@@ -34,19 +35,7 @@ export const columns: ColumnDef<ProposalRow>[] = [
   {
     accessorKey: "lifecycleStage",
     header: ({ column }) => (
-      <button
-        className="flex items-center justify-center gap-1.5 hover:text-white transition-colors mx-auto"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        {"Lifecycle Stage".toUpperCase()}
-        {column.getIsSorted() === "asc" ? (
-          <ArrowUp className="size-3.5" strokeWidth={3} />
-        ) : column.getIsSorted() === "desc" ? (
-          <ArrowDown className="size-3.5" strokeWidth={3} />
-        ) : (
-          <ArrowUp className="size-3.5 opacity-40" strokeWidth={3} />
-        )}
-      </button>
+      <SortableHeaderButton column={column} label="Lifecycle Stage" />
     ),
     cell: ({ row }) => (
       <LifecycleIndicator stage={row.original.lifecycleStage} />
@@ -73,19 +62,7 @@ export const columns: ColumnDef<ProposalRow>[] = [
   {
     accessorKey: "votingStart",
     header: ({ column }) => (
-      <button
-        className="flex items-center justify-center gap-1.5 hover:text-white transition-colors mx-auto"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        {"Voting Start".toUpperCase()}
-        {column.getIsSorted() === "asc" ? (
-          <ArrowUp className="size-3.5" strokeWidth={3} />
-        ) : column.getIsSorted() === "desc" ? (
-          <ArrowDown className="size-3.5" strokeWidth={3} />
-        ) : (
-          <ArrowUp className="size-3.5 opacity-40" strokeWidth={3} />
-        )}
-      </button>
+      <SortableHeaderButton column={column} label="Voting Start" />
     ),
     cell: ({ row }) => {
       const value = formatDate(row.original.votingStart);
@@ -99,19 +76,7 @@ export const columns: ColumnDef<ProposalRow>[] = [
   {
     accessorKey: "votingEndsIn",
     header: ({ column }) => (
-      <button
-        className="flex items-center justify-center gap-1.5 hover:text-white transition-colors mx-auto"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        {"Voting Ends In".toUpperCase()}
-        {column.getIsSorted() === "asc" ? (
-          <ArrowUp className="size-3.5" strokeWidth={3} />
-        ) : column.getIsSorted() === "desc" ? (
-          <ArrowDown className="size-3.5" strokeWidth={3} />
-        ) : (
-          <ArrowUp className="size-3.5 opacity-40" strokeWidth={3} />
-        )}
-      </button>
+      <SortableHeaderButton column={column} label="Voting End" />
     ),
     cell: ({ row }) => (
       <VotingEndsInCell votingEndsIn={row.original.votingEndsIn ?? ""} />
