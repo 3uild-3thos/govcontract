@@ -6,6 +6,8 @@ A decentralized governance system built on the Solana blockchain.
 
 This repository contains a Solana program that enables a decentralized governance system. The contract allows validators to create proposals, vote on them, and tally the results.
 
+**Note**: For the latest and most accurate CLI usage (to interact with this contract), run `svmgov --help` for general help or `svmgov <command> --help` for command-specific details. See the [CLI README](../svmgov/readme.md) for full details.
+
 ## Features
 
 - **Proposal creation**: Validators with minimum 100,000 SOL stake can create new proposals with a title, description (must be a valid GitHub link), and voting period in epochs.
@@ -13,8 +15,8 @@ This repository contains a Solana program that enables a decentralized governanc
 - **Proposal support**: Validators can show support for a proposal using merkle proof verification. When total supporting stake reaches 5% of cluster stake, voting is activated.
 - **Voting**: Validators can cast votes on active proposals, with their vote weight determined by their stake. Votes are distributed across For/Against/Abstain in basis points (totaling 10,000).
 - **Vote modification**: Validators can modify their existing votes before proposal finalization.
-- **Vote override**: Delegators can override their validator's vote using stake account verification and merkle proofs, effectively splitting the validator's voting power.
-- **Merkle proof verification**: Comprehensive integration with external snapshot programs for stake verification during support, voting, and vote override operations.
+- **Vote override**: Delegators can override their validator's vote using stake account verification and merkle proofs, effectively splitting the validator's voting power. Vote overrides can be cast independently of whether the validator has voted, allowing delegators to participate in governance even if their validator chooses not to vote.
+- **Merkle proof verification**: Comprehensive integration with external snapshot programs (e.g., gov_v1) for stake verification during support, voting, and vote override operations. Serves as the source of truth.
 - **PDA utilities**: Robust program-derived address derivation for all contract accounts.
 - **Enhanced validation**: Improved error handling and input validation throughout the contract, including stake requirements, voting period limits (max 10 epochs), and GitHub link validation.
 
@@ -31,7 +33,9 @@ The contract is organized into several modules:
 
 ## CLI Interface
 
-This repository also includes a command-line interface (CLI) program, `svmgov`, which provides a convenient way to interact with the contract. The `svmgov` CLI allows validators and delegators to create proposals, add merkle roots, cast votes, override votes, modify votes, and perform other actions on the contract with a simple CLI interface. The validator/delegator identity keypair is necessary for most commands, and supports API integration for real-time stake verification.
+This repository also includes a command-line interface (CLI) program, `svmgov`, which provides a convenient way to interact with the contract. The `svmgov` CLI allows validators and delegators to create proposals, add merkle roots, cast votes, override votes, modify votes, and perform other actions on the contract with a simple CLI interface. The validator/delegator identity keypair is necessary for most commands, and supports API integration for real-time stake verification. The CLI automatically handles MetaMerkleProof PDA initialization for seamless operations.
+
+For detailed CLI usage, see the [CLI README](../svmgov/readme.md).
 
 ## Usage
 
@@ -46,6 +50,8 @@ To use this contract, you'll need to:
 7. **Cast vote override**: Use the `cast_vote_override` instruction for delegators to override their validator's vote using stake account verification and merkle proofs.
 8. **Modify vote**: Use the `modify_vote` instruction to update an existing validator vote before finalization.
 9. **Finalize proposal**: Use the `finalize_proposal` instruction to determine the outcome after the voting period ends (anyone can call this).
+
+For practical interaction, use the `svmgov` CLI as described in the [CLI README](../svmgov/readme.md).
 
 ## Requirements and Constraints
 
@@ -63,17 +69,18 @@ To use this contract, you'll need to:
 - **Vote Distribution**: For/Against/Abstain percentages must total 100% (10,000 basis points)
 - **Timing**: Voting occurs within specified epoch ranges, not slot-based
 - **Validator Voting**: Each validator can vote once, but can modify their vote
-- **Vote Override**: Delegators can override validator votes using stake accounts and merkle proofs
+- **Vote Override**: Delegators can override validator votes using stake accounts and merkle proofs, even if the validator hasn't voted yet
 
 ### Merkle Proof Verification
 
 - All stake-related operations (support, voting, vote override) require valid merkle proofs
 - Proofs are verified against external snapshot programs
 - Consensus results and meta merkle proofs must be owned by the snapshot program
+- The CLI automatically initializes required PDAs if they don't exist
 
 ## Events
 
-The contract emits comprehensive events for all major governance actions. Frontend applications and external services can listen to these events to track governance activity in real-time. All events are automatically included in the generated IDL.
+The contract emits comprehensive events for all major governance actions. Frontend applications and external services can listen to these events in real-time. All events are automatically included in the generated IDL.
 
 ### ProposalCreated
 
@@ -249,3 +256,5 @@ To contribute to this project, you'll need:
 1. **Rust and Solana tools**: Install Rust and the Solana(agave) CLI using the official instructions.
 2. **Cargo**: Use Cargo to build and manage dependencies for the contract.
 3. **Anchor**: Use Anchor to generate and manage the contract's IDL files.
+
+For detailed CLI mechanics, see the [CLI README](../svmgov/readme.md).

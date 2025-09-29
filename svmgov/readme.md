@@ -1,8 +1,11 @@
 # Solana Validator Governance CLI (`svmgov`)
 
-`svmgov` is a command-line interface (CLI) tool designed for Solana validators and delegators to interact with the Solana Validator Governance program. It enables validators to create governance proposals, support proposals, cast votes, and manage vote overrides with merkle proof verification. Delegators can override their validator's votes using stake account verification. The CLI integrates with external APIs for real-time validator stake data and supports comprehensive governance operations.
+`svmgov` is a command-line interface (CLI) tool designed for Solana validators and delegators to interact with the Solana Validator Governance program. It enables validators to create proposals, support proposals, cast votes, and manage vote overrides with merkle proof verification. Delegators can override their validator's votes using stake account verification. The CLI integrates with external APIs for real-time validator stake data and supports comprehensive governance operations, including automatic MetaMerkleProof PDA initialization for seamless merkle proof handling.
+
+**Note**: For the latest and most accurate usage, run `svmgov --help` for general help or `svmgov <command> --help` for command-specific details.
 
 ---
+
 ## Requirements
 
 [![Rust](https://img.shields.io/badge/Rust-1.85%2B-black?logo=rust)](https://www.rust-lang.org/)
@@ -41,7 +44,7 @@ To use `svmgov`, follow these steps:
 - `--identity-keypair <PATH>` (short: `-i`; env: `SVMGOV_KEY`): Path to the validator’s identity keypair JSON file (required for most commands).
 - `--rpc-url <URL>` (short: `-r`; env: `SVMGOV_RPC`): Custom RPC URL for the Solana network (optional; defaults to `https://api.mainnet-beta.solana.com`).
 
-Example env usage: Set `export SVMGOV_KEY="/path/to/key.json"` and `export SVMGOV_RPC="https://api.testnet.solana.com"`, then run commands without these flags (e.g., `svmgov list-proposals` uses the env values).
+Example env usage: Set `export SVMGOV_KEY="/path/to/key.json"` and `export SVMGOV_RPC="https://api.testnet.solana.com"`, then run commands without these flags (e.g., `svmgov list-proposals` uses the env values). Flags override env vars if both are provided.
 
 ### Available Commands
 
@@ -60,6 +63,7 @@ Example env usage: Set `export SVMGOV_KEY="/path/to/key.json"` and `export SVMGO
 Run any command with `--help` for detailed usage, e.g., `svmgov create-proposal --help`.
 
 ### Typical Workflow
+
 Here's a common sequence to get started:
 
 1. **Initialize index** (one-time): `svmgov init-index -i /path/to/identity_key.json`
@@ -67,12 +71,13 @@ Here's a common sequence to get started:
 3. **View proposal details**: `svmgov get-proposal --proposal-id <ID> -r https://api.mainnet-beta.solana.com`
 4. **Create a proposal** (validators): `svmgov create-proposal --title "Proposal Title" --description "https://github.com/repo/issue" --start-epoch 820 --length 20 -i /path/to/identity_key.json`
 5. **Support a proposal** (validators): `svmgov support-proposal --proposal-id <ID> -i /path/to/identity_key.json`
-6. **Cast validator vote**: `svmgov cast-vote --proposal-id <ID> --for-votes 7000 --against-votes 2000 --abstain-votes 1000 -i /path/to/identity_key.json`
-7. **Cast vote override** (delegators): `svmgov cast-vote-override --proposal-id <ID> --for-votes 7000 --against-votes 2000 --abstain-votes 1000 -i /path/to/identity_key.json`
-8. **Modify vote** (if needed): `svmgov modify-vote --proposal-id <ID> --for-votes 8000 --against-votes 1000 --abstain-votes 1000 -i /path/to/identity_key.json`
+6. **Cast validator vote**: `svmgov cast-vote --proposal-id <ID> --votes-for 7000 --votes-against 2000 --votes-abstain 1000 -i /path/to/identity_key.json`
+7. **Cast vote override** (delegators): `svmgov cast-vote-override --proposal-id <ID> --votes-for 7000 --votes-against 2000 --votes-abstain 1000 -i /path/to/identity_key.json`
+8. **Modify vote** (if needed): `svmgov modify-vote --proposal-id <ID> --votes-for 8000 --votes-against 1000 --votes-abstain 1000 -i /path/to/identity_key.json`
 9. **Add merkle root** (proposal author): `svmgov add-merkle-root --proposal-id <ID> --merkle-root <HASH> -i /path/to/identity_key.json`
 10. **Finalize proposal** after voting ends: `svmgov finalize-proposal --proposal-id <ID> -i /path/to/identity_key.json`
-11. **List votes** for verification: `svmgov list-votes --proposal-id <ID> --verbose true -r https://api.mainnet-beta.solana.com`
+11. **List votes** for verification: `svmgov list-votes --proposal-id <ID> --verbose true -r https://api.mainnet-beta.solana.com --limit 10 --json`
+
 ---
 
 ## Governance Mechanics
@@ -82,8 +87,9 @@ The Solana Validator Governance program enforces the following rules, which impa
 - **Minimum Stake for Proposal Creation**: A validator must have at least **100,000 SOL** staked to create a proposal. If this requirement isn't met, the `create-proposal` command will fail with a `NotEnoughStake` error.
 - **Cluster Support Threshold**: A proposal requires **500 basis points (5%) of total cluster support** to activate voting. Validators contribute to this using the `support-proposal` command. The smart contract calculates and enforces this threshold.
 - **Merkle Proof Verification**: All stake-related operations use merkle proof verification to ensure stake ownership and prevent double-voting. The CLI integrates with external APIs to fetch and verify proofs.
-- **Vote Override**: Delegators can override their validator's vote using stake account verification. This allows for more democratic participation in governance.
+- **Vote Override**: Delegators can override their validator's vote using stake account verification, providing additional governance flexibility. Vote overrides can be cast independently of whether the validator has voted, allowing delegators to participate in governance even if their validator chooses not to vote.
 - **Proposal Lifecycle**: Proposals follow a strict lifecycle: Creation → Support Phase → Voting Phase → Finalization, with appropriate validation at each step.
+- **Automatic PDA Handling**: The CLI automatically checks for and initializes required MetaMerkleProof PDAs if they don't exist, using data from API proofs. This happens transparently before executing voting/support operations.
 
 The CLI does not perform local validation of these conditions; the smart contract handles enforcement through merkle proof verification, and the CLI relays any resulting errors.
 
@@ -103,9 +109,43 @@ All CLI commands that interact with the governance contract emit comprehensive e
 
 ### Monitoring Events
 
-Frontend applications can listen to these events for real-time updates:
+Frontend applications can listen to these events using Anchor's event system:
 
-For detailed event data structures and usage examples, refer to the [Contract Events Documentation](../contract/readme.md#events).
+```javascript
+import * as anchor from "@coral-xyz/anchor";
+
+// Initialize program
+const program = new anchor.Program(IDL, PROGRAM_ID, provider);
+
+// Listen for proposal creation
+const proposalListener = program.addEventListener(
+  "ProposalCreated",
+  (event, slot) => {
+    console.log("New proposal:", event.title);
+    // Update proposals list in UI
+  }
+);
+
+// Listen for votes
+const voteListener = program.addEventListener("VoteCast", (event, slot) => {
+  console.log("Vote cast:", event.forVotesBp, "basis points");
+  // Update voting results in real-time
+});
+
+// Listen for vote overrides
+const overrideListener = program.addEventListener(
+  "VoteOverrideCast",
+  (event, slot) => {
+    console.log("Vote override by delegator");
+    // Update delegator voting status
+  }
+);
+
+// Cleanup listeners when component unmounts
+// program.removeEventListener(proposalListener);
+```
+
+Events are strongly typed and included in the generated TypeScript types from the IDL. For detailed event data structures and usage examples, refer to the [Contract Events Documentation](../contract/readme.md#events).
 
 ---
 
@@ -134,7 +174,7 @@ Create a new governance proposal with merkle proof verification.
 - `--title <TITLE>`: Proposal title (required; max 50 characters).
 - `--description <DESCRIPTION>`: Proposal description (required; must start with `https://github.com`; max 250 characters).
 - `--start-epoch <EPOCH>`: Epoch when the proposal should become active (required).
-- `--length <EPOCHS>`: Number of epochs the proposal should be open for voting (required).
+- `--length <EPOCHS>`: Number of epochs the proposal should be open for voting (required; 1-10 max).
 
 **Requirements**:
 - The validator's identity keypair must have at least **100,000 SOL** staked.
@@ -155,6 +195,7 @@ Support an existing proposal with stake verification to help it reach the 5% clu
 **Notes**:
 - Each validator's support contributes to the proposal's `cluster_support_bp`. Voting activates only when this reaches **500 basis points (5%)**.
 - Merkle proof verification ensures stake ownership.
+- The CLI automatically initializes required MetaMerkleProof PDAs if they don't exist.
 
 **Example**:
 ```sh
@@ -163,21 +204,22 @@ svmgov support-proposal --proposal-id "123" --identity-keypair /path/to/key.json
 
 ### `cast-vote`
 
-Cast a validator vote on an active governance proposal with merkle proof verification.
+Cast a validator vote on an active proposal.
 
 **Arguments**:
 - `--proposal-id <ID>`: The proposal's ID (PDA) (required).
-- `--for-votes <BASIS_POINTS>`: Basis points for 'For' (required).
-- `--against-votes <BASIS_POINTS>`: Basis points for 'Against' (required).
-- `--abstain-votes <BASIS_POINTS>`: Basis points for 'Abstain' (required).
+- `--votes-for <BASIS_POINTS>`: Basis points for 'For' (required).
+- `--votes-against <BASIS_POINTS>`: Basis points for 'Against' (required).
+- `--votes-abstain <BASIS_POINTS>`: Basis points for 'Abstain' (required).
 
 **Requirements**:
 - Basis points must sum to 10,000 (100%).
 - Merkle proof verification validates stake ownership.
+- The CLI automatically initializes required MetaMerkleProof PDAs if they don't exist.
 
 **Example**:
 ```sh
-svmgov cast-vote --proposal-id "123" --for-votes 7000 --against-votes 2000 --abstain-votes 1000 --identity-keypair /path/to/key.json
+svmgov cast-vote --proposal-id "123" --votes-for 7000 --votes-against 2000 --votes-abstain 1000 --identity-keypair /path/to/key.json
 ```
 
 ### `cast-vote-override`
@@ -186,42 +228,46 @@ Override a validator's vote as a delegator using stake account verification.
 
 **Arguments**:
 - `--proposal-id <ID>`: The proposal's ID (PDA) (required).
-- `--for-votes <BASIS_POINTS>`: Basis points for 'For' (required).
-- `--against-votes <BASIS_POINTS>`: Basis points for 'Against' (required).
-- `--abstain-votes <BASIS_POINTS>`: Basis points for 'Abstain' (required).
+- `--votes-for <BASIS_POINTS>`: Basis points for 'For' (required).
+- `--votes-against <BASIS_POINTS>`: Basis points for 'Against' (required).
+- `--votes-abstain <BASIS_POINTS>`: Basis points for 'Abstain' (required).
 - `--stake-account <PUBKEY>`: Optional stake account pubkey (base58). If omitted, the CLI selects the first stake account from the voter summary for the signer.
 
 **Requirements**:
 - Basis points must sum to 10,000 (100%).
 - Requires stake account ownership and merkle proof verification.
-- Can only override votes for stake accounts delegated to the caller.
+- Can override votes for stake accounts delegated to the caller, even if the validator hasn't voted yet.
+- The CLI automatically initializes required MetaMerkleProof PDAs if they don't exist.
 
 **Examples**:
 ```sh
 # Auto-select first stake account from summary
-svmgov cast-vote-override --proposal-id "123" --for-votes 7000 --against-votes 2000 --abstain-votes 1000 --identity-keypair /path/to/key.json
+svmgov cast-vote-override --proposal-id "123" --votes-for 7000 --votes-against 2000 --votes-abstain 1000 --identity-keypair /path/to/key.json
 
 # Use an explicit stake account
-svmgov cast-vote-override --proposal-id "123" --for-votes 7000 --against-votes 2000 --abstain-votes 1000 --stake-account <STAKE_PUBKEY> --identity-keypair /path/to/key.json
+svmgov cast-vote-override --proposal-id "123" --votes-for 7000 --votes-against 2000 --votes-abstain 1000 --stake-account <STAKE_PUBKEY> --identity-keypair /path/to/key.json
 ```
 
 ### `modify-vote`
 
-Modify an existing vote on a proposal with merkle proof verification.
+Modify an existing vote on a proposal.
 
 **Arguments**:
 - `--proposal-id <ID>`: The proposal's ID (PDA) (required).
-- `--for-votes <BASIS_POINTS>`: Basis points for 'For' (required).
-- `--against-votes <BASIS_POINTS>`: Basis points for 'Against' (required).
-- `--abstain-votes <BASIS_POINTS>`: Basis points for 'Abstain' (required).
+- `--votes-for <BASIS_POINTS>`: Basis points for 'For' (required).
+- `--votes-against <BASIS_POINTS>`: Basis points for 'Against' (required).
+- `--votes-abstain <BASIS_POINTS>`: Basis points for 'Abstain' (required).
+- `--spl-vote-account <PUBKEY>`: Optional SPL vote account pubkey (base58). If omitted, the CLI selects the first from the voter summary.
 
 **Requirements**:
 - Basis points must sum to 10,000 (100%).
 - Merkle proof verification validates stake ownership.
+- Can only modify if a vote was previously cast.
+- The CLI automatically initializes required MetaMerkleProof PDAs if they don't exist.
 
 **Example**:
 ```sh
-svmgov modify-vote --proposal-id "123" --for-votes 7000 --against-votes 2000 --abstain-votes 1000 --identity-keypair /path/to/key.json
+svmgov modify-vote --proposal-id "123" --votes-for 8000 --votes-against 1000 --votes-abstain 1000 --identity-keypair /path/to/key.json
 ```
 
 ### `add-merkle-root`
@@ -304,15 +350,27 @@ svmgov list-votes --proposal-id "123" --rpc-url https://api.mainnet-beta.solana.
 ## Additional Notes
 
 - **Identity Keypair**: Must have sufficient stake and permissions for actions like creating proposals or voting. Both validators and delegators can use the CLI.
-- **Vote Allocation**: In `cast-vote`, `cast-vote-override`, and `modify-vote`, basis points (`--for-votes`, `--against-votes`, `--abstain-votes`) must sum to 10,000 (100%). E.g., 70% 'For' (7000), 20% 'Against' (2000), 10% 'Abstain' (1000).
+- **Vote Allocation**: In `cast-vote`, `cast-vote-override`, and `modify-vote`, basis points (`--votes-for`, `--votes-against`, `--votes-abstain`) must sum to 10,000 (100%). E.g., 70% 'For' (7000), 20% 'Against' (2000), 10% 'Abstain' (1000).
 - **Merkle Proof Verification**: All voting operations use merkle proof verification to ensure stake ownership and prevent double-voting.
 - **API Integration**: The CLI integrates with external APIs for real-time validator stake data and merkle proof generation.
-- **Vote Override**: Delegators can override their validator's vote using stake account verification, providing additional governance flexibility.
+- **Vote Override**: Delegators can override their validator's vote using stake account verification, providing additional governance flexibility. Vote overrides can be cast independently of whether the validator has voted, allowing delegators to participate in governance even if their validator chooses not to vote.
 - **Proposal States**: Proposals go through states: Created → Supported → Voting → Finalized, with appropriate validation at each step.
-
+- **Automatic PDA Handling**: The CLI automatically checks for and initializes required MetaMerkleProof PDAs if they don't exist, using data from API proofs. This happens transparently before executing voting/support operations.
 
 ## Troubleshooting
 
 - **Compilation fails on older Rust?** Ensure you're using Rust 1.85.0 or higher (stable). No nightly features are used in this project—do not install nightly Rust, as it may introduce unrelated issues. Update your toolchain with `rustup update stable` and set `rustup default stable`.
 - **Merkle proof errors?** Ensure your validator/delegator has sufficient stake and the merkle proof service is accessible.
 - **Vote override fails?** Verify you own the stake account and it has active stake delegated to a validator.
+- **Invalid basis points?** Ensure they sum to exactly 10,000.
+- **PDA initialization fails?** Check RPC connection and keypair permissions; the CLI handles this automatically but requires valid API responses.
+
+## Development
+
+To contribute to this project, you'll need:
+
+1. **Rust and Solana tools**: Install Rust and the Solana(agave) CLI using the official instructions.
+2. **Cargo**: Use Cargo to build and manage dependencies for the CLI.
+3. **Anchor**: Use Anchor to generate and manage the contract's IDL files (for CLI integration).
+
+For detailed contract mechanics, see the [Contract README](../contract/readme.md).
