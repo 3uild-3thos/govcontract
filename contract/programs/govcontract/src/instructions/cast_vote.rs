@@ -10,10 +10,10 @@ use crate::{
 };
 
 #[cfg(feature = "production")]
-use gov_v1::{ConsensusResult, MetaMerkleProof, ID as GOV_V1_ID };
+use gov_v1::{ConsensusResult, MetaMerkleProof, ID as GOV_V1_ID};
 
 #[cfg(feature = "testing")]
-use mock_gov_v1::{ConsensusResult, MetaMerkleProof, ID as GOV_V1_ID };
+use mock_gov_v1::{ConsensusResult, MetaMerkleProof, ID as GOV_V1_ID};
 
 #[derive(Accounts)]
 #[instruction(spl_vote_account: Pubkey)]
@@ -74,10 +74,14 @@ impl<'info> CastVote<'info> {
             .checked_add(against_votes_bp)
             .and_then(|sum| sum.checked_add(abstain_votes_bp))
             .ok_or(GovernanceError::ArithmeticOverflow)?;
-        require!(total_bp == BASIS_POINTS_MAX, GovernanceError::InvalidVoteDistribution);
+        require!(
+            total_bp == BASIS_POINTS_MAX,
+            GovernanceError::InvalidVoteDistribution
+        );
 
         require!(
-            self.consensus_result.ballot.meta_merkle_root == self.proposal.meta_merkle_root.unwrap_or_default(),
+            self.consensus_result.ballot.meta_merkle_root
+                == self.proposal.meta_merkle_root.unwrap_or_default(),
             GovernanceError::InvalidMerkleRoot
         );
         let meta_merkle_leaf = &self.meta_merkle_proof.meta_merkle_leaf;
@@ -95,7 +99,7 @@ impl<'info> CastVote<'info> {
             self.signer.key(),
             GovernanceError::InvalidVoteAccount
         );
-        
+
         require_gt!(
             meta_merkle_leaf.active_stake,
             0u64,

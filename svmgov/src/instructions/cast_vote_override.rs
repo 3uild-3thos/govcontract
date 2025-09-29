@@ -45,23 +45,31 @@ pub async fn cast_vote_override(
     let program = program_setup_govcontract(identity_keypair.clone(), rpc_url.clone()).await?;
     let voter_summary = get_voter_summary(&identity_keypair.pubkey().to_string(), None).await?;
     let spl_stake_account: Pubkey = if let Some(stake_account) = spl_stake_account {
-        Pubkey::from_str(&stake_account).map_err(|_| anyhow!("Invalid stake account: {}", stake_account))?
+        Pubkey::from_str(&stake_account)
+            .map_err(|_| anyhow!("Invalid stake account: {}", stake_account))?
     } else {
         (&voter_summary.stake_accounts[0]).try_into()?
     };
     let delegator_vote_proof = get_stake_account_proof(&spl_stake_account, None).await?;
-    let stake_merkle_proof = convert_merkle_proof_strings(&delegator_vote_proof.stake_merkle_proof)?;
+    let stake_merkle_proof =
+        convert_merkle_proof_strings(&delegator_vote_proof.stake_merkle_proof)?;
     let stake_merkle_leaf = (&delegator_vote_proof.stake_merkle_leaf).try_into()?;
     let spl_vote_account = if let Some(spl_vote_account) = spl_vote_account {
-        Pubkey::from_str(&spl_vote_account).map_err(|_| anyhow!("Invalid vote account: {}", spl_vote_account))?
+        Pubkey::from_str(&spl_vote_account)
+            .map_err(|_| anyhow!("Invalid vote account: {}", spl_vote_account))?
     } else {
-        Pubkey::from_str(&voter_summary.stake_accounts[0].vote_account).map_err(|_| anyhow!("Invalid vote account: {}", voter_summary.stake_accounts[0].vote_account))?
+        Pubkey::from_str(&voter_summary.stake_accounts[0].vote_account).map_err(|_| {
+            anyhow!(
+                "Invalid vote account: {}",
+                voter_summary.stake_accounts[0].vote_account
+            )
+        })?
     };
-    let validator_vote_proof =
-        get_vote_account_proof(&spl_vote_account, None).await?;
+    let validator_vote_proof = get_vote_account_proof(&spl_vote_account, None).await?;
 
     let validator_vote_pda = derive_vote_pda(&proposal_pubkey, &spl_vote_account);
-    let vote_override_pda = derive_vote_override_pda(&proposal_pubkey, &spl_stake_account, &validator_vote_pda);
+    let vote_override_pda =
+        derive_vote_override_pda(&proposal_pubkey, &spl_stake_account, &validator_vote_pda);
 
     // Ensure MetaMerkleProof PDA is initialized
     let (consensus_result_pda, meta_merkle_proof_pda) = ensure_meta_merkle_proof_initialized(

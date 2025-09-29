@@ -8,7 +8,6 @@ use anchor_lang::{
     },
 };
 
-
 use crate::{
     constants::*,
     error::GovernanceError,

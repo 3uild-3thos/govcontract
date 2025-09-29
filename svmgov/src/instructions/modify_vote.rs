@@ -41,12 +41,12 @@ pub async fn modify_vote(
     let program = program_setup_govcontract(identity_keypair.clone(), rpc_url.clone()).await?;
     let voter_summary = get_voter_summary(&identity_keypair.pubkey().to_string(), None).await?;
     let spl_vote_account = if let Some(spl_vote_account) = spl_vote_account {
-        Pubkey::from_str(&spl_vote_account).map_err(|_| anyhow!("Invalid vote account: {}", spl_vote_account))?
+        Pubkey::from_str(&spl_vote_account)
+            .map_err(|_| anyhow!("Invalid vote account: {}", spl_vote_account))?
     } else {
         (&voter_summary.vote_accounts[0]).try_into()?
     };
-    let validator_vote_proof =
-        get_vote_account_proof(&spl_vote_account, None).await?;
+    let validator_vote_proof = get_vote_account_proof(&spl_vote_account, None).await?;
 
     let vote = derive_vote_pda(&proposal_pubkey, &spl_vote_account);
 

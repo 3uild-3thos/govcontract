@@ -30,13 +30,17 @@ impl<'info> AddMerkleRoot<'info> {
         );
 
         require!(
-            self.consensus_result.ballot.meta_merkle_root.iter().any(|&x| x != 0),
+            self.consensus_result
+                .ballot
+                .meta_merkle_root
+                .iter()
+                .any(|&x| x != 0),
             GovernanceError::InvalidMerkleRoot
         );
 
         self.proposal.meta_merkle_root = Some(self.consensus_result.ballot.meta_merkle_root);
         self.proposal.consensus_result_pda = Some(self.consensus_result.key());
-        
+
         emit!(MerkleRootAdded {
             proposal_id: self.proposal.key(),
             author: self.signer.key(),

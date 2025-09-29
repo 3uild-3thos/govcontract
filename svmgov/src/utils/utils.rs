@@ -24,9 +24,7 @@ use textwrap::wrap;
 
 use crate::{
     constants::*,
-    gov_v1::{
-        client::{accounts as gov_v1_accounts, args as gov_v1_args},
-    },
+    gov_v1::client::{accounts as gov_v1_accounts, args as gov_v1_args},
     govcontract::{
         self,
         accounts::{Proposal, Vote},

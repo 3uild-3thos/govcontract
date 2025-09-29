@@ -159,10 +159,7 @@ pub async fn get_vote_account_proof(
     vote_account: &Pubkey,
     snapshot_slot: Option<u64>,
 ) -> Result<VoteAccountProofAPI> {
-    let mut url = format!(
-        "{}/proof/vote_account/{}",
-        OPERATOR_API_URL, vote_account
-    );
+    let mut url = format!("{}/proof/vote_account/{}", OPERATOR_API_URL, vote_account);
 
     if let Some(slot) = snapshot_slot {
         url.push_str(&format!("?network=mainnet&slot={}", slot));
@@ -188,10 +185,7 @@ pub async fn get_stake_account_proof(
     stake_account: &Pubkey,
     snapshot_slot: Option<u64>,
 ) -> Result<StakeAccountProofAPI> {
-    let mut url = format!(
-        "{}/proof/stake_account/{}",
-        OPERATOR_API_URL, stake_account
-    );
+    let mut url = format!("{}/proof/stake_account/{}", OPERATOR_API_URL, stake_account);
 
     if let Some(slot) = snapshot_slot {
         url.push_str(&format!("?network=mainnet&slot={}", slot));

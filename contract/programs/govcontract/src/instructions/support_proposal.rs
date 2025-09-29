@@ -1,9 +1,4 @@
-use anchor_lang::{
-    prelude::*,
-    solana_program::{
-        epoch_stake::get_epoch_total_stake
-    },
-};
+use anchor_lang::{prelude::*, solana_program::epoch_stake::get_epoch_total_stake};
 
 use crate::{
     constants::*,
@@ -14,9 +9,9 @@ use crate::{
 };
 
 #[cfg(feature = "production")]
-use gov_v1::{ConsensusResult, MetaMerkleProof, ID as GOV_V1_ID };
+use gov_v1::{ConsensusResult, MetaMerkleProof, ID as GOV_V1_ID};
 #[cfg(feature = "testing")]
-use mock_gov_v1::{ConsensusResult, MetaMerkleProof, ID as GOV_V1_ID };
+use mock_gov_v1::{ConsensusResult, MetaMerkleProof, ID as GOV_V1_ID};
 
 #[derive(Accounts)]
 #[instruction(spl_vote_account: Pubkey)]
@@ -44,13 +39,18 @@ pub struct SupportProposal<'info> {
 }
 
 impl<'info> SupportProposal<'info> {
-    pub fn support_proposal(&mut self, spl_vote_account: Pubkey, bumps: &SupportProposalBumps) -> Result<()> {
+    pub fn support_proposal(
+        &mut self,
+        spl_vote_account: Pubkey,
+        bumps: &SupportProposalBumps,
+    ) -> Result<()> {
         // Ensure proposal is eligible for support
         require!(!self.proposal.voting, GovernanceError::ProposalClosed);
         require!(!self.proposal.finalized, GovernanceError::ProposalFinalized);
 
         require!(
-            self.consensus_result.ballot.meta_merkle_root == self.proposal.meta_merkle_root.unwrap_or_default(),
+            self.consensus_result.ballot.meta_merkle_root
+                == self.proposal.meta_merkle_root.unwrap_or_default(),
             GovernanceError::InvalidMerkleRoot
         );
 
@@ -92,7 +92,8 @@ impl<'info> SupportProposal<'info> {
         });
 
         let cluster_stake = get_epoch_total_stake();
-        let support_scaled = (self.proposal.cluster_support_lamports as u128) * CLUSTER_SUPPORT_MULTIPLIER;
+        let support_scaled =
+            (self.proposal.cluster_support_lamports as u128) * CLUSTER_SUPPORT_MULTIPLIER;
         let cluster_scaled = (cluster_stake as u128) * CLUSTER_STAKE_MULTIPLIER;
         let voting_activated = if support_scaled >= cluster_scaled {
             // Activate voting if threshold met

@@ -10,9 +10,9 @@ use crate::{
 };
 
 #[cfg(feature = "production")]
-use gov_v1::{ConsensusResult, MetaMerkleProof, ID as GOV_V1_ID };
+use gov_v1::{ConsensusResult, MetaMerkleProof, ID as GOV_V1_ID};
 #[cfg(feature = "testing")]
-use mock_gov_v1::{ConsensusResult, MetaMerkleProof, ID as GOV_V1_ID };
+use mock_gov_v1::{ConsensusResult, MetaMerkleProof, ID as GOV_V1_ID};
 
 #[derive(Accounts)]
 #[instruction(spl_vote_account: Pubkey)]
@@ -72,11 +72,14 @@ impl<'info> ModifyVote<'info> {
             .checked_add(against_votes_bp)
             .and_then(|sum| sum.checked_add(abstain_votes_bp))
             .ok_or(GovernanceError::ArithmeticOverflow)?;
-        require!(total_bp == BASIS_POINTS_MAX, GovernanceError::InvalidVoteDistribution);
-
+        require!(
+            total_bp == BASIS_POINTS_MAX,
+            GovernanceError::InvalidVoteDistribution
+        );
 
         require!(
-            self.consensus_result.ballot.meta_merkle_root == self.proposal.meta_merkle_root.unwrap_or_default(),
+            self.consensus_result.ballot.meta_merkle_root
+                == self.proposal.meta_merkle_root.unwrap_or_default(),
             GovernanceError::InvalidMerkleRoot
         );
 
@@ -95,7 +98,7 @@ impl<'info> ModifyVote<'info> {
             self.signer.key(),
             GovernanceError::InvalidVoteAccount
         );
-        
+
         // Verify SPL vote account
         require_eq!(
             meta_merkle_leaf.vote_account,
@@ -124,7 +127,9 @@ impl<'info> ModifyVote<'info> {
         )?;
 
         // Calculate new effective votes for each category based on actual lamports
-        let effective_stake = self.vote.stake
+        let effective_stake = self
+            .vote
+            .stake
             .checked_sub(self.vote.override_lamports)
             .ok_or(GovernanceError::ArithmeticOverflow)?;
         let for_votes_lamports = calculate_vote_lamports!(effective_stake, for_votes_bp)?;

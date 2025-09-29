@@ -1,11 +1,11 @@
 #![allow(unexpected_cfgs, unused_variables, clippy::too_many_arguments)]
+mod constants;
 mod error;
 mod events;
 mod instructions;
 mod merkle_helpers;
 mod state;
 mod utils;
-mod constants;
 use anchor_lang::prelude::*;
 use instructions::*;
 
@@ -45,7 +45,8 @@ pub mod govcontract {
     }
 
     pub fn support_proposal(ctx: Context<SupportProposal>, spl_vote_account: Pubkey) -> Result<()> {
-        ctx.accounts.support_proposal(spl_vote_account, &ctx.bumps)?;
+        ctx.accounts
+            .support_proposal(spl_vote_account, &ctx.bumps)?;
         Ok(())
     }
 
@@ -78,8 +79,13 @@ pub mod govcontract {
         against_votes_bp: u64,
         abstain_votes_bp: u64,
     ) -> Result<()> {
-        ctx.accounts
-            .modify_vote(spl_vote_account, for_votes_bp, against_votes_bp, abstain_votes_bp, &ctx.bumps)?;
+        ctx.accounts.modify_vote(
+            spl_vote_account,
+            for_votes_bp,
+            against_votes_bp,
+            abstain_votes_bp,
+            &ctx.bumps,
+        )?;
         Ok(())
     }
 

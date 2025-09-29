@@ -376,7 +376,10 @@ async fn handle_command(cli: Cli) -> Result<()> {
             )
             .await?;
         }
-        Commands::SupportProposal { proposal_id, spl_vote_account } => {
+        Commands::SupportProposal {
+            proposal_id,
+            spl_vote_account,
+        } => {
             instructions::support_proposal(
                 proposal_id.to_string(),
                 cli.identity_keypair,
@@ -487,7 +490,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 cli.identity_keypair,
                 cli.rpc_url,
                 consensus_result.to_string(),
-                )
+            )
             .await?;
         }
     }

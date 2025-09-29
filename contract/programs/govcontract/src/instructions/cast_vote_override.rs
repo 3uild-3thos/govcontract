@@ -10,9 +10,9 @@ use crate::{
 };
 
 #[cfg(feature = "production")]
-use gov_v1::{ConsensusResult, MetaMerkleProof, StakeMerkleLeaf, ID as GOV_V1_ID };
+use gov_v1::{ConsensusResult, MetaMerkleProof, StakeMerkleLeaf, ID as GOV_V1_ID};
 #[cfg(feature = "testing")]
-use mock_gov_v1::{ConsensusResult, MetaMerkleProof, StakeMerkleLeaf, ID as GOV_V1_ID };
+use mock_gov_v1::{ConsensusResult, MetaMerkleProof, StakeMerkleLeaf, ID as GOV_V1_ID};
 
 #[derive(Accounts)]
 #[instruction(spl_vote_account: Pubkey, spl_stake_account: Pubkey)]
@@ -81,10 +81,14 @@ impl<'info> CastVoteOverride<'info> {
             .checked_add(against_votes_bp)
             .and_then(|sum| sum.checked_add(abstain_votes_bp))
             .ok_or(GovernanceError::ArithmeticOverflow)?;
-        require!(total_bp == BASIS_POINTS_MAX, GovernanceError::InvalidVoteDistribution);
+        require!(
+            total_bp == BASIS_POINTS_MAX,
+            GovernanceError::InvalidVoteDistribution
+        );
 
         require!(
-            self.consensus_result.ballot.meta_merkle_root == self.proposal.meta_merkle_root.unwrap_or_default(),
+            self.consensus_result.ballot.meta_merkle_root
+                == self.proposal.meta_merkle_root.unwrap_or_default(),
             GovernanceError::InvalidMerkleRoot
         );
 
@@ -159,7 +163,6 @@ impl<'info> CastVoteOverride<'info> {
 
         // If validator has already voted, adjust validator values in vote and proposal
         if self.validator_vote.has_voted {
-
             // Substract validator vote lamports from proposal
             self.proposal.sub_vote_lamports(
                 self.validator_vote.for_votes_lamports,
@@ -168,13 +171,22 @@ impl<'info> CastVoteOverride<'info> {
             )?;
 
             // Calculate new validator votes, substracting delegator stake from validator vote
-            let new_validator_stake = self.validator_vote.stake
+            let new_validator_stake = self
+                .validator_vote
+                .stake
                 .checked_sub(delegator_stake)
                 .ok_or(GovernanceError::ArithmeticOverflow)?;
 
-            let for_votes_lamports_new = calculate_vote_lamports!(new_validator_stake, self.validator_vote.for_votes_bp)?;
-            let against_votes_lamports_new = calculate_vote_lamports!(new_validator_stake, self.validator_vote.against_votes_bp)?;
-            let abstain_votes_lamports_new = calculate_vote_lamports!(new_validator_stake, self.validator_vote.abstain_votes_bp)?;
+            let for_votes_lamports_new =
+                calculate_vote_lamports!(new_validator_stake, self.validator_vote.for_votes_bp)?;
+            let against_votes_lamports_new = calculate_vote_lamports!(
+                new_validator_stake,
+                self.validator_vote.against_votes_bp
+            )?;
+            let abstain_votes_lamports_new = calculate_vote_lamports!(
+                new_validator_stake,
+                self.validator_vote.abstain_votes_bp
+            )?;
 
             // Add new validator vote lamports to proposal
             self.proposal.add_vote_lamports(
@@ -187,7 +199,6 @@ impl<'info> CastVoteOverride<'info> {
             self.validator_vote.for_votes_lamports = for_votes_lamports_new;
             self.validator_vote.against_votes_lamports = against_votes_lamports_new;
             self.validator_vote.abstain_votes_lamports = abstain_votes_lamports_new;
-
         }
 
         self.proposal.vote_count += 1;
@@ -231,7 +242,6 @@ impl<'info> CastVoteOverride<'info> {
             stake_amount: delegator_stake,
             vote_timestamp: clock.unix_timestamp,
         });
-
 
         Ok(())
     }

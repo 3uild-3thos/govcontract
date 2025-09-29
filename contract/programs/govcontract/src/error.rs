@@ -1,8 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::constants::{
-    MAX_DESCRIPTION_LENGTH, MAX_TITLE_LENGTH, MAX_VOTING_EPOCHS
-};
+use crate::constants::{MAX_DESCRIPTION_LENGTH, MAX_TITLE_LENGTH, MAX_VOTING_EPOCHS};
 
 #[error_code]
 pub enum GovernanceError {

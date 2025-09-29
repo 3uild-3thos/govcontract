@@ -4,11 +4,9 @@ use anyhow::Result;
 
 use crate::{
     govcontract::client::{accounts, args},
-    utils::{
-        utils::{
-            create_spinner, derive_proposal_index_pda, derive_proposal_pda, load_identity_keypair,
-            program_setup_govcontract, find_spl_vote_account,
-        },
+    utils::utils::{
+        create_spinner, derive_proposal_index_pda, derive_proposal_pda, find_spl_vote_account,
+        load_identity_keypair, program_setup_govcontract,
     },
 };
 
@@ -35,8 +33,9 @@ pub async fn create_proposal(
     let identity_keypair = load_identity_keypair(identity_keypair)?;
 
     let program = program_setup_govcontract(identity_keypair.clone(), rpc_url.clone()).await?;
-    
-    let spl_vote_account = find_spl_vote_account(&identity_keypair.pubkey(), &program.rpc()).await?;
+
+    let spl_vote_account =
+        find_spl_vote_account(&identity_keypair.pubkey(), &program.rpc()).await?;
 
     let seed_value = seed.unwrap_or_else(rand::random::<u64>);
 
