@@ -69,14 +69,14 @@ export function DashboardStats({
         ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12">
+    <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-8">
       {stats.map((stat, index) => (
         <div key={index} className="min-w-0">
-          <p className="text-[var(--color-dao-color-gray)] text-xs uppercase tracking-wider mb-1">
+          <p className="text-[var(--color-dao-color-gray)] text-[10px] sm:text-xs uppercase tracking-wider mb-1">
             {stat.label}
           </p>
           <div>
-            <p className="text-foreground text-lg lg:text-xl font-medium">
+            <p className="text-foreground text-base sm:text-lg lg:text-xl font-medium">
               {stat.value}
             </p>
             {stat.showRaw && stat.rawValue && (

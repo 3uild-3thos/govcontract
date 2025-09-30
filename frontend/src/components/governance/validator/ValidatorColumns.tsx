@@ -8,8 +8,8 @@ import {
   formatLamportsDisplay,
   formatOptionalCount,
 } from "@/lib/governance/formatters";
-import { CopyableAddress } from "../shared/CopyableAddress";
-import { SortableHeaderButton } from "../shared/SortableHeaderButton";
+import { CopyableAddress } from "@/components/governance/shared/CopyableAddress";
+import { SortableHeaderButton } from "@/components/governance/shared/SortableHeaderButton";
 
 export const columns: ColumnDef<VoteAccountData>[] = [
   {
@@ -18,22 +18,33 @@ export const columns: ColumnDef<VoteAccountData>[] = [
     cell: ({ row }) => {
       const account = row.getValue("vote_account") as string;
       return (
-        <CopyableAddress
-          address={account}
-          shortenedLength={4}
-          copyLabel="Copy full address"
-        />
+        <>
+          {/* Mobile: Simple text without copy button */}
+          <div className="sm:hidden">
+            <p className="font-mono text-white/90 text-xs">
+              {formatAddress(account, 4)}
+            </p>
+          </div>
+          {/* Desktop: Full CopyableAddress component */}
+          <div className="hidden sm:block">
+            <CopyableAddress
+              address={account}
+              shortenedLength={4}
+              copyLabel="Copy full address"
+            />
+          </div>
+        </>
       );
     },
   },
   {
     accessorKey: "identity",
-    header: "IDENTITY",
+    header: () => <span className="hidden sm:inline">IDENTITY</span>,
     cell: ({ row }) => {
       const identity = row.getValue("identity") as string | undefined;
-      if (!identity) return <div>-</div>;
+      if (!identity) return <div className="hidden sm:block">-</div>;
       const displayIdentity = formatAddress(identity, 6);
-      return <div className="font-mono">{displayIdentity}</div>;
+      return <p className="hidden sm:block font-mono text-xs lg:text-sm">{displayIdentity}</p>;
     },
   },
   {
@@ -47,33 +58,37 @@ export const columns: ColumnDef<VoteAccountData>[] = [
   },
   {
     accessorKey: "commission",
-    header: "COMMISSION",
+    header: () => <span className="hidden sm:inline">COMMISSION</span>,
     cell: ({ row }) => {
       const commission = row.getValue("commission") as number | undefined;
       const formattedCommission = formatCommission(commission);
-      return <div>{formattedCommission}</div>;
+      return <div className="hidden sm:block">{formattedCommission}</div>;
     },
   },
   {
     accessorKey: "lastVote",
     header: ({ column }) => (
-      <SortableHeaderButton column={column} label="LAST VOTE" />
+      <div className="hidden sm:block">
+        <SortableHeaderButton column={column} label="LAST VOTE" />
+      </div>
     ),
     cell: ({ row }) => {
       const lastVote = row.getValue("lastVote") as number | undefined;
       const formattedLastVote = formatOptionalCount(lastVote);
-      return <div>{formattedLastVote}</div>;
+      return <div className="hidden sm:block">{formattedLastVote}</div>;
     },
   },
   {
     accessorKey: "credits",
     header: ({ column }) => (
-      <SortableHeaderButton column={column} label="CREDITS" />
+      <div className="hidden sm:block">
+        <SortableHeaderButton column={column} label="CREDITS" />
+      </div>
     ),
     cell: ({ row }) => {
       const credits = row.getValue("credits") as number | undefined;
       const formattedCredits = formatOptionalCount(credits);
-      return <div>{formattedCredits}</div>;
+      return <div className="hidden sm:block">{formattedCredits}</div>;
     },
   },
 ];

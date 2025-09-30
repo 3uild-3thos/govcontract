@@ -23,7 +23,7 @@ export function CopyableAddress({
 
   return (
     <div className={cn("space-y-1", className)}>
-      <div className="font-mono text-white/90">{shortened}</div>
+      <p className="font-mono text-white/90 text-xs lg:text-sm">{shortened}</p>
       <button
         type="button"
         onClick={() => copyToClipboard(address)}

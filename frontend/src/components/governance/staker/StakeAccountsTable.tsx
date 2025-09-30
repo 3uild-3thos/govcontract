@@ -11,16 +11,8 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import {
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-} from "lucide-react";
-
 import type { StakeAccountData } from "@/dummy-data/wallets";
-import { columns } from "./StakerColumns";
+import { columns } from "@/components/governance/staker/StakerColumns";
 import {
   Table,
   TableBody,
@@ -29,15 +21,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TableFilters } from "@/components/governance/shared/TableFilters";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { AppButton } from "@/components/ui/AppButton";
+  TablePaginationMobile,
+  TablePaginationDesktop,
+} from "@/components/governance/shared/TablePagination";
+import {
+  MobileRowDrawer,
+  DetailRow,
+} from "@/components/governance/shared/MobileRowDrawer";
+import { CopyableAddress } from "@/components/governance/shared/CopyableAddress";
+import { formatLamportsDisplay } from "@/lib/governance/formatters";
+import { StakeAccountStatus } from "@/components/governance/staker/StakeAccountStatus";
 
 interface StakeAccountsTableProps {
   data: StakeAccountData[];
@@ -51,10 +46,9 @@ const stakeAmountOptions = [
   { value: "500000", label: "> 500,000 SOL" },
 ];
 
-const stakeStatusOptions: {
-  value: StakeAccountData["state"] | "All";
-  label: string;
-}[] = [
+type StakeStatusType = NonNullable<StakeAccountData["state"]> | "All";
+
+const stakeStatusOptions: { value: StakeStatusType; label: string }[] = [
   { value: "All", label: "Status" },
   { value: "active", label: "Active" },
   { value: "inactive", label: "Inactive" },
@@ -63,16 +57,23 @@ const stakeStatusOptions: {
 ];
 
 export function StakeAccountsTable({ data }: StakeAccountsTableProps) {
+  // State Management
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     [],
   );
   const [searchValue, setSearchValue] = React.useState("");
   const [stakeSizeFilter, setStakeSizeFilter] = React.useState("All");
-  const [stakeStatusFilter, setStakeStatusFilter] = React.useState<
-    StakeAccountData["state"] | "All"
-  >("All");
+  const [stakeStatusFilter, setStakeStatusFilter] =
+    React.useState<StakeStatusType>("All");
 
+  // Mobile drawer state
+  const [selectedRow, setSelectedRow] = React.useState<StakeAccountData | null>(
+    null,
+  );
+  const [drawerOpen, setDrawerOpen] = React.useState(false);
+
+  // Data Filtering
   const filteredData = React.useMemo(() => {
     let filtered = [...data];
 
@@ -98,13 +99,11 @@ export function StakeAccountsTable({ data }: StakeAccountsTableProps) {
     return filtered;
   }, [data, searchValue, stakeSizeFilter, stakeStatusFilter]);
 
+  // Table Setup
   const table = useReactTable({
     data: filteredData,
     columns,
-    state: {
-      sorting,
-      columnFilters,
-    },
+    state: { sorting, columnFilters },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -112,9 +111,7 @@ export function StakeAccountsTable({ data }: StakeAccountsTableProps) {
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     initialState: {
-      pagination: {
-        pageSize: 10,
-      },
+      pagination: { pageSize: 10 },
     },
   });
 
@@ -126,212 +123,184 @@ export function StakeAccountsTable({ data }: StakeAccountsTableProps) {
     setSorting([]);
   };
 
+  const handleRowClick = (rowData: StakeAccountData) => {
+    // Only on mobile (check if screen width is less than sm breakpoint)
+    if (window.innerWidth < 640) {
+      setSelectedRow(rowData);
+      setDrawerOpen(true);
+    }
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h2 className="text-2xl font-semibold text-foreground">
-          Stake Accounts
-        </h2>
+      {/* Search and Filters */}
+      <TableFilters
+        title="Stake Accounts"
+        searchValue={searchValue}
+        onSearchChange={setSearchValue}
+        searchPlaceholder="Search stake accounts..."
+        filters={[
+          {
+            value: stakeSizeFilter,
+            onChange: setStakeSizeFilter,
+            options: stakeAmountOptions,
+            placeholder: "Stake Amount",
+            className: "w-[140px] text-white/60",
+          },
+          {
+            value: stakeStatusFilter,
+            onChange: (value) => setStakeStatusFilter(value as StakeStatusType),
+            options: stakeStatusOptions,
+            placeholder: "Status",
+            className: "w-[120px] text-white/60",
+          },
+        ]}
+        onReset={handleReset}
+      />
 
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-white/50" />
-            <input
-              placeholder="Search stake accounts..."
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 input"
-            />
-          </div>
-
-          <Select value={stakeSizeFilter} onValueChange={setStakeSizeFilter}>
-            <SelectTrigger className="w-[180px] text-white/60">
-              <SelectValue placeholder="Stake Size" />
-            </SelectTrigger>
-            <SelectContent className="select-background">
-              {stakeAmountOptions.map((option) => (
-                <SelectItem
-                  key={option.value}
-                  value={option.value}
-                  className="text-foreground"
-                >
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={stakeStatusFilter}
-            onValueChange={(value) => {
-              setStakeStatusFilter(value as StakeAccountData["state"] | "All");
-            }}
-          >
-            <SelectTrigger className="w-[180px] text-white/60">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent className="select-background">
-              {stakeStatusOptions.map((option) => (
-                <SelectItem
-                  key={option.value}
-                  value={option.value ?? ""}
-                  className="text-foreground"
-                >
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <AppButton
-            variant="outline"
-            onClick={handleReset}
-            className=" bg-transparent text-white"
-          >
-            Reset
-          </AppButton>
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-white/10 glass-card overflow-hidden">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow
-                key={headerGroup.id}
-                className="hover:bg-transparent border-white/10"
-              >
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    className={`text-xs font-semibold uppercase tracking-wide text-white/50 text-center`}
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
+      {/* Table */}
+      <div className="rounded-2xl border glass-card overflow-hidden">
+        <div className="sm:overflow-x-auto">
+          <Table className="w-full table-auto sm:table-fixed">
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  className="border-white/10 hover:bg-transparent"
+                  key={headerGroup.id}
+                  className="hover:bg-transparent border-white/10"
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className={`py-4 text-white/80 text-center`}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
-                  ))}
+                  {headerGroup.headers.map((header) => {
+                    const columnId = header.column.id;
+                    const isMobileHidden = [
+                      "active_stake",
+                      "vote_account",
+                    ].includes(columnId);
+
+                    return (
+                      <TableHead
+                        key={header.id}
+                        className={`text-xs font-semibold uppercase tracking-wide text-white/50 text-center px-2 sm:px-4
+                          ${isMobileHidden ? "hidden sm:table-cell" : ""}
+                          ${
+                            columnId === "stake_account"
+                              ? "w-3/5 sm:w-auto"
+                              : ""
+                          }
+                          ${columnId === "state" ? "w-2/5 sm:w-auto" : ""}
+                        `}
+                      >
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                      </TableHead>
+                    );
+                  })}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow className="hover:bg-transparent">
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center text-white/60"
-                >
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      <div className="flex items-center justify-between px-2">
-        <div className="text-sm text-white/60">
-          Total Accounts: {filteredData.length.toLocaleString()}
-        </div>
-
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2 text-sm text-white/60">
-            <span>Rows per page</span>
-            <Select
-              value={`${table.getState().pagination.pageSize}`}
-              onValueChange={(value) => table.setPageSize(Number(value))}
-            >
-              <SelectTrigger className="h-8 w-[70px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="select-background">
-                {[10, 20, 30, 40, 50].map((pageSize) => (
-                  <SelectItem
-                    key={pageSize}
-                    value={`${pageSize}`}
-                    className="text-white"
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    className="border-white/10 hover:bg-white/5 sm:hover:bg-transparent cursor-pointer sm:cursor-default"
+                    onClick={() => handleRowClick(row.original)}
                   >
-                    {pageSize}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+                    {row.getVisibleCells().map((cell) => {
+                      const columnId = cell.column.id;
+                      const isMobileHidden = [
+                        "active_stake",
+                        "vote_account",
+                      ].includes(columnId);
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => table.setPageIndex(0)}
-              disabled={!table.getCanPreviousPage()}
-              className="size-8 border-white/10 text-white hover:bg-white/5 disabled:opacity-50"
-            >
-              <ChevronsLeft className="size-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-              className="size-8 border-white/10 text-white hover:bg-white/5 disabled:opacity-50"
-            >
-              <ChevronLeft className="size-4" />
-            </Button>
-
-            <div className="flex items-center gap-1">
-              <span className="text-sm text-white/60">
-                {table.getState().pagination.pageIndex + 1}
-              </span>
-              <span className="text-sm text-white/60">/</span>
-              <span className="text-sm text-white/60">
-                {table.getPageCount()}
-              </span>
-            </div>
-
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-              className="size-8 border-white/10 text-white hover:bg-white/5 disabled:opacity-50"
-            >
-              <ChevronRight className="size-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-              disabled={!table.getCanNextPage()}
-              className="size-8 border-white/10 text-white hover:bg-white/5 disabled:opacity-50"
-            >
-              <ChevronsRight className="size-4" />
-            </Button>
-          </div>
+                      return (
+                        <TableCell
+                          key={cell.id}
+                          className={`py-4 text-white/80 text-center px-2 sm:px-4
+                            ${isMobileHidden ? "hidden sm:table-cell" : ""}
+                          `}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow className="hover:bg-transparent">
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center text-white/60"
+                  >
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </div>
       </div>
+
+      {/* Pagination */}
+      <TablePaginationMobile
+        table={table}
+        totalLabel="Total"
+        totalCount={filteredData.length}
+      />
+      <TablePaginationDesktop
+        table={table}
+        totalLabel="Total Accounts"
+        totalCount={filteredData.length}
+      />
+
+      {/* Mobile Row Details Drawer */}
+      <MobileRowDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        title="Stake Account Details"
+      >
+        {selectedRow && (
+          <>
+            <DetailRow
+              label="Stake Account"
+              value={
+                <CopyableAddress
+                  address={selectedRow.stake_account}
+                  shortenedLength={8}
+                  copyLabel="Copy full address"
+                />
+              }
+              fullWidth
+            />
+            <DetailRow
+              label="Delegated Validator"
+              value={
+                <CopyableAddress
+                  address={selectedRow.vote_account}
+                  shortenedLength={8}
+                  copyLabel="Copy vote account"
+                />
+              }
+              fullWidth
+            />
+            <DetailRow
+              label="Amount"
+              value={formatLamportsDisplay(selectedRow.active_stake).value}
+            />
+            <DetailRow
+              label="State"
+              value={
+                <StakeAccountStatus state={selectedRow.state || "active"} />
+              }
+            />
+          </>
+        )}
+      </MobileRowDrawer>
     </div>
   );
 }

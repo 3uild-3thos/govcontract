@@ -4,8 +4,8 @@ import { ColumnDef } from "@tanstack/react-table";
 import type { StakeAccountData } from "@/dummy-data/wallets";
 import { StakeAccountStatus } from "@/components/governance/staker/StakeAccountStatus";
 import { CopyableAddress } from "@/components/governance/shared/CopyableAddress";
-import { formatLamportsDisplay } from "@/lib/governance/formatters";
-import { SortableHeaderButton } from "../shared/SortableHeaderButton";
+import { formatLamportsDisplay, formatAddress } from "@/lib/governance/formatters";
+import { SortableHeaderButton } from "@/components/governance/shared/SortableHeaderButton";
 
 export const columns: ColumnDef<StakeAccountData>[] = [
   {
@@ -14,36 +14,51 @@ export const columns: ColumnDef<StakeAccountData>[] = [
     cell: ({ row }) => {
       const account = row.getValue("stake_account") as string;
       return (
-        <CopyableAddress
-          address={account}
-          shortenedLength={4}
-          copyLabel="Copy full address"
-        />
+        <>
+          {/* Mobile: Simple text without copy button */}
+          <div className="sm:hidden">
+            <p className="font-mono text-white/90 text-xs">
+              {formatAddress(account, 4)}
+            </p>
+          </div>
+          {/* Desktop: Full CopyableAddress component */}
+          <div className="hidden sm:block">
+            <CopyableAddress
+              address={account}
+              shortenedLength={4}
+              copyLabel="Copy full address"
+            />
+          </div>
+        </>
       );
     },
   },
   {
     accessorKey: "active_stake",
     header: ({ column }) => (
-      <SortableHeaderButton column={column} label="AMOUNT" />
+      <div className="hidden sm:block">
+        <SortableHeaderButton column={column} label="AMOUNT" />
+      </div>
     ),
     cell: ({ row }) => {
       const stake = row.getValue("active_stake") as number;
       const solAmount = formatLamportsDisplay(stake);
-      return <div>{solAmount.value}</div>;
+      return <div className="hidden sm:block">{solAmount.value}</div>;
     },
   },
   {
     accessorKey: "vote_account",
-    header: "DELEGATED VALIDATOR",
+    header: () => <span className="hidden sm:inline">DELEGATED VALIDATOR</span>,
     cell: ({ row }) => {
       const validator = row.getValue("vote_account") as string;
       return (
-        <CopyableAddress
-          address={validator}
-          shortenedLength={8}
-          copyLabel="Copy vote account"
-        />
+        <div className="hidden sm:block">
+          <CopyableAddress
+            address={validator}
+            shortenedLength={8}
+            copyLabel="Copy vote account"
+          />
+        </div>
       );
     },
   },

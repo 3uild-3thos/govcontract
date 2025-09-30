@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import type { ProposalRecord } from "@/dummy-data/proposals";
@@ -10,6 +11,7 @@ import { useMounted } from "@/hooks/useMounted";
 import LifecycleIndicator from "@/components/ui/LifecycleIndicator";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 type ProposalStatus = ProposalRecord["status"];
 type ProposalLifecycleStage = ProposalRecord["lifecycleStage"];
@@ -43,7 +45,10 @@ const getVotingStatusText = (
   return "Voting Not Started Yet";
 };
 
-const getActionButtonText = (lifecycleStage: ProposalLifecycleStage) => {
+const getActionButtonText = (
+  lifecycleStage: ProposalLifecycleStage,
+  status: ProposalStatus,
+) => {
   if (lifecycleStage === "voting") {
     return "Cast Vote";
   }
@@ -55,8 +60,10 @@ const getActionButtonText = (lifecycleStage: ProposalLifecycleStage) => {
   return null;
 };
 
-const shouldShowModifyButton = (lifecycleStage: ProposalLifecycleStage) =>
-  lifecycleStage === "voting";
+const shouldShowModifyButton = (
+  lifecycleStage: ProposalLifecycleStage,
+  status: ProposalStatus,
+) => lifecycleStage === "voting";
 
 const VotingDetails = ({ items, layout }: VotingDetailsProps) => {
   if (items.length === 0) {
@@ -149,9 +156,9 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
     ? calculateVotingEndsIn(votingEndsInValue)
     : null;
   const votingStatusText = getVotingStatusText(status, votingEndsIn);
-  const actionButtonText = getActionButtonText(lifecycleStage);
+  const actionButtonText = getActionButtonText(lifecycleStage, status);
   const showActionButton = Boolean(actionButtonText);
-  const showModifyButton = shouldShowModifyButton(lifecycleStage);
+  const showModifyButton = shouldShowModifyButton(lifecycleStage, status);
 
   const detailItems = [
     `Quorum ${quorumPercent}%`,
@@ -165,7 +172,9 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
 
   const handleButtonClick: MouseEventHandler<HTMLButtonElement> = (event) => {
     event.stopPropagation();
-    console.log((event.target as HTMLButtonElement).innerText);
+    toast.success(
+      (event.target as HTMLButtonElement).innerText + " Successfully",
+    );
   };
 
   return (

@@ -69,6 +69,13 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    overscroll-behavior: none;
+    width: 100%;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    height: 100dvh;
+  }
   body {
     @apply text-foreground;
     background: radial-gradient(
@@ -144,6 +151,14 @@
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+  }
+
+  /* Sonner Toast Styles */
+  [data-sonner-toast] {
+    background: var(--color-dao-color-gray) !important;
+    color: var(--color-background) !important;
+    border: none !important;
+    opacity: 0.9;
   }
 
   .input {

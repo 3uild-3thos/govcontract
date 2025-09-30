@@ -1,10 +1,11 @@
 "use client";
 
-import type { ProposalRow } from "./ProposalsTable";
+import type { ProposalRow } from "@/components/proposals/proposals-table/ProposalsTable";
 import Link from "next/link";
 import { AppButton } from "@/components/ui/AppButton";
 import { GitHubIcon } from "@/components/icons/SvgIcons";
 import { Spade } from "lucide-react";
+import { toast } from "sonner";
 
 const VOTE_STATE_LABEL: Record<ProposalRow["vote"]["state"], string> = {
   "in-progress": "In Progress",
@@ -80,7 +81,7 @@ function VoteActions({ state }: { state: ProposalRow["lifecycleStage"] }) {
           variant="outline"
           text="Modify Vote"
           className="w-full justify-center border-white/15 bg-white/10 text-sm font-medium text-white/75 hover:text-white"
-          onClick={() => console.log("modify vote")}
+          onClick={() => toast.success("Modify Vote Successfully")}
         />
       )}
       <AppButton
@@ -88,7 +89,11 @@ function VoteActions({ state }: { state: ProposalRow["lifecycleStage"] }) {
         text={state === "voting" ? "Cast Vote" : "Support"}
         className="w-full justify-center text-sm font-semibold text-foreground"
         onClick={() =>
-          console.log(state === "voting" ? "cast vote" : "support")
+          toast.success(
+            state === "voting"
+              ? "Cast Vote Successfully"
+              : "Support Proposal Successfully",
+          )
         }
       />
     </div>

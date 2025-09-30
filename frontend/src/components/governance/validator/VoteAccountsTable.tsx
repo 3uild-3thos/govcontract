@@ -11,13 +11,6 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import {
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-} from "lucide-react";
 import type { VoteAccountData } from "@/dummy-data/wallets";
 import {
   Table,
@@ -27,16 +20,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { columns } from "@/components/governance/validator/ValidatorColumns";
+import { TableFilters } from "@/components/governance/shared/TableFilters";
+import { TablePaginationMobile, TablePaginationDesktop } from "@/components/governance/shared/TablePagination";
+import { MobileRowDrawer, DetailRow } from "@/components/governance/shared/MobileRowDrawer";
+import { CopyableAddress } from "@/components/governance/shared/CopyableAddress";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { AppButton } from "@/components/ui/AppButton";
-import { columns } from "./ValidatorColumns";
+  formatAddress,
+  formatCommission,
+  formatLamportsDisplay,
+  formatOptionalCount,
+} from "@/lib/governance/formatters";
 
 interface VoteAccountsTableProps {
   data: VoteAccountData[];
@@ -51,19 +45,23 @@ const stakeSizeOptions = [
 ];
 
 export function VoteAccountsTable({ data }: VoteAccountsTableProps) {
+  // State Management
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    [],
-  );
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [searchValue, setSearchValue] = React.useState("");
   const [stakeSizeFilter, setStakeSizeFilter] = React.useState("All");
 
+  // Mobile drawer state
+  const [selectedRow, setSelectedRow] = React.useState<VoteAccountData | null>(null);
+  const [drawerOpen, setDrawerOpen] = React.useState(false);
+
+  // Data Filtering
   const filteredData = React.useMemo(() => {
     let filtered = [...data];
 
     if (searchValue) {
       filtered = filtered.filter((row) =>
-        row.vote_account.toLowerCase().includes(searchValue.toLowerCase()),
+        row.vote_account.toLowerCase().includes(searchValue.toLowerCase())
       );
     }
 
@@ -75,13 +73,11 @@ export function VoteAccountsTable({ data }: VoteAccountsTableProps) {
     return filtered;
   }, [data, searchValue, stakeSizeFilter]);
 
+  // Table Setup
   const table = useReactTable({
     data: filteredData,
     columns,
-    state: {
-      sorting,
-      columnFilters,
-    },
+    state: { sorting, columnFilters },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -89,12 +85,11 @@ export function VoteAccountsTable({ data }: VoteAccountsTableProps) {
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     initialState: {
-      pagination: {
-        pageSize: 10,
-      },
+      pagination: { pageSize: 10 },
     },
   });
 
+  // Handlers
   const handleReset = () => {
     setSearchValue("");
     setStakeSizeFilter("All");
@@ -102,189 +97,160 @@ export function VoteAccountsTable({ data }: VoteAccountsTableProps) {
     setSorting([]);
   };
 
+  const handleRowClick = (rowData: VoteAccountData) => {
+    // Only on mobile (check if screen width is less than sm breakpoint)
+    if (window.innerWidth < 640) {
+      setSelectedRow(rowData);
+      setDrawerOpen(true);
+    }
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h2 className="text-2xl font-semibold text-foreground">
-          Vote Accounts
-        </h2>
+      {/* Search and Filters */}
+      <TableFilters
+        title="Vote Accounts"
+        searchValue={searchValue}
+        onSearchChange={setSearchValue}
+        searchPlaceholder="Search vote accounts..."
+        filters={[
+          {
+            value: stakeSizeFilter,
+            onChange: setStakeSizeFilter,
+            options: stakeSizeOptions,
+            placeholder: "Stake Size",
+          },
+        ]}
+        onReset={handleReset}
+      />
 
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-white/50" />
-            <input
-              placeholder="Search vote accounts..."
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 input"
-            />
-          </div>
-
-          <Select value={stakeSizeFilter} onValueChange={setStakeSizeFilter}>
-            <SelectTrigger className="w-[180px] text-white/60">
-              <SelectValue placeholder="Stake Size" />
-            </SelectTrigger>
-            <SelectContent className="select-background">
-              {stakeSizeOptions.map((option) => (
-                <SelectItem
-                  key={option.value}
-                  value={option.value}
-                  className="text-foreground"
-                >
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <AppButton
-            variant="outline"
-            onClick={handleReset}
-            className=" bg-transparent text-white"
-          >
-            Reset
-          </AppButton>
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-white/10 glass-card overflow-hidden">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow
-                key={headerGroup.id}
-                className="hover:bg-transparent border-white/10"
-              >
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    className="text-xs font-semibold uppercase tracking-wide text-white/50 text-center"
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
+      {/* Table */}
+      <div className="rounded-2xl border glass-card overflow-hidden">
+        <div className="sm:overflow-x-auto">
+          <Table className="w-full table-auto sm:table-fixed">
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  className="border-white/10 hover:bg-transparent"
+                  key={headerGroup.id}
+                  className="hover:bg-transparent border-white/10"
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className="py-4 text-white/80 text-center"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
-                  ))}
+                  {headerGroup.headers.map((header) => {
+                    const columnId = header.column.id;
+                    const isMobileHidden = ["identity", "commission", "lastVote", "credits"].includes(columnId);
+
+                    return (
+                      <TableHead
+                        key={header.id}
+                        className={`text-xs font-semibold uppercase tracking-wide text-white/50 text-center px-2 sm:px-4
+                          ${isMobileHidden ? "hidden sm:table-cell" : ""}
+                          ${columnId === "vote_account" ? "w-3/5 sm:w-auto" : ""}
+                          ${columnId === "active_stake" ? "w-2/5 sm:w-auto" : ""}
+                        `}
+                      >
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.header, header.getContext())}
+                      </TableHead>
+                    );
+                  })}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow className="hover:bg-transparent">
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center text-white/60"
-                >
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      <div className="flex items-center justify-between px-2">
-        <div className="text-sm text-white/60">
-          Total Validators: {filteredData.length.toLocaleString()}
-        </div>
-
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2 text-sm text-white/60">
-            <span>Rows per page</span>
-            <Select
-              value={`${table.getState().pagination.pageSize}`}
-              onValueChange={(value) => table.setPageSize(Number(value))}
-            >
-              <SelectTrigger className="h-8 w-[70px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="select-background">
-                {[10, 20, 30, 40, 50].map((pageSize) => (
-                  <SelectItem
-                    key={pageSize}
-                    value={`${pageSize}`}
-                    className="text-foreground"
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    className="border-white/10 hover:bg-white/5 sm:hover:bg-transparent cursor-pointer sm:cursor-default"
+                    onClick={() => handleRowClick(row.original)}
                   >
-                    {pageSize}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+                    {row.getVisibleCells().map((cell) => {
+                      const columnId = cell.column.id;
+                      const isMobileHidden = ["identity", "commission", "lastVote", "credits"].includes(columnId);
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => table.setPageIndex(0)}
-              disabled={!table.getCanPreviousPage()}
-              className="size-8 border-white/10 text-white hover:bg-white/5 disabled:opacity-50"
-            >
-              <ChevronsLeft className="size-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-              className="size-8 border-white/10 text-white hover:bg-white/5 disabled:opacity-50"
-            >
-              <ChevronLeft className="size-4" />
-            </Button>
-
-            <div className="flex items-center gap-1">
-              <span className="text-sm text-white/60">
-                {table.getState().pagination.pageIndex + 1}
-              </span>
-              <span className="text-sm text-white/60">/</span>
-              <span className="text-sm text-white/60">
-                {table.getPageCount()}
-              </span>
-            </div>
-
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-              className="size-8 border-white/10 text-white hover:bg-white/5 disabled:opacity-50"
-            >
-              <ChevronRight className="size-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-              disabled={!table.getCanNextPage()}
-              className="size-8 border-white/10 text-white hover:bg-white/5 disabled:opacity-50"
-            >
-              <ChevronsRight className="size-4" />
-            </Button>
-          </div>
+                      return (
+                        <TableCell
+                          key={cell.id}
+                          className={`py-4 text-white/80 text-center px-2 sm:px-4
+                            ${isMobileHidden ? "hidden sm:table-cell" : ""}
+                          `}
+                        >
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow className="hover:bg-transparent">
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center text-white/60"
+                  >
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </div>
       </div>
+
+      {/* Pagination */}
+      <TablePaginationMobile
+        table={table}
+        totalLabel="Total"
+        totalCount={filteredData.length}
+      />
+      <TablePaginationDesktop
+        table={table}
+        totalLabel="Total Validators"
+        totalCount={filteredData.length}
+      />
+
+      {/* Mobile Row Details Drawer */}
+      <MobileRowDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        title="Vote Account Details"
+      >
+        {selectedRow && (
+          <>
+            <DetailRow
+              label="Vote Account"
+              value={
+                <CopyableAddress
+                  address={selectedRow.vote_account}
+                  shortenedLength={8}
+                  copyLabel="Copy full address"
+                />
+              }
+              fullWidth
+            />
+            <DetailRow
+              label="Identity"
+              value={selectedRow.identity ? formatAddress(selectedRow.identity, 8) : "-"}
+              fullWidth
+            />
+            <DetailRow
+              label="Delegated Stake"
+              value={formatLamportsDisplay(selectedRow.active_stake).value}
+            />
+            <DetailRow
+              label="Commission"
+              value={formatCommission(selectedRow.commission)}
+            />
+            <DetailRow
+              label="Last Vote"
+              value={formatOptionalCount(selectedRow.lastVote)}
+            />
+            <DetailRow
+              label="Credits"
+              value={formatOptionalCount(selectedRow.credits)}
+            />
+          </>
+        )}
+      </MobileRowDrawer>
     </div>
   );
 }
