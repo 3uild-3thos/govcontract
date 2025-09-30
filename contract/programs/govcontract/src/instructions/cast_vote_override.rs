@@ -23,12 +23,13 @@ pub struct CastVoteOverride<'info> {
     pub signer: Signer<'info>, // Voter (staker/delegator)
     #[account(mut)]
     pub proposal: Account<'info, Proposal>, // Proposal being voted on
+    /// CHECK: Validator vote account. Might not yet exist
     #[account(
         mut,
         seeds = [b"vote", proposal.key().as_ref(), spl_vote_account.key.as_ref()],
-        bump = validator_vote.bump,
+        bump,
     )]
-    pub validator_vote: Account<'info, Vote>, // Validator's existing vote (if any)
+    pub validator_vote: UncheckedAccount<'info>, // Validator's existing vote (if any)
     /// CHECK: Vote account is too big to deserialize, so we check on owner and size, then compare node_pubkey with signer
     #[account(
         constraint = spl_vote_account.owner == &vote_program::ID @ ProgramError::InvalidAccountOwner,
@@ -175,65 +176,78 @@ impl<'info> CastVoteOverride<'info> {
         let against_votes_lamports = calculate_vote_lamports!(delegator_stake, against_votes_bp)?;
         let abstain_votes_lamports = calculate_vote_lamports!(delegator_stake, abstain_votes_bp)?;
 
-        // Subtract validator's vote
-        self.proposal.sub_vote_lamports(
-            self.validator_vote.for_votes_lamports,
-            self.validator_vote.against_votes_lamports,
-            self.validator_vote.abstain_votes_lamports,
-        )?;
+        // Check that validator vote exists
+        // If account does not exist, call cache_votes_override to store staker's vote in override PDA
 
-        // Add delegator's vote
-        self.proposal.add_vote_lamports(
-            for_votes_lamports,
-            against_votes_lamports,
-            abstain_votes_lamports,
-        )?;
+        if(self.validator_vote.data_len() == Vote::INIT_SPACE
+            && self.validator_vote.owner == &vote_program::ID
+            && Vote::deserialize(&mut self.validator_vote.data.borrow().as_ref()).is_ok())
+        {
+            let mut validator_vote = Vote::deserialize(&mut self.validator_vote.data.borrow().as_ref())?;
 
-        let new_validator_stake = validator_stake
-            .checked_sub(delegator_stake)
-            .ok_or(GovernanceError::ArithmeticOverflow)?;
+            // Subtract validator's vote
+            self.proposal.sub_vote_lamports(
+                self.validator_vote.for_votes_lamports,
+                self.validator_vote.against_votes_lamports,
+                self.validator_vote.abstain_votes_lamports,
+            )?;
 
-        // Calculate new validator votes for each category based on actual lamports
-        let for_votes_lamports_new =
-            calculate_vote_lamports!(new_validator_stake, self.validator_vote.for_votes_bp)?;
-        let against_votes_lamports_new =
-            calculate_vote_lamports!(new_validator_stake, self.validator_vote.against_votes_bp)?;
-        let abstain_votes_lamports_new =
-            calculate_vote_lamports!(new_validator_stake, self.validator_vote.abstain_votes_bp)?;
+            // Add delegator's vote
+            self.proposal.add_vote_lamports(
+                for_votes_lamports,
+                against_votes_lamports,
+                abstain_votes_lamports,
+            )?;
 
-        // Add validator's new vote
-        self.proposal.add_vote_lamports(
-            for_votes_lamports_new,
-            against_votes_lamports_new,
-            abstain_votes_lamports_new,
-        )?;
+            let new_validator_stake = validator_stake
+                .checked_sub(delegator_stake)
+                .ok_or(GovernanceError::ArithmeticOverflow)?;
 
-        // Store new lamports
-        self.validator_vote.for_votes_lamports = for_votes_lamports_new;
-        self.validator_vote.against_votes_lamports = against_votes_lamports_new;
-        self.validator_vote.abstain_votes_lamports = abstain_votes_lamports_new;
-        self.validator_vote.override_lamports = self
-            .validator_vote
-            .override_lamports
-            .checked_add(delegator_stake)
-            .ok_or(GovernanceError::ArithmeticOverflow)?;
+            // Calculate new validator votes for each category based on actual lamports
+            let for_votes_lamports_new =
+                calculate_vote_lamports!(new_validator_stake, self.validator_vote.for_votes_bp)?;
+            let against_votes_lamports_new =
+                calculate_vote_lamports!(new_validator_stake, self.validator_vote.against_votes_bp)?;
+            let abstain_votes_lamports_new =
+                calculate_vote_lamports!(new_validator_stake, self.validator_vote.abstain_votes_bp)?;
 
-        // Store override
-        self.vote_override.set_inner(VoteOverride {
-            stake_account: stake_merkle_leaf.stake_account,
-            validator: meta_merkle_leaf.vote_account,
-            proposal: self.proposal.key(),
-            vote_account_validator: self.validator_vote.key(),
-            for_votes_bp,
-            against_votes_bp,
-            abstain_votes_bp,
-            stake_amount: delegator_stake,
-            vote_override_timestamp: clock.unix_timestamp,
-            bump: bumps.vote_override,
-            for_votes_lamports,
-            against_votes_lamports,
-            abstain_votes_lamports,
-        });
+            // Add validator's new vote
+            self.proposal.add_vote_lamports(
+                for_votes_lamports_new,
+                against_votes_lamports_new,
+                abstain_votes_lamports_new,
+            )?;
+
+            // Store new lamports
+            self.validator_vote.for_votes_lamports = for_votes_lamports_new;
+            self.validator_vote.against_votes_lamports = against_votes_lamports_new;
+            self.validator_vote.abstain_votes_lamports = abstain_votes_lamports_new;
+            self.validator_vote.override_lamports = self
+                .validator_vote
+                .override_lamports
+                .checked_add(delegator_stake)
+                .ok_or(GovernanceError::ArithmeticOverflow)?;
+
+            // Store override
+            self.vote_override.set_inner(VoteOverride {
+                stake_account: stake_merkle_leaf.stake_account,
+                validator: meta_merkle_leaf.vote_account,
+                proposal: self.proposal.key(),
+                vote_account_validator: self.validator_vote.key(),
+                for_votes_bp,
+                against_votes_bp,
+                abstain_votes_bp,
+                stake_amount: delegator_stake,
+                vote_override_timestamp: clock.unix_timestamp,
+                bump: bumps.vote_override,
+                for_votes_lamports,
+                against_votes_lamports,
+                abstain_votes_lamports,
+            });
+        }
+        else {
+            // Store delegator's vote in a the cache PDA
+        }
 
         // Emit vote override cast event
         emit!(VoteOverrideCast {

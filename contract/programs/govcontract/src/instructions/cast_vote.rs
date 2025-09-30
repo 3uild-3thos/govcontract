@@ -161,6 +161,9 @@ impl<'info> CastVote<'info> {
 
         self.proposal.vote_count += 1;
 
+        // Check if ovveride PDA exists
+        // If it does, update lamports with the override amount
+
         // Store the vote distribution in the Vote PDA
         self.vote.set_inner(Vote {
             validator: self.signer.key(),
