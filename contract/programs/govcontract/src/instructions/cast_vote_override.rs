@@ -1,10 +1,8 @@
 use anchor_lang::{
     prelude::*,
     solana_program::{
-        borsh0_10::try_from_slice_unchecked,
-        stake::program as stake_program,
-        vote::{program as vote_program, state::VoteState},
-    },
+        borsh0_10::try_from_slice_unchecked, program::invoke_signed, stake::program as stake_program, system_instruction::create_account, vote::{program as vote_program, state::VoteState}
+    }, system_program::{create_account, CreateAccount},
 };
 
 use crate::{
@@ -13,7 +11,7 @@ use crate::{
     error::GovernanceError,
     events::VoteOverrideCast,
     merkle_helpers::verify_merkle_proof_cpi,
-    state::{Proposal, Vote, VoteOverride},
+    state::{Proposal, Vote, VoteOverride, VoteOverrideCache},
 };
 use gov_v1::{ConsensusResult, MetaMerkleProof, StakeMerkleLeaf};
 
@@ -44,6 +42,13 @@ pub struct CastVoteOverride<'info> {
         bump
     )]
     pub vote_override: Account<'info, VoteOverride>, // New override account
+    /// CHECK: Vote override cache account. Might not yet exist
+    #[account(
+        mut,
+        seeds = [b"vote_override", proposal.key().as_ref(), validator_vote.key().as_ref()],
+        bump
+    )]
+    pub vote_override_cache: UncheckedAccount<'info>,
     /// CHECK: stake account for override
     #[account(
         constraint = spl_stake_account.owner == &stake_program::ID @ ProgramError::InvalidAccountOwner,
@@ -179,17 +184,17 @@ impl<'info> CastVoteOverride<'info> {
         // Check that validator vote exists
         // If account does not exist, call cache_votes_override to store staker's vote in override PDA
 
-        if(self.validator_vote.data_len() == Vote::INIT_SPACE
+        if self.validator_vote.data_len() == Vote::INIT_SPACE
             && self.validator_vote.owner == &vote_program::ID
-            && Vote::deserialize(&mut self.validator_vote.data.borrow().as_ref()).is_ok())
+            && Vote::deserialize(&mut self.validator_vote.data.borrow().as_ref()).is_ok()
         {
             let mut validator_vote = Vote::deserialize(&mut self.validator_vote.data.borrow().as_ref())?;
 
             // Subtract validator's vote
             self.proposal.sub_vote_lamports(
-                self.validator_vote.for_votes_lamports,
-                self.validator_vote.against_votes_lamports,
-                self.validator_vote.abstain_votes_lamports,
+                validator_vote.for_votes_lamports,
+                validator_vote.against_votes_lamports,
+                validator_vote.abstain_votes_lamports,
             )?;
 
             // Add delegator's vote
@@ -205,11 +210,11 @@ impl<'info> CastVoteOverride<'info> {
 
             // Calculate new validator votes for each category based on actual lamports
             let for_votes_lamports_new =
-                calculate_vote_lamports!(new_validator_stake, self.validator_vote.for_votes_bp)?;
+                calculate_vote_lamports!(new_validator_stake, validator_vote.for_votes_bp)?;
             let against_votes_lamports_new =
-                calculate_vote_lamports!(new_validator_stake, self.validator_vote.against_votes_bp)?;
+                calculate_vote_lamports!(new_validator_stake, validator_vote.against_votes_bp)?;
             let abstain_votes_lamports_new =
-                calculate_vote_lamports!(new_validator_stake, self.validator_vote.abstain_votes_bp)?;
+                calculate_vote_lamports!(new_validator_stake, validator_vote.abstain_votes_bp)?;
 
             // Add validator's new vote
             self.proposal.add_vote_lamports(
@@ -219,11 +224,10 @@ impl<'info> CastVoteOverride<'info> {
             )?;
 
             // Store new lamports
-            self.validator_vote.for_votes_lamports = for_votes_lamports_new;
-            self.validator_vote.against_votes_lamports = against_votes_lamports_new;
-            self.validator_vote.abstain_votes_lamports = abstain_votes_lamports_new;
-            self.validator_vote.override_lamports = self
-                .validator_vote
+            validator_vote.for_votes_lamports = for_votes_lamports_new;
+            validator_vote.against_votes_lamports = against_votes_lamports_new;
+            validator_vote.abstain_votes_lamports = abstain_votes_lamports_new;
+            validator_vote.override_lamports = validator_vote
                 .override_lamports
                 .checked_add(delegator_stake)
                 .ok_or(GovernanceError::ArithmeticOverflow)?;
@@ -247,6 +251,67 @@ impl<'info> CastVoteOverride<'info> {
         }
         else {
             // Store delegator's vote in a the cache PDA
+            if self.vote_override_cache.data_len() == VoteOverrideCache::INIT_SPACE
+                && self.validator_vote.owner == &vote_program::ID
+                && VoteOverrideCache::deserialize(&mut self.vote_override_cache.data.borrow().as_ref()).is_ok() {
+
+                let mut vote_override_cache = VoteOverrideCache::deserialize(&mut self.vote_override_cache.data.borrow().as_ref())?;
+
+                // Check if cache is for the same validator and proposal
+                if vote_override_cache.proposal != self.proposal.key()
+                    || vote_override_cache.vote_account_validator != self.validator_vote.key()
+                {
+                    // Return Error
+                }
+
+                // Add delegator's vote to cache
+                vote_override_cache.for_votes_bp = vote_override_cache.for_votes_bp.checked_add(for_votes_bp).ok_or(GovernanceError::ArithmeticOverflow)?;
+                vote_override_cache.against_votes_bp = vote_override_cache.against_votes_bp.checked_add(against_votes_bp).ok_or(GovernanceError::ArithmeticOverflow)?;
+                vote_override_cache.abstain_votes_bp = vote_override_cache.abstain_votes_bp.checked_add(abstain_votes_bp).ok_or(GovernanceError::ArithmeticOverflow)?;
+
+                vote_override_cache.for_votes_lamports = vote_override_cache.for_votes_lamports.checked_add(for_votes_lamports).ok_or(GovernanceError::ArithmeticOverflow)?;
+                vote_override_cache.against_votes_lamports = vote_override_cache.against_votes_lamports.checked_add(against_votes_lamports).ok_or(GovernanceError::ArithmeticOverflow)?;
+                vote_override_cache.abstain_votes_lamports = vote_override_cache.abstain_votes_lamports.checked_add(abstain_votes_lamports).ok_or(GovernanceError::ArithmeticOverflow)?;
+            }
+            else {
+                // Initialize account thourgh CPI to system program
+                let seeds = &[
+                    b"cache_vote_override",
+                    self.proposal.key().as_ref(),
+                    self.validator_vote.key().as_ref(),
+                    &[bumps.cash_vote_override],
+                ];
+        
+                let ix = create_account(
+                    &self.signer.key(),
+                    &self.vote_override_cache.key(),
+                    Rent::get()?.minimum_balance(8 + VoteOverrideCache::INIT_SPACE),
+                    (8 + VoteOverrideCache::INIT_SPACE) as u64,
+                    &vote_program::ID,
+                );
+        
+                invoke_signed(
+                    &ix,
+                    &[
+                        self.signer.to_account_info(), 
+                        self.vote_override_cache.to_account_info(), 
+                        self.system_program.to_account_info(),
+                    ],
+                    &[seeds],
+                )?;
+
+                // Add delegator's vote to cache
+                // Add missing fields
+                let mut vote_override_cache = VoteOverrideCache::deserialize(&mut self.vote_override_cache.data.borrow().as_ref())?;
+                
+                vote_override_cache.for_votes_bp = vote_override_cache.for_votes_bp.checked_add(for_votes_bp).ok_or(GovernanceError::ArithmeticOverflow)?;
+                vote_override_cache.against_votes_bp = vote_override_cache.against_votes_bp.checked_add(against_votes_bp).ok_or(GovernanceError::ArithmeticOverflow)?;
+                vote_override_cache.abstain_votes_bp = vote_override_cache.abstain_votes_bp.checked_add(abstain_votes_bp).ok_or(GovernanceError::ArithmeticOverflow)?;
+
+                vote_override_cache.for_votes_lamports = vote_override_cache.for_votes_lamports.checked_add(for_votes_lamports).ok_or(GovernanceError::ArithmeticOverflow)?;
+                vote_override_cache.against_votes_lamports = vote_override_cache.against_votes_lamports.checked_add(against_votes_lamports).ok_or(GovernanceError::ArithmeticOverflow)?;
+                vote_override_cache.abstain_votes_lamports = vote_override_cache.abstain_votes_lamports.checked_add(abstain_votes_lamports).ok_or(GovernanceError::ArithmeticOverflow)?;
+            }
         }
 
         // Emit vote override cast event
