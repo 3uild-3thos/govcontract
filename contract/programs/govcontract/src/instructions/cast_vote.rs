@@ -138,7 +138,7 @@ impl<'info> CastVote<'info> {
         let for_votes_lamports = calculate_vote_lamports!(effective_stake, for_votes_bp)?;
         let against_votes_lamports = calculate_vote_lamports!(effective_stake, against_votes_bp)?;
         let abstain_votes_lamports = calculate_vote_lamports!(effective_stake, abstain_votes_bp)?;
-        
+
         // Add validator vote lamports to proposal
         self.proposal.add_vote_lamports(
             for_votes_lamports,

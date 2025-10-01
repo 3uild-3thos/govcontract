@@ -180,21 +180,26 @@ impl<'info> CastVoteOverride<'info> {
                 self.validator_vote.abstain_votes_lamports,
             )?;
 
-            // Calculate new validator votes, substracting delegator stake from validator vote
-            let new_validator_stake = self
+            // Sum current delegator stake and existing override lamports
+            let remove_lamports = delegator_stake
+                .checked_add(self.validator_vote.override_lamports)
+                .ok_or(GovernanceError::ArithmeticOverflow)?;
+
+            // Calculate new validator votes, substracting delegator stake and override lamports from validator vote
+            let effective_stake = self
                 .validator_vote
                 .stake
-                .checked_sub(delegator_stake)
+                .checked_sub(remove_lamports)
                 .ok_or(GovernanceError::ArithmeticOverflow)?;
 
             let for_votes_lamports_new =
-                calculate_vote_lamports!(new_validator_stake, self.validator_vote.for_votes_bp)?;
+                calculate_vote_lamports!(effective_stake, self.validator_vote.for_votes_bp)?;
             let against_votes_lamports_new = calculate_vote_lamports!(
-                new_validator_stake,
+                effective_stake,
                 self.validator_vote.against_votes_bp
             )?;
             let abstain_votes_lamports_new = calculate_vote_lamports!(
-                new_validator_stake,
+                effective_stake,
                 self.validator_vote.abstain_votes_bp
             )?;
 

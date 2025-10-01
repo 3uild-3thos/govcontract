@@ -84,7 +84,7 @@ impl<'info> CreateProposal<'info> {
             0u64,
             GovernanceError::InvalidVotingLength
         );
-        
+
         // Verify voting length is not too long (MAX_VOTING_EPOCHS)
         require!(
             voting_length_epochs <= MAX_VOTING_EPOCHS,
