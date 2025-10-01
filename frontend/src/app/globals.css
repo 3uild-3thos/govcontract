@@ -162,7 +162,13 @@
   }
 
   .input {
-    @apply border border-white/15 focus:border-primary focus:outline-none text-sm px-4 py-1 rounded-lg transition-all duration-200 ease-out placeholder:transition-opacity placeholder:duration-200 focus:placeholder:opacity-60;
+    @apply border border-white/15 focus:border-primary focus:outline-none text-base px-4 py-1 rounded-lg transition-all duration-200 ease-out placeholder:transition-opacity placeholder:duration-200 focus:placeholder:opacity-60;
+  }
+
+  @media (min-width: 768px) {
+    .input {
+      @apply text-sm;
+    }
   }
 
   .select-background {
