@@ -159,7 +159,6 @@ impl<'info> ModifyVote<'info> {
         self.vote.for_votes_lamports = for_votes_lamports;
         self.vote.against_votes_lamports = against_votes_lamports;
         self.vote.abstain_votes_lamports = abstain_votes_lamports;
-        self.vote.stake = effective_stake;
         self.vote.vote_timestamp = clock.unix_timestamp;
 
         emit!(VoteModified {
