@@ -1,8 +1,8 @@
 use anchor_lang::{
     prelude::*,
     solana_program::{
-        borsh0_10::try_from_slice_unchecked, program::invoke_signed, stake::program as stake_program, system_instruction::create_account, vote::{program as vote_program, state::VoteState}
-    }, system_program::{create_account, CreateAccount},
+        borsh0_10::try_from_slice_unchecked, program::invoke_signed, stake::program as stake_program, system_instruction::create_account, vote::{self, program as vote_program, state::VoteState}
+    },
 };
 
 use crate::{
@@ -252,7 +252,7 @@ impl<'info> CastVoteOverride<'info> {
         else {
             // Store delegator's vote in a the cache PDA
             if self.vote_override_cache.data_len() == VoteOverrideCache::INIT_SPACE
-                && self.validator_vote.owner == &vote_program::ID
+                && self.vote_override_cache.owner == &vote_program::ID
                 && VoteOverrideCache::deserialize(&mut self.vote_override_cache.data.borrow().as_ref()).is_ok() {
 
                 let mut vote_override_cache = VoteOverrideCache::deserialize(&mut self.vote_override_cache.data.borrow().as_ref())?;
@@ -272,16 +272,19 @@ impl<'info> CastVoteOverride<'info> {
                 vote_override_cache.for_votes_lamports = vote_override_cache.for_votes_lamports.checked_add(for_votes_lamports).ok_or(GovernanceError::ArithmeticOverflow)?;
                 vote_override_cache.against_votes_lamports = vote_override_cache.against_votes_lamports.checked_add(against_votes_lamports).ok_or(GovernanceError::ArithmeticOverflow)?;
                 vote_override_cache.abstain_votes_lamports = vote_override_cache.abstain_votes_lamports.checked_add(abstain_votes_lamports).ok_or(GovernanceError::ArithmeticOverflow)?;
+
+                vote_override_cache.total_stake = vote_override_cache.total_stake.checked_add(delegator_stake).ok_or(GovernanceError::ArithmeticOverflow)?;
             }
             else {
                 // Initialize account thourgh CPI to system program
+                let proposal_key = self.proposal.key();
+                let validator_vote_key = self.validator_vote.key();
                 let seeds = &[
                     b"cache_vote_override",
-                    self.proposal.key().as_ref(),
-                    self.validator_vote.key().as_ref(),
-                    &[bumps.cash_vote_override],
+                    proposal_key.as_ref(),
+                    validator_vote_key.as_ref(),
+                    &[bumps.vote_override_cache],
                 ];
-        
                 let ix = create_account(
                     &self.signer.key(),
                     &self.vote_override_cache.key(),
@@ -311,6 +314,8 @@ impl<'info> CastVoteOverride<'info> {
                 vote_override_cache.for_votes_lamports = vote_override_cache.for_votes_lamports.checked_add(for_votes_lamports).ok_or(GovernanceError::ArithmeticOverflow)?;
                 vote_override_cache.against_votes_lamports = vote_override_cache.against_votes_lamports.checked_add(against_votes_lamports).ok_or(GovernanceError::ArithmeticOverflow)?;
                 vote_override_cache.abstain_votes_lamports = vote_override_cache.abstain_votes_lamports.checked_add(abstain_votes_lamports).ok_or(GovernanceError::ArithmeticOverflow)?;
+
+                vote_override_cache.total_stake = vote_override_cache.total_stake.checked_add(delegator_stake).ok_or(GovernanceError::ArithmeticOverflow)?;
             }
         }
 

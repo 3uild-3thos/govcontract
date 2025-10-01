@@ -12,7 +12,7 @@ use crate::{
     error::GovernanceError,
     events::VoteCast,
     merkle_helpers::verify_merkle_proof_cpi,
-    state::{Proposal, Vote},
+    state::{Proposal, Vote, VoteOverrideCache},
 };
 use gov_v1::{ConsensusResult, MetaMerkleProof};
 
@@ -36,6 +36,13 @@ pub struct CastVote<'info> {
         constraint = spl_vote_account.data_len() == VoteState::size_of() @ GovernanceError::InvalidVoteAccountSize
     )]
     pub spl_vote_account: UncheckedAccount<'info>,
+    /// CHECK: Vote override cache account. Might not yet exist
+    #[account(
+        mut,
+        seeds = [b"vote_override", proposal.key().as_ref(), vote.key().as_ref()],
+        bump
+    )]
+    pub vote_override_cache: UncheckedAccount<'info>,
     /// CHECK: The snapshot program (gov-v1 or mock)
     pub snapshot_program: UncheckedAccount<'info>,
     /// CHECK: Consensus result account owned by snapshot program
@@ -153,46 +160,90 @@ impl<'info> CastVote<'info> {
         let against_votes_lamports = calculate_vote_lamports!(voter_stake, against_votes_bp)?;
         let abstain_votes_lamports = calculate_vote_lamports!(voter_stake, abstain_votes_bp)?;
 
-        self.proposal.add_vote_lamports(
-            for_votes_lamports,
-            against_votes_lamports,
-            abstain_votes_lamports,
-        )?;
-
-        self.proposal.vote_count += 1;
-
         // Check if ovveride PDA exists
         // If it does, update lamports with the override amount
+        if self.vote_override_cache.data_len() == VoteOverrideCache::INIT_SPACE
+                && self.vote_override_cache.owner == &vote_program::ID
+                && VoteOverrideCache::deserialize(&mut self.vote_override_cache.data.borrow().as_ref()).is_ok() {
 
-        // Store the vote distribution in the Vote PDA
-        self.vote.set_inner(Vote {
-            validator: self.signer.key(),
-            proposal: self.proposal.key(),
-            for_votes_bp,
-            against_votes_bp,
-            abstain_votes_bp,
-            for_votes_lamports,
-            against_votes_lamports,
-            abstain_votes_lamports,
-            override_lamports: 0,
-            stake: voter_stake,
-            vote_timestamp: clock.unix_timestamp,
-            bump: bumps.vote,
-        });
+            let mut override_cache = VoteOverrideCache::deserialize(&mut self.vote_override_cache.data.borrow().as_ref())?;
 
-        // Emit vote cast event
-        emit!(VoteCast {
-            proposal_id: self.proposal.key(),
-            voter: self.signer.key(),
-            vote_account: self.spl_vote_account.key(),
-            for_votes_bp,
-            against_votes_bp,
-            abstain_votes_bp,
-            for_votes_lamports,
-            against_votes_lamports,
-            abstain_votes_lamports,
-            vote_timestamp: clock.unix_timestamp,
-        });
+            // Add cached votes
+            self.proposal.add_vote_lamports(
+                override_cache.for_votes_lamports,
+                override_cache.against_votes_lamports,
+                override_cache.abstain_votes_lamports,
+            )?;
+
+            let new_validator_stake = voter_stake
+                .checked_sub(override_cache.total_stake)
+                .ok_or(GovernanceError::ArithmeticOverflow)?;
+
+            // Calculate new validator votes for each category based on actual lamports
+            let for_votes_lamports_new =
+                calculate_vote_lamports!(new_validator_stake, self.vote.for_votes_bp)?;
+            let against_votes_lamports_new =
+                calculate_vote_lamports!(new_validator_stake, self.vote.against_votes_bp)?;
+            let abstain_votes_lamports_new =
+                calculate_vote_lamports!(new_validator_stake, self.vote.abstain_votes_bp)?;
+
+            // Add validator's new vote
+            self.proposal.add_vote_lamports(
+                for_votes_lamports_new,
+                against_votes_lamports_new,
+                abstain_votes_lamports_new,
+            )?;
+
+            // Store new lamports
+            self.vote.for_votes_lamports = for_votes_lamports_new;
+            self.vote.against_votes_lamports = against_votes_lamports_new;
+            self.vote.abstain_votes_lamports = abstain_votes_lamports_new;
+            self.vote.override_lamports = self.vote
+                .override_lamports
+                .checked_add(override_cache.total_stake)
+                .ok_or(GovernanceError::ArithmeticOverflow)?;
+
+        }
+        else {
+
+            self.proposal.add_vote_lamports(
+                for_votes_lamports,
+                against_votes_lamports,
+                abstain_votes_lamports,
+            )?;
+
+            self.proposal.vote_count += 1;
+
+            // Store the vote distribution in the Vote PDA
+            self.vote.set_inner(Vote {
+                validator: self.signer.key(),
+                proposal: self.proposal.key(),
+                for_votes_bp,
+                against_votes_bp,
+                abstain_votes_bp,
+                for_votes_lamports,
+                against_votes_lamports,
+                abstain_votes_lamports,
+                override_lamports: 0,
+                stake: voter_stake,
+                vote_timestamp: clock.unix_timestamp,
+                bump: bumps.vote,
+            });
+
+            // Emit vote cast event
+            emit!(VoteCast {
+                proposal_id: self.proposal.key(),
+                voter: self.signer.key(),
+                vote_account: self.spl_vote_account.key(),
+                for_votes_bp,
+                against_votes_bp,
+                abstain_votes_bp,
+                for_votes_lamports,
+                against_votes_lamports,
+                abstain_votes_lamports,
+                vote_timestamp: clock.unix_timestamp,
+            });
+        }
 
         Ok(())
     }
