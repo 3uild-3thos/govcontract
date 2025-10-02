@@ -6,7 +6,6 @@ import { AppButton } from "@/components/ui/AppButton";
 import { GitHubIcon } from "@/components/icons/SvgIcons";
 import { Spade } from "lucide-react";
 import { toast } from "sonner";
-
 const VOTE_STATE_LABEL: Record<ProposalRow["vote"]["state"], string> = {
   "in-progress": "In Progress",
   finished: "Finished",
@@ -19,7 +18,7 @@ function ProposalInfo({ proposal }: { proposal: ProposalRow }) {
         href={`/proposals/${proposal.simd.toLowerCase()}`}
         className="space-y-3 block"
       >
-        <h3 className="h3 whitespace-pre-wrap text-lg font-semibold tracking-tight text-white sm:text-xl hover:text-primary duration-200 transition-colors">
+        <h3 className="h3 whitespace-pre-wrap text-lg font-semibold tracking-tight text-white sm:text-xl hover-gradient-text transition-all duration-200">
           {proposal.simd}: {proposal.title}
         </h3>
         <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--basic-color-gray)] line-clamp-3">

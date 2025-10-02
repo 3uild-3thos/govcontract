@@ -200,9 +200,9 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
               className="bg-transparent !justify-end !px-0 !py-0 !min-w-fit"
             />
           </div>
-          <h5 className="h5 font-medium text-foreground leading-tight line-clamp-3 text-balance">
+          <h4 className="h4 font-medium text-foreground leading-tight line-clamp-3 text-balance">
             {title}
-          </h5>
+          </h4>
         </div>
 
         <VotingDetails items={detailItems} layout="mobile" />
@@ -225,9 +225,9 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
             </span>
             <LifecycleIndicator stage={lifecycleStage} />
           </div>
-          <h5 className="h5 font-medium text-foreground leading-tight line-clamp-2 text-balance">
+          <h4 className="h4 font-medium text-foreground leading-tight line-clamp-2 text-balance">
             {title}
-          </h5>
+          </h4>
           <VotingDetails items={detailItems} layout="tablet" />
         </div>
 

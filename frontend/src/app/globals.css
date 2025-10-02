@@ -172,6 +172,21 @@
     -webkit-text-fill-color: transparent;
   }
 
+  .hover-gradient-text {
+    background-image: linear-gradient(
+      90deg,
+      var(--primary) 0%,
+      var(--secondary) 100%
+    );
+    background-clip: text;
+    -webkit-background-clip: text;
+    transition: all 0.2s ease;
+  }
+
+  .hover-gradient-text:hover {
+    -webkit-text-fill-color: transparent;
+  }
+
   /* Sonner Toast Styles */
   [data-sonner-toast] {
     background: var(--color-dao-color-gray) !important;
@@ -220,7 +235,7 @@
     @apply flex gap-6 items-center justify-center w-full;
   }
   .social-link {
-    @apply flex items-center justify-center w-6 h-6 text-[var(--color-dao-color-gray)]/50 hover:text-white transition-colors duration-200;
+    @apply flex items-center justify-center w-6 h-6 text-[var(--color-dao-color-gray)]/50 hover:text-primary transition-colors duration-200;
   }
 
   .legal-text {

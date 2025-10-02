@@ -50,7 +50,7 @@ export default function FilterPanel({
           <Progress value={quorumFilter} className="h-2" />
           {/* Thumb indicator */}
           <div
-            className="absolute top-1/2 -translate-y-1/2 size-5 bg-foreground border-3 border-primary rounded-full shadow-lg transition-transform group-hover:scale-110 pointer-events-none"
+            className="absolute top-1/2 -translate-y-1/2 size-6 bg-foreground border-3 border-primary rounded-full shadow-lg transition-transform group-hover:scale-110 pointer-events-none"
             style={{ left: `calc(${quorumFilter}% - 10px)` }}
           />
           <input
