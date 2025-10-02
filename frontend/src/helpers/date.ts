@@ -70,3 +70,36 @@ export function formatDate(dateStr: string | null): string | null {
     .format(date)
     .replace(",", "");
 }
+
+/**
+ * Calculate how long ago a timestamp was
+ * @param timestamp - Unix timestamp in milliseconds
+ * @returns Formatted string like "3 days ago", "today", etc.
+ */
+export function calculateTimeAgo(timestamp: number): string {
+  const now = Date.now();
+  const diff = now - timestamp;
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+  if (days === 0) {
+    if (hours === 0) {
+      if (minutes === 0) return "just now";
+      if (minutes === 1) return "1 minute ago";
+      return `${minutes} minutes ago`;
+    }
+    if (hours === 1) return "1 hour ago";
+    return `${hours} hours ago`;
+  }
+  if (days === 1) return "1 day ago";
+  if (days < 30) return `${days} days ago`;
+
+  const months = Math.floor(days / 30);
+  if (months === 1) return "1 month ago";
+  if (months < 12) return `${months} months ago`;
+
+  const years = Math.floor(days / 365);
+  if (years === 1) return "1 year ago";
+  return `${years} years ago`;
+}

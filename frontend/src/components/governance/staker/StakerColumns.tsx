@@ -48,7 +48,7 @@ export const columns: ColumnDef<StakeAccountData>[] = [
   },
   {
     accessorKey: "vote_account",
-    header: () => <span className="hidden sm:inline">DELEGATED VALIDATOR</span>,
+    header: () => <span className="hidden sm:inline">DELEGATED VOTER</span>,
     cell: ({ row }) => {
       const validator = row.getValue("vote_account") as string;
       return (

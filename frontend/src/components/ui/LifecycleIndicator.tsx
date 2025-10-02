@@ -10,12 +10,16 @@ import {
 import type { ProposalLifecycleStage } from "@/dummy-data/proposals";
 import { Circle, Loader } from "lucide-react";
 
-const STAGE_ORDER: ProposalLifecycleStage[] = ["support", "voting", "finished"];
+const STAGE_ORDER: ProposalLifecycleStage[] = [
+  "support",
+  "voting",
+  "finalized",
+];
 
 const STAGE_LABEL: Record<ProposalLifecycleStage, string> = {
   support: "Support",
   voting: "Voting",
-  finished: "Finished",
+  finalized: "Finished",
 };
 
 const STAGE_DESCRIPTION: Record<ProposalLifecycleStage, string> = {
@@ -23,7 +27,7 @@ const STAGE_DESCRIPTION: Record<ProposalLifecycleStage, string> = {
     "During this period we take a snapshot of all active validators on Solana to make them eligible for the next vote.",
   voting:
     "Validators vote on active governance proposals. Delegators can override their validator's vote using stake account verification.",
-  finished:
+  finalized:
     "Voting period has ended and all votes have been counted. The proposal is finalized and ready for on-chain execution.",
 };
 
@@ -62,7 +66,7 @@ export default function LifecycleIndicator({ stage }: LifecycleIndicatorProps) {
             >
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2">
-                  {stage === "finished" ? (
+                  {stage === "finalized" ? (
                     <Circle className="size-3 text-white" />
                   ) : (
                     <Loader className="size-4 animate-spin text-white" />

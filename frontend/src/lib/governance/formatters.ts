@@ -1,4 +1,4 @@
-const LAMPORTS_PER_SOL = 1_000_000_000;
+export const LAMPORTS_PER_SOL = 1e9;
 
 const isValidNumber = (value: number | null | undefined): value is number =>
   typeof value === "number" && !Number.isNaN(value);
@@ -26,8 +26,8 @@ export function formatSOL(lamports: number): string {
   }).format(sol);
 }
 
-export function formatPercentage(value: number): string {
-  return `${value}%`;
+export function formatPercentage(percentage: number) {
+  return `(${percentage.toFixed(0)}%)`;
 }
 
 export function formatAddress(address: string, length: number = 4): string {

@@ -39,7 +39,27 @@
   --color-dao-status-active: var(--active);
   --color-dao-status-finalizing: var(--finalizing);
   --color-dao-status-finalized: var(--finalized);
-  /* --color-dao-status-executable: var(--executable); */
+  --color-dao-gradient-vote-for: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(34, 197, 94, 0.2) 25%,
+    rgba(34, 197, 94, 0.6) 60%,
+    rgba(34, 197, 94, 1) 100%
+  );
+  --color-dao-gradient-vote-against: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(239, 68, 68, 0.2) 25%,
+    rgba(239, 68, 68, 0.6) 60%,
+    rgba(239, 68, 68, 1) 100%
+  );
+  --color-dao-gradient-vote-abstain: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(156, 163, 175, 0.2) 25%,
+    rgba(156, 163, 175, 0.6) 60%,
+    rgba(156, 163, 175, 1) 100%
+  );
 }
 
 :root {
@@ -62,7 +82,6 @@
   --active: rgb(34, 197, 94);
   --finalizing: rgb(33, 184, 240);
   --finalized: rgb(249, 115, 22);
-  /* --executable: rgb(245, 158, 11); */
 }
 
 @layer base {
@@ -201,7 +220,7 @@
     @apply flex gap-6 items-center justify-center w-full;
   }
   .social-link {
-    @apply flex items-center justify-center w-6 h-6 text-[var(--color-dao-color-gray)] hover:text-white transition-colors duration-200;
+    @apply flex items-center justify-center w-6 h-6 text-[var(--color-dao-color-gray)]/50 hover:text-white transition-colors duration-200;
   }
 
   .legal-text {
@@ -214,5 +233,44 @@
 
   .footer-legal-container {
     @apply flex items-center justify-center w-full;
+  }
+
+  /* Phase Timeline Connector Animation */
+  .connector-line {
+    position: relative;
+    overflow: hidden;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .connector-line--animated::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-size: 200% 100%;
+    animation: connector-flow 2.5s linear infinite;
+    opacity: 0.9;
+  }
+
+  /* Unified gradient for active and complete states */
+  .connector-line--active::after,
+  .connector-line--complete::after {
+    background-image: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(34, 197, 94, 0.4) 30%,
+      rgba(34, 197, 94, 0.85) 100%
+    );
+  }
+}
+@layer utilities {
+  @keyframes connector-flow {
+    0% {
+      background-position: 0% 50%;
+    }
+    100% {
+      background-position: -200% 50%;
+    }
   }
 }

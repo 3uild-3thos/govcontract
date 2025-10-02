@@ -34,7 +34,7 @@ function ProposalInfo({ proposal }: { proposal: ProposalRow }) {
         className="w-fit border-white/20  text-[11px] font-medium uppercase tracking-[0.1em] text-white/70 hover:bg-white/20"
       >
         <Link
-          href={proposal.link}
+          href={proposal.description}
           target="_blank"
           rel="noreferrer"
           className="inline-flex items-center gap-2"
@@ -55,7 +55,7 @@ function LifecycleStageBar({
   const stages: ProposalRow["lifecycleStage"][] = [
     "support",
     "voting",
-    "finished",
+    "finalized",
   ];
   const activeIndex = stages.indexOf(stage);
 
@@ -105,7 +105,7 @@ function VotingPanel({ proposal }: { proposal: ProposalRow }) {
     <aside className="w-full glass-card p-6 lg:w-80 xl:w-80">
       <header className="mb-6">
         <span className="block text-[11px] uppercase tracking-[0.24em] text-white/45 mb-3">
-          {proposal.lifecycleStage === "finished" ? "Vote" : "Stage"}
+          {proposal.lifecycleStage === "finalized" ? "Vote" : "Stage"}
         </span>
         <div className="flex items-center justify-between gap-4">
           <span className="text-lg font-semibold text-white">

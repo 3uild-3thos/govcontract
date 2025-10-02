@@ -1,18 +1,46 @@
 export type ProposalStatus = "active" | "finalizing" | "finalized";
 
-export type ProposalLifecycleStage = "support" | "voting" | "finished";
+export type ProposalLifecycleStage = "support" | "voting" | "finalized";
 
 export type ProposalRecord = {
+  // Identity
   simd: string;
   title: string;
-  summary: string;
-  lifecycleStage: ProposalLifecycleStage;
-  quorumPercent: number;
-  solRequired: number;
+  summary: string; // Short text description for list view
+  description: string; // GitHub URL (renamed from 'link')
+  author: string; // Pubkey
+
+  // Epochs & Timestamps
+  creationEpoch: number;
+  startEpoch: number;
+  endEpoch: number;
+  creationTimestamp: number; // Unix timestamp
   votingStart: string | null;
   votingEndsIn: string | null;
+
+  // Vote Data (in lamports)
+  clusterSupportLamports: number;
+  forVotesLamports: number;
+  againstVotesLamports: number;
+  abstainVotesLamports: number;
+  voteCount: number;
+
+  // Requirements & Metrics
+  quorumPercent: number; // Required quorum (e.g., 80)
+  solRequired: number; // In SOL (not lamports)
+  proposerStakeWeightBp: number; // Basis points
+
+  // Status
+  lifecycleStage: ProposalLifecycleStage;
   status: ProposalStatus;
-  link: string;
+  voting: boolean; // Is currently voting
+  finalized: boolean; // Is finalized
+
+  // Technical
+  proposalBump: number;
+  index: number;
+
+  // Legacy (keep for now)
   vote: {
     state: "in-progress" | "finished";
     lastUpdated: string;
@@ -21,428 +49,1192 @@ export type ProposalRecord = {
 
 export const proposals: ProposalRecord[] = [
   {
+    // Identity
     simd: "SIMD-0326",
     title: "Proposal for the New Alpenglow Consensus Protocol",
     summary:
       "A major overhaul of Solana's core consensus protocol, replacing Proof-of-History and TowerBFT mechanisms with a modern architecture focused on performance, resilience, and simplicity. Require validator pools to disclose detailed staking metrics and provide standardized reporting dashboards for large delegators. Require validator pools to disclose detailed staking metrics and provide standardized reporting dashboards for large delegators.",
-    lifecycleStage: "support",
-    quorumPercent: 80,
-    solRequired: 182432988,
+    description: "https://github.com/0326.md",
+    author: "9PnPbA4Eny7HsmqkzYjcrFXbChaTC3uLfPqtdvGea4f2",
+
+    // Epochs & Timestamps
+    creationEpoch: 650,
+    startEpoch: 653,
+    endEpoch: 660,
+    creationTimestamp: Date.now() - 3 * 24 * 60 * 60 * 1000, // 3 days ago
     votingStart: null,
     votingEndsIn: null,
-    status: "active",
-    link: "https://example.com/proposals/simd-0326",
-    vote: {
-      state: "in-progress",
-      lastUpdated: "2025-09-21T09:15:00Z",
-    },
-  },
-  {
-    simd: "SIMD-0327",
-    title: "Proposal for the New Alpenglow Consensus Protocol",
-    summary:
-      "A major overhaul of Solana's core consensus protocol, replacing Proof-of-History and TowerBFT mechanisms with a modern architecture focused on performance, resilience, and simplicity.",
-    lifecycleStage: "voting",
+
+    // Vote Data (in lamports) - Support phase, no votes yet
+    clusterSupportLamports: 145946390400000000, // 80% of required
+    forVotesLamports: 0,
+    againstVotesLamports: 0,
+    abstainVotesLamports: 0,
+    voteCount: 0,
+
+    // Requirements & Metrics
     quorumPercent: 80,
     solRequired: 182432988,
-    votingStart: "2025-09-28 10:00:00",
-    votingEndsIn: "2025-10-15 10:00:00",
+    proposerStakeWeightBp: 250, // 2.5%
+
+    // Status
+    lifecycleStage: "support",
     status: "active",
-    link: "https://example.com/proposals/simd-0327",
+    voting: false,
+    finalized: false,
+
+    // Technical
+    proposalBump: 255,
+    index: 326,
+
+    // Legacy
     vote: {
       state: "in-progress",
       lastUpdated: "2025-09-21T09:15:00Z",
     },
   },
   {
+    // Identity
+    simd: "SIMD-0327",
+    title: "Adjust Staking Rewards for Network Security",
+    summary:
+      "This proposal seeks to adjust validator staking rewards to more effectively support network security and recognize validator contributions. The goal is to ensure that reward distribution is better aligned with the evolving needs of the network and the efforts of its validators.",
+    description: "https://github.com/0327.md",
+    author: "DqRgKsL8jWvAorPDkGNPtVqTCskqDeVpTa4f56YHsmqk",
+
+    // Epochs & Timestamps
+    creationEpoch: 648,
+    startEpoch: 651,
+    endEpoch: 658,
+    creationTimestamp: Date.now() - 7 * 24 * 60 * 60 * 1000, // 7 days ago
+    votingStart: "2025-09-28 10:00:00",
+    votingEndsIn: "2025-10-15 10:00:00",
+
+    // Vote Data (in lamports) - Active voting with data
+    clusterSupportLamports: 182432988000000000, // 100% of required
+    forVotesLamports: 1234567000000000, // ~1.23M SOL
+    againstVotesLamports: 479210000000000, // ~479K SOL
+    abstainVotesLamports: 191284000000000, // ~191K SOL
+    voteCount: 2545,
+
+    // Requirements & Metrics
+    quorumPercent: 80,
+    solRequired: 182432988,
+    proposerStakeWeightBp: 180, // 1.8%
+
+    // Status
+    lifecycleStage: "voting",
+    status: "active",
+    voting: true,
+    finalized: false,
+
+    // Technical
+    proposalBump: 254,
+    index: 327,
+
+    // Legacy
+    vote: {
+      state: "in-progress",
+      lastUpdated: "2025-09-21T09:15:00Z",
+    },
+  },
+  {
+    // Identity
     simd: "SIMD-0334",
     title: "Validator Reward Distribution Upgrade",
     summary:
       "Introduce dynamic reward multipliers for validators that exceed uptime and performance benchmarks across multiple epochs.",
-    lifecycleStage: "finished",
-    quorumPercent: 80,
-    solRequired: 182432988,
+    description: "https://github.com/0334.md",
+    author: "7K3iFhqVpF4xnwMGWKmQRgNvWqKAoZGmZN6vLkPvJXbd",
+
+    // Epochs & Timestamps
+    creationEpoch: 620,
+    startEpoch: 623,
+    endEpoch: 630,
+    creationTimestamp: Date.now() - 45 * 24 * 60 * 60 * 1000, // 45 days ago
     votingStart: "2025-08-15 10:00:00",
     votingEndsIn: "2025-08-25 10:00:00",
+
+    // Vote Data (in lamports) - Finalized with results
+    clusterSupportLamports: 182432988000000000,
+    forVotesLamports: 1567890000000000, // ~1.57M SOL
+    againstVotesLamports: 234567000000000, // ~234K SOL
+    abstainVotesLamports: 102543000000000, // ~102K SOL
+    voteCount: 3120,
+
+    // Requirements & Metrics
+    quorumPercent: 80,
+    solRequired: 182432988,
+    proposerStakeWeightBp: 320, // 3.2%
+
+    // Status
+    lifecycleStage: "finalized",
     status: "finalized",
-    link: "https://example.com/proposals/simd-0334",
+    voting: false,
+    finalized: true,
+
+    // Technical
+    proposalBump: 253,
+    index: 334,
+
+    // Legacy
     vote: {
       state: "finished",
       lastUpdated: "2025-09-20T22:40:00Z",
     },
   },
   {
+    // Identity
     simd: "SIMD-0338",
     title: "Staker Delegation Transparency Initiative",
     summary:
       "Require validator pools to disclose detailed staking metrics and provide standardized reporting dashboards for large delegators.",
-    lifecycleStage: "finished",
-    quorumPercent: 80,
-    solRequired: 182432988,
+    description: "https://github.com/0338.md",
+    author: "EW5YJhVNkPzBhMQWZKMRivaKqJnXMrVDvWbBiXdgaYvn",
+
+    // Epochs & Timestamps
+    creationEpoch: 600,
+    startEpoch: 603,
+    endEpoch: 610,
+    creationTimestamp: Date.now() - 90 * 24 * 60 * 60 * 1000, // 90 days ago
     votingStart: "2025-07-01 10:00:00",
     votingEndsIn: "2025-07-10 10:00:00",
+
+    // Vote Data (in lamports)
+    clusterSupportLamports: 182432988000000000,
+    forVotesLamports: 1345678000000000,
+    againstVotesLamports: 456789000000000,
+    abstainVotesLamports: 202533000000000,
+    voteCount: 2890,
+
+    // Requirements & Metrics
+    quorumPercent: 80,
+    solRequired: 182432988,
+    proposerStakeWeightBp: 290, // 2.9%
+
+    // Status
+    lifecycleStage: "finalized",
     status: "finalizing",
-    link: "https://example.com/proposals/simd-0338",
+    voting: false,
+    finalized: true,
+
+    // Technical
+    proposalBump: 252,
+    index: 338,
+
+    // Legacy
     vote: {
       state: "finished",
       lastUpdated: "2025-09-18T13:20:00Z",
     },
   },
   {
+    // Identity
     simd: "SIMD-0341",
     title: "Validator Infrastructure Hardening",
     summary:
       "Fund upgrades for validator infrastructure redundancy, including geo-distributed failover clusters and shared tooling grants.",
-    lifecycleStage: "finished",
-    quorumPercent: 80,
-    solRequired: 182432988,
+    description: "https://github.com/0341.md",
+    author: "3hPrFxPMvHydBE4cYsWqCfGMBxDfayJN8VxQmzqNBUoT",
+
+    // Epochs & Timestamps
+    creationEpoch: 580,
+    startEpoch: 583,
+    endEpoch: 590,
+    creationTimestamp: Date.now() - 150 * 24 * 60 * 60 * 1000, // 150 days ago
     votingStart: "2025-05-01 10:00:00",
     votingEndsIn: "2025-05-10 10:00:00",
+
+    // Vote Data (in lamports)
+    clusterSupportLamports: 182432988000000000,
+    forVotesLamports: 1678901000000000,
+    againstVotesLamports: 123456000000000,
+    abstainVotesLamports: 102643000000000,
+    voteCount: 3340,
+
+    // Requirements & Metrics
+    quorumPercent: 80,
+    solRequired: 182432988,
+    proposerStakeWeightBp: 410, // 4.1%
+
+    // Status
+    lifecycleStage: "finalized",
     status: "finalized",
-    link: "https://example.com/proposals/simd-0341",
+    voting: false,
+    finalized: true,
+
+    // Technical
+    proposalBump: 251,
+    index: 341,
+
+    // Legacy
     vote: {
       state: "finished",
       lastUpdated: "2025-09-17T06:05:00Z",
     },
   },
   {
+    // Identity
     simd: "SIMD-0342",
     title: "Validator Infrastructure Hardening",
     summary:
       "Fund upgrades for validator infrastructure redundancy, including geo-distributed failover clusters and shared tooling grants. Require validator pools to disclose detailed staking metrics and provide standardized reporting dashboards for large delegators. Require validator pools to disclose detailed staking metrics and provide standardized reporting dashboards for large delegators.",
-    lifecycleStage: "finished",
-    quorumPercent: 80,
-    solRequired: 182432988,
+    description: "https://github.com/0342.md",
+    author: "HzYp5bKnG7QTZhcvLbJdRxumFfKDhYxNmXB3jPQqNvAe",
+
+    // Epochs & Timestamps
+    creationEpoch: 570,
+    startEpoch: 573,
+    endEpoch: 580,
+    creationTimestamp: Date.now() - 180 * 24 * 60 * 60 * 1000, // 180 days ago
     votingStart: "2025-04-01 10:00:00",
     votingEndsIn: "2025-04-10 10:00:00",
+
+    // Vote Data (in lamports)
+    clusterSupportLamports: 182432988000000000,
+    forVotesLamports: 1789012000000000,
+    againstVotesLamports: 98765000000000,
+    abstainVotesLamports: 17223000000000,
+    voteCount: 3560,
+
+    // Requirements & Metrics
+    quorumPercent: 80,
+    solRequired: 182432988,
+    proposerStakeWeightBp: 380, // 3.8%
+
+    // Status
+    lifecycleStage: "finalized",
     status: "finalized",
-    link: "https://example.com/proposals/simd-0342",
+    voting: false,
+    finalized: true,
+
+    // Technical
+    proposalBump: 250,
+    index: 342,
+
+    // Legacy
+    vote: {
+      state: "finished",
+      lastUpdated: "2025-09-16T15:45:00Z",
+    },
+  },
+  {
+    // Identity
+    simd: "SIMD-0343",
+    title: "Validator Infrastructure Hardening",
+    summary:
+      "Fund upgrades for validator infrastructure redundancy, including geo-distributed failover clusters and shared tooling grants.",
+    description: "https://github.com/0343.md",
+    author: "A9kVtFmP3jyQRN4ZsGwKLhdVxQTmPkUeXfJhZBcBvRaD",
+
+    // Epochs & Timestamps
+    creationEpoch: 560,
+    startEpoch: 563,
+    endEpoch: 570,
+    creationTimestamp: Date.now() - 200 * 24 * 60 * 60 * 1000,
+    votingStart: "2025-04-01 10:00:00",
+    votingEndsIn: "2025-04-10 10:00:00",
+
+    // Vote Data (in lamports)
+    clusterSupportLamports: 182432988000000000,
+    forVotesLamports: 1890123000000000,
+    againstVotesLamports: 76543000000000,
+    abstainVotesLamports: 38334000000000,
+    voteCount: 3780,
+
+    // Requirements & Metrics
+    quorumPercent: 80,
+    solRequired: 182432988,
+    proposerStakeWeightBp: 420,
+
+    // Status
+    lifecycleStage: "finalized",
+    status: "finalized",
+    voting: false,
+    finalized: true,
+
+    // Technical
+    proposalBump: 249,
+    index: 343,
+
+    // Legacy
     vote: {
       state: "finished",
       lastUpdated: "2025-09-16T15:45:00Z",
     },
   },
   // {
-  //   simd: "SIMD-0343",
-  //   title: "Validator Infrastructure Hardening",
-  //   summary:
-  //     "Fund upgrades for validator infrastructure redundancy, including geo-distributed failover clusters and shared tooling grants.",
-  //   lifecycleStage: "finalized",
-  //   quorumPercent: 80,
-  //   solRequired: 182,432,988,
-  //   votingStart: "2025-04-01 10:00:00",
-  //   votingEndsIn: "2025-04-10 10:00:00",
-  //   status: "finalized",
-  //   link: "https://example.com/proposals/simd-0343",
-  //   vote: {
-  //     state: "executed",
-  //     lastUpdated: "2025-09-16T15:45:00Z",
-  //   },
-  // },
-  // {
+  //   // Identity
   //   simd: "SIMD-0344",
   //   title: "Validator Reward Harmonization",
   //   summary:
   //     "Normalize validator reward distribution windows to align with epoch rollovers and improve payout predictability.",
-  //   lifecycleStage: "support",
-  //   quorumPercent: 78,
-  //   solRequired: 98500000,
+  //   description:
+  //     "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0344.md",
+  //   author: "BsRQ8mNJvFkXKvDRtqMCgP3xZJ7UhYsKLqBV4fzNwtEM",
+
+  //   // Epochs & Timestamps
+  //   creationEpoch: 655,
+  //   startEpoch: 658,
+  //   endEpoch: 665,
+  //   creationTimestamp: Date.now() - 2 * 24 * 60 * 60 * 1000,
   //   votingStart: null,
   //   votingEndsIn: null,
+
+  //   // Vote Data (in lamports)
+  //   clusterSupportLamports: 76830000000000000, // 78% of required
+  //   forVotesLamports: 0,
+  //   againstVotesLamports: 0,
+  //   abstainVotesLamports: 0,
+  //   voteCount: 0,
+
+  //   // Requirements & Metrics
+  //   quorumPercent: 78,
+  //   solRequired: 98500000,
+  //   proposerStakeWeightBp: 190,
+
+  //   // Status
+  //   lifecycleStage: "support",
   //   status: "active",
-  //   link: "https://example.com/proposals/simd-0344",
+  //   voting: false,
+  //   finalized: false,
+
+  //   // Technical
+  //   proposalBump: 248,
+  //   index: 344,
+
+  //   // Legacy
   //   vote: {
   //     state: "in-progress",
   //     lastUpdated: "2025-09-14T08:10:00Z",
   //   },
   // },
   // {
+  //   // Identity
   //   simd: "SIMD-0345",
   //   title: "Regional Validator Outreach",
   //   summary:
   //     "Provide grants for validator education programs in underrepresented geographic regions.",
-  //   lifecycleStage: "support",
-  //   quorumPercent: 72,
-  //   solRequired: 64000000,
+  //   description:
+  //     "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0345.md",
+  //   author: "CnT5VJyDNzPxLkBRmQKjsFH9wAQgZQVTPeLbUhxqgAhm",
+
+  //   // Epochs & Timestamps
+  //   creationEpoch: 654,
+  //   startEpoch: 657,
+  //   endEpoch: 664,
+  //   creationTimestamp: Date.now() - 5 * 24 * 60 * 60 * 1000,
   //   votingStart: null,
   //   votingEndsIn: null,
+
+  //   // Vote Data (in lamports)
+  //   clusterSupportLamports: 46080000000000000, // 72% of required
+  //   forVotesLamports: 0,
+  //   againstVotesLamports: 0,
+  //   abstainVotesLamports: 0,
+  //   voteCount: 0,
+
+  //   // Requirements & Metrics
+  //   quorumPercent: 72,
+  //   solRequired: 64000000,
+  //   proposerStakeWeightBp: 150,
+
+  //   // Status
+  //   lifecycleStage: "support",
   //   status: "active",
-  //   link: "https://example.com/proposals/simd-0345",
+  //   voting: false,
+  //   finalized: false,
+
+  //   // Technical
+  //   proposalBump: 247,
+  //   index: 345,
+
+  //   // Legacy
   //   vote: {
-  //     state: "queued",
+  //     state: "in-progress",
   //     lastUpdated: "2025-09-13T18:25:00Z",
   //   },
   // },
   // {
+  //   // Identity
   //   simd: "SIMD-0346",
   //   title: "Validator Alerting Enhancements",
   //   summary:
   //     "Introduce standardized incident alerting requirements for validators to improve coordination during outages.",
-  //   lifecycleStage: "voting",
-  //   quorumPercent: 81,
-  //   solRequired: 112300000,
+  //   description:
+  //     "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0346.md",
+  //   author: "DykX8mJeqK2SfVg3HBmZRkTvQjNPKRMvEzJQKhYDrPwa",
+
+  //   // Epochs & Timestamps
+  //   creationEpoch: 649,
+  //   startEpoch: 652,
+  //   endEpoch: 659,
+  //   creationTimestamp: Date.now() - 6 * 24 * 60 * 60 * 1000,
   //   votingStart: "2025-09-20 10:00:00",
   //   votingEndsIn: "2025-09-30 10:00:00",
+
+  //   // Vote Data (in lamports) - Active voting
+  //   clusterSupportLamports: 112300000000000000,
+  //   forVotesLamports: 890123000000000,
+  //   againstVotesLamports: 234567000000000,
+  //   abstainVotesLamports: 145310000000000,
+  //   voteCount: 1890,
+
+  //   // Requirements & Metrics
+  //   quorumPercent: 81,
+  //   solRequired: 112300000,
+  //   proposerStakeWeightBp: 210,
+
+  //   // Status
+  //   lifecycleStage: "voting",
   //   status: "active",
-  //   link: "https://example.com/proposals/simd-0346",
+  //   voting: true,
+  //   finalized: false,
+
+  //   // Technical
+  //   proposalBump: 246,
+  //   index: 346,
+
+  //   // Legacy
   //   vote: {
   //     state: "in-progress",
   //     lastUpdated: "2025-09-21T06:05:00Z",
   //   },
   // },
   // {
+  //   // Identity
   //   simd: "SIMD-0347",
   //   title: "RPC Performance Enhancements",
   //   summary:
   //     "Upgrade RPC infrastructure guidelines to improve throughput during peak governance activity.",
-  //   lifecycleStage: "voting",
-  //   quorumPercent: 84,
-  //   solRequired: 134900000,
+  //   description:
+  //     "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0347.md",
+  //   author: "EjtR8kQvPxLmZgKcNhJvQZFkYrPUoBk9XzmTVhfGiYQn",
+
+  //   // Epochs & Timestamps
+  //   creationEpoch: 647,
+  //   startEpoch: 650,
+  //   endEpoch: 657,
+  //   creationTimestamp: Date.now() - 8 * 24 * 60 * 60 * 1000,
   //   votingStart: "2025-09-18 12:00:00",
   //   votingEndsIn: "2025-09-28 12:00:00",
+
+  //   // Vote Data (in lamports) - Active voting
+  //   clusterSupportLamports: 134900000000000000,
+  //   forVotesLamports: 1012345000000000,
+  //   againstVotesLamports: 156789000000000,
+  //   abstainVotesLamports: 100866000000000,
+  //   voteCount: 2234,
+
+  //   // Requirements & Metrics
+  //   quorumPercent: 84,
+  //   solRequired: 134900000,
+  //   proposerStakeWeightBp: 230,
+
+  //   // Status
+  //   lifecycleStage: "voting",
   //   status: "active",
-  //   link: "https://example.com/proposals/simd-0347",
+  //   voting: true,
+  //   finalized: false,
+
+  //   // Technical
+  //   proposalBump: 245,
+  //   index: 347,
+
+  //   // Legacy
   //   vote: {
   //     state: "in-progress",
   //     lastUpdated: "2025-09-20T16:30:00Z",
   //   },
   // },
   // {
+  //   // Identity
   //   simd: "SIMD-0348",
   //   title: "Validator Insurance Fund",
   //   summary:
   //     "Create a shared insurance fund to offset slashing incidents for compliant validators.",
-  //   lifecycleStage: "voting",
-  //   quorumPercent: 86,
-  //   solRequired: 205000000,
+  //   description:
+  //     "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0348.md",
+  //   author: "FksE9YmRqDmTvJgNK3xPzQhWfYcLBnRVjkDpQbMaHxty",
+
+  //   // Epochs & Timestamps
+  //   creationEpoch: 646,
+  //   startEpoch: 649,
+  //   endEpoch: 656,
+  //   creationTimestamp: Date.now() - 10 * 24 * 60 * 60 * 1000,
   //   votingStart: "2025-09-15 09:00:00",
   //   votingEndsIn: "2025-09-25 09:00:00",
+
+  //   // Vote Data (in lamports) - Active voting
+  //   clusterSupportLamports: 205000000000000000,
+  //   forVotesLamports: 1456789000000000,
+  //   againstVotesLamports: 345678000000000,
+  //   abstainVotesLamports: 102533000000000,
+  //   voteCount: 2678,
+
+  //   // Requirements & Metrics
+  //   quorumPercent: 86,
+  //   solRequired: 205000000,
+  //   proposerStakeWeightBp: 270,
+
+  //   // Status
+  //   lifecycleStage: "voting",
   //   status: "active",
-  //   link: "https://example.com/proposals/simd-0348",
+  //   voting: true,
+  //   finalized: false,
+
+  //   // Technical
+  //   proposalBump: 244,
+  //   index: 348,
+
+  //   // Legacy
   //   vote: {
   //     state: "in-progress",
   //     lastUpdated: "2025-09-19T11:55:00Z",
   //   },
   // },
   // {
+  //   // Identity
   //   simd: "SIMD-0349",
   //   title: "Validator SLA Enforcement",
   //   summary:
   //     "Enforce minimum uptime requirements for validators participating in governance votes.",
-  //   lifecycleStage: "finalized",
-  //   quorumPercent: 88,
-  //   solRequired: 175750000,
+  //   description:
+  //     "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0349.md",
+  //   author: "GmnR9zTQhyNk8xWb5JvMtVPR5w7RYzPEYPTkrdRPFkwy",
+
+  //   // Epochs & Timestamps
+  //   creationEpoch: 625,
+  //   startEpoch: 628,
+  //   endEpoch: 635,
+  //   creationTimestamp: Date.now() - 50 * 24 * 60 * 60 * 1000,
   //   votingStart: "2025-08-05 10:00:00",
   //   votingEndsIn: "2025-08-15 10:00:00",
+
+  //   // Vote Data (in lamports) - Finalized
+  //   clusterSupportLamports: 175750000000000000,
+  //   forVotesLamports: 1678901000000000,
+  //   againstVotesLamports: 234567000000000,
+  //   abstainVotesLamports: 91532000000000,
+  //   voteCount: 3120,
+
+  //   // Requirements & Metrics
+  //   quorumPercent: 88,
+  //   solRequired: 175750000,
+  //   proposerStakeWeightBp: 340,
+
+  //   // Status
+  //   lifecycleStage: "finalized",
   //   status: "finalizing",
-  //   link: "https://example.com/proposals/simd-0349",
+  //   voting: false,
+  //   finalized: true,
+
+  //   // Technical
+  //   proposalBump: 243,
+  //   index: 349,
+
+  //   // Legacy
   //   vote: {
-  //     state: "queued",
+  //     state: "finished",
   //     lastUpdated: "2025-09-10T07:20:00Z",
   //   },
   // },
   // {
+  //   // Identity
   //   simd: "SIMD-0350",
   //   title: "Governance Dashboard Refresh",
   //   summary:
   //     "Refresh the governance portal UI to highlight proposal timelines and validator participation.",
-  //   lifecycleStage: "finalized",
-  //   quorumPercent: 82,
-  //   solRequired: 95400000,
+  //   description:
+  //     "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0350.md",
+  //   author: "HnYX8mNKjQRF3xHcLfJhP8ecYKypQsK5jMYmRaYzPBnr",
+
+  //   // Epochs & Timestamps
+  //   creationEpoch: 622,
+  //   startEpoch: 625,
+  //   endEpoch: 632,
+  //   creationTimestamp: Date.now() - 55 * 24 * 60 * 60 * 1000,
   //   votingStart: "2025-08-01 10:00:00",
   //   votingEndsIn: "2025-08-11 10:00:00",
+
+  //   // Vote Data (in lamports) - Finalized
+  //   clusterSupportLamports: 95400000000000000,
+  //   forVotesLamports: 1234567000000000,
+  //   againstVotesLamports: 456789000000000,
+  //   abstainVotesLamports: 213644000000000,
+  //   voteCount: 2780,
+
+  //   // Requirements & Metrics
+  //   quorumPercent: 82,
+  //   solRequired: 95400000,
+  //   proposerStakeWeightBp: 260,
+
+  //   // Status
+  //   lifecycleStage: "finalized",
   //   status: "finalizing",
-  //   link: "https://example.com/proposals/simd-0350",
+  //   voting: false,
+  //   finalized: true,
+
+  //   // Technical
+  //   proposalBump: 242,
+  //   index: 350,
+
+  //   // Legacy
   //   vote: {
-  //     state: "queued",
+  //     state: "finished",
   //     lastUpdated: "2025-09-08T03:15:00Z",
   //   },
   // },
   // {
+  //   // Identity
   //   simd: "SIMD-0351",
   //   title: "Validator Health API",
   //   summary:
   //     "Publish a standard health reporting API for validators to share live performance data.",
-  //   lifecycleStage: "finalized",
-  //   quorumPercent: 80,
-  //   solRequired: 123000000,
+  //   description:
+  //     "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0351.md",
+  //   author: "JpQ8MZfNkh3xR7ynYHBKQEpRLVaF2cGjTmYmRhzPBsnW",
+
+  //   // Epochs & Timestamps
+  //   creationEpoch: 610,
+  //   startEpoch: 613,
+  //   endEpoch: 620,
+  //   creationTimestamp: Date.now() - 75 * 24 * 60 * 60 * 1000,
   //   votingStart: "2025-07-10 10:00:00",
   //   votingEndsIn: "2025-07-20 10:00:00",
+
+  //   // Vote Data (in lamports) - Finalized
+  //   clusterSupportLamports: 123000000000000000,
+  //   forVotesLamports: 1345678000000000,
+  //   againstVotesLamports: 345678000000000,
+  //   abstainVotesLamports: 213644000000000,
+  //   voteCount: 2890,
+
+  //   // Requirements & Metrics
+  //   quorumPercent: 80,
+  //   solRequired: 123000000,
+  //   proposerStakeWeightBp: 280,
+
+  //   // Status
+  //   lifecycleStage: "finalized",
   //   status: "finalizing",
-  //   link: "https://example.com/proposals/simd-0351",
+  //   voting: false,
+  //   finalized: true,
+
+  //   // Technical
+  //   proposalBump: 241,
+  //   index: 351,
+
+  //   // Legacy
   //   vote: {
-  //     state: "queued",
+  //     state: "finished",
   //     lastUpdated: "2025-09-06T14:45:00Z",
   //   },
   // },
   // {
+  //   // Identity
   //   simd: "SIMD-0352",
   //   title: "Stake Pool Transparency",
   //   summary:
   //     "Require stake pools to publish validator allocation updates and reward histories.",
-  //   lifecycleStage: "finalized",
-  //   quorumPercent: 83,
-  //   solRequired: 155000000,
+  //   description:
+  //     "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0352.md",
+  //   author: "KzNkgP8MRYqJfnLxHhBXKEGjQyTmZbsVaF2crPBnrWpQ",
+
+  //   // Epochs & Timestamps
+  //   creationEpoch: 595,
+  //   startEpoch: 598,
+  //   endEpoch: 605,
+  //   creationTimestamp: Date.now() - 100 * 24 * 60 * 60 * 1000,
   //   votingStart: "2025-06-05 10:00:00",
   //   votingEndsIn: "2025-06-15 10:00:00",
+
+  //   // Vote Data (in lamports) - Finalized
+  //   clusterSupportLamports: 155000000000000000,
+  //   forVotesLamports: 1567890000000000,
+  //   againstVotesLamports: 234567000000000,
+  //   abstainVotesLamports: 102543000000000,
+  //   voteCount: 3340,
+
+  //   // Requirements & Metrics
+  //   quorumPercent: 83,
+  //   solRequired: 155000000,
+  //   proposerStakeWeightBp: 310,
+
+  //   // Status
+  //   lifecycleStage: "finalized",
   //   status: "finalized",
-  //   link: "https://example.com/proposals/simd-0352",
+  //   voting: false,
+  //   finalized: true,
+
+  //   // Technical
+  //   proposalBump: 240,
+  //   index: 352,
+
+  //   // Legacy
   //   vote: {
-  //     state: "executed",
+  //     state: "finished",
   //     lastUpdated: "2025-09-01T19:30:00Z",
   //   },
   // },
   // {
+  //   // Identity
   //   simd: "SIMD-0353",
   //   title: "Validator Cooling Period Update",
   //   summary:
   //     "Adjust key rotation cooling periods to reduce downtime during scheduled maintenance.",
-  //   lifecycleStage: "finalized",
-  //   quorumPercent: 77,
-  //   solRequired: 142000000,
+  //   description:
+  //     "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0353.md",
+  //   author: "LmRYqJfKnxHzgPBh8MNKbEGXKQyT2cVaFrPBnrWpQjZb",
+
+  //   // Epochs & Timestamps
+  //   creationEpoch: 585,
+  //   startEpoch: 588,
+  //   endEpoch: 595,
+  //   creationTimestamp: Date.now() - 120 * 24 * 60 * 60 * 1000,
   //   votingStart: "2025-05-20 10:00:00",
   //   votingEndsIn: "2025-05-30 10:00:00",
+
+  //   // Vote Data (in lamports) - Finalized
+  //   clusterSupportLamports: 142000000000000000,
+  //   forVotesLamports: 1456789000000000,
+  //   againstVotesLamports: 345678000000000,
+  //   abstainVotesLamports: 102533000000000,
+  //   voteCount: 3120,
+
+  //   // Requirements & Metrics
+  //   quorumPercent: 77,
+  //   solRequired: 142000000,
+  //   proposerStakeWeightBp: 300,
+
+  //   // Status
+  //   lifecycleStage: "finalized",
   //   status: "finalized",
-  //   link: "https://example.com/proposals/simd-0353",
+  //   voting: false,
+  //   finalized: true,
+
+  //   // Technical
+  //   proposalBump: 239,
+  //   index: 353,
+
+  //   // Legacy
   //   vote: {
-  //     state: "executed",
+  //     state: "finished",
   //     lastUpdated: "2025-08-28T12:05:00Z",
   //   },
   // },
   // {
+  //   // Identity
   //   simd: "SIMD-0354",
   //   title: "Light Client Incentives",
   //   summary:
   //     "Offer incentives for validators operating light client endpoints to improve mobile access.",
-  //   lifecycleStage: "finalized",
-  //   quorumPercent: 79,
-  //   solRequired: 118500000,
+  //   description:
+  //     "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0354.md",
+  //   author: "MnKQyTzgPBh8XRYqJfLxHbEGKnVaF2crPBnrWpQjZbmL",
+
+  //   // Epochs & Timestamps
+  //   creationEpoch: 575,
+  //   startEpoch: 578,
+  //   endEpoch: 585,
+  //   creationTimestamp: Date.now() - 140 * 24 * 60 * 60 * 1000,
   //   votingStart: "2025-05-01 10:00:00",
   //   votingEndsIn: "2025-05-11 10:00:00",
+
+  //   // Vote Data (in lamports) - Finalized
+  //   clusterSupportLamports: 118500000000000000,
+  //   forVotesLamports: 1234567000000000,
+  //   againstVotesLamports: 456789000000000,
+  //   abstainVotesLamports: 213644000000000,
+  //   voteCount: 2980,
+
+  //   // Requirements & Metrics
+  //   quorumPercent: 79,
+  //   solRequired: 118500000,
+  //   proposerStakeWeightBp: 290,
+
+  //   // Status
+  //   lifecycleStage: "finalized",
   //   status: "finalized",
-  //   link: "https://example.com/proposals/simd-0354",
+  //   voting: false,
+  //   finalized: true,
+
+  //   // Technical
+  //   proposalBump: 238,
+  //   index: 354,
+
+  //   // Legacy
   //   vote: {
-  //     state: "executed",
+  //     state: "finished",
   //     lastUpdated: "2025-08-25T09:40:00Z",
   //   },
   // },
   // {
+  //   // Identity
   //   simd: "SIMD-0355",
   //   title: "Validator Security Workshops",
   //   summary:
   //     "Fund quarterly workshops for validators covering security best practices and tooling.",
-  //   lifecycleStage: "support",
-  //   quorumPercent: 74,
-  //   solRequired: 68250000,
+  //   description:
+  //     "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0355.md",
+  //   author: "NoPQyTRYqJfzgKnxLhBXKEGHbVaF2crPBnrWpQjZbmL",
+
+  //   // Epochs & Timestamps
+  //   creationEpoch: 653,
+  //   startEpoch: 656,
+  //   endEpoch: 663,
+  //   creationTimestamp: Date.now() - 4 * 24 * 60 * 60 * 1000,
   //   votingStart: null,
   //   votingEndsIn: null,
+
+  //   // Vote Data (in lamports) - Support phase
+  //   clusterSupportLamports: 50505000000000000, // 74% of required
+  //   forVotesLamports: 0,
+  //   againstVotesLamports: 0,
+  //   abstainVotesLamports: 0,
+  //   voteCount: 0,
+
+  //   // Requirements & Metrics
+  //   quorumPercent: 74,
+  //   solRequired: 68250000,
+  //   proposerStakeWeightBp: 160,
+
+  //   // Status
+  //   lifecycleStage: "support",
   //   status: "active",
-  //   link: "https://example.com/proposals/simd-0355",
+  //   voting: false,
+  //   finalized: false,
+
+  //   // Technical
+  //   proposalBump: 237,
+  //   index: 355,
+
+  //   // Legacy
   //   vote: {
-  //     state: "queued",
+  //     state: "in-progress",
   //     lastUpdated: "2025-09-05T07:10:00Z",
   //   },
   // },
   // {
+  //   // Identity
   //   simd: "SIMD-0356",
   //   title: "Validator Energy Audit",
   //   summary:
   //     "Commission an energy consumption audit for validator hardware to establish sustainability benchmarks.",
-  //   lifecycleStage: "support",
-  //   quorumPercent: 76,
-  //   solRequired: 102000000,
+  //   description:
+  //     "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0356.md",
+  //   author: "PqRSTYzgKnxLhBJfNkQEGHbVaF2crPBnrWpQjZbmLXM",
+
+  //   // Epochs & Timestamps
+  //   creationEpoch: 652,
+  //   startEpoch: 655,
+  //   endEpoch: 662,
+  //   creationTimestamp: Date.now() - 5 * 24 * 60 * 60 * 1000,
   //   votingStart: null,
   //   votingEndsIn: null,
+
+  //   // Vote Data (in lamports) - Support phase
+  //   clusterSupportLamports: 77520000000000000, // 76% of required
+  //   forVotesLamports: 0,
+  //   againstVotesLamports: 0,
+  //   abstainVotesLamports: 0,
+  //   voteCount: 0,
+
+  //   // Requirements & Metrics
+  //   quorumPercent: 76,
+  //   solRequired: 102000000,
+  //   proposerStakeWeightBp: 170,
+
+  //   // Status
+  //   lifecycleStage: "support",
   //   status: "active",
-  //   link: "https://example.com/proposals/simd-0356",
+  //   voting: false,
+  //   finalized: false,
+
+  //   // Technical
+  //   proposalBump: 236,
+  //   index: 356,
+
+  //   // Legacy
   //   vote: {
-  //     state: "queued",
+  //     state: "in-progress",
   //     lastUpdated: "2025-09-04T11:50:00Z",
   //   },
   // },
   // {
+  //   // Identity
   //   simd: "SIMD-0357",
   //   title: "Validator Peer Review Council",
   //   summary:
   //     "Establish a review council to evaluate validator grant applications for infrastructure scaling.",
-  //   lifecycleStage: "support",
-  //   quorumPercent: 80,
-  //   solRequired: 97600000,
+  //   description:
+  //     "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0357.md",
+  //   author: "QrSTUVWzgKnxLhBJfNkQEGHbVaF2crPBnrWpQjZbmLNY",
+
+  //   // Epochs & Timestamps
+  //   creationEpoch: 651,
+  //   startEpoch: 654,
+  //   endEpoch: 661,
+  //   creationTimestamp: Date.now() - 6 * 24 * 60 * 60 * 1000,
   //   votingStart: null,
   //   votingEndsIn: null,
+
+  //   // Vote Data (in lamports) - Support phase
+  //   clusterSupportLamports: 78080000000000000, // 80% of required
+  //   forVotesLamports: 0,
+  //   againstVotesLamports: 0,
+  //   abstainVotesLamports: 0,
+  //   voteCount: 0,
+
+  //   // Requirements & Metrics
+  //   quorumPercent: 80,
+  //   solRequired: 97600000,
+  //   proposerStakeWeightBp: 200,
+
+  //   // Status
+  //   lifecycleStage: "support",
   //   status: "active",
-  //   link: "https://example.com/proposals/simd-0357",
+  //   voting: false,
+  //   finalized: false,
+
+  //   // Technical
+  //   proposalBump: 235,
+  //   index: 357,
+
+  //   // Legacy
   //   vote: {
   //     state: "in-progress",
   //     lastUpdated: "2025-09-03T22:30:00Z",
   //   },
   // },
   // {
+  //   // Identity
   //   simd: "SIMD-0358",
   //   title: "Cross-Chain Governance Bridge",
   //   summary:
   //     "Explore interoperability for governance signals with aligned ecosystems to improve proposal reach.",
-  //   lifecycleStage: "support",
-  //   quorumPercent: 85,
-  //   solRequired: 248000000,
+  //   description:
+  //     "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0358.md",
+  //   author: "RsVWXYZagKnxLhBJfNkQEGHbVaF2crPBnrWpQjZbmPQR",
+
+  //   // Epochs & Timestamps
+  //   creationEpoch: 649,
+  //   startEpoch: 652,
+  //   endEpoch: 659,
+  //   creationTimestamp: Date.now() - 7 * 24 * 60 * 60 * 1000,
   //   votingStart: null,
   //   votingEndsIn: null,
+
+  //   // Vote Data (in lamports) - Support phase
+  //   clusterSupportLamports: 210800000000000000, // 85% of required
+  //   forVotesLamports: 0,
+  //   againstVotesLamports: 0,
+  //   abstainVotesLamports: 0,
+  //   voteCount: 0,
+
+  //   // Requirements & Metrics
+  //   quorumPercent: 85,
+  //   solRequired: 248000000,
+  //   proposerStakeWeightBp: 350,
+
+  //   // Status
+  //   lifecycleStage: "support",
   //   status: "active",
-  //   link: "https://example.com/proposals/simd-0358",
+  //   voting: false,
+  //   finalized: false,
+
+  //   // Technical
+  //   proposalBump: 234,
+  //   index: 358,
+
+  //   // Legacy
   //   vote: {
   //     state: "in-progress",
   //     lastUpdated: "2025-09-02T17:05:00Z",
   //   },
   // },
   // {
+  //   // Identity
   //   simd: "SIMD-0359",
   //   title: "Validator Insurance Expansion",
   //   summary:
   //     "Expand insurance coverage tiers for validators taking on additional network duties.",
-  //   lifecycleStage: "support",
-  //   quorumPercent: 82,
-  //   solRequired: 215500000,
+  //   description:
+  //     "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0359.md",
+  //   author: "StWXYZabcKnxLhBJfNkQEGHbVaF2crPBnrWpQjZbmQST",
+
+  //   // Epochs & Timestamps
+  //   creationEpoch: 648,
+  //   startEpoch: 651,
+  //   endEpoch: 658,
+  //   creationTimestamp: Date.now() - 8 * 24 * 60 * 60 * 1000,
   //   votingStart: null,
   //   votingEndsIn: null,
+
+  //   // Vote Data (in lamports) - Support phase
+  //   clusterSupportLamports: 176710000000000000, // 82% of required
+  //   forVotesLamports: 0,
+  //   againstVotesLamports: 0,
+  //   abstainVotesLamports: 0,
+  //   voteCount: 0,
+
+  //   // Requirements & Metrics
+  //   quorumPercent: 82,
+  //   solRequired: 215500000,
+  //   proposerStakeWeightBp: 330,
+
+  //   // Status
+  //   lifecycleStage: "support",
   //   status: "active",
-  //   link: "https://example.com/proposals/simd-0359",
+  //   voting: false,
+  //   finalized: false,
+
+  //   // Technical
+  //   proposalBump: 233,
+  //   index: 359,
+
+  //   // Legacy
   //   vote: {
-  //     state: "queued",
+  //     state: "in-progress",
   //     lastUpdated: "2025-09-01T09:55:00Z",
   //   },
   // },
   // {
+  //   // Identity
   //   simd: "SIMD-0360",
   //   title: "Validator Health Monitoring APIs",
   //   summary:
   //     "Launch standardized APIs for real-time validator health metrics exposed to integrators.",
-  //   lifecycleStage: "support",
-  //   quorumPercent: 83,
-  //   solRequired: 138400000,
+  //   description:
+  //     "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0360.md",
+  //   author: "TuXYZabcdefKnxLhBJfNkQEGHbVaF2crPBnrWpQjZbRT",
+
+  //   // Epochs & Timestamps
+  //   creationEpoch: 647,
+  //   startEpoch: 650,
+  //   endEpoch: 657,
+  //   creationTimestamp: Date.now() - 9 * 24 * 60 * 60 * 1000,
   //   votingStart: null,
   //   votingEndsIn: null,
+
+  //   // Vote Data (in lamports) - Support phase
+  //   clusterSupportLamports: 114872000000000000, // 83% of required
+  //   forVotesLamports: 0,
+  //   againstVotesLamports: 0,
+  //   abstainVotesLamports: 0,
+  //   voteCount: 0,
+
+  //   // Requirements & Metrics
+  //   quorumPercent: 83,
+  //   solRequired: 138400000,
+  //   proposerStakeWeightBp: 220,
+
+  //   // Status
+  //   lifecycleStage: "support",
   //   status: "active",
-  //   link: "https://example.com/proposals/simd-0360",
+  //   voting: false,
+  //   finalized: false,
+
+  //   // Technical
+  //   proposalBump: 232,
+  //   index: 360,
+
+  //   // Legacy
   //   vote: {
-  //     state: "queued",
+  //     state: "in-progress",
   //     lastUpdated: "2025-08-30T13:40:00Z",
   //   },
   // },
   // {
+  //   // Identity
   //   simd: "SIMD-0361",
   //   title: "Validator Tooling Grants",
   //   summary:
   //     "Provide grants for shared validator tooling focused on monitoring and automation.",
-  //   lifecycleStage: "support",
-  //   quorumPercent: 78,
-  //   solRequired: 110750000,
+  //   description:
+  //     "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0361.md",
+  //   author: "UvWXYZabcghiKnxLhBJfNkQEGHbVaF2crPBnrWpQjUV",
+
+  //   // Epochs & Timestamps
+  //   creationEpoch: 646,
+  //   startEpoch: 649,
+  //   endEpoch: 656,
+  //   creationTimestamp: Date.now() - 10 * 24 * 60 * 60 * 1000,
   //   votingStart: null,
   //   votingEndsIn: null,
+
+  //   // Vote Data (in lamports) - Support phase
+  //   clusterSupportLamports: 86385000000000000, // 78% of required
+  //   forVotesLamports: 0,
+  //   againstVotesLamports: 0,
+  //   abstainVotesLamports: 0,
+  //   voteCount: 0,
+
+  //   // Requirements & Metrics
+  //   quorumPercent: 78,
+  //   solRequired: 110750000,
+  //   proposerStakeWeightBp: 195,
+
+  //   // Status
+  //   lifecycleStage: "support",
   //   status: "active",
-  //   link: "https://example.com/proposals/simd-0361",
+  //   voting: false,
+  //   finalized: false,
+
+  //   // Technical
+  //   proposalBump: 231,
+  //   index: 361,
+
+  //   // Legacy
   //   vote: {
-  //     state: "queued",
+  //     state: "in-progress",
   //     lastUpdated: "2025-08-29T20:05:00Z",
+  //   },
+  // },
+  // {
+  //   // Identity
+  //   simd: "SIMD-0362",
+  //   title: "Validator Tooling Grants",
+  //   summary:
+  //     "Provide grants for shared validator tooling focused on monitoring and automation.",
+  //   description:
+  //     "https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0362.md",
+  //   author: "VwXYZabcdefghiKnxLhBJfNkQEGHbVaF2crPBnrWpQjZbUV",
+
+  //   // Epochs & Timestamps
+  //   creationEpoch: 645,
+  //   startEpoch: 648,
+  //   endEpoch: 655,
+  //   creationTimestamp: Date.now() - 11 * 24 * 60 * 60 * 1000,
+  //   votingStart: null,
+  //   votingEndsIn: null,
+
+  //   // Vote Data (in lamports) - Support phase
+  //   clusterSupportLamports: 69600000000000000, // 75% of required
+  //   forVotesLamports: 0,
+  //   againstVotesLamports: 0,
+  //   abstainVotesLamports: 0,
+  //   voteCount: 0,
+
+  //   // Requirements & Metrics
+  //   quorumPercent: 75,
+  //   solRequired: 92800000,
+  //   proposerStakeWeightBp: 185,
+
+  //   // Status
+  //   lifecycleStage: "support",
+  //   status: "active",
+  //   voting: false,
+  //   finalized: false,
+
+  //   // Technical
+  //   proposalBump: 230,
+  //   index: 362,
+
+  //   // Legacy
+  //   vote: {
+  //     state: "in-progress",
+  //     lastUpdated: "2025-08-28T15:30:00Z",
   //   },
   // },
 ];

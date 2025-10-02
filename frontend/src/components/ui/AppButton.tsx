@@ -33,7 +33,7 @@ const variantOverrides: Record<string, string> = {
   destructive:
     "text-white dark:bg-destructive dark:hover:bg-destructive/90 disabled:hover:bg-destructive",
   outline:
-    "border-white/15 bg-transparent hover:bg-white/12 hover:text-foreground hover:border-white/15 sm:hover:[background:var(--color-dao-gradient-hover)] sm:hover:text-foreground/90 sm:hover:border-[var(--color-dao-gradient-hover-border)] disabled:hover:bg-transparent disabled:hover:border-white/15 shadow-none dark:border-white/15 transition-all duration-200",
+    "border-white/13 bg-transparent hover:bg-white/13 hover:text-foreground hover:border-white/13 sm:hover:[background:var(--color-dao-gradient-hover)] sm:hover:text-foreground/90 sm:hover:border-[var(--color-dao-gradient-hover-border)] disabled:hover:bg-transparent disabled:hover:border-white/13 shadow-none dark:border-white/13 transition-all duration-200",
   gradient:
     "bg-gradient-to-r from-primary to-secondary text-foreground sm:hover:brightness-110 transition-all duration-200 disabled:hover:brightness-100",
 };
