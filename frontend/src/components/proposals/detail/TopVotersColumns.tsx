@@ -64,7 +64,7 @@ export const topVoterColumns: ColumnDef<TopVoterRecord>[] = [
       <SortableHeaderButton column={column} label="Staked" />
     ),
     cell: ({ row }) => (
-      <div className="text-sm font-medium text-white/60">
+      <div className="text-sm text-white/60">
         {formatLamportsDisplay(row.original.stakedLamports).value}
       </div>
     ),
@@ -105,7 +105,7 @@ export const topVoterColumns: ColumnDef<TopVoterRecord>[] = [
       <SortableHeaderButton column={column} label="Percentage" />
     ),
     cell: ({ row }) => (
-      <span className="text-sm font-medium text-white/60">
+      <span className="text-sm text-white/60">
         {row.original.votePercentage.toFixed(2)}%
       </span>
     ),
@@ -116,7 +116,7 @@ export const topVoterColumns: ColumnDef<TopVoterRecord>[] = [
       <SortableHeaderButton column={column} label="Vote Date" />
     ),
     cell: ({ row }) => (
-      <span className="text-sm font-medium text-white/60">
+      <span className="text-sm text-white/60">
         {formatDate(row.original.voteTimestamp)}
       </span>
     ),

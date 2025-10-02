@@ -104,10 +104,10 @@ export default function TopVotersTable() {
 
   return (
     <div className="glass-card overflow-hidden rounded-3xl border border-white/10">
-      <div className="flex flex-col gap-4 border-b border-white/10  px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-4 border-b border-white/10  px-6 py-5 md:flex-row md:items-center md:justify-between">
         <h4 className="h4 font-semibold">Top Voters</h4>
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
-          <div className="relative flex-1 max-w-xs md:max-w-[200px] lg:max-w-md">
+          <div className="relative w-full sm:flex-1 sm:max-w-xs md:max-w-[200px] lg:max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-white/50" />
             <input
               placeholder="Search voters..."
@@ -116,39 +116,41 @@ export default function TopVotersTable() {
               className="w-full pl-10 pr-4 py-2 input"
             />
           </div>
-          <Select
-            key="outcomeFilter"
-            value={outcomeFilter}
-            onValueChange={(value) =>
-              setOutcomeFilter(value as VoteOutcomeFilter)
-            }
-          >
-            <SelectTrigger className="w-[150px] text-foreground">
-              <SelectValue placeholder="All Outcomes" />
-            </SelectTrigger>
-            <SelectContent className="select-background">
-              {FILTER_OPTIONS.map((option) => (
-                <SelectItem
-                  key={option.value}
-                  value={option.value}
-                  className="text-foreground"
-                >
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <AppButton
-            variant="outline"
-            onClick={handleReset}
-            className="bg-transparent text-white"
-          >
-            Reset
-          </AppButton>
+          <div className="flex gap-3 w-full sm:w-auto">
+            <Select
+              key="outcomeFilter"
+              value={outcomeFilter}
+              onValueChange={(value) =>
+                setOutcomeFilter(value as VoteOutcomeFilter)
+              }
+            >
+              <SelectTrigger className="flex-1 sm:w-[150px] text-white/60">
+                <SelectValue placeholder="All Outcomes" />
+              </SelectTrigger>
+              <SelectContent className="select-background">
+                {FILTER_OPTIONS.map((option) => (
+                  <SelectItem
+                    key={option.value}
+                    value={option.value}
+                    className="text-foreground"
+                  >
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <AppButton
+              variant="outline"
+              onClick={handleReset}
+              className="bg-transparent text-white"
+            >
+              Reset
+            </AppButton>
+          </div>
           <AppButton
             variant="outline"
             size="icon"
-            className="bg-transparent text-white"
+            className="hidden lg:flex bg-transparent text-white"
             aria-label="Download top voters"
           >
             <Download className="size-4" />
@@ -193,7 +195,7 @@ export default function TopVotersTable() {
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  className="border-b border-white/5 bg-transparent transition hover:bg-white/5"
+                  className="border-b border-white/5 bg-transparent hover:bg-transparent"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
@@ -230,13 +232,13 @@ export default function TopVotersTable() {
       <div className="space-y-4 border-t border-white/10 bg-black/20 px-6 py-5">
         <TablePaginationMobile
           table={table}
-          totalLabel="Validators"
+          totalLabel="Voters"
           totalCount={filteredData.length}
           pageSizeOptions={[10, 20, 30]}
         />
         <TablePaginationDesktop
           table={table}
-          totalLabel="Total Validators"
+          totalLabel="Total Voters"
           totalCount={filteredData.length}
           pageSizeOptions={[10, 20, 30, 40, 50]}
         />

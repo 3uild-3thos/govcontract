@@ -9,8 +9,8 @@ interface PhaseNodeProps {
 
 export function PhaseNode({ phase, state }: PhaseNodeProps) {
   return (
-    <div className="flex flex-col items-center">
-      <div className="relative flex items-center justify-center">
+    <div className="flex flex-col items-center relative">
+      <div className="relative flex items-center justify-center scale-75 sm:scale-85 md:scale-90 lg:scale-100">
         {state === "active" && (
           <span
             className="absolute inset-[-8px] rounded-full bg-gradient-to-br from-primary to-secondary opacity-30"
@@ -26,7 +26,7 @@ export function PhaseNode({ phase, state }: PhaseNodeProps) {
             state === "active" &&
               "bg-gradient-to-r from-primary to-secondary text-foreground",
             state === "upcoming" &&
-              "border border-white/15 bg-white/5 text-white/60"
+              "border border-white/15 bg-white/5 text-white/60",
           )}
         >
           <PhaseIcon icon={phase.icon} state={state} />
@@ -35,8 +35,10 @@ export function PhaseNode({ phase, state }: PhaseNodeProps) {
 
       <span
         className={cn(
-          "mt-3 text-xs text-white/50 transition-colors duration-300",
-          state === "active" && "text-white"
+          "absolute top-full mt-2 lg:mt-3 text-xs text-white/50 transition-colors duration-300 text-center",
+          "whitespace-normal sm:whitespace-nowrap",
+          "max-w-[80px] sm:max-w-none",
+          state === "active" && "text-white",
         )}
       >
         {phase.label}

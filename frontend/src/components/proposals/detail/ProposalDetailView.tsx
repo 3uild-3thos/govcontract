@@ -24,7 +24,8 @@ export default function ProposalDetailView({
     <div className="space-y-6 sm:space-y-8">
       <ProposalBreadcrumb simd={proposal.simd} />
       <ProposalDetailHeader proposal={proposal} />
-      <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+
+      <div className="grid gap-6 md:grid-cols-[2fr_1fr] lg:grid-cols-[2fr_1fr]">
         <VoteBreakdown proposal={proposal} />
         <CastVote
           proposalSimd={proposal.simd}

@@ -30,8 +30,8 @@ export default function PhaseTimeline({
     <div className="glass-card space-y-6 p-6">
       <h4 className="h4 font-semibold">Phase Timeline</h4>
 
-      <div className="relative flex w-full justify-center px-8">
-        <div className="flex w-full max-w-4xl items-center gap-0">
+      <div className="relative flex w-full justify-center px-2 sm:px-4 md:px-6 lg:px-8 pb-8">
+        <div className="flex w-fit max-w-4xl items-center justify-center gap-0 mx-auto">
           {PHASES.map((phase, index) => {
             const phaseState = resolvePhaseState(
               currentPhase,

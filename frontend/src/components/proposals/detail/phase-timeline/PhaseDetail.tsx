@@ -16,9 +16,9 @@ export function PhaseDetail({ currentPhase, status }: PhaseDetailProps) {
   if (!detail) return null;
 
   return (
-    <div className="mx-auto flex max-w-lg flex-col items-center justify-center space-y-2 pt-4 text-center">
+    <div className="mx-auto flex max-w-lg flex-col items-center justify-center space-y-2 pt-2 lg:pt-4 text-center">
       <p className="text-sm font-semibold text-primary/70">{detail.title}</p>
-      <p className="text-xs text-white/70">{detail.body}</p>
+      <p className="text-sm text-white/50">{detail.body}</p>
     </div>
   );
 }

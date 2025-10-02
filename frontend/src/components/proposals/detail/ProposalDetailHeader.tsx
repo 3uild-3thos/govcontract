@@ -25,8 +25,8 @@ function InfoItem({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-2">
-      <p className="text-white/30 font-semibold">{label}</p>
+    <div className="flex items-center gap-1 sm:gap-1.5 lg:gap-2">
+      <p className="text-white/30 font-semibold text-xs lg:text-sm">{label}</p>
       {children}
     </div>
   );
@@ -41,46 +41,57 @@ export default function ProposalDetailHeader({
 
   return (
     <div className="glass-card space-y-6 p-6">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
         <div className="flex-1 space-y-3">
           <h2 className="h2">{proposal.title}</h2>
+          <div className="lg:hidden">
+            <StatusBadge
+              status={
+                (proposal.status?.toLowerCase() || "active") as ProposalStatus
+              }
+              variant="pill"
+            />
+          </div>
           <p className=" text-sm leading-6 text-pretty text-white/60 line-clamp-3">
             {proposal.summary}
           </p>
         </div>
-        <StatusBadge
-          status={
-            (proposal.status?.toLowerCase() || "active") as ProposalStatus
-          }
-          variant="pill"
-        />
+        <div className="hidden lg:block">
+          <StatusBadge
+            status={
+              (proposal.status?.toLowerCase() || "active") as ProposalStatus
+            }
+            variant="pill"
+          />
+        </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-6 border-t border-white/10 pt-4 text-sm">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-wrap items-center gap-2 sm:gap-3 lg:gap-6 border-t border-white/10 pt-3 sm:pt-4 text-sm leading-none lg:leading-normal">
         <InfoItem label="ID:">
-          <span className="font-mono text-white/60">#{proposal.simd}</span>
+          <span className="font-mono text-white/60 text-xs lg:text-sm">
+            #{proposal.simd}
+          </span>
         </InfoItem>
 
         <InfoItem label="Author:">
-          <span className="font-mono text-white/60">
+          <span className="font-mono text-white/60 text-xs lg:text-sm">
             {formatAddress(proposal.author, 4)}
           </span>
           {copied ? (
-            <CheckIcon className="size-4 text-green-500" />
+            <CheckIcon className="size-3 lg:size-4 text-green-500" />
           ) : (
             <CopyIcon
-              className="size-4 text-white/60 hover:cursor-pointer"
+              className="size-3 lg:size-4 text-white/60 hover:cursor-pointer"
               onClick={() => copyToClipboard(proposal.author)}
             />
           )}
         </InfoItem>
 
         <InfoItem label="Created:">
-          {" "}
-          <p className="text-white/60">{createdAgo}</p>
+          <p className="text-white/60 text-xs lg:text-sm">{createdAgo}</p>
         </InfoItem>
         <InfoItem label="Ends:">
-          <p className="text-white/60">{endsIn}</p>
+          <p className="text-white/60 text-xs lg:text-sm">{endsIn}</p>
         </InfoItem>
         <InfoItem label="Link to proposal:">
           <Link
@@ -89,11 +100,11 @@ export default function ProposalDetailHeader({
             rel="noreferrer"
             className="hover:cursor-pointer"
           >
-            <Github className="size-5 text-white/60 hover:text-primary duration-200 transition-colors" />
+            <Github className="size-6 rounded-full lg:round-none lg:size-5 text-white/60 bg-white/10 p-1 lg:p-0 lg:bg-transparent hover:text-primary duration-200 transition-colors" />
           </Link>
         </InfoItem>
 
-        <div className="ml-auto mr-4">
+        <div className="hidden lg:block lg:ml-auto lg:mr-4">
           <LifecycleIndicator
             stage={
               (proposal.lifecycleStage || "voting") as ProposalLifecycleStage

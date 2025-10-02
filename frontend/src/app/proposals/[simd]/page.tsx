@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import ProposalDetailView from "@/components/proposals/detail/proposal-detail-view";
+import ProposalDetailView from "@/components/proposals/detail/ProposalDetailView";
 import { proposals } from "@/dummy-data/proposals";
 
 interface ProposalDetailsPageProps {

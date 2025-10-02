@@ -40,24 +40,24 @@ export default function VoteBreakdown({
   }, [proposal]);
 
   return (
-    <div className="glass-card flex h-full flex-col p-6 lg:p-8">
-      <div className="flex flex-1 flex-col items-center gap-8 lg:flex-row lg:items-stretch lg:gap-12">
+    <div className="glass-card flex h-full flex-col p-6 md:p-6 lg:p-8">
+      <div className="flex flex-1 flex-col items-center gap-8 md:flex-col md:gap-6 lg:flex-row lg:items-stretch lg:gap-12">
         {/* TODO: Add graph placeholder */}
         <div className="flex flex-1 items-center justify-center">
-          <div className=" w-full max-w-[280px] bg-amber-50 lg:max-w-none" />
+          <div className=" w-full max-w-[280px] bg-amber-50 md:max-w-[200px] lg:max-w-none" />
         </div>
 
         {/* Vote Breakdown Section */}
         <div className="flex flex-1 flex-col">
           <div className="mb-4 space-y-2">
-            <h4 className="h4 text-center font-semibold lg:text-left">
+            <h4 className="h4 text-center font-semibold md:text-left lg:text-left">
               Vote Breakdown
             </h4>
-            <p className="text-center text-sm text-white/60 lg:text-left">
+            <p className="text-center text-sm text-white/60 md:text-left lg:text-left">
               Current distribution of recorded votes for this proposal.
             </p>
           </div>
-          <div className="flex-1 space-y-4">
+          <div className="flex-1 space-y-2 md:space-y-3 lg:space-y-4">
             <VoteItem
               label="For"
               amount={formatLamportsDisplay(votes.for).value}
@@ -81,14 +81,14 @@ export default function VoteBreakdown({
             {HAVE_VOTED ? (
               <>
                 <CircleCheck className="size-4 text-emerald-400" />
-                <p className="text-sm text-center text-white/60">
+                <p className="text-xs lg:text-sm text-center text-white/60">
                   You have voted for this proposal.
                 </p>
               </>
             ) : (
               <>
                 <CircleX className="size-4 text-destructive/50" />
-                <p className="text-sm text-center text-white/60">
+                <p className="text-xs lg:text-sm text-center text-white/60">
                   You have not voted for this proposal.
                 </p>
               </>

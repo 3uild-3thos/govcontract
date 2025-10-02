@@ -33,7 +33,9 @@ export function TablePaginationMobile<TData>({
     <div className="flex flex-col gap-3 px-2 text-sm text-white/60 sm:hidden">
       {/* First Row: Total count and page size */}
       <div className="flex items-center justify-between">
-        <span>{totalLabel}: {totalCount.toLocaleString()}</span>
+        <span>
+          {totalLabel}: {totalCount.toLocaleString()}
+        </span>
         <div className="flex items-center gap-2">
           <span>Show</span>
           <Select
@@ -127,7 +129,7 @@ export function TablePaginationDesktop<TData>({
             value={`${table.getState().pagination.pageSize}`}
             onValueChange={(value) => table.setPageSize(Number(value))}
           >
-            <SelectTrigger className="h-8 w-[100px]">
+            <SelectTrigger className="h-8 w-[70px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="select-background">

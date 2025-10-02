@@ -26,11 +26,11 @@ export default function CastVote({
   };
 
   return (
-    <div className="glass-card h-full p-8">
+    <div className="glass-card h-full p-6 md:p-6 lg:p-8">
       <div className="flex flex-col h-full">
-        <div className="space-y-1 mb-8">
+        <div className="space-y-1 mb-6 md:mb-4 lg:mb-8">
           <h4 className="h4 font-semibold">Cast Your Vote</h4>
-          <p className=" text-sm text-white/60">
+          <p className=" text-sm  text-white/60">
             Your vote is weighted by your SOL stake.
           </p>
         </div>
