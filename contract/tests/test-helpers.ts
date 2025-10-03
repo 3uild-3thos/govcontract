@@ -98,6 +98,21 @@ export function deriveVoteOverrideAccount(
   )[0];
 }
 
+export function deriveVoteOverrideCacheAccount(
+  program: anchor.Program<Govcontract>,
+  proposalAccount: anchor.web3.PublicKey,
+  validatorVote: anchor.web3.PublicKey
+): anchor.web3.PublicKey {
+  return anchor.web3.PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("vote_override_cache"),
+      proposalAccount.toBuffer(),
+      validatorVote.toBuffer(),
+    ],
+    program.programId
+  )[0];
+}
+
 // Event listener helpers
 export function createEventListener<T>(
   program: anchor.Program<Govcontract>,

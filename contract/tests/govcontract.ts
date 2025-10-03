@@ -22,6 +22,7 @@ import {
   deriveConsensusResultAccount,
   deriveMetaMerkleProofAccount,
   deriveVoteOverrideAccount,
+  deriveVoteOverrideCacheAccount,
   createEventListener,
   removeEventListener,
   logProposalState,
@@ -217,12 +218,19 @@ describe("govcontract", () => {
       });
 
       try {
+        const voteOverrideCacheAccount = deriveVoteOverrideCacheAccount(
+          program,
+          testAccounts.proposalAccount,
+          validator.voteAccount
+        );
+        
         const tx = await program.methods
           .castVote(TEST_VOTE_PARAMS.for, TEST_VOTE_PARAMS.against, TEST_VOTE_PARAMS.abstain)
           .accountsPartial({
             signer: provider.publicKey,
             proposal: testAccounts.proposalAccount,
             vote: validator.voteAccount,
+            voteOverrideCache: voteOverrideCacheAccount,
             splVoteAccount: validator.splVoteAccount.publicKey,
             snapshotProgram: mockProgram.programId,
             consensusResult: testAccounts.consensusResult,
@@ -377,12 +385,19 @@ describe("govcontract", () => {
         testAccounts.voteAccounts[2]
       );
 
+      const voteOverrideCacheAccount = deriveVoteOverrideCacheAccount(
+        program,
+        testAccounts.proposalAccount,
+        testAccounts.voteAccounts[2]
+      );
+
       await program.methods
         .castVoteOverride(TEST_VOTE_OVERRIDE_PARAMS.for, TEST_VOTE_OVERRIDE_PARAMS.against, TEST_VOTE_OVERRIDE_PARAMS.abstain, [], stakeMerkleLeaf)
         .accountsPartial({
           signer: delegator.publicKey,
           proposal: testAccounts.proposalAccount,
           validatorVote: testAccounts.voteAccounts[2],
+          voteOverrideCache: voteOverrideCacheAccount,
           splVoteAccount: testAccounts.splVoteAccounts[4].publicKey,
           voteOverride: voteOverrideAccount,
           splStakeAccount: delegatorStakeAccount.publicKey,
