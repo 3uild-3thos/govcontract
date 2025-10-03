@@ -130,7 +130,6 @@ impl<'info> SupportProposal<'info> {
             // Activate voting if threshold met
             self.proposal.start_epoch = clock.epoch + 4;
             self.proposal.end_epoch = self.proposal.start_epoch + 3;
-            self.proposal.voting = true;
             true
         } else {
             false
