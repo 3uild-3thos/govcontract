@@ -75,7 +75,6 @@ impl<'info> CastVoteOverride<'info> {
         bumps: &CastVoteOverrideBumps,
     ) -> Result<()> {
         // Check that the proposal is open for voting
-        require!(self.proposal.voting, GovernanceError::ProposalClosed);
         require!(!self.proposal.finalized, GovernanceError::ProposalFinalized);
 
         // Get the current epoch from the Clock sysvar

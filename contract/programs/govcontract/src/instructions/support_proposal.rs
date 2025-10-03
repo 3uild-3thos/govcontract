@@ -49,7 +49,7 @@ pub struct SupportProposal<'info> {
 impl<'info> SupportProposal<'info> {
     pub fn support_proposal(&mut self, bumps: &SupportProposalBumps) -> Result<()> {
         // Ensure proposal is eligible for support
-        require!(!self.proposal.voting, GovernanceError::ProposalClosed);
+        require!(Clock::get()?.epoch <= self.proposal.start_epoch, GovernanceError::ProposalClosed);
         require!(!self.proposal.finalized, GovernanceError::ProposalFinalized);
 
         // Validate snapshot program ownership
@@ -128,6 +128,8 @@ impl<'info> SupportProposal<'info> {
         let cluster_scaled = (cluster_stake as u128) * CLUSTER_STAKE_MULTIPLIER;
         let voting_activated = if support_scaled >= cluster_scaled {
             // Activate voting if threshold met
+            self.proposal.start_epoch = clock.epoch + 4;
+            self.proposal.end_epoch = self.proposal.start_epoch + 3;
             self.proposal.voting = true;
             true
         } else {

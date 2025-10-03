@@ -61,8 +61,6 @@ impl<'info> CreateProposal<'info> {
         &mut self,
         title: String,
         description: String,
-        start_epoch: u64,
-        voting_length_epochs: u64,
         bumps: &CreateProposalBumps,
     ) -> Result<()> {
         // Validate proposal inputs
@@ -79,15 +77,6 @@ impl<'info> CreateProposal<'info> {
         require!(
             is_valid_github_link(&description),
             GovernanceError::DescriptionInvalid
-        );
-        require_gt!(
-            voting_length_epochs,
-            0u64,
-            GovernanceError::InvalidVotingLength
-        );
-        require!(
-            voting_length_epochs <= MAX_VOTING_EPOCHS,
-            GovernanceError::VotingLengthTooLong
         );
 
         // Validate snapshot program ownership
@@ -157,8 +146,6 @@ impl<'info> CreateProposal<'info> {
 
         let clock = Clock::get()?;
 
-        require_gte!(start_epoch, clock.epoch, GovernanceError::InvalidStartEpoch);
-
         // Calculate stake weight basis points
         let cluster_stake = get_epoch_total_stake();
         let proposer_stake = get_epoch_stake_for_vote_account(self.spl_vote_account.key);
@@ -170,10 +157,8 @@ impl<'info> CreateProposal<'info> {
             title,
             description,
             creation_epoch: clock.epoch,
-            start_epoch,
-            end_epoch: start_epoch
-                .checked_add(voting_length_epochs)
-                .ok_or(GovernanceError::ArithmeticOverflow)?,
+            start_epoch: 0,
+            end_epoch: 0,
             proposer_stake_weight_bp,
             proposal_bump: bumps.proposal,
             creation_timestamp: clock.unix_timestamp,

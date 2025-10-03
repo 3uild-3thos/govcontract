@@ -33,7 +33,6 @@ impl<'info> FinalizeProposal<'info> {
         });
 
         self.proposal.finalized = true;
-        self.proposal.voting = false;
 
         Ok(())
     }

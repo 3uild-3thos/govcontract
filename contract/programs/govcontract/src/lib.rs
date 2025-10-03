@@ -34,8 +34,6 @@ pub mod govcontract {
         ctx.accounts.create_proposal(
             title,
             description,
-            start_epoch,
-            voting_length_epochs,
             &ctx.bumps,
         )?;
         Ok(())
