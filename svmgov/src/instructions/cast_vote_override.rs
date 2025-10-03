@@ -14,7 +14,7 @@ use crate::{
             generate_pdas_from_vote_proof_response, get_stake_account_proof,
             get_vote_account_proof, get_voter_summary,
         },
-        utils::{create_spinner, derive_vote_override_pda, derive_vote_pda, setup_all},
+        utils::{create_spinner, derive_vote_override_pda, derive_vote_override_cache_pda, derive_vote_pda, setup_all},
     },
 };
 
@@ -65,6 +65,7 @@ pub async fn cast_vote_override(
         &validator_vote_pda,
         &program.id(),
     );
+    let vote_override_cache_pda = derive_vote_override_cache_pda(&proposal_pubkey, &validator_vote_pda, &program.id());
 
     let stake_merkle_proof_vec =
         convert_merkle_proof_strings(&stake_merkle_proof.stake_merkle_proof)?;
@@ -90,6 +91,7 @@ pub async fn cast_vote_override(
             proposal: proposal_pubkey,
             validator_vote: validator_vote_pda,
             vote_override: vote_override_pda,
+            vote_override_cache: vote_override_cache_pda,
             consensus_result: consensus_result_pda,
             meta_merkle_proof: meta_merkle_proof_pda,
             snapshot_program: SNAPSHOT_PROGRAM_ID,

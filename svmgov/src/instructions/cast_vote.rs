@@ -10,7 +10,7 @@ use crate::{
     govcontract::client::{accounts, args},
     utils::{
         api_helpers::{generate_pdas_from_vote_proof_response, get_vote_account_proof},
-        utils::{create_spinner, derive_vote_pda, setup_all},
+        utils::{create_spinner, derive_vote_pda, derive_vote_override_cache_pda, setup_all},
     },
 };
 
@@ -40,6 +40,7 @@ pub async fn cast_vote(
         generate_pdas_from_vote_proof_response(&proof_response)?;
 
     let vote_pda = derive_vote_pda(&proposal_pubkey, &vote_account, &program.id());
+    let vote_override_cache_pda = derive_vote_override_cache_pda(&proposal_pubkey, &vote_pda, &program.id());
 
     let spinner = create_spinner("Sending cast-vote transaction...");
 
@@ -55,6 +56,7 @@ pub async fn cast_vote(
             spl_vote_account: vote_account,
             proposal: proposal_pubkey,
             vote: vote_pda,
+            vote_override_cache: vote_override_cache_pda,
             consensus_result: consensus_result_pda,
             meta_merkle_proof: meta_merkle_proof_pda,
             snapshot_program: SNAPSHOT_PROGRAM_ID,

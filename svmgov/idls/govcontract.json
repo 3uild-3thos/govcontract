@@ -93,6 +93,46 @@
           "name": "spl_vote_account"
         },
         {
+          "name": "vote_override_cache",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  111,
+                  116,
+                  101,
+                  95,
+                  111,
+                  118,
+                  101,
+                  114,
+                  114,
+                  105,
+                  100,
+                  101,
+                  95,
+                  99,
+                  97,
+                  99,
+                  104,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "proposal"
+              },
+              {
+                "kind": "account",
+                "path": "vote"
+              }
+            ]
+          }
+        },
+        {
           "name": "snapshot_program"
         },
         {
@@ -201,6 +241,46 @@
               {
                 "kind": "account",
                 "path": "spl_stake_account"
+              },
+              {
+                "kind": "account",
+                "path": "validator_vote"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vote_override_cache",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  111,
+                  116,
+                  101,
+                  95,
+                  111,
+                  118,
+                  101,
+                  114,
+                  114,
+                  105,
+                  100,
+                  101,
+                  95,
+                  99,
+                  97,
+                  99,
+                  104,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "proposal"
               },
               {
                 "kind": "account",
@@ -557,10 +637,13 @@
               },
               {
                 "kind": "account",
-                "path": "signer"
+                "path": "spl_vote_account"
               }
             ]
           }
+        },
+        {
+          "name": "spl_vote_account"
         },
         {
           "name": "snapshot_program"
@@ -747,148 +830,183 @@
     },
     {
       "code": 6001,
+      "name": "TitleEmpty",
+      "msg": "The title of the proposal cannot be empty"
+    },
+    {
+      "code": 6002,
       "name": "TitleTooLong",
       "msg": "The title of the proposal is too long, max 50 char"
     },
     {
-      "code": 6002,
+      "code": 6003,
+      "name": "DescriptionEmpty",
+      "msg": "The description of the proposal cannot be empty"
+    },
+    {
+      "code": 6004,
       "name": "DescriptionTooLong",
       "msg": "The description of the proposal is too long, max 250 char"
     },
     {
-      "code": 6003,
+      "code": 6005,
       "name": "DescriptionInvalid",
       "msg": "The description of the proposal must point to a github link"
     },
     {
-      "code": 6004,
+      "code": 6006,
       "name": "InvalidProposalId",
       "msg": "Invalid proposal ID"
     },
     {
-      "code": 6005,
+      "code": 6007,
       "name": "VotingNotStarted",
       "msg": "Voting on proposal not yet started"
     },
     {
-      "code": 6006,
+      "code": 6008,
       "name": "ProposalClosed",
       "msg": "Proposal closed"
     },
     {
-      "code": 6007,
+      "code": 6009,
       "name": "ProposalFinalized",
       "msg": "Proposal finalized"
     },
     {
-      "code": 6008,
+      "code": 6010,
       "name": "InvalidVoteDistribution",
       "msg": "Vote distribution must add up to 100% in Basis Points"
     },
     {
-      "code": 6009,
+      "code": 6011,
       "name": "VotingPeriodNotEnded",
       "msg": "Voting period not yet ended"
     },
     {
-      "code": 6010,
+      "code": 6012,
       "name": "InvalidVoteAccount",
       "msg": "Invalid vote account, proposal id mismatch"
     },
     {
-      "code": 6011,
+      "code": 6013,
       "name": "FailedDeserializeNodePubkey",
       "msg": "Failed to deserialize node_pubkey from Vote account"
     },
     {
-      "code": 6012,
+      "code": 6014,
       "name": "VoteNodePubkeyMismatch",
       "msg": "Deserialized node_pubkey from Vote accounts does not match"
     },
     {
-      "code": 6013,
+      "code": 6015,
       "name": "NotEnoughAccounts",
       "msg": "Not enough accounts for tally"
     },
     {
-      "code": 6014,
+      "code": 6016,
       "name": "InvalidClusterStake",
       "msg": "Cluster stake cannot be zero"
     },
     {
-      "code": 6015,
+      "code": 6017,
       "name": "InvalidStartEpoch",
       "msg": "Start epoch must be current or future epoch"
     },
     {
-      "code": 6016,
+      "code": 6018,
       "name": "InvalidVotingLength",
       "msg": "Voting length must be bigger than 0"
     },
     {
-      "code": 6017,
+      "code": 6019,
       "name": "InvalidVoteAccountVersion",
       "msg": "Invalid Vote account version"
     },
     {
-      "code": 6018,
+      "code": 6020,
       "name": "InvalidVoteAccountSize",
       "msg": "Invalid Vote account size"
     },
     {
-      "code": 6019,
-      "name": "AllVotesCount",
-      "msg": "All votes cast on the proposal must be counted to finalize"
-    },
-    {
-      "code": 6020,
+      "code": 6021,
       "name": "InvalidStakeAccount",
       "msg": "Stake account invalid"
     },
     {
-      "code": 6021,
+      "code": 6022,
       "name": "InvalidStakeState",
       "msg": "Stake account invalid"
     },
     {
-      "code": 6022,
+      "code": 6023,
       "name": "InvalidStakeAccountSize",
       "msg": "Invalid Stake account size"
     },
     {
-      "code": 6023,
+      "code": 6024,
       "name": "InvalidSnapshotProgram",
       "msg": "Invalid Snapshot program: provided program ID does not match the expected Merkle Verifier Service program"
     },
     {
-      "code": 6024,
+      "code": 6025,
       "name": "UnauthorizedMerkleRootUpdate",
       "msg": "Only the original proposal author can add the merkle root hash"
     },
     {
-      "code": 6025,
+      "code": 6026,
       "name": "MerkleRootAlreadySet",
       "msg": "Merkle root hash is already set for this proposal"
     },
     {
-      "code": 6026,
+      "code": 6027,
       "name": "InvalidMerkleRoot",
       "msg": "Merkle root hash cannot be all zeros"
     },
     {
-      "code": 6027,
+      "code": 6028,
       "name": "InvalidSnapshotSlot",
       "msg": "Invalid snapshot slot: snapshot slot must be less past or current slot"
     },
     {
-      "code": 6028,
+      "code": 6029,
       "name": "MustBeOwnedBySnapshotProgram",
       "msg": "Account must be owned by Snapshot program"
     },
     {
-      "code": 6029,
+      "code": 6030,
       "name": "InvalidConsensusResultPDA",
       "msg": "Invalid consensus result PDA"
+    },
+    {
+      "code": 6031,
+      "name": "CantDeserializeMMPPDA",
+      "msg": "Can't deserialize MetaMerkleProof PDA"
+    },
+    {
+      "code": 6032,
+      "name": "CantDeserializeConsensusResult",
+      "msg": "Can't deserialize ConsensusResult"
+    },
+    {
+      "code": 6033,
+      "name": "CannotModifyAfterStart",
+      "msg": "Cannot modify proposal after voting has started"
+    },
+    {
+      "code": 6034,
+      "name": "VotingLengthTooLong",
+      "msg": "Voting length exceeds maximum allowed epochs"
+    },
+    {
+      "code": 6035,
+      "name": "ArithmeticOverflow",
+      "msg": "Arithmetic overflow occurred"
+    },
+    {
+      "code": 6036,
+      "name": "SnapshotProgramUpgraded",
+      "msg": "Snapshot program has been upgraded, update protection triggered"
     }
   ],
   "types": [

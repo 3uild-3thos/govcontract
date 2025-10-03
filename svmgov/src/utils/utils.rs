@@ -451,3 +451,17 @@ pub fn derive_vote_override_pda(
     let (pda, _) = Pubkey::find_program_address(seeds, program_id);
     pda
 }
+
+pub fn derive_vote_override_cache_pda(
+    proposal_pubkey: &Pubkey,
+    validator_vote_pda: &Pubkey,
+    program_id: &Pubkey,
+) -> Pubkey {
+    let seeds = &[
+        b"vote_override_cache",
+        proposal_pubkey.as_ref(),
+        validator_vote_pda.as_ref(),
+    ];
+    let (pda, _) = Pubkey::find_program_address(seeds, program_id);
+    pda
+}
