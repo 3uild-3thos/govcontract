@@ -45,7 +45,7 @@ pub struct CastVoteOverride<'info> {
     /// CHECK: Vote override cache account. Might not yet exist
     #[account(
         mut,
-        seeds = [b"vote_override", proposal.key().as_ref(), validator_vote.key().as_ref()],
+        seeds = [b"vote_override_cache", proposal.key().as_ref(), validator_vote.key().as_ref()],
         bump
     )]
     pub vote_override_cache: UncheckedAccount<'info>,
