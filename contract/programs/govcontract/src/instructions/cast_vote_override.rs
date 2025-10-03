@@ -260,7 +260,7 @@ impl<'info> CastVoteOverride<'info> {
                 if vote_override_cache.proposal != self.proposal.key()
                     || vote_override_cache.vote_account_validator != self.validator_vote.key()
                 {
-                    // Return Error
+                    return Err(GovernanceError::InvalidVoteAccount.into());
                 }
 
                 // Add delegator's vote to cache
@@ -302,19 +302,28 @@ impl<'info> CastVoteOverride<'info> {
                     &[seeds],
                 )?;
 
-                // Add delegator's vote to cache
-                // Add missing fields
-                let mut vote_override_cache = VoteOverrideCache::deserialize(&mut self.vote_override_cache.data.borrow().as_ref())?;
+                // Initialize the cache with proper values
+                let vote_override_cache = VoteOverrideCache {
+                    validator: meta_merkle_leaf.vote_account,
+                    proposal: self.proposal.key(),
+                    vote_account_validator: self.validator_vote.key(),
+                    for_votes_bp,
+                    against_votes_bp,
+                    abstain_votes_bp,
+                    for_votes_lamports,
+                    against_votes_lamports,
+                    abstain_votes_lamports,
+                    total_stake: delegator_stake,
+                    bump: bumps.vote_override_cache,
+                };
                 
-                vote_override_cache.for_votes_bp = vote_override_cache.for_votes_bp.checked_add(for_votes_bp).ok_or(GovernanceError::ArithmeticOverflow)?;
-                vote_override_cache.against_votes_bp = vote_override_cache.against_votes_bp.checked_add(against_votes_bp).ok_or(GovernanceError::ArithmeticOverflow)?;
-                vote_override_cache.abstain_votes_bp = vote_override_cache.abstain_votes_bp.checked_add(abstain_votes_bp).ok_or(GovernanceError::ArithmeticOverflow)?;
-
-                vote_override_cache.for_votes_lamports = vote_override_cache.for_votes_lamports.checked_add(for_votes_lamports).ok_or(GovernanceError::ArithmeticOverflow)?;
-                vote_override_cache.against_votes_lamports = vote_override_cache.against_votes_lamports.checked_add(against_votes_lamports).ok_or(GovernanceError::ArithmeticOverflow)?;
-                vote_override_cache.abstain_votes_lamports = vote_override_cache.abstain_votes_lamports.checked_add(abstain_votes_lamports).ok_or(GovernanceError::ArithmeticOverflow)?;
-
-                vote_override_cache.total_stake = vote_override_cache.total_stake.checked_add(delegator_stake).ok_or(GovernanceError::ArithmeticOverflow)?;
+                // Serialize the initialized cache to the account data
+                let mut account_data = self.vote_override_cache.data.borrow_mut();
+                let serialized = borsh::to_vec(&vote_override_cache).map_err(|e| {
+                    msg!("Error serializing VoteOverrideCache: {}", e);
+                    GovernanceError::ArithmeticOverflow
+                })?;
+                account_data[0..serialized.len()].copy_from_slice(&serialized);
             }
         }
 
