@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { AppButton } from "@/components/ui/AppButton";
-import { Settings, Menu } from "lucide-react";
+import { Settings, Menu, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
 import {
   Drawer,
@@ -15,6 +15,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { formatAddress } from "@/lib/governance/formatters";
 
 type NavLink = {
   href: string;
@@ -26,9 +27,12 @@ const navLinks: NavLink[] = [
   { href: "/dashboard", label: "Dashboard" },
 ];
 
+const wallet = "7K3iFhqVpF4xnwMGWKmQRgNvWqKAoZGmZN6vLkPvJXbd"; // Test wallet address
+
 export default function Navbar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [walletAddress, setWalletAddress] = useState(false);
 
   useEffect(() => {
     setIsOpen(false);
@@ -109,6 +113,17 @@ export default function Navbar() {
                       </DrawerClose>
                     );
                   })}
+
+                  <div className="my-2 h-px bg-white/10" />
+
+                  <button
+                    type="button"
+                    className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-base font-medium transition-all text-muted hover:text-white hover:bg-white/5"
+                    aria-label="Settings"
+                  >
+                    <Settings className="size-5" />
+                    <span>Settings</span>
+                  </button>
                 </nav>
               </DrawerContent>
             </Drawer>
@@ -128,7 +143,7 @@ export default function Navbar() {
               </span>
             </Link>
           </div>
-          <nav className="hidden lg:flex items-center gap-8">
+          <nav className="hidden lg:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
             <ul className="flex items-center gap-8 list-none">
               {navLinks.map((link) => renderNavLinks(link))}
             </ul>
@@ -140,16 +155,40 @@ export default function Navbar() {
               size="icon"
               aria-label="Settings"
               icon={<Settings className="size-4" />}
-              className="text-muted rounded-full"
+              className="text-muted rounded-full hidden lg:flex"
             />
-            <AppButton
-              type="button"
-              aria-label="Connect Wallet"
-              variant="gradient"
-              size="lg"
-              className="rounded-full font-plus-jakarta-sans font-bold lg:h-9 lg:px-6"
-              text="Connect Wallet"
-            />
+            {walletAddress ? (
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 flex-row-reverse">
+                  <span className="size-2 rounded-full bg-emerald-400" />
+                  <div className="flex flex-col items-end">
+                    <span className="text-sm font-medium font-mono text-foreground">
+                      {formatAddress(wallet, 4)}
+                    </span>
+                    <span className="text-xs text-emerald-400">Connected</span>
+                  </div>
+                </div>
+                <AppButton
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  aria-label="Disconnect"
+                  icon={<LogOut className="size-5" />}
+                  className="text-muted border-none"
+                  onClick={() => setWalletAddress(false)}
+                />
+              </div>
+            ) : (
+              <AppButton
+                type="button"
+                aria-label="Connect Wallet"
+                variant="gradient"
+                size="lg"
+                className="rounded-full font-plus-jakarta-sans font-bold lg:h-9 lg:px-6"
+                text="Connect Wallet"
+                onClick={() => setWalletAddress(true)}
+              />
+            )}
           </div>
         </div>
       </div>
