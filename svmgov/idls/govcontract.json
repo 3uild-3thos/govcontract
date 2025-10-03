@@ -434,14 +434,6 @@
         {
           "name": "description",
           "type": "string"
-        },
-        {
-          "name": "start_epoch",
-          "type": "u64"
-        },
-        {
-          "name": "voting_length_epochs",
-          "type": "u64"
         }
       ]
     },

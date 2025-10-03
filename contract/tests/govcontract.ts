@@ -68,9 +68,7 @@ describe("govcontract", () => {
         .createProposal(
           seed,
           TEST_PROPOSAL_PARAMS.title,
-          TEST_PROPOSAL_PARAMS.description,
-          TEST_PROPOSAL_PARAMS.startEpoch,
-          TEST_PROPOSAL_PARAMS.endEpoch
+          TEST_PROPOSAL_PARAMS.description
         )
         .accountsPartial({
           signer: provider.publicKey,
@@ -523,9 +521,7 @@ describe("govcontract - Error Cases", () => {
         .createProposal(
           testSeed,
           ERROR_TEST_PARAMS.emptyTitle,
-          TEST_PROPOSAL_PARAMS.description,
-          TEST_PROPOSAL_PARAMS.startEpoch,
-          TEST_PROPOSAL_PARAMS.endEpoch
+          TEST_PROPOSAL_PARAMS.description
         )
         .accountsPartial({
           signer: provider.publicKey,
@@ -584,9 +580,7 @@ describe("govcontract - Error Cases", () => {
         .createProposal(
           testSeed,
           TEST_PROPOSAL_PARAMS.title,
-          ERROR_TEST_PARAMS.emptyDescription,
-          TEST_PROPOSAL_PARAMS.startEpoch,
-          TEST_PROPOSAL_PARAMS.endEpoch
+          ERROR_TEST_PARAMS.emptyDescription
         )
         .accountsPartial({
           signer: provider.publicKey,
@@ -610,65 +604,6 @@ describe("govcontract - Error Cases", () => {
     }
   });
 
-  it("Error Test - Voting Length Too Long", async () => {
-    const testSeed = new anchor.BN(randomBytes(8));
-    const splVoteAccount = anchor.web3.Keypair.generate();
-
-    const space = 3762;
-    const lamports = await provider.connection.getMinimumBalanceForRentExemption(space);
-
-    await program.provider.sendAndConfirm(
-      new anchor.web3.Transaction().add(
-        anchor.web3.SystemProgram.createAccount({
-          fromPubkey: provider.publicKey,
-          newAccountPubkey: splVoteAccount.publicKey,
-          space,
-          lamports: lamports + 1000000000,
-          programId: anchor.web3.VoteProgram.programId,
-        }),
-        anchor.web3.VoteProgram.initializeAccount({
-          votePubkey: splVoteAccount.publicKey,
-          nodePubkey: provider.publicKey,
-          voteInit: new anchor.web3.VoteInit(
-            provider.publicKey,
-            provider.publicKey,
-            provider.publicKey,
-            1
-          ),
-        })
-      ),
-      [splVoteAccount]
-    );
-
-    try {
-      await program.methods
-        .createProposal(
-          testSeed,
-          TEST_PROPOSAL_PARAMS.title,
-          TEST_PROPOSAL_PARAMS.description,
-          TEST_PROPOSAL_PARAMS.startEpoch,
-          ERROR_TEST_PARAMS.longVotingLength // 20 epochs > MAX_VOTING_EPOCHS (10)
-        )
-        .accountsPartial({
-          signer: provider.publicKey,
-          proposal: deriveProposalAccount(program, testSeed, splVoteAccount.publicKey),
-          proposalIndex: deriveProposalIndexAccount(program),
-          splVoteAccount: splVoteAccount.publicKey,
-          snapshotProgram: mockProgram.programId,
-          consensusResult: deriveConsensusResultAccount(mockProgram),
-          metaMerkleProof: deriveMetaMerkleProofAccount(mockProgram, deriveConsensusResultAccount(mockProgram), splVoteAccount.publicKey),
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .rpc();
-
-      throw new Error("Expected error was not thrown - voting length should be rejected");
-    } catch (error: any) {
-      console.log("Expected error caught:", error.message);
-      if (error.message.includes("VotingLengthTooLong")) {
-        console.log("Correctly caught VotingLengthTooLong error");
-      }
-    }
-  });
 
   it("Error Test - Cannot Modify Merkle Root After Voting Starts", async () => {
 

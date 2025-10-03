@@ -28,8 +28,6 @@ pub mod govcontract {
         seed: u64,
         title: String,
         description: String,
-        start_epoch: u64,
-        voting_length_epochs: u64,
     ) -> Result<()> {
         ctx.accounts.create_proposal(
             title,

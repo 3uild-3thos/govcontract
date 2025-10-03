@@ -45,8 +45,6 @@ export const TEST_VOTE_OVERRIDE_PARAMS = {
 export const TEST_PROPOSAL_PARAMS = {
   title: "Proposal1",
   description: "https://github.com/repo/test-proposal",
-  startEpoch: new BN(0),
-  endEpoch: new BN(1),
 };
 
 // Error test parameters
@@ -54,6 +52,5 @@ export const ERROR_TEST_PARAMS = {
   emptyTitle: "",
   emptyDescription: "",
   invalidDescription: "not a github link",
-  longVotingLength: new BN(20), // Exceeds MAX_VOTING_EPOCHS (10)
   overflowValue: new BN("18446744073709551616"), // u64::MAX + 1
 };

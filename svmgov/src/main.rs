@@ -61,7 +61,7 @@ enum Commands {
                       It requires a title and a GitHub link for the proposal description, and optionally a unique seed to derive the proposal's address (PDA). \
                       The identity keypair is required to sign the transaction, and an optional RPC URL can be provided to connect to the chain.\n\n\
                       Examples:\n\
-                      $ svmgov --identity-keypair /path/to/key.json create-proposal --title \"New Governance Rule\" --description \"https://github.com/repo/proposal\" --start-epoch 820 --length 20\n\
+                      $ svmgov --identity-keypair /path/to/key.json create-proposal --title \"New Governance Rule\" --description \"https://github.com/repo/proposal\"\n\
                       $ svmgov --identity-keypair /path/to/key.json --rpc-url https://api.mainnet-beta.solana.com create-proposal --seed 42 --title \"New Governance Rule\" --description \"https://github.com/repo/proposal\""
     )]
     CreateProposal {
@@ -77,16 +77,6 @@ enum Commands {
         #[arg(long, help = "GitHub link for the proposal description")]
         description: String,
 
-        /// Start epoch of proposal.
-        #[arg(long, help = "The start epoch for the proposal")]
-        start_epoch: u64,
-
-        /// Length in epochs for the proposal to go active for support and eventually voting.
-        #[arg(
-            long,
-            help = "The length of the voting period for the proposal in epochs"
-        )]
-        length: u64,
     },
 
     #[command(
@@ -333,8 +323,6 @@ async fn handle_command(cli: Cli) -> Result<()> {
             seed,
             title,
             description,
-            start_epoch,
-            length,
         } => {
             instructions::create_proposal(
                 title.to_string(),
@@ -342,8 +330,6 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 *seed,
                 cli.identity_keypair,
                 cli.rpc_url,
-                *start_epoch,
-                *length,
             )
             .await?;
         }

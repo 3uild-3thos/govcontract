@@ -19,18 +19,14 @@ pub async fn create_proposal(
     seed: Option<u64>,
     identity_keypair: Option<String>,
     rpc_url: Option<String>,
-    start_epoch: u64,
-    length: u64,
 ) -> Result<()> {
     log::debug!(
-        "create_proposal: title={}, description={}, seed={:?}, identity_keypair={:?}, rpc_url={:?}, start_epoch={}, length={}",
+        "create_proposal: title={}, description={}, seed={:?}, identity_keypair={:?}, rpc_url={:?}",
         proposal_title,
         proposal_description,
         seed,
         identity_keypair,
-        rpc_url,
-        start_epoch,
-        length
+        rpc_url
     );
 
     let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
@@ -62,8 +58,6 @@ pub async fn create_proposal(
         .args(args::CreateProposal {
             title: proposal_title,
             description: proposal_description,
-            start_epoch,
-            voting_length_epochs: length,
             seed: seed_value,
         })
         .accounts(accounts::CreateProposal {
