@@ -47,6 +47,8 @@ export type ProposalRecord = {
   };
 };
 
+const MOCK_NOW = Date.UTC(2025, 8, 24, 12, 0, 0); // 2025-09-24T12:00:00Z
+
 export const proposals: ProposalRecord[] = [
   {
     // Identity
@@ -61,7 +63,7 @@ export const proposals: ProposalRecord[] = [
     creationEpoch: 650,
     startEpoch: 653,
     endEpoch: 660,
-    creationTimestamp: Date.now() - 3 * 24 * 60 * 60 * 1000, // 3 days ago
+    creationTimestamp: MOCK_NOW - 3 * 24 * 60 * 60 * 1000, // 3 days ago
     votingStart: null,
     votingEndsIn: null,
 
@@ -106,9 +108,9 @@ export const proposals: ProposalRecord[] = [
     creationEpoch: 648,
     startEpoch: 651,
     endEpoch: 658,
-    creationTimestamp: Date.now() - 7 * 24 * 60 * 60 * 1000, // 7 days ago
-    votingStart: "2025-09-28 10:00:00",
-    votingEndsIn: "2025-10-15 10:00:00",
+    creationTimestamp: MOCK_NOW - 7 * 24 * 60 * 60 * 1000, // 7 days ago
+    votingStart: "2025-09-28T10:00:00Z",
+    votingEndsIn: "2025-10-15T10:00:00Z",
 
     // Vote Data (in lamports) - Active voting with data
     clusterSupportLamports: 182432988000000000, // 100% of required
@@ -151,9 +153,9 @@ export const proposals: ProposalRecord[] = [
     creationEpoch: 620,
     startEpoch: 623,
     endEpoch: 630,
-    creationTimestamp: Date.now() - 45 * 24 * 60 * 60 * 1000, // 45 days ago
-    votingStart: "2025-08-15 10:00:00",
-    votingEndsIn: "2025-08-25 10:00:00",
+    creationTimestamp: MOCK_NOW - 45 * 24 * 60 * 60 * 1000, // 45 days ago
+    votingStart: "2025-08-15T10:00:00Z",
+    votingEndsIn: "2025-08-25T10:00:00Z",
 
     // Vote Data (in lamports) - Finalized with results
     clusterSupportLamports: 182432988000000000,
@@ -163,7 +165,7 @@ export const proposals: ProposalRecord[] = [
     voteCount: 3120,
 
     // Requirements & Metrics
-    quorumPercent: 80,
+    quorumPercent: 70,
     solRequired: 182432988,
     proposerStakeWeightBp: 320, // 3.2%
 
@@ -196,9 +198,9 @@ export const proposals: ProposalRecord[] = [
     creationEpoch: 600,
     startEpoch: 603,
     endEpoch: 610,
-    creationTimestamp: Date.now() - 90 * 24 * 60 * 60 * 1000, // 90 days ago
-    votingStart: "2025-07-01 10:00:00",
-    votingEndsIn: "2025-07-10 10:00:00",
+    creationTimestamp: MOCK_NOW - 90 * 24 * 60 * 60 * 1000, // 90 days ago
+    votingStart: "2025-07-01T10:00:00Z",
+    votingEndsIn: "2025-07-10T10:00:00Z",
 
     // Vote Data (in lamports)
     clusterSupportLamports: 182432988000000000,
@@ -241,9 +243,9 @@ export const proposals: ProposalRecord[] = [
     creationEpoch: 580,
     startEpoch: 583,
     endEpoch: 590,
-    creationTimestamp: Date.now() - 150 * 24 * 60 * 60 * 1000, // 150 days ago
-    votingStart: "2025-05-01 10:00:00",
-    votingEndsIn: "2025-05-10 10:00:00",
+    creationTimestamp: MOCK_NOW - 150 * 24 * 60 * 60 * 1000, // 150 days ago
+    votingStart: "2025-05-01T10:00:00Z",
+    votingEndsIn: "2025-05-10T10:00:00Z",
 
     // Vote Data (in lamports)
     clusterSupportLamports: 182432988000000000,
@@ -286,9 +288,9 @@ export const proposals: ProposalRecord[] = [
     creationEpoch: 570,
     startEpoch: 573,
     endEpoch: 580,
-    creationTimestamp: Date.now() - 180 * 24 * 60 * 60 * 1000, // 180 days ago
-    votingStart: "2025-04-01 10:00:00",
-    votingEndsIn: "2025-04-10 10:00:00",
+    creationTimestamp: MOCK_NOW - 180 * 24 * 60 * 60 * 1000, // 180 days ago
+    votingStart: "2025-04-01T10:00:00Z",
+    votingEndsIn: "2025-04-10T10:00:00Z",
 
     // Vote Data (in lamports)
     clusterSupportLamports: 182432988000000000,
@@ -331,9 +333,9 @@ export const proposals: ProposalRecord[] = [
     creationEpoch: 560,
     startEpoch: 563,
     endEpoch: 570,
-    creationTimestamp: Date.now() - 200 * 24 * 60 * 60 * 1000,
-    votingStart: "2025-04-01 10:00:00",
-    votingEndsIn: "2025-04-10 10:00:00",
+    creationTimestamp: MOCK_NOW - 200 * 24 * 60 * 60 * 1000,
+    votingStart: "2025-04-01T10:00:00Z",
+    votingEndsIn: "2025-04-10T10:00:00Z",
 
     // Vote Data (in lamports)
     clusterSupportLamports: 182432988000000000,

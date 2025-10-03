@@ -112,12 +112,21 @@
         rgba(253, 58, 78, 0.1) 0%,
         rgba(253, 58, 78, 0) 50%
       ),
-      linear-gradient(0deg, #0d0f17 0%, #0d0f17 100%), #fff;
+      linear-gradient(0deg, #0d0f17 0%, #0d0f17 100%), #0d0f17;
     min-height: 100vh;
     background-attachment: fixed;
     background-size: cover;
     width: 100%;
     overflow-x: hidden;
+    background-color: #0d0f17;
+  }
+
+  @supports (-moz-appearance: none) {
+    @media (max-width: 768px) {
+      body {
+        background-attachment: scroll;
+      }
+    }
   }
 
   :root {
