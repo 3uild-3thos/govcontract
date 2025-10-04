@@ -1,7 +1,7 @@
 "use client";
 
 import { formatAddress } from "@/lib/governance/formatters";
-import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
+import { useCopyToClipboard } from "@/hooks";
 import { cn } from "@/lib/utils";
 
 interface CopyableAddressProps {

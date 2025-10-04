@@ -1,7 +1,7 @@
 "use client";
 
 import { GovernanceEmptyState } from "./shared/GovernanceEmptyState";
-import { useGovernanceDashboard } from "@/hooks/useGovernanceDashboard";
+import { useGovernanceDashboard } from "@/hooks";
 import { GovernanceDashboardLayout } from "@/components/governance/GovernanceDashboardLayout";
 
 export function GovernanceDashboard() {

@@ -2,16 +2,20 @@
 "use client";
 
 import * as React from "react";
-import { proposals } from "@/dummy-data/proposals";
 import { AppButton } from "@/components/ui/AppButton";
 import FilterPanel from "./FilterPanel";
-import ProposalCard from "./ProposalCard";
+import ProposalCard, { ProposalCardSkeleton } from "./ProposalCard";
+import { useProposals } from "@/hooks";
 
 export default function ProposalList() {
   const [showEligibleOnly, setShowEligibleOnly] = React.useState(false);
   const [statusFilter, setStatusFilter] = React.useState("all");
   const [searchQuery, setSearchQuery] = React.useState("");
   const [quorumFilter, setQuorumFilter] = React.useState(80);
+
+  const { data: proposalsData, isLoading: isLoadingProposals } = useProposals();
+
+  const proposals = React.useMemo(() => proposalsData || [], [proposalsData]);
 
   const searcheProposals = React.useMemo(() => {
     return proposals.filter((proposal) => {
@@ -32,7 +36,7 @@ export default function ProposalList() {
       }
       return true;
     });
-  }, [statusFilter, searchQuery, quorumFilter]);
+  }, [proposals, statusFilter, searchQuery, quorumFilter]);
 
   return (
     <div className="space-y-4 -mt-6">
@@ -43,20 +47,33 @@ export default function ProposalList() {
         onQuorumFilterChange={setQuorumFilter}
       />
 
-      <div className="space-y-4">
-        {searcheProposals.map((proposal) => (
-          <ProposalCard key={proposal.simd} proposal={proposal} />
-        ))}
-      </div>
+      {/* Loading state */}
+      {isLoadingProposals && (
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <ProposalCardSkeleton key={i} />
+          ))}
+        </div>
+      )}
 
-      {searcheProposals.length === 0 && (
+      {/* Loaded proposals */}
+      {!isLoadingProposals && searcheProposals.length > 0 && (
+        <div className="space-y-4">
+          {searcheProposals.map((proposal) => (
+            <ProposalCard key={proposal.simd} proposal={proposal} />
+          ))}
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!isLoadingProposals && searcheProposals.length === 0 && (
         <div className="text-center py-12 text-dao-color-gray text-default">
           No proposals available.
         </div>
       )}
 
-      {/* Load More Button */}
-      {searcheProposals.length > 5 && (
+      {/* Load More */}
+      {!isLoadingProposals && searcheProposals.length > 5 && (
         <div className="flex justify-center pt-4">
           <AppButton
             text="Load More"

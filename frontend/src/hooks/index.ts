@@ -1,10 +1,9 @@
 export * from "./useIsBelowMd";
-export * from "./useLatestProposalData";
-export * from "./useVotes";
-export * from "./useGetValidators";
-export * from "./useGetValidatorsTable";
-export * from "./useValidatorsVoterSplits";
-export * from "./useGetValidatorsTableMobile";
-export * from "./useGetValidatorsBubbleChart";
-export * from "./useVoteAccountsWithValidators";
 export * from "./useCollision";
+export * from "./useCopyToClipboard";
+export * from "./useGovernanceDashboard";
+export * from "./useMounted";
+export * from "./useWalletRole";
+
+// data hooks
+export * from "./useProposals";

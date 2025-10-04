@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ColumnFiltersState,
@@ -16,8 +15,6 @@ import {
 } from "@tanstack/react-table";
 import { Check, ChevronDown } from "lucide-react";
 
-import type { ProposalRecord } from "@/dummy-data/proposals";
-import { proposals } from "@/dummy-data/proposals";
 import { columns } from "./Columns";
 import {
   Table,
@@ -37,6 +34,9 @@ import {
 import { Pagination } from "@/components/ui/AppPagniation";
 import { AppButton } from "@/components/ui/AppButton";
 import ExternalProposalPanel from "./ExternalProposalPanel";
+import { ProposalRecord } from "@/types";
+import { useProposals } from "@/hooks";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 
 export type ProposalRow = ProposalRecord & { id: string };
 
@@ -53,55 +53,48 @@ const getIsExpanded = (state: ExpandedState, rowId: string) =>
   Boolean((state as Record<string, boolean>)[rowId]);
 
 export default function ProposalsTable({ title }: { title: string }) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    [],
-  );
-  const [expanded, setExpanded] = React.useState<ExpandedState>({});
-  const [statusFilter, setStatusFilter] = React.useState("all");
-  const [showEligibleOnly, setShowEligibleOnly] = React.useState(false);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [expanded, setExpanded] = useState<ExpandedState>({});
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [showEligibleOnly, setShowEligibleOnly] = useState(false);
 
-  const handleExpandedChange = React.useCallback<OnChangeFn<ExpandedState>>(
+  const { data: proposalsData, isLoading: isLoadingProposals } = useProposals();
+
+  const data = useMemo(() => proposalsData || [], [proposalsData]);
+
+  const handleExpandedChange = useCallback<OnChangeFn<ExpandedState>>(
     (updater) => {
       setExpanded((previous) => {
         const nextState =
           typeof updater === "function" ? updater(previous) : updater ?? {};
 
         const openEntries = Object.entries(nextState).filter(([, isOpen]) =>
-          Boolean(isOpen),
+          Boolean(isOpen)
         );
 
         if (openEntries.length === 0) return {};
 
         const newlyOpened = openEntries.find(
-          ([rowId]) => !getIsExpanded(previous, rowId),
+          ([rowId]) => !getIsExpanded(previous, rowId)
         );
         const [rowId] = newlyOpened ?? openEntries[0];
 
         return { [rowId]: true } satisfies ExpandedState;
       });
     },
-    [],
+    []
   );
 
-  const handleRowToggle = React.useCallback((rowId: string) => {
+  const handleRowToggle = useCallback((rowId: string) => {
     setExpanded((previous) =>
       getIsExpanded(previous, rowId)
         ? {}
-        : ({ [rowId]: true } satisfies ExpandedState),
+        : ({ [rowId]: true } satisfies ExpandedState)
     );
   }, []);
 
-  const data = React.useMemo<ProposalRow[]>(
-    () =>
-      proposals.map((proposal) => ({
-        ...proposal,
-        id: proposal.simd,
-      })),
-    [],
-  );
-
-  const getDefaultExpanded = React.useCallback((): ExpandedState => {
+  const getDefaultExpanded = useCallback((): ExpandedState => {
     if (data.length === 0) {
       return {};
     }
@@ -109,7 +102,7 @@ export default function ProposalsTable({ title }: { title: string }) {
     return { [data[0].id]: true } satisfies ExpandedState;
   }, [data]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     // Only expand first row on client side after mount
     if (data.length > 0 && Object.keys(expanded).length === 0) {
       setExpanded(getDefaultExpanded());
@@ -139,7 +132,7 @@ export default function ProposalsTable({ title }: { title: string }) {
     },
   });
 
-  const handleReset = React.useCallback(() => {
+  const handleReset = useCallback(() => {
     setSorting([]);
     setColumnFilters([]);
     setStatusFilter("all");
@@ -148,7 +141,7 @@ export default function ProposalsTable({ title }: { title: string }) {
     table.setPageIndex(0);
   }, [getDefaultExpanded, table]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (statusFilter !== "all") {
       table.getColumn("status")?.setFilterValue(statusFilter);
     } else {
@@ -250,7 +243,7 @@ export default function ProposalsTable({ title }: { title: string }) {
                       ? null
                       : flexRender(
                           header.column.columnDef.header,
-                          header.getContext(),
+                          header.getContext()
                         )}
                   </TableHead>
                 ))}
@@ -258,9 +251,41 @@ export default function ProposalsTable({ title }: { title: string }) {
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row) => (
-                <React.Fragment key={row.id}>
+            {(() => {
+              if (isLoadingProposals) {
+                return (
+                  <>
+                    {[...Array(4)].map((_, i) => (
+                      <TableRow key={`skeleton-${i}`} className="animate-pulse">
+                        {table.getAllColumns().map((col) => (
+                          <TableCell
+                            key={col.id}
+                            className="py-5 px-6 text-center"
+                          >
+                            <div className="mx-auto h-4 w-3/4 rounded bg-white/10" />
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </>
+                );
+              }
+
+              if (table.getRowModel().rows.length === 0) {
+                return (
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell
+                      colSpan={table.getAllColumns().length}
+                      className="h-24 text-center text-sm text-white/60"
+                    >
+                      No proposals available.
+                    </TableCell>
+                  </TableRow>
+                );
+              }
+
+              return table.getRowModel().rows.map((row) => (
+                <Fragment key={row.id}>
                   <TableRow
                     data-state={row.getIsExpanded() ? "open" : undefined}
                     className="cursor-pointer select-none transition hover:bg-white/3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
@@ -284,7 +309,7 @@ export default function ProposalsTable({ title }: { title: string }) {
                       >
                         {flexRender(
                           cell.column.columnDef.cell,
-                          cell.getContext(),
+                          cell.getContext()
                         )}
                       </TableCell>
                     ))}
@@ -327,18 +352,9 @@ export default function ProposalsTable({ title }: { title: string }) {
                       </TableRow>
                     )}
                   </AnimatePresence>
-                </React.Fragment>
-              ))
-            ) : (
-              <TableRow className="hover:bg-transparent">
-                <TableCell
-                  colSpan={table.getAllColumns().length}
-                  className="h-24 text-center text-sm text-white/60"
-                >
-                  No proposals available.
-                </TableCell>
-              </TableRow>
-            )}
+                </Fragment>
+              ));
+            })()}
           </TableBody>
         </Table>
       </div>

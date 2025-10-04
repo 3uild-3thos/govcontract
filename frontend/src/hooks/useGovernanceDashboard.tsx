@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { dummyWallets, type WalletData } from "@/dummy-data/wallets";
-import { useWalletRole } from "@/hooks/useWalletRole";
+import { useWalletRole } from "@/hooks";
 import { WalletRole } from "@/lib/governance/role-detection";
 
 const NETWORK = "testnet" as const;
@@ -15,7 +15,7 @@ export interface GovernanceDashboardStats {
 }
 
 export function useGovernanceDashboard(
-  options: UseGovernanceDashboardOptions = {},
+  options: UseGovernanceDashboardOptions = {}
 ) {
   const { initialWalletData } = options;
 
@@ -23,7 +23,7 @@ export function useGovernanceDashboard(
     CHANGE THIS TO USE THE DIFFERENT WALLET ROLES & NO WALLET DATA
   *************************************************** */
   const [walletData] = useState<WalletData>(
-    () => initialWalletData ?? dummyWallets.both,
+    () => initialWalletData ?? dummyWallets.both
   );
 
   const walletRoleState = useWalletRole(walletData);
@@ -31,12 +31,12 @@ export function useGovernanceDashboard(
   const stats = useMemo<GovernanceDashboardStats>(() => {
     const delegationsReceived = walletData.vote_accounts.reduce(
       (sum, account) => sum + account.active_stake,
-      0,
+      0
     );
 
     const totalStaked = walletData.stake_accounts.reduce(
       (sum, account) => sum + account.active_stake,
-      0,
+      0
     );
 
     return {

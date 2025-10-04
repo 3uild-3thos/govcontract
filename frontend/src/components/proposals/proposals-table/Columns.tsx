@@ -6,7 +6,7 @@ import { ChevronDown } from "lucide-react";
 import StatusBadge from "@/components/ui/StatusBadge";
 import LifecycleIndicator from "@/components/ui/LifecycleIndicator";
 import { formatDate, calculateVotingEndsIn, formatNumber } from "@/helpers";
-import { useMounted } from "@/hooks/useMounted";
+import { useMounted } from "@/hooks";
 import { SortableHeaderButton } from "@/components/SortableHeaderButton";
 
 function VotingEndsInCell({ votingEndsIn }: { votingEndsIn: string }) {

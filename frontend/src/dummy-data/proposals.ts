@@ -1,55 +1,8 @@
-export type ProposalStatus = "active" | "finalizing" | "finalized";
-
-export type ProposalLifecycleStage = "support" | "voting" | "finalized";
-
-export type ProposalRecord = {
-  // Identity
-  simd: string;
-  title: string;
-  summary: string; // Short text description for list view
-  description: string; // GitHub URL (renamed from 'link')
-  author: string; // Pubkey
-
-  // Epochs & Timestamps
-  creationEpoch: number;
-  startEpoch: number;
-  endEpoch: number;
-  creationTimestamp: number; // Unix timestamp
-  votingStart: string | null;
-  votingEndsIn: string | null;
-
-  // Vote Data (in lamports)
-  clusterSupportLamports: number;
-  forVotesLamports: number;
-  againstVotesLamports: number;
-  abstainVotesLamports: number;
-  voteCount: number;
-
-  // Requirements & Metrics
-  quorumPercent: number; // Required quorum (e.g., 80)
-  solRequired: number; // In SOL (not lamports)
-  proposerStakeWeightBp: number; // Basis points
-
-  // Status
-  lifecycleStage: ProposalLifecycleStage;
-  status: ProposalStatus;
-  voting: boolean; // Is currently voting
-  finalized: boolean; // Is finalized
-
-  // Technical
-  proposalBump: number;
-  index: number;
-
-  // Legacy (keep for now)
-  vote: {
-    state: "in-progress" | "finished";
-    lastUpdated: string;
-  };
-};
+import { RawProposal } from "@/types";
 
 const MOCK_NOW = Date.UTC(2025, 8, 24, 12, 0, 0); // 2025-09-24T12:00:00Z
 
-export const proposals: ProposalRecord[] = [
+export const proposalsMockData: RawProposal[] = [
   {
     // Identity
     simd: "SIMD-0326",
@@ -60,40 +13,36 @@ export const proposals: ProposalRecord[] = [
     author: "9PnPbA4Eny7HsmqkzYjcrFXbChaTC3uLfPqtdvGea4f2",
 
     // Epochs & Timestamps
-    creationEpoch: 650,
-    startEpoch: 653,
-    endEpoch: 660,
-    creationTimestamp: MOCK_NOW - 3 * 24 * 60 * 60 * 1000, // 3 days ago
-    votingStart: null,
-    votingEndsIn: null,
+    creation_epoch: 650,
+    start_epoch: 653,
+    end_epoch: 660,
+    creation_timestamp: MOCK_NOW - 3 * 24 * 60 * 60 * 1000, // 3 days ago
+    voting_start: null,
+    voting_ends_in: null,
 
     // Vote Data (in lamports) - Support phase, no votes yet
-    clusterSupportLamports: 145946390400000000, // 80% of required
-    forVotesLamports: 0,
-    againstVotesLamports: 0,
-    abstainVotesLamports: 0,
-    voteCount: 0,
+    cluster_support_lamports: 145946390400000000, // 80% of required
+    for_votes_lamports: 0,
+    against_votes_lamports: 0,
+    abstain_votes_lamports: 0,
+    vote_count: 0,
 
     // Requirements & Metrics
-    quorumPercent: 80,
-    solRequired: 182432988,
-    proposerStakeWeightBp: 250, // 2.5%
+    quorum_percent: 80,
+    sol_required: 182432988,
+    proposer_stake_weight_bp: 250, // 2.5%
 
     // Status
-    lifecycleStage: "support",
+    lifecycle_stage: "support",
     status: "active",
-    voting: false,
-    finalized: false,
 
     // Technical
-    proposalBump: 255,
+    proposal_bump: 255,
     index: 326,
 
     // Legacy
-    vote: {
-      state: "in-progress",
-      lastUpdated: "2025-09-21T09:15:00Z",
-    },
+    vote_state: "in-progress",
+    vote_last_updated: "2025-09-21T09:15:00Z",
   },
   {
     // Identity
@@ -105,40 +54,36 @@ export const proposals: ProposalRecord[] = [
     author: "DqRgKsL8jWvAorPDkGNPtVqTCskqDeVpTa4f56YHsmqk",
 
     // Epochs & Timestamps
-    creationEpoch: 648,
-    startEpoch: 651,
-    endEpoch: 658,
-    creationTimestamp: MOCK_NOW - 7 * 24 * 60 * 60 * 1000, // 7 days ago
-    votingStart: "2025-09-28T10:00:00Z",
-    votingEndsIn: "2025-10-15T10:00:00Z",
+    creation_epoch: 648,
+    start_epoch: 651,
+    end_epoch: 658,
+    creation_timestamp: MOCK_NOW - 7 * 24 * 60 * 60 * 1000, // 7 days ago
+    voting_start: "2025-09-28T10:00:00Z",
+    voting_ends_in: "2025-10-15T10:00:00Z",
 
     // Vote Data (in lamports) - Active voting with data
-    clusterSupportLamports: 182432988000000000, // 100% of required
-    forVotesLamports: 1234567000000000, // ~1.23M SOL
-    againstVotesLamports: 479210000000000, // ~479K SOL
-    abstainVotesLamports: 191284000000000, // ~191K SOL
-    voteCount: 2545,
+    cluster_support_lamports: 182432988000000000, // 100% of required
+    for_votes_lamports: 1234567000000000, // ~1.23M SOL
+    against_votes_lamports: 479210000000000, // ~479K SOL
+    abstain_votes_lamports: 191284000000000, // ~191K SOL
+    vote_count: 2545,
 
     // Requirements & Metrics
-    quorumPercent: 80,
-    solRequired: 182432988,
-    proposerStakeWeightBp: 180, // 1.8%
+    quorum_percent: 80,
+    sol_required: 182432988,
+    proposer_stake_weight_bp: 180, // 1.8%
 
     // Status
-    lifecycleStage: "voting",
+    lifecycle_stage: "voting",
     status: "active",
-    voting: true,
-    finalized: false,
 
     // Technical
-    proposalBump: 254,
+    proposal_bump: 254,
     index: 327,
 
     // Legacy
-    vote: {
-      state: "in-progress",
-      lastUpdated: "2025-09-21T09:15:00Z",
-    },
+    vote_state: "in-progress",
+    vote_last_updated: "2025-09-21T09:15:00Z",
   },
   {
     // Identity
@@ -150,40 +95,36 @@ export const proposals: ProposalRecord[] = [
     author: "7K3iFhqVpF4xnwMGWKmQRgNvWqKAoZGmZN6vLkPvJXbd",
 
     // Epochs & Timestamps
-    creationEpoch: 620,
-    startEpoch: 623,
-    endEpoch: 630,
-    creationTimestamp: MOCK_NOW - 45 * 24 * 60 * 60 * 1000, // 45 days ago
-    votingStart: "2025-08-15T10:00:00Z",
-    votingEndsIn: "2025-08-25T10:00:00Z",
+    creation_epoch: 620,
+    start_epoch: 623,
+    end_epoch: 630,
+    creation_timestamp: MOCK_NOW - 45 * 24 * 60 * 60 * 1000, // 45 days ago
+    voting_start: "2025-08-15T10:00:00Z",
+    voting_ends_in: "2025-08-25T10:00:00Z",
 
     // Vote Data (in lamports) - Finalized with results
-    clusterSupportLamports: 182432988000000000,
-    forVotesLamports: 1567890000000000, // ~1.57M SOL
-    againstVotesLamports: 234567000000000, // ~234K SOL
-    abstainVotesLamports: 102543000000000, // ~102K SOL
-    voteCount: 3120,
+    cluster_support_lamports: 182432988000000000,
+    for_votes_lamports: 1567890000000000, // ~1.57M SOL
+    against_votes_lamports: 234567000000000, // ~234K SOL
+    abstain_votes_lamports: 102543000000000, // ~102K SOL
+    vote_count: 3120,
 
     // Requirements & Metrics
-    quorumPercent: 70,
-    solRequired: 182432988,
-    proposerStakeWeightBp: 320, // 3.2%
+    quorum_percent: 70,
+    sol_required: 182432988,
+    proposer_stake_weight_bp: 320, // 3.2%
 
     // Status
-    lifecycleStage: "finalized",
+    lifecycle_stage: "finalized",
     status: "finalized",
-    voting: false,
-    finalized: true,
 
     // Technical
-    proposalBump: 253,
+    proposal_bump: 253,
     index: 334,
 
     // Legacy
-    vote: {
-      state: "finished",
-      lastUpdated: "2025-09-20T22:40:00Z",
-    },
+    vote_state: "finished",
+    vote_last_updated: "2025-09-20T22:40:00Z",
   },
   {
     // Identity
@@ -195,40 +136,37 @@ export const proposals: ProposalRecord[] = [
     author: "EW5YJhVNkPzBhMQWZKMRivaKqJnXMrVDvWbBiXdgaYvn",
 
     // Epochs & Timestamps
-    creationEpoch: 600,
-    startEpoch: 603,
-    endEpoch: 610,
-    creationTimestamp: MOCK_NOW - 90 * 24 * 60 * 60 * 1000, // 90 days ago
-    votingStart: "2025-07-01T10:00:00Z",
-    votingEndsIn: "2025-07-10T10:00:00Z",
+    creation_epoch: 600,
+    start_epoch: 603,
+    end_epoch: 610,
+    creation_timestamp: MOCK_NOW - 90 * 24 * 60 * 60 * 1000, // 90 days ago
+    voting_start: "2025-07-01T10:00:00Z",
+    voting_ends_in: "2025-07-10T10:00:00Z",
 
     // Vote Data (in lamports)
-    clusterSupportLamports: 182432988000000000,
-    forVotesLamports: 1345678000000000,
-    againstVotesLamports: 456789000000000,
-    abstainVotesLamports: 202533000000000,
-    voteCount: 2890,
+    cluster_support_lamports: 182432988000000000,
+    for_votes_lamports: 1345678000000000,
+    against_votes_lamports: 456789000000000,
+    abstain_votes_lamports: 202533000000000,
+    vote_count: 2890,
 
     // Requirements & Metrics
-    quorumPercent: 80,
-    solRequired: 182432988,
-    proposerStakeWeightBp: 290, // 2.9%
+    quorum_percent: 80,
+    sol_required: 182432988,
+    proposer_stake_weight_bp: 290, // 2.9%
 
     // Status
-    lifecycleStage: "finalized",
+    lifecycle_stage: "finalized",
     status: "finalizing",
-    voting: false,
-    finalized: true,
 
     // Technical
-    proposalBump: 252,
+    proposal_bump: 252,
     index: 338,
 
     // Legacy
-    vote: {
-      state: "finished",
-      lastUpdated: "2025-09-18T13:20:00Z",
-    },
+
+    vote_state: "finished",
+    vote_last_updated: "2025-09-18T13:20:00Z",
   },
   {
     // Identity
@@ -240,40 +178,37 @@ export const proposals: ProposalRecord[] = [
     author: "3hPrFxPMvHydBE4cYsWqCfGMBxDfayJN8VxQmzqNBUoT",
 
     // Epochs & Timestamps
-    creationEpoch: 580,
-    startEpoch: 583,
-    endEpoch: 590,
-    creationTimestamp: MOCK_NOW - 150 * 24 * 60 * 60 * 1000, // 150 days ago
-    votingStart: "2025-05-01T10:00:00Z",
-    votingEndsIn: "2025-05-10T10:00:00Z",
+    creation_epoch: 580,
+    start_epoch: 583,
+    end_epoch: 590,
+    creation_timestamp: MOCK_NOW - 150 * 24 * 60 * 60 * 1000, // 150 days ago
+    voting_start: "2025-05-01T10:00:00Z",
+    voting_ends_in: "2025-05-10T10:00:00Z",
 
     // Vote Data (in lamports)
-    clusterSupportLamports: 182432988000000000,
-    forVotesLamports: 1678901000000000,
-    againstVotesLamports: 123456000000000,
-    abstainVotesLamports: 102643000000000,
-    voteCount: 3340,
+    cluster_support_lamports: 182432988000000000,
+    for_votes_lamports: 1678901000000000,
+    against_votes_lamports: 123456000000000,
+    abstain_votes_lamports: 102643000000000,
+    vote_count: 3340,
 
     // Requirements & Metrics
-    quorumPercent: 80,
-    solRequired: 182432988,
-    proposerStakeWeightBp: 410, // 4.1%
+    quorum_percent: 80,
+    sol_required: 182432988,
+    proposer_stake_weight_bp: 410, // 4.1%
 
     // Status
-    lifecycleStage: "finalized",
+    lifecycle_stage: "finalized",
     status: "finalized",
-    voting: false,
-    finalized: true,
 
     // Technical
-    proposalBump: 251,
+    proposal_bump: 251,
     index: 341,
 
     // Legacy
-    vote: {
-      state: "finished",
-      lastUpdated: "2025-09-17T06:05:00Z",
-    },
+
+    vote_state: "finished",
+    vote_last_updated: "2025-09-17T06:05:00Z",
   },
   {
     // Identity
@@ -285,40 +220,37 @@ export const proposals: ProposalRecord[] = [
     author: "HzYp5bKnG7QTZhcvLbJdRxumFfKDhYxNmXB3jPQqNvAe",
 
     // Epochs & Timestamps
-    creationEpoch: 570,
-    startEpoch: 573,
-    endEpoch: 580,
-    creationTimestamp: MOCK_NOW - 180 * 24 * 60 * 60 * 1000, // 180 days ago
-    votingStart: "2025-04-01T10:00:00Z",
-    votingEndsIn: "2025-04-10T10:00:00Z",
+    creation_epoch: 570,
+    start_epoch: 573,
+    end_epoch: 580,
+    creation_timestamp: MOCK_NOW - 180 * 24 * 60 * 60 * 1000, // 180 days ago
+    voting_start: "2025-04-01T10:00:00Z",
+    voting_ends_in: "2025-04-10T10:00:00Z",
 
     // Vote Data (in lamports)
-    clusterSupportLamports: 182432988000000000,
-    forVotesLamports: 1789012000000000,
-    againstVotesLamports: 98765000000000,
-    abstainVotesLamports: 17223000000000,
-    voteCount: 3560,
+    cluster_support_lamports: 182432988000000000,
+    for_votes_lamports: 1789012000000000,
+    against_votes_lamports: 98765000000000,
+    abstain_votes_lamports: 17223000000000,
+    vote_count: 3560,
 
     // Requirements & Metrics
-    quorumPercent: 80,
-    solRequired: 182432988,
-    proposerStakeWeightBp: 380, // 3.8%
+    quorum_percent: 80,
+    sol_required: 182432988,
+    proposer_stake_weight_bp: 380, // 3.8%
 
     // Status
-    lifecycleStage: "finalized",
+    lifecycle_stage: "finalized",
     status: "finalized",
-    voting: false,
-    finalized: true,
 
     // Technical
-    proposalBump: 250,
+    proposal_bump: 250,
     index: 342,
 
     // Legacy
-    vote: {
-      state: "finished",
-      lastUpdated: "2025-09-16T15:45:00Z",
-    },
+
+    vote_state: "finished",
+    vote_last_updated: "2025-09-16T15:45:00Z",
   },
   {
     // Identity
@@ -330,40 +262,37 @@ export const proposals: ProposalRecord[] = [
     author: "A9kVtFmP3jyQRN4ZsGwKLhdVxQTmPkUeXfJhZBcBvRaD",
 
     // Epochs & Timestamps
-    creationEpoch: 560,
-    startEpoch: 563,
-    endEpoch: 570,
-    creationTimestamp: MOCK_NOW - 200 * 24 * 60 * 60 * 1000,
-    votingStart: "2025-04-01T10:00:00Z",
-    votingEndsIn: "2025-04-10T10:00:00Z",
+    creation_epoch: 560,
+    start_epoch: 563,
+    end_epoch: 570,
+    creation_timestamp: MOCK_NOW - 200 * 24 * 60 * 60 * 1000,
+    voting_start: "2025-04-01T10:00:00Z",
+    voting_ends_in: "2025-04-10T10:00:00Z",
 
     // Vote Data (in lamports)
-    clusterSupportLamports: 182432988000000000,
-    forVotesLamports: 1890123000000000,
-    againstVotesLamports: 76543000000000,
-    abstainVotesLamports: 38334000000000,
-    voteCount: 3780,
+    cluster_support_lamports: 182432988000000000,
+    for_votes_lamports: 1890123000000000,
+    against_votes_lamports: 76543000000000,
+    abstain_votes_lamports: 38334000000000,
+    vote_count: 3780,
 
     // Requirements & Metrics
-    quorumPercent: 80,
-    solRequired: 182432988,
-    proposerStakeWeightBp: 420,
+    quorum_percent: 80,
+    sol_required: 182432988,
+    proposer_stake_weight_bp: 420,
 
     // Status
-    lifecycleStage: "finalized",
+    lifecycle_stage: "finalized",
     status: "finalized",
-    voting: false,
-    finalized: true,
 
     // Technical
-    proposalBump: 249,
+    proposal_bump: 249,
     index: 343,
 
     // Legacy
-    vote: {
-      state: "finished",
-      lastUpdated: "2025-09-16T15:45:00Z",
-    },
+
+    vote_state: "finished",
+    vote_last_updated: "2025-09-16T15:45:00Z",
   },
   // {
   //   // Identity
@@ -376,8 +305,8 @@ export const proposals: ProposalRecord[] = [
   //   author: "BsRQ8mNJvFkXKvDRtqMCgP3xZJ7UhYsKLqBV4fzNwtEM",
 
   //   // Epochs & Timestamps
-  //   creationEpoch: 655,
-  //   startEpoch: 658,
+  //   creation_epoch: 655,
+  //   start_epoch: 658,
   //   endEpoch: 665,
   //   creationTimestamp: Date.now() - 2 * 24 * 60 * 60 * 1000,
   //   votingStart: null,
@@ -391,7 +320,7 @@ export const proposals: ProposalRecord[] = [
   //   voteCount: 0,
 
   //   // Requirements & Metrics
-  //   quorumPercent: 78,
+  //   quorum_percent: 78,
   //   solRequired: 98500000,
   //   proposerStakeWeightBp: 190,
 
@@ -422,8 +351,8 @@ export const proposals: ProposalRecord[] = [
   //   author: "CnT5VJyDNzPxLkBRmQKjsFH9wAQgZQVTPeLbUhxqgAhm",
 
   //   // Epochs & Timestamps
-  //   creationEpoch: 654,
-  //   startEpoch: 657,
+  //   creation_epoch: 654,
+  //   start_epoch: 657,
   //   endEpoch: 664,
   //   creationTimestamp: Date.now() - 5 * 24 * 60 * 60 * 1000,
   //   votingStart: null,
@@ -437,7 +366,7 @@ export const proposals: ProposalRecord[] = [
   //   voteCount: 0,
 
   //   // Requirements & Metrics
-  //   quorumPercent: 72,
+  //   quorum_percent: 72,
   //   solRequired: 64000000,
   //   proposerStakeWeightBp: 150,
 
@@ -468,8 +397,8 @@ export const proposals: ProposalRecord[] = [
   //   author: "DykX8mJeqK2SfVg3HBmZRkTvQjNPKRMvEzJQKhYDrPwa",
 
   //   // Epochs & Timestamps
-  //   creationEpoch: 649,
-  //   startEpoch: 652,
+  //   creation_epoch: 649,
+  //   start_epoch: 652,
   //   endEpoch: 659,
   //   creationTimestamp: Date.now() - 6 * 24 * 60 * 60 * 1000,
   //   votingStart: "2025-09-20 10:00:00",
@@ -483,7 +412,7 @@ export const proposals: ProposalRecord[] = [
   //   voteCount: 1890,
 
   //   // Requirements & Metrics
-  //   quorumPercent: 81,
+  //   quorum_percent: 81,
   //   solRequired: 112300000,
   //   proposerStakeWeightBp: 210,
 
@@ -514,8 +443,8 @@ export const proposals: ProposalRecord[] = [
   //   author: "EjtR8kQvPxLmZgKcNhJvQZFkYrPUoBk9XzmTVhfGiYQn",
 
   //   // Epochs & Timestamps
-  //   creationEpoch: 647,
-  //   startEpoch: 650,
+  //   creation_epoch: 647,
+  //   start_epoch: 650,
   //   endEpoch: 657,
   //   creationTimestamp: Date.now() - 8 * 24 * 60 * 60 * 1000,
   //   votingStart: "2025-09-18 12:00:00",
@@ -529,7 +458,7 @@ export const proposals: ProposalRecord[] = [
   //   voteCount: 2234,
 
   //   // Requirements & Metrics
-  //   quorumPercent: 84,
+  //   quorum_percent: 84,
   //   solRequired: 134900000,
   //   proposerStakeWeightBp: 230,
 
@@ -560,8 +489,8 @@ export const proposals: ProposalRecord[] = [
   //   author: "FksE9YmRqDmTvJgNK3xPzQhWfYcLBnRVjkDpQbMaHxty",
 
   //   // Epochs & Timestamps
-  //   creationEpoch: 646,
-  //   startEpoch: 649,
+  //   creation_epoch: 646,
+  //   start_epoch: 649,
   //   endEpoch: 656,
   //   creationTimestamp: Date.now() - 10 * 24 * 60 * 60 * 1000,
   //   votingStart: "2025-09-15 09:00:00",
@@ -575,7 +504,7 @@ export const proposals: ProposalRecord[] = [
   //   voteCount: 2678,
 
   //   // Requirements & Metrics
-  //   quorumPercent: 86,
+  //   quorum_percent: 86,
   //   solRequired: 205000000,
   //   proposerStakeWeightBp: 270,
 
@@ -606,8 +535,8 @@ export const proposals: ProposalRecord[] = [
   //   author: "GmnR9zTQhyNk8xWb5JvMtVPR5w7RYzPEYPTkrdRPFkwy",
 
   //   // Epochs & Timestamps
-  //   creationEpoch: 625,
-  //   startEpoch: 628,
+  //   creation_epoch: 625,
+  //   start_epoch: 628,
   //   endEpoch: 635,
   //   creationTimestamp: Date.now() - 50 * 24 * 60 * 60 * 1000,
   //   votingStart: "2025-08-05 10:00:00",
@@ -621,7 +550,7 @@ export const proposals: ProposalRecord[] = [
   //   voteCount: 3120,
 
   //   // Requirements & Metrics
-  //   quorumPercent: 88,
+  //   quorum_percent: 88,
   //   solRequired: 175750000,
   //   proposerStakeWeightBp: 340,
 
@@ -652,8 +581,8 @@ export const proposals: ProposalRecord[] = [
   //   author: "HnYX8mNKjQRF3xHcLfJhP8ecYKypQsK5jMYmRaYzPBnr",
 
   //   // Epochs & Timestamps
-  //   creationEpoch: 622,
-  //   startEpoch: 625,
+  //   creation_epoch: 622,
+  //   start_epoch: 625,
   //   endEpoch: 632,
   //   creationTimestamp: Date.now() - 55 * 24 * 60 * 60 * 1000,
   //   votingStart: "2025-08-01 10:00:00",
@@ -667,7 +596,7 @@ export const proposals: ProposalRecord[] = [
   //   voteCount: 2780,
 
   //   // Requirements & Metrics
-  //   quorumPercent: 82,
+  //   quorum_percent: 82,
   //   solRequired: 95400000,
   //   proposerStakeWeightBp: 260,
 
@@ -698,8 +627,8 @@ export const proposals: ProposalRecord[] = [
   //   author: "JpQ8MZfNkh3xR7ynYHBKQEpRLVaF2cGjTmYmRhzPBsnW",
 
   //   // Epochs & Timestamps
-  //   creationEpoch: 610,
-  //   startEpoch: 613,
+  //   creation_epoch: 610,
+  //   start_epoch: 613,
   //   endEpoch: 620,
   //   creationTimestamp: Date.now() - 75 * 24 * 60 * 60 * 1000,
   //   votingStart: "2025-07-10 10:00:00",
@@ -713,7 +642,7 @@ export const proposals: ProposalRecord[] = [
   //   voteCount: 2890,
 
   //   // Requirements & Metrics
-  //   quorumPercent: 80,
+  //   quorum_percent: 80,
   //   solRequired: 123000000,
   //   proposerStakeWeightBp: 280,
 
@@ -744,8 +673,8 @@ export const proposals: ProposalRecord[] = [
   //   author: "KzNkgP8MRYqJfnLxHhBXKEGjQyTmZbsVaF2crPBnrWpQ",
 
   //   // Epochs & Timestamps
-  //   creationEpoch: 595,
-  //   startEpoch: 598,
+  //   creation_epoch: 595,
+  //   start_epoch: 598,
   //   endEpoch: 605,
   //   creationTimestamp: Date.now() - 100 * 24 * 60 * 60 * 1000,
   //   votingStart: "2025-06-05 10:00:00",
@@ -759,7 +688,7 @@ export const proposals: ProposalRecord[] = [
   //   voteCount: 3340,
 
   //   // Requirements & Metrics
-  //   quorumPercent: 83,
+  //   quorum_percent: 83,
   //   solRequired: 155000000,
   //   proposerStakeWeightBp: 310,
 
@@ -790,8 +719,8 @@ export const proposals: ProposalRecord[] = [
   //   author: "LmRYqJfKnxHzgPBh8MNKbEGXKQyT2cVaFrPBnrWpQjZb",
 
   //   // Epochs & Timestamps
-  //   creationEpoch: 585,
-  //   startEpoch: 588,
+  //   creation_epoch: 585,
+  //   start_epoch: 588,
   //   endEpoch: 595,
   //   creationTimestamp: Date.now() - 120 * 24 * 60 * 60 * 1000,
   //   votingStart: "2025-05-20 10:00:00",
@@ -805,7 +734,7 @@ export const proposals: ProposalRecord[] = [
   //   voteCount: 3120,
 
   //   // Requirements & Metrics
-  //   quorumPercent: 77,
+  //   quorum_percent: 77,
   //   solRequired: 142000000,
   //   proposerStakeWeightBp: 300,
 
@@ -836,8 +765,8 @@ export const proposals: ProposalRecord[] = [
   //   author: "MnKQyTzgPBh8XRYqJfLxHbEGKnVaF2crPBnrWpQjZbmL",
 
   //   // Epochs & Timestamps
-  //   creationEpoch: 575,
-  //   startEpoch: 578,
+  //   creation_epoch: 575,
+  //   start_epoch: 578,
   //   endEpoch: 585,
   //   creationTimestamp: Date.now() - 140 * 24 * 60 * 60 * 1000,
   //   votingStart: "2025-05-01 10:00:00",
@@ -851,7 +780,7 @@ export const proposals: ProposalRecord[] = [
   //   voteCount: 2980,
 
   //   // Requirements & Metrics
-  //   quorumPercent: 79,
+  //   quorum_percent: 79,
   //   solRequired: 118500000,
   //   proposerStakeWeightBp: 290,
 
@@ -882,8 +811,8 @@ export const proposals: ProposalRecord[] = [
   //   author: "NoPQyTRYqJfzgKnxLhBXKEGHbVaF2crPBnrWpQjZbmL",
 
   //   // Epochs & Timestamps
-  //   creationEpoch: 653,
-  //   startEpoch: 656,
+  //   creation_epoch: 653,
+  //   start_epoch: 656,
   //   endEpoch: 663,
   //   creationTimestamp: Date.now() - 4 * 24 * 60 * 60 * 1000,
   //   votingStart: null,
@@ -897,7 +826,7 @@ export const proposals: ProposalRecord[] = [
   //   voteCount: 0,
 
   //   // Requirements & Metrics
-  //   quorumPercent: 74,
+  //   quorum_percent: 74,
   //   solRequired: 68250000,
   //   proposerStakeWeightBp: 160,
 
@@ -928,8 +857,8 @@ export const proposals: ProposalRecord[] = [
   //   author: "PqRSTYzgKnxLhBJfNkQEGHbVaF2crPBnrWpQjZbmLXM",
 
   //   // Epochs & Timestamps
-  //   creationEpoch: 652,
-  //   startEpoch: 655,
+  //   creation_epoch: 652,
+  //   start_epoch: 655,
   //   endEpoch: 662,
   //   creationTimestamp: Date.now() - 5 * 24 * 60 * 60 * 1000,
   //   votingStart: null,
@@ -943,7 +872,7 @@ export const proposals: ProposalRecord[] = [
   //   voteCount: 0,
 
   //   // Requirements & Metrics
-  //   quorumPercent: 76,
+  //   quorum_percent: 76,
   //   solRequired: 102000000,
   //   proposerStakeWeightBp: 170,
 
@@ -974,8 +903,8 @@ export const proposals: ProposalRecord[] = [
   //   author: "QrSTUVWzgKnxLhBJfNkQEGHbVaF2crPBnrWpQjZbmLNY",
 
   //   // Epochs & Timestamps
-  //   creationEpoch: 651,
-  //   startEpoch: 654,
+  //   creation_epoch: 651,
+  //   start_epoch: 654,
   //   endEpoch: 661,
   //   creationTimestamp: Date.now() - 6 * 24 * 60 * 60 * 1000,
   //   votingStart: null,
@@ -989,7 +918,7 @@ export const proposals: ProposalRecord[] = [
   //   voteCount: 0,
 
   //   // Requirements & Metrics
-  //   quorumPercent: 80,
+  //   quorum_percent: 80,
   //   solRequired: 97600000,
   //   proposerStakeWeightBp: 200,
 
@@ -1020,8 +949,8 @@ export const proposals: ProposalRecord[] = [
   //   author: "RsVWXYZagKnxLhBJfNkQEGHbVaF2crPBnrWpQjZbmPQR",
 
   //   // Epochs & Timestamps
-  //   creationEpoch: 649,
-  //   startEpoch: 652,
+  //   creation_epoch: 649,
+  //   start_epoch: 652,
   //   endEpoch: 659,
   //   creationTimestamp: Date.now() - 7 * 24 * 60 * 60 * 1000,
   //   votingStart: null,
@@ -1035,7 +964,7 @@ export const proposals: ProposalRecord[] = [
   //   voteCount: 0,
 
   //   // Requirements & Metrics
-  //   quorumPercent: 85,
+  //   quorum_percent: 85,
   //   solRequired: 248000000,
   //   proposerStakeWeightBp: 350,
 
@@ -1066,8 +995,8 @@ export const proposals: ProposalRecord[] = [
   //   author: "StWXYZabcKnxLhBJfNkQEGHbVaF2crPBnrWpQjZbmQST",
 
   //   // Epochs & Timestamps
-  //   creationEpoch: 648,
-  //   startEpoch: 651,
+  //   creation_epoch: 648,
+  //   start_epoch: 651,
   //   endEpoch: 658,
   //   creationTimestamp: Date.now() - 8 * 24 * 60 * 60 * 1000,
   //   votingStart: null,
@@ -1081,7 +1010,7 @@ export const proposals: ProposalRecord[] = [
   //   voteCount: 0,
 
   //   // Requirements & Metrics
-  //   quorumPercent: 82,
+  //   quorum_percent: 82,
   //   solRequired: 215500000,
   //   proposerStakeWeightBp: 330,
 
@@ -1112,8 +1041,8 @@ export const proposals: ProposalRecord[] = [
   //   author: "TuXYZabcdefKnxLhBJfNkQEGHbVaF2crPBnrWpQjZbRT",
 
   //   // Epochs & Timestamps
-  //   creationEpoch: 647,
-  //   startEpoch: 650,
+  //   creation_epoch: 647,
+  //   start_epoch: 650,
   //   endEpoch: 657,
   //   creationTimestamp: Date.now() - 9 * 24 * 60 * 60 * 1000,
   //   votingStart: null,
@@ -1127,7 +1056,7 @@ export const proposals: ProposalRecord[] = [
   //   voteCount: 0,
 
   //   // Requirements & Metrics
-  //   quorumPercent: 83,
+  //   quorum_percent: 83,
   //   solRequired: 138400000,
   //   proposerStakeWeightBp: 220,
 
@@ -1158,8 +1087,8 @@ export const proposals: ProposalRecord[] = [
   //   author: "UvWXYZabcghiKnxLhBJfNkQEGHbVaF2crPBnrWpQjUV",
 
   //   // Epochs & Timestamps
-  //   creationEpoch: 646,
-  //   startEpoch: 649,
+  //   creation_epoch: 646,
+  //   start_epoch: 649,
   //   endEpoch: 656,
   //   creationTimestamp: Date.now() - 10 * 24 * 60 * 60 * 1000,
   //   votingStart: null,
@@ -1173,7 +1102,7 @@ export const proposals: ProposalRecord[] = [
   //   voteCount: 0,
 
   //   // Requirements & Metrics
-  //   quorumPercent: 78,
+  //   quorum_percent: 78,
   //   solRequired: 110750000,
   //   proposerStakeWeightBp: 195,
 
@@ -1204,8 +1133,8 @@ export const proposals: ProposalRecord[] = [
   //   author: "VwXYZabcdefghiKnxLhBJfNkQEGHbVaF2crPBnrWpQjZbUV",
 
   //   // Epochs & Timestamps
-  //   creationEpoch: 645,
-  //   startEpoch: 648,
+  //   creation_epoch: 645,
+  //   start_epoch: 648,
   //   endEpoch: 655,
   //   creationTimestamp: Date.now() - 11 * 24 * 60 * 60 * 1000,
   //   votingStart: null,
@@ -1219,7 +1148,7 @@ export const proposals: ProposalRecord[] = [
   //   voteCount: 0,
 
   //   // Requirements & Metrics
-  //   quorumPercent: 75,
+  //   quorum_percent: 75,
   //   solRequired: 92800000,
   //   proposerStakeWeightBp: 185,
 

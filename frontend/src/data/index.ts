@@ -1,2 +1,1 @@
-export * from "./getValidators";
-export * from "./getAllProposals";
+export * from "./getProposals";

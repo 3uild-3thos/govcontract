@@ -1,0 +1,1 @@
+export const GET_ALL_PROPOSALS = "GET_ALL_PROPOSALS";

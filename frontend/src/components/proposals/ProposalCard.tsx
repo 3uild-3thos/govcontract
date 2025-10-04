@@ -6,7 +6,7 @@ import { Fragment, type MouseEventHandler } from "react";
 import { AppButton } from "@/components/ui/AppButton";
 import { calculateVotingEndsIn } from "@/helpers";
 import { formatNumber } from "@/helpers";
-import { useMounted } from "@/hooks/useMounted";
+import { useMounted } from "@/hooks";
 
 import LifecycleIndicator from "@/components/ui/LifecycleIndicator";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -34,7 +34,7 @@ const STATUS_LABEL_FOR_ENDED = "Ended";
 
 const getVotingStatusText = (
   status: ProposalStatus,
-  votingEndsInText: string | null,
+  votingEndsInText: string | null
 ) => {
   if (status === "finalized" || votingEndsInText === STATUS_LABEL_FOR_ENDED) {
     return "Voting Ended";
@@ -47,7 +47,7 @@ const getVotingStatusText = (
 
 const getActionButtonText = (
   lifecycleStage: ProposalLifecycleStage,
-  status: ProposalStatus,
+  status: ProposalStatus
 ) => {
   if (lifecycleStage === "voting") {
     return "Cast Vote";
@@ -62,7 +62,7 @@ const getActionButtonText = (
 
 const shouldShowModifyButton = (
   lifecycleStage: ProposalLifecycleStage,
-  status: ProposalStatus,
+  status: ProposalStatus
 ) => lifecycleStage === "voting";
 
 const VotingDetails = ({ items, layout }: VotingDetailsProps) => {
@@ -173,7 +173,7 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
   const handleButtonClick: MouseEventHandler<HTMLButtonElement> = (event) => {
     event.stopPropagation();
     toast.success(
-      (event.target as HTMLButtonElement).innerText + " Successfully",
+      (event.target as HTMLButtonElement).innerText + " Successfully"
     );
   };
 
@@ -249,3 +249,58 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
     </div>
   );
 }
+
+export const ProposalCardSkeleton = () => {
+  return (
+    <div className="glass-card border p-6 animate-pulse space-y-4">
+      {/* Mobile Layout */}
+      <div className="md:hidden space-y-4">
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-3 w-10 rounded bg-white/10" />
+              <div className="h-3 w-3 rounded-full bg-white/10" />
+            </div>
+            <div className="h-4 w-12 rounded bg-white/10" />
+          </div>
+          <div className="h-5 w-3/4 rounded bg-white/10" />
+        </div>
+
+        <div className="flex items-center gap-5 pb-4 text-xs">
+          <div className="h-3 w-16 rounded bg-white/10" />
+          <div className="h-3 w-20 rounded bg-white/10" />
+          <div className="h-3 w-24 rounded bg-white/10" />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <div className="h-9 w-full rounded-full bg-white/10" />
+          <div className="h-9 w-full rounded-full bg-white/10" />
+        </div>
+      </div>
+
+      {/* Tablet / Desktop Layout */}
+      <div className="hidden md:flex md:gap-4">
+        <div className="flex-1 space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="h-3 w-12 rounded bg-white/10" />
+            <div className="h-3 w-3 rounded-full bg-white/10" />
+          </div>
+          <div className="h-5 w-3/4 rounded bg-white/10" />
+          <div className="flex gap-4">
+            <div className="h-3 w-16 rounded bg-white/10" />
+            <div className="h-3 w-20 rounded bg-white/10" />
+            <div className="h-3 w-24 rounded bg-white/10" />
+          </div>
+        </div>
+
+        <div className="flex flex-col items-end justify-between gap-3 min-w-[140px]">
+          <div className="h-4 w-14 rounded bg-white/10" />
+          <div className="flex gap-2 w-full">
+            <div className="h-9 w-full rounded-full bg-white/10" />
+            <div className="h-9 w-full rounded-full bg-white/10" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

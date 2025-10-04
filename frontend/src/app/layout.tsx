@@ -4,6 +4,7 @@ import { Inter, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { Toaster } from "@/components/ui/sonner";
+import Providers from "./providers";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -35,12 +36,14 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${plusJakartaSans.variable} ${jetBrainsMono.variable} antialiased`}
       >
-        <Navbar />
-        <div className="w-full overflow-x-hidden">
-          <div className="max-w-7xl mx-auto px-4 sm:px-8">{children}</div>
-        </div>
-        <Footer />
-        <Toaster theme="dark" position="bottom-right" />
+        <Providers>
+          <Navbar />
+          <div className="w-full overflow-x-hidden">
+            <div className="max-w-7xl mx-auto px-4 sm:px-8">{children}</div>
+          </div>
+          <Footer />
+          <Toaster theme="dark" position="bottom-right" />
+        </Providers>
       </body>
     </html>
   );

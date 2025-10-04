@@ -1,6 +1,6 @@
 import type { WalletData } from "@/dummy-data/wallets";
 import type { ViewType } from "@/types/governance";
-import type { GovernanceDashboardStats } from "@/hooks/useGovernanceDashboard";
+import type { GovernanceDashboardStats } from "@/hooks";
 import { WalletRole } from "@/lib/governance/role-detection";
 import { DashboardStats } from "@/components/governance/shared/DashboardStats";
 import { RoleToggle } from "@/components/governance/shared/RoleToggle";
@@ -50,7 +50,9 @@ export function GovernanceDashboardLayout({
           <div className="glass-card px-8 py-6 mb-6">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="h2 text-foreground mb-2">Governance Dashboard</h2>
+                <h2 className="h2 text-foreground mb-2">
+                  Governance Dashboard
+                </h2>
                 {walletRole !== WalletRole.NONE && (
                   <p className="text-[var(--color-dao-color-gray)] text-sm">
                     You are viewing as a{" "}
