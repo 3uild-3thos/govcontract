@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import type { ProposalLifecycleStage } from "@/dummy-data/proposals";
+import type { ProposalLifecycleStage } from "@/types";
 import type { PhaseDefinition, PhaseDetail, ConnectorVariant } from "./types";
 
 export const PHASE_DETAILS: Record<

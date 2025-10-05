@@ -196,6 +196,37 @@
     -webkit-text-fill-color: transparent;
   }
 
+  /* Modal layout helpers */
+  .app-modal-content {
+    @apply bg-background border-white/10 max-w-lg grid max-h-[80vh] overflow-hidden gap-0 sm:max-h-[85vh] sm:gap-4;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .app-modal-scroll-region {
+    @apply overflow-y-auto sm:overflow-visible;
+    min-height: 0;
+  }
+
+  .app-modal-body {
+    @apply flex flex-col gap-4 pb-6 sm:pb-0;
+  }
+
+  .app-modal-handle {
+    @apply mx-auto h-1 w-12 rounded-full bg-white/20 sm:hidden;
+  }
+
+  .app-modal-footer {
+    @apply sticky bottom-0 z-10 flex !gap-4 pb-6 pt-2 sm:static sm:mt-4 sm:bg-transparent sm:p-0;
+  }
+
+  .governance-action-primary {
+    @apply w-full font-semibold;
+  }
+
+  .governance-action-secondary {
+    @apply w-full border-0 bg-white/12 sm:border sm:border-white/15 sm:bg-white/3;
+  }
+
   /* Sonner Toast Styles */
   [data-sonner-toast] {
     background: var(--color-dao-color-gray) !important;

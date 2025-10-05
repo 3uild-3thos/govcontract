@@ -5,7 +5,7 @@ import type {
   ProposalRecord,
   ProposalStatus,
   ProposalLifecycleStage,
-} from "@/dummy-data/proposals";
+} from "@/types";
 import { calculateTimeAgo, calculateVotingEndsIn } from "@/helpers";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { CheckIcon, CopyIcon, Github } from "lucide-react";

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import type { ProposalRecord } from "@/dummy-data/proposals";
+import type { ProposalRecord } from "@/types";
 import { Fragment, type MouseEventHandler } from "react";
 import { AppButton } from "@/components/ui/AppButton";
 import { calculateVotingEndsIn } from "@/helpers";
@@ -11,7 +11,8 @@ import { useMounted } from "@/hooks";
 import LifecycleIndicator from "@/components/ui/LifecycleIndicator";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { useModal } from "@/contexts/ModalContext";
+import { motion } from "framer-motion";
 
 type ProposalStatus = ProposalRecord["status"];
 type ProposalLifecycleStage = ProposalRecord["lifecycleStage"];
@@ -34,7 +35,7 @@ const STATUS_LABEL_FOR_ENDED = "Ended";
 
 const getVotingStatusText = (
   status: ProposalStatus,
-  votingEndsInText: string | null
+  votingEndsInText: string | null,
 ) => {
   if (status === "finalized" || votingEndsInText === STATUS_LABEL_FOR_ENDED) {
     return "Voting Ended";
@@ -47,7 +48,7 @@ const getVotingStatusText = (
 
 const getActionButtonText = (
   lifecycleStage: ProposalLifecycleStage,
-  status: ProposalStatus
+  status: ProposalStatus,
 ) => {
   if (lifecycleStage === "voting") {
     return "Cast Vote";
@@ -62,7 +63,7 @@ const getActionButtonText = (
 
 const shouldShowModifyButton = (
   lifecycleStage: ProposalLifecycleStage,
-  status: ProposalStatus
+  status: ProposalStatus,
 ) => lifecycleStage === "voting";
 
 const VotingDetails = ({ items, layout }: VotingDetailsProps) => {
@@ -142,6 +143,7 @@ const ActionButtons = ({
 export default function ProposalCard({ proposal }: ProposalCardProps) {
   const router = useRouter();
   const mounted = useMounted();
+  const { openModal } = useModal();
   const {
     status,
     lifecycleStage,
@@ -172,17 +174,28 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
 
   const handleButtonClick: MouseEventHandler<HTMLButtonElement> = (event) => {
     event.stopPropagation();
-    toast.success(
-      (event.target as HTMLButtonElement).innerText + " Successfully"
-    );
+    const buttonText = (event.target as HTMLButtonElement).innerText;
+
+    if (buttonText === "Modify Vote") {
+      // TODO: Pass the actual proposal public key when available
+      openModal("modify-vote", { proposalId: "" });
+    } else if (buttonText === "Cast Vote") {
+      // TODO: Pass the actual proposal public key when available
+      openModal("cast-vote", { proposalId: "" });
+    } else if (buttonText === "Support") {
+      // TODO: Pass the actual proposal public key when available
+      openModal("support-proposal", { proposalId: "" });
+    }
   };
 
   return (
-    <div
+    <motion.div
       className="glass-card border p-6 transition-all cursor-pointer"
       role="link"
       tabIndex={0}
       onClick={handleCardClick}
+      whileTap={{ scale: 0.95, backgroundColor: "rgba(255, 255, 255, 0.05)" }}
+      transition={{ duration: 0.15, ease: "easeInOut" }}
     >
       {/* Mobile Layout*/}
       <div className="md:hidden space-y-4">
@@ -246,7 +259,7 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
           />
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 

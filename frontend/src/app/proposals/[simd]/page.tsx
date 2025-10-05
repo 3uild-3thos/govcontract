@@ -1,15 +1,18 @@
 import { notFound } from "next/navigation";
 import ProposalDetailView from "@/components/proposals/detail/ProposalDetailView";
-import { proposals } from "@/dummy-data/proposals";
+import { proposalsMockData } from "@/dummy-data/proposals";
+import { mapProposalDto } from "@/data/getProposals";
 
 interface ProposalDetailsPageProps {
   params: Promise<{ simd: string }>;
 }
 
-const findProposalBySimd = async (simd: string) =>
-  proposals.find(
+const findProposalBySimd = async (simd: string) => {
+  const rawProposal = proposalsMockData.find(
     (proposal) => proposal.simd.toLowerCase() === simd.toLowerCase(),
   );
+  return rawProposal ? mapProposalDto(rawProposal) : undefined;
+};
 
 export default async function ProposalDetailsPage({
   params,

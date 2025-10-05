@@ -1,6 +1,6 @@
 "use client";
 
-import type { ProposalRecord } from "@/dummy-data/proposals";
+import type { ProposalRecord } from "@/types";
 import ProposalBreadcrumb from "./ProposalBreadcrumb";
 import ProposalDetailHeader from "./ProposalDetailHeader";
 import VoteBreakdown from "./VoteBreakdown";

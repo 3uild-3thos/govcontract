@@ -7,7 +7,8 @@ import {
   MapPinCheckInside,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
+import { useModal } from "@/contexts/ModalContext";
+
 
 interface GovernanceActionsProps {
   variant: ViewType;
@@ -51,89 +52,75 @@ function ActionGrid({ actions, gridClassName }: ActionGridProps) {
   );
 }
 
-function openCreateProposalModal() {
-  return () => toast.success("Proposal created successfully");
+function getValidatorConfig(
+  openModal: ReturnType<typeof useModal>["openModal"],
+) {
+  return {
+    title: "Governance Actions",
+    description:
+      "Note: To create a proposal, you must use the validator's identity keypair when executing commands.",
+    wrapperClassName: "glass-card p-6 space-y-4",
+    descriptionClassName: "text-sm text-white/60",
+    gridClassName: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4",
+    actions: [
+      {
+        label: "Create Proposal",
+        variant: "gradient",
+        onClick: () => openModal("create-proposal"),
+        className: "governance-action-primary",
+        icon: <PlusCircle className="size-4" />,
+      },
+      {
+        label: "Support Proposal",
+        variant: "outline",
+        onClick: () => openModal("support-proposal"),
+        className: "governance-action-secondary",
+        icon: <ThumbsUp className="size-4" />,
+      },
+      {
+        label: "Cast Vote",
+        variant: "outline",
+        onClick: () => openModal("cast-vote"),
+        className: "governance-action-secondary",
+        icon: <MapPinCheckInside className="size-4" />,
+      },
+      {
+        label: "Modify Vote",
+        variant: "outline",
+        onClick: () => openModal("modify-vote"),
+        className: "governance-action-secondary",
+        icon: <PencilLine className="size-4" />,
+      },
+    ] satisfies ActionButtonConfig[],
+  };
 }
 
-function openSupportProposalModal() {
-  return () => console.log("Support Proposal");
+function getStakerConfig(openModal: ReturnType<typeof useModal>["openModal"]) {
+  return {
+    title: "Governance Actions",
+    description:
+      "As a staker, you can participate in governance by voting on proposals.",
+    wrapperClassName: "glass-card p-6 space-y-4 h-full",
+    descriptionClassName: "text-sm text-white/60",
+    gridClassName: "grid grid-cols-1 sm:grid-cols-2 gap-4",
+    actions: [
+      {
+        label: "Cast Vote",
+        variant: "gradient",
+        onClick: () => openModal("override-vote"),
+        className: "governance-action-primary",
+        icon: <MapPinCheckInside className="size-4" />,
+      },
+      {
+        label: "Modify Vote",
+        variant: "outline",
+        onClick: () => openModal("modify-vote"),
+        className: "governance-action-secondary",
+        icon: <PencilLine className="size-4" />,
+      },
+    ] satisfies ActionButtonConfig[],
+  };
 }
-
-function openCastVoteModal() {
-  return () => console.log("Cast Vote");
-}
-
-function openModifyVoteModal() {
-  return () => console.log("Modify Vote");
-}
-
-const validatorConfig = {
-  title: "Governance Actions",
-  description:
-    "Note: To create a proposal, you must use the validator's identity keypair when executing commands.",
-  wrapperClassName: "glass-card p-6 space-y-4",
-  descriptionClassName: "text-sm text-white/60",
-  gridClassName: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4",
-  actions: [
-    {
-      label: "Create Proposal",
-      variant: "gradient",
-      onClick: openCreateProposalModal(),
-      className: "w-full font-semibold",
-      icon: <PlusCircle className="size-4" />,
-    },
-    {
-      label: "Support Proposal",
-      variant: "outline",
-      onClick: openSupportProposalModal(),
-      className:
-        "w-full border-0 bg-white/12 sm:border sm:border-white/15 sm:bg-white/3",
-      icon: <ThumbsUp className="size-4" />,
-    },
-    {
-      label: "Cast Vote",
-      variant: "outline",
-      onClick: openCastVoteModal(),
-      className:
-        "w-full border-0 bg-white/12 sm:border sm:border-white/15 sm:bg-white/3",
-      icon: <MapPinCheckInside className="size-4" />,
-    },
-    {
-      label: "Modify Vote",
-      variant: "outline",
-      onClick: openModifyVoteModal(),
-      className:
-        "w-full border-0 bg-white/12 sm:border sm:border-white/15 sm:bg-white/3",
-      icon: <PencilLine className="size-4" />,
-    },
-  ] satisfies ActionButtonConfig[],
-};
-
-const stakerConfig = {
-  title: "Governance Actions",
-  description:
-    "As a staker, you can participate in governance by voting on proposals.",
-  wrapperClassName: "glass-card p-6 space-y-4 h-full",
-  descriptionClassName: "text-sm text-white/60",
-  gridClassName: "grid grid-cols-1 sm:grid-cols-2 gap-4",
-  actions: [
-    {
-      label: "Cast Vote",
-      variant: "gradient",
-      onClick: openCastVoteModal(),
-      className: "w-full font-semibold",
-      icon: <MapPinCheckInside className="size-4" />,
-    },
-    {
-      label: "Modify Vote",
-      variant: "outline",
-      onClick: openModifyVoteModal(),
-      className:
-        "w-full border-0 bg-white/12 sm:border sm:border-white/15 sm:bg-white/3",
-      icon: <PencilLine className="size-4" />,
-    },
-  ] satisfies ActionButtonConfig[],
-};
 
 export function GovernanceActions({
   variant,
@@ -143,7 +130,11 @@ export function GovernanceActions({
   wrapperClassName,
   className,
 }: GovernanceActionsProps) {
-  const config = variant === "validator" ? validatorConfig : stakerConfig;
+  const { openModal } = useModal();
+  const config =
+    variant === "validator"
+      ? getValidatorConfig(openModal)
+      : getStakerConfig(openModal);
   const resolvedTitle = title ?? config.title;
   const resolvedDescription =
     description === undefined ? config.description : description;

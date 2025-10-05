@@ -1,4 +1,4 @@
-import type { ProposalLifecycleStage } from "@/dummy-data/proposals";
+import type { ProposalLifecycleStage } from "@/types";
 
 export type PhaseKey = ProposalLifecycleStage;
 export type PhaseState = "passed" | "active" | "upcoming";

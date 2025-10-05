@@ -4,6 +4,7 @@ export * from "./useCopyToClipboard";
 export * from "./useGovernanceDashboard";
 export * from "./useMounted";
 export * from "./useWalletRole";
+export * from "./useVoteDistribution";
 
 // data hooks
 export * from "./useProposals";
