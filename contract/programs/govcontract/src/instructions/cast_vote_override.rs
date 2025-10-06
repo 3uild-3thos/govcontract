@@ -274,7 +274,7 @@ impl<'info> CastVoteOverride<'info> {
                 let proposal_key = self.proposal.key();
                 let validator_vote_key = self.validator_vote.key();
                 let seeds = &[
-                    b"vote_override",
+                    b"vote_override_cache",
                     proposal_key.as_ref(),
                     validator_vote_key.as_ref(),
                     &[bumps.vote_override_cache],
