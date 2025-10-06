@@ -13,34 +13,28 @@ import { cn } from "@/lib/utils";
 import { AppButton } from "@/components/ui/AppButton";
 import ErrorMessage from "./shared/ErrorMessage";
 import RequirementItem from "./shared/RequirementItem";
+import { toast } from "sonner";
 
 interface SupportProposalModalProps {
   proposalId?: string;
   isOpen: boolean;
-  isLoading?: boolean;
-  error?: string;
   onClose: () => void;
-  onSubmit?: (data: SupportProposalData) => void | Promise<void>;
-}
-
-interface SupportProposalData {
-  proposalId: string;
 }
 
 export function SupportProposalModal({
   proposalId: initialProposalId = "",
   isOpen,
-  isLoading = false,
-  error,
-  onSubmit,
   onClose,
 }: SupportProposalModalProps) {
   const [proposalId, setProposalId] = React.useState(initialProposalId);
   const [supportor] = React.useState("2ryu...JP9sv");
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | undefined>();
 
   React.useEffect(() => {
     if (isOpen) {
       setProposalId(initialProposalId);
+      setError(undefined);
     }
   }, [isOpen, initialProposalId]);
 
@@ -57,11 +51,32 @@ export function SupportProposalModal({
     e.preventDefault();
     if (!proposalId || !allRequirementsMet || isLoading) return;
 
-    await onSubmit?.({ proposalId });
+    setIsLoading(true);
+    setError(undefined);
+
+    try {
+      const result = await Promise.resolve({ success: true });
+
+      console.log("Supporting proposal:", { proposalId });
+
+      if (result.success) {
+        toast.success("Proposal supported successfully");
+        onClose();
+      } else {
+        setError("Failed to support proposal");
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to support proposal",
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleClose = () => {
     setProposalId("");
+    setError(undefined);
     onClose();
   };
 

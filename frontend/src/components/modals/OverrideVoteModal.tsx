@@ -14,41 +14,29 @@ import { AppButton } from "@/components/ui/AppButton";
 import ErrorMessage from "./shared/ErrorMessage";
 import { VoteDistributionControls } from "./shared/VoteDistributionControls";
 import { useVoteDistribution } from "@/hooks";
+import { toast } from "sonner";
 
 interface OverrideVoteModalProps {
   proposalId?: string;
   isOpen: boolean;
-  isLoading?: boolean;
-  error?: string;
   onClose: () => void;
-  onSubmit?: (data: OverrideVoteData) => void | Promise<void>;
 }
 
-interface OverrideVoteData {
-  proposalId: string;
-  stakeAccount: string;
-  usePrimaryStake: boolean;
-  distribution: {
-    for: number;
-    against: number;
-    abstain: number;
-  };
-}
+
 
 type StakeAccountOption = "primary" | "specify";
 
 export function OverrideVoteModal({
   proposalId: initialProposalId = "",
   isOpen,
-  isLoading = false,
-  error,
-  onSubmit,
   onClose,
 }: OverrideVoteModalProps) {
   const [proposalId, setProposalId] = React.useState(initialProposalId);
   const [stakeAccountOption, setStakeAccountOption] =
     React.useState<StakeAccountOption>("primary");
   const [customStakeAccount, setCustomStakeAccount] = React.useState("");
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | undefined>();
   const {
     distribution,
     totalPercentage,
@@ -64,8 +52,10 @@ export function OverrideVoteModal({
       setStakeAccountOption("primary");
       setCustomStakeAccount("");
       resetDistribution();
+      setError(undefined);
     }
   }, [isOpen, initialProposalId, resetDistribution]);
+
   const isValidStakeAccount =
     stakeAccountOption === "primary" || customStakeAccount.trim() !== "";
 
@@ -79,13 +69,27 @@ export function OverrideVoteModal({
     )
       return;
 
-    await onSubmit?.({
-      proposalId,
-      stakeAccount:
-        stakeAccountOption === "primary" ? "primary" : customStakeAccount,
-      usePrimaryStake: stakeAccountOption === "primary",
-      distribution,
-    });
+    setIsLoading(true);
+    setError(undefined);
+
+    try {
+      // TODO: Implement actual vote override logic
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      console.log("Overriding vote:", {
+        proposalId,
+        stakeAccount:
+          stakeAccountOption === "primary" ? "primary" : customStakeAccount,
+        usePrimaryStake: stakeAccountOption === "primary",
+        distribution,
+      });
+
+      toast.success("Vote cast successfully");
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to override vote");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleClose = () => {
@@ -93,6 +97,7 @@ export function OverrideVoteModal({
     setStakeAccountOption("primary");
     setCustomStakeAccount("");
     resetDistribution();
+    setError(undefined);
     onClose();
   };
 

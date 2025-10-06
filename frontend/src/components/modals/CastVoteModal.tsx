@@ -14,36 +14,24 @@ import { AppButton } from "@/components/ui/AppButton";
 import ErrorMessage from "./shared/ErrorMessage";
 import { VoteDistributionControls } from "./shared/VoteDistributionControls";
 import { useVoteDistribution } from "@/hooks";
+import { toast } from "sonner";
 
 interface CastVoteModalProps {
   proposalId?: string;
   isOpen: boolean;
-  isLoading?: boolean;
-  error?: string;
   onClose: () => void;
-  onSubmit?: (data: CastVoteData) => void | Promise<void>;
-}
-
-interface CastVoteData {
-  proposalId: string;
-  distribution: {
-    for: number;
-    against: number;
-    abstain: number;
-  };
 }
 
 export function CastVoteModal({
   proposalId: initialProposalId = "",
   isOpen,
-  isLoading = false,
-  error,
-  onSubmit,
   onClose,
 }: CastVoteModalProps) {
   const [proposalId, setProposalId] = React.useState(initialProposalId);
   const [voterAccount] = React.useState("4aD...bC2"); // TODO: This would come from wallet
   const [votingPower] = React.useState(20000); // TODO: This would come from API
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | undefined>();
   const {
     distribution,
     totalPercentage,
@@ -57,6 +45,7 @@ export function CastVoteModal({
     if (isOpen) {
       setProposalId(initialProposalId);
       resetDistribution();
+      setError(undefined);
     }
   }, [isOpen, initialProposalId, resetDistribution]);
 
@@ -64,15 +53,26 @@ export function CastVoteModal({
     e.preventDefault();
     if (!proposalId || !isValidDistribution || isLoading) return;
 
-    await onSubmit?.({
-      proposalId,
-      distribution,
-    });
+    setIsLoading(true);
+    setError(undefined);
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      console.log("Casting vote:", { proposalId, distribution });
+
+      toast.success("Vote cast successfully");
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to cast vote");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleClose = () => {
     setProposalId("");
     resetDistribution();
+    setError(undefined);
     onClose();
   };
 

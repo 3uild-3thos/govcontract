@@ -6,7 +6,7 @@ import {
 import type { ViewType } from "@/types/governance";
 
 interface DashboardStatsProps {
-  network: "mainnet" | "testnet" | "devnet";
+  network: string;
   snapshotSlot: number;
   currentView: ViewType;
   delegationsReceived?: number; // in lamports
@@ -27,14 +27,26 @@ export function DashboardStats({
   type StatEntry = {
     label: string;
     value: string | number;
+    mobileValue?: string | number;
     rawValue?: string;
     showRaw: boolean;
   };
+  // on mobile only show "custom" when the network is a custom URL, otherwise show the network name
+  const isCustomNetwork =
+    network &&
+    (network.startsWith("http://") || network.startsWith("https://"));
+  const networkDisplay = network || "-";
+  const networkMobileDisplay = isCustomNetwork ? "Custom" : networkDisplay;
 
   const stats: StatEntry[] =
     currentView === "validator"
       ? [
-          { label: "Network", value: network || "-", showRaw: false },
+          {
+            label: "Network",
+            value: networkDisplay,
+            mobileValue: networkMobileDisplay,
+            showRaw: false,
+          },
           {
             label: "Snapshot Slot",
             value: formatOptionalSlot(snapshotSlot),
@@ -51,7 +63,12 @@ export function DashboardStats({
           },
         ]
       : [
-          { label: "Network", value: network || "-", showRaw: false },
+          {
+            label: "Network",
+            value: networkDisplay,
+            mobileValue: networkMobileDisplay,
+            showRaw: false,
+          },
           {
             label: "Snapshot Slot",
             value: formatOptionalSlot(snapshotSlot),
@@ -77,7 +94,10 @@ export function DashboardStats({
           </p>
           <div>
             <p className="text-foreground text-base sm:text-lg lg:text-xl font-medium">
-              {stat.value}
+              <span className="sm:hidden">
+                {stat.mobileValue ?? stat.value}
+              </span>
+              <span className="hidden sm:inline">{stat.value}</span>
             </p>
             {stat.showRaw && stat.rawValue && (
               <p

@@ -12,13 +12,11 @@ import {
 import { cn } from "@/lib/utils";
 import { AppButton } from "@/components/ui/AppButton";
 import ErrorMessage from "./shared/ErrorMessage";
+import { toast } from "sonner";
 
 interface CreateProposalModalProps {
   isOpen: boolean;
-  isLoading?: boolean;
-  error?: string;
   onClose: () => void;
-  onSubmit?: (data: CreateProposalData) => void | Promise<void>;
 }
 
 interface CreateProposalData {
@@ -30,9 +28,6 @@ interface CreateProposalData {
 
 export function CreateProposalModal({
   isOpen,
-  isLoading = false,
-  error,
-  onSubmit,
   onClose,
 }: CreateProposalModalProps) {
   const [formData, setFormData] = React.useState<CreateProposalData>({
@@ -41,6 +36,8 @@ export function CreateProposalModal({
     startEpoch: "",
     votingLength: "",
   });
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | undefined>();
 
   React.useEffect(() => {
     if (!isOpen) {
@@ -50,6 +47,7 @@ export function CreateProposalModal({
         startEpoch: "",
         votingLength: "",
       });
+      setError(undefined);
     }
   }, [isOpen]);
 
@@ -63,7 +61,23 @@ export function CreateProposalModal({
     ) {
       return;
     }
-    await onSubmit?.(formData);
+
+    setIsLoading(true);
+    setError(undefined);
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      console.log("Creating proposal:", formData);
+
+      toast.success("Proposal created successfully");
+      onClose();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to create proposal",
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleClose = () => {
@@ -73,6 +87,7 @@ export function CreateProposalModal({
       startEpoch: "",
       votingLength: "",
     });
+    setError(undefined);
     onClose();
   };
 

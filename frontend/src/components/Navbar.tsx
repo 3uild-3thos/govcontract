@@ -16,6 +16,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { formatAddress } from "@/lib/governance/formatters";
+import { useModal } from "@/contexts/ModalContext";
 
 type NavLink = {
   href: string;
@@ -31,6 +32,7 @@ const wallet = "7K3iFhqVpF4xnwMGWKmQRgNvWqKAoZGmZN6vLkPvJXbd"; // Test wallet ad
 
 export default function Navbar() {
   const pathname = usePathname();
+  const { openModal } = useModal();
   const [isOpen, setIsOpen] = useState(false);
   const [walletAddress, setWalletAddress] = useState(false);
 
@@ -120,6 +122,10 @@ export default function Navbar() {
                     type="button"
                     className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-base font-medium transition-all text-muted hover:text-white hover:bg-white/5"
                     aria-label="Settings"
+                    onClick={() => {
+                      openModal("settings");
+                      setIsOpen(false);
+                    }}
                   >
                     <Settings className="size-5" />
                     <span>Settings</span>
@@ -156,6 +162,7 @@ export default function Navbar() {
               aria-label="Settings"
               icon={<Settings className="size-4" />}
               className="text-muted rounded-full hidden lg:flex"
+              onClick={() => openModal("settings")}
             />
             {walletAddress ? (
               <div className="flex items-center gap-4">

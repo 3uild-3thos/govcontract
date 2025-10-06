@@ -15,34 +15,23 @@ import ErrorMessage from "./shared/ErrorMessage";
 import RequirementItem from "./shared/RequirementItem";
 import { VoteDistributionControls } from "./shared/VoteDistributionControls";
 import { useVoteDistribution } from "@/hooks";
+import { toast } from "sonner";
 
 interface ModifyVoteModalProps {
   proposalId?: string;
   isOpen: boolean;
-  isLoading?: boolean;
-  error?: string;
   onClose: () => void;
-  onSubmit?: (data: ModifyVoteData) => void | Promise<void>;
 }
 
-interface ModifyVoteData {
-  proposalId: string;
-  distribution: {
-    for: number;
-    against: number;
-    abstain: number;
-  };
-}
 
 export function ModifyVoteModal({
   proposalId: initialProposalId = "",
   isOpen,
-  isLoading = false,
-  error,
-  onSubmit,
   onClose,
 }: ModifyVoteModalProps) {
   const [proposalId, setProposalId] = React.useState(initialProposalId);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | undefined>();
   const {
     distribution,
     totalPercentage,
@@ -60,6 +49,7 @@ export function ModifyVoteModal({
     if (isOpen) {
       setProposalId(initialProposalId);
       resetDistribution();
+      setError(undefined);
     }
   }, [isOpen, initialProposalId, resetDistribution]);
 
@@ -67,15 +57,27 @@ export function ModifyVoteModal({
     e.preventDefault();
     if (!proposalId || !isValidDistribution || isLoading) return;
 
-    await onSubmit?.({
-      proposalId,
-      distribution,
-    });
+    setIsLoading(true);
+    setError(undefined);
+
+    try {
+      // TODO: Implement actual vote modification logic
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      console.log("Modifying vote:", { proposalId, distribution });
+
+      toast.success("Vote modified successfully");
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to modify vote");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleClose = () => {
     setProposalId("");
     resetDistribution();
+    setError(undefined);
     onClose();
   };
 
