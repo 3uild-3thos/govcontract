@@ -225,13 +225,13 @@ export function OverrideVoteModal({
           <AppButton
             variant="outline"
             text="Cancel"
-            size="default"
+            size="lg"
             onClick={handleClose}
             disabled={isLoading}
           />
           <AppButton
             form="cast-vote-staker-form"
-            size="default"
+            size="lg"
             disabled={
               !proposalId ||
               !isValidDistribution ||

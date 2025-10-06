@@ -166,14 +166,13 @@ export function SupportProposalModal({
           <AppButton
             variant="outline"
             text="Cancel"
-            size="default"
+            size="lg"
             onClick={handleClose}
             disabled={isLoading}
           />
           <AppButton
             form="support-proposal-form"
-            size="default"
-            className="sm:h-8 sm:px-3 sm:gap-1.5 sm:has-[>svg]:px-2.5"
+            size="lg"
             disabled={!proposalId || !allRequirementsMet || isLoading}
             onClick={handleSubmit}
             variant="gradient"

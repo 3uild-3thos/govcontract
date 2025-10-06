@@ -159,13 +159,13 @@ export function CastVoteModal({
           <AppButton
             variant="outline"
             text="Cancel"
-            size="default"
+            size="lg"
             onClick={handleClose}
             disabled={isLoading}
           />
           <AppButton
             form="cast-vote-form"
-            size="default"
+            size="lg"
             disabled={!proposalId || !isValidDistribution || isLoading}
             onClick={handleSubmit}
             variant="gradient"

@@ -215,13 +215,13 @@ export function CreateProposalModal({
           <AppButton
             variant="outline"
             text="Cancel"
-            size="default"
+            size="lg"
             onClick={handleClose}
             disabled={isLoading}
           />
           <AppButton
             form="create-proposal-form"
-            size="default"
+            size="lg"
             disabled={!isFormValid || isLoading}
             onClick={handleSubmit}
             variant="gradient"

@@ -169,13 +169,13 @@ export function ModifyVoteModal({
           <AppButton
             variant="outline"
             text="Cancel"
-            size="default"
+            size="lg"
             onClick={handleClose}
             disabled={isLoading}
           />
           <AppButton
             form="modify-vote-form"
-            size="default"
+            size="lg"
             disabled={
               !proposalId ||
               !isValidDistribution ||

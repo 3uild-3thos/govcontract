@@ -6,22 +6,30 @@ import { AppButton } from "@/components/ui/AppButton";
 import FilterPanel from "./FilterPanel";
 import ProposalCard, { ProposalCardSkeleton } from "./ProposalCard";
 import { useProposals } from "@/hooks";
+import { FilterState } from "./ProposalFilterModal";
 
 export default function ProposalList() {
   const [showEligibleOnly, setShowEligibleOnly] = React.useState(false);
   const [statusFilter, setStatusFilter] = React.useState("all");
   const [searchQuery, setSearchQuery] = React.useState("");
   const [quorumFilter, setQuorumFilter] = React.useState(80);
+  const [filterState, setFilterState] = React.useState<FilterState>({
+    onlyEligible: false,
+    status: "all",
+    lifecycle: "all",
+    timeWindow: "all",
+    minimumSOL: 0,
+  });
 
   const { data: proposalsData, isLoading: isLoadingProposals } = useProposals();
 
   const proposals = React.useMemo(() => proposalsData || [], [proposalsData]);
 
-  const searcheProposals = React.useMemo(() => {
+  const filteredProposals = React.useMemo(() => {
     return proposals.filter((proposal) => {
       if (
-        statusFilter !== "all" &&
-        proposal.status.toLowerCase() !== statusFilter
+        filterState.status !== "all" &&
+        proposal.status.toLowerCase() !== filterState.status
       ) {
         return false;
       }
@@ -36,7 +44,7 @@ export default function ProposalList() {
       }
       return true;
     });
-  }, [proposals, statusFilter, searchQuery, quorumFilter]);
+  }, [filterState, searchQuery, quorumFilter, proposals]);
 
   return (
     <div className="space-y-4 -mt-6">
@@ -45,35 +53,24 @@ export default function ProposalList() {
         onSearchQueryChange={setSearchQuery}
         quorumFilter={quorumFilter}
         onQuorumFilterChange={setQuorumFilter}
+        filterState={filterState}
+        onFilterStateChange={setFilterState}
       />
 
-      {/* Loading state */}
-      {isLoadingProposals && (
-        <div className="space-y-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <ProposalCardSkeleton key={i} />
-          ))}
-        </div>
-      )}
+      <div className="space-y-4">
+        {filteredProposals.map((proposal) => (
+          <ProposalCard key={proposal.simd} proposal={proposal} />
+        ))}
+      </div>
 
-      {/* Loaded proposals */}
-      {!isLoadingProposals && searcheProposals.length > 0 && (
-        <div className="space-y-4">
-          {searcheProposals.map((proposal) => (
-            <ProposalCard key={proposal.simd} proposal={proposal} />
-          ))}
-        </div>
-      )}
-
-      {/* Empty state */}
-      {!isLoadingProposals && searcheProposals.length === 0 && (
+      {filteredProposals.length === 0 && (
         <div className="text-center py-12 text-dao-color-gray text-default">
           No proposals available.
         </div>
       )}
 
-      {/* Load More */}
-      {!isLoadingProposals && searcheProposals.length > 5 && (
+      {/* Load More Button */}
+      {filteredProposals.length > 5 && (
         <div className="flex justify-center pt-4">
           <AppButton
             text="Load More"
@@ -86,3 +83,4 @@ export default function ProposalList() {
     </div>
   );
 }
+
