@@ -16,8 +16,13 @@ import { motion } from "framer-motion";
 
 type ProposalStatus = ProposalRecord["status"];
 type ProposalLifecycleStage = ProposalRecord["lifecycleStage"];
+interface VotingDetailItem {
+  label: string;
+  value: string;
+}
+
 interface VotingDetailsProps {
-  items: string[];
+  items: VotingDetailItem[];
   layout: "mobile" | "tablet";
 }
 interface ActionButtonsProps {
@@ -33,17 +38,20 @@ interface ProposalCardProps {
 
 const STATUS_LABEL_FOR_ENDED = "Ended";
 
-const getVotingStatusText = (
+const getVotingStatusValue = (
   status: ProposalStatus,
   votingEndsInText: string | null,
 ) => {
   if (status === "finalized" || votingEndsInText === STATUS_LABEL_FOR_ENDED) {
-    return "Voting Ended";
+    return "Ended";
+  }
+  if (!votingEndsInText || votingEndsInText === "-") {
+    return "Not Started Yet";
   }
   if (votingEndsInText) {
-    return `Voting Ends in ${votingEndsInText}`;
+    return votingEndsInText;
   }
-  return "Voting Not Started Yet";
+  return "Not Started Yet";
 };
 
 const getActionButtonText = (
@@ -73,24 +81,30 @@ const VotingDetails = ({ items, layout }: VotingDetailsProps) => {
 
   if (layout === "mobile") {
     return (
-      <div className="inline-flex items-center text-white/60 text-xs gap-5 pb-4">
-        {items.map((item, index) => (
-          <Fragment key={`${item}-${index}`}>
-            <span>{item}</span>
-            {index < items.length - 1 && (
-              <span className="w-[1px] h-3 bg-dao-color-gray/30" />
-            )}
-          </Fragment>
+      <div className="grid grid-cols-3 gap-4 pb-4 text-xs">
+        {items.map((item) => (
+          <div
+            key={`${item.label}-${item.value}`}
+            className="flex flex-col gap-1"
+          >
+            <span className="text-white/40 text-[10px] uppercase tracking-wide">
+              {item.label}
+            </span>
+            <span className="text-white/60 font-semibold">{item.value}</span>
+          </div>
         ))}
       </div>
     );
   }
 
   return (
-    <div className="flex gap-4 text-sm">
+    <div className="flex gap-4 text-sm text-white/60">
       {items.map((item, index) => (
-        <Fragment key={`${item}-${index}`}>
-          <span className="text-white/60">{item}</span>
+        <Fragment key={`${item.label}-${item.value}`}>
+          <span>
+            <span className="text-white/40">{item.label}: </span>
+            <span>{item.value}</span>
+          </span>
           {index < items.length - 1 && <span className="text-white/20">|</span>}
         </Fragment>
       ))}
@@ -157,15 +171,15 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
   const votingEndsIn = mounted
     ? calculateVotingEndsIn(votingEndsInValue)
     : null;
-  const votingStatusText = getVotingStatusText(status, votingEndsIn);
+  const votingStatusValue = getVotingStatusValue(status, votingEndsIn);
   const actionButtonText = getActionButtonText(lifecycleStage, status);
   const showActionButton = Boolean(actionButtonText);
   const showModifyButton = shouldShowModifyButton(lifecycleStage, status);
 
-  const detailItems = [
-    `Quorum ${quorumPercent}%`,
-    `Required ${formatNumber(solRequired)} SOL`,
-    votingStatusText,
+  const detailItems: VotingDetailItem[] = [
+    { label: "Quorum", value: `${quorumPercent}%` },
+    { label: "Required", value: `${formatNumber(solRequired)} SOL` },
+    { label: "Voting Ends In", value: votingStatusValue },
   ];
 
   const handleCardClick = () => {

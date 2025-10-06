@@ -39,7 +39,7 @@ export default function ProposalList() {
       ) {
         return false;
       }
-      if (proposal.quorumPercent !== quorumFilter) {
+      if (proposal.quorumPercent > quorumFilter) {
         return false;
       }
       return true;
@@ -83,4 +83,3 @@ export default function ProposalList() {
     </div>
   );
 }
-
