@@ -59,7 +59,6 @@ impl<'info> CastVote<'info> {
         for_votes_bp: u64,
         against_votes_bp: u64,
         abstain_votes_bp: u64,
-        // meta_merkle_leaf: MetaMerkleLeaf,
         bumps: &CastVoteBumps,
     ) -> Result<()> {
         // Check that the proposal is open for voting
@@ -113,11 +112,6 @@ impl<'info> CastVote<'info> {
                 msg!("Error deserializing MetaMerkleProof: {}", e);
                 GovernanceError::CantDeserializeMMPPDA
             })?;
-        // let meta_merkle_proof = MetaMerkleProof::try_from_slice(&account_data[8..])
-        //     .map_err(|e| {
-        //         msg!("Error deserializing MetaMerkleProof: {}", e);
-        //         GovernanceError::CantDeserializeMMPPDA
-        //     })?;
         let meta_merkle_leaf = meta_merkle_proof.meta_merkle_leaf;
 
         // Crosscheck consensus result

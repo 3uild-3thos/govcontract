@@ -89,17 +89,6 @@ impl<'info> CreateProposal<'info> {
             GovernanceError::MustBeOwnedBySnapshotProgram
         );
 
-        // let consensus_result_data = self.consensus_result.try_borrow_data()?;
-        // let consensus_result = try_from_slice_unchecked::<ConsensusResult>(&consensus_result_data[8..])
-        //     .map_err(|e| {
-        //         msg!("Error deserializing ConsensusResult: {}", e);
-        //         GovernanceError::CantDeserializeConsensusResult
-        //     })?;
-
-        // require!(
-        //     consensus_result.ballot.meta_merkle_root == self.proposal.merkle_root_hash.unwrap(),
-        //     GovernanceError::InvalidMerkleRoot
-        // );
         // Deserialize MetaMerkleProof for crosschecking
         let account_data = self.meta_merkle_proof.try_borrow_data()?;
 
@@ -108,11 +97,6 @@ impl<'info> CreateProposal<'info> {
                 msg!("Error deserializing MetaMerkleProof: {}", e);
                 GovernanceError::CantDeserializeMMPPDA
             })?;
-        // let meta_merkle_proof = MetaMerkleProof::try_from_slice(&account_data[8..])
-        //     .map_err(|e| {
-        //         msg!("Error deserializing MetaMerkleProof: {}", e);
-        //         GovernanceError::CantDeserializeMMPPDA
-        //     })?;
         let meta_merkle_leaf = meta_merkle_proof.meta_merkle_leaf;
 
         // Crosscheck consensus result

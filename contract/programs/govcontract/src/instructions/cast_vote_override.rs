@@ -125,11 +125,6 @@ impl<'info> CastVoteOverride<'info> {
                 msg!("Error deserializing MetaMerkleProof: {}", e);
                 GovernanceError::CantDeserializeMMPPDA
             })?;
-        // let meta_merkle_proof = MetaMerkleProof::try_from_slice(&meta_account_data[8..])
-        //     .map_err(|e| {
-        //         msg!("Error deserializing MetaMerkleProof: {}", e);
-        //         GovernanceError::CantDeserializeMMPPDA
-        //     })?;
         let meta_merkle_leaf = meta_merkle_proof.meta_merkle_leaf;
 
         require_eq!(

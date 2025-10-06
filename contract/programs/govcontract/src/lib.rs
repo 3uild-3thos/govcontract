@@ -11,8 +11,7 @@ use instructions::*;
 
 use gov_v1::StakeMerkleLeaf;
 
-// declare_id!("GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc");
-declare_id!("AXnkQnEEMBsKcJ1gSXP1aW6tZMGWodzEaoB6b3bRib2r");
+declare_id!("GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc");
 
 #[program]
 pub mod govcontract {
@@ -42,23 +41,17 @@ pub mod govcontract {
         Ok(())
     }
 
-    // pub fn modify_proposal(ctx: Context<CreateProposal>) -> Result<()> {
-    //     msg!("Greetings from: {:?}", ctx.program_id);
-    //     Ok(())
-    // }
 
     pub fn cast_vote(
         ctx: Context<CastVote>,
         for_votes_bp: u64,
         against_votes_bp: u64,
         abstain_votes_bp: u64,
-        // meta_merkle_leaf: MetaMerkleLeaf,
     ) -> Result<()> {
         ctx.accounts.cast_vote(
             for_votes_bp,
             against_votes_bp,
             abstain_votes_bp,
-            // meta_merkle_leaf,
             &ctx.bumps,
         )?;
         Ok(())
