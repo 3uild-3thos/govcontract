@@ -1,12 +1,10 @@
 "use client";
 
-import type { DeviceType } from "@/lib/device-detection";
 import ProposalsTable from "./proposals-table/ProposalsTable";
 import ProposalList from "./ProposalList";
 
 interface ProposalsViewProps {
   title: string;
-  initialDevice?: DeviceType;
 }
 
 export default function ProposalsView({ title }: ProposalsViewProps) {

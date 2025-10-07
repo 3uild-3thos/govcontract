@@ -115,6 +115,7 @@ export function StakeAccountsTable({ data }: StakeAccountsTableProps) {
     },
   });
 
+  // Handlers
   const handleReset = () => {
     setSearchValue("");
     setStakeSizeFilter("All");
@@ -141,6 +142,7 @@ export function StakeAccountsTable({ data }: StakeAccountsTableProps) {
         searchPlaceholder="Search stake accounts..."
         filters={[
           {
+            label: "Stake Amount",
             value: stakeSizeFilter,
             onChange: setStakeSizeFilter,
             options: stakeAmountOptions,
@@ -148,6 +150,7 @@ export function StakeAccountsTable({ data }: StakeAccountsTableProps) {
             className: "w-[140px] text-white/60",
           },
           {
+            label: "Status",
             value: stakeStatusFilter,
             onChange: (value) => setStakeStatusFilter(value as StakeStatusType),
             options: stakeStatusOptions,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import type { ProposalRecord } from "@/dummy-data/proposals";
+import type { ProposalRecord } from "@/types";
 import { CircleCheck, CircleX } from "lucide-react";
 import VoteItem from "./VoteItem";
 import QuorumDonut from "./QuorumDonut";

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import type { ProposalRecord } from "@/dummy-data/proposals";
+import type { ProposalRecord } from "@/types";
 import { Fragment, type MouseEventHandler } from "react";
 import { AppButton } from "@/components/ui/AppButton";
 import { calculateVotingEndsIn } from "@/helpers";
@@ -11,12 +11,18 @@ import { useMounted } from "@/hooks";
 import LifecycleIndicator from "@/components/ui/LifecycleIndicator";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { useModal } from "@/contexts/ModalContext";
+import { motion } from "framer-motion";
 
 type ProposalStatus = ProposalRecord["status"];
 type ProposalLifecycleStage = ProposalRecord["lifecycleStage"];
+interface VotingDetailItem {
+  label: string;
+  value: string;
+}
+
 interface VotingDetailsProps {
-  items: string[];
+  items: VotingDetailItem[];
   layout: "mobile" | "tablet";
 }
 interface ActionButtonsProps {
@@ -32,22 +38,25 @@ interface ProposalCardProps {
 
 const STATUS_LABEL_FOR_ENDED = "Ended";
 
-const getVotingStatusText = (
+const getVotingStatusValue = (
   status: ProposalStatus,
-  votingEndsInText: string | null
+  votingEndsInText: string | null,
 ) => {
   if (status === "finalized" || votingEndsInText === STATUS_LABEL_FOR_ENDED) {
-    return "Voting Ended";
+    return "Ended";
+  }
+  if (!votingEndsInText || votingEndsInText === "-") {
+    return "Not Started Yet";
   }
   if (votingEndsInText) {
-    return `Voting Ends in ${votingEndsInText}`;
+    return votingEndsInText;
   }
-  return "Voting Not Started Yet";
+  return "Not Started Yet";
 };
 
 const getActionButtonText = (
   lifecycleStage: ProposalLifecycleStage,
-  status: ProposalStatus
+  status: ProposalStatus,
 ) => {
   if (lifecycleStage === "voting") {
     return "Cast Vote";
@@ -62,7 +71,7 @@ const getActionButtonText = (
 
 const shouldShowModifyButton = (
   lifecycleStage: ProposalLifecycleStage,
-  status: ProposalStatus
+  status: ProposalStatus,
 ) => lifecycleStage === "voting";
 
 const VotingDetails = ({ items, layout }: VotingDetailsProps) => {
@@ -72,24 +81,30 @@ const VotingDetails = ({ items, layout }: VotingDetailsProps) => {
 
   if (layout === "mobile") {
     return (
-      <div className="inline-flex items-center text-white/60 text-xs gap-5 pb-4">
-        {items.map((item, index) => (
-          <Fragment key={`${item}-${index}`}>
-            <span>{item}</span>
-            {index < items.length - 1 && (
-              <span className="w-[1px] h-3 bg-dao-color-gray/30" />
-            )}
-          </Fragment>
+      <div className="grid grid-cols-3 gap-4 pb-4 text-xs">
+        {items.map((item) => (
+          <div
+            key={`${item.label}-${item.value}`}
+            className="flex flex-col gap-1"
+          >
+            <span className="text-white/40 text-[10px] uppercase tracking-wide">
+              {item.label}
+            </span>
+            <span className="text-white/60 font-semibold">{item.value}</span>
+          </div>
         ))}
       </div>
     );
   }
 
   return (
-    <div className="flex gap-4 text-sm">
+    <div className="flex gap-4 text-sm text-white/60">
       {items.map((item, index) => (
-        <Fragment key={`${item}-${index}`}>
-          <span className="text-white/60">{item}</span>
+        <Fragment key={`${item.label}-${item.value}`}>
+          <span>
+            <span className="text-white/40">{item.label}: </span>
+            <span>{item.value}</span>
+          </span>
           {index < items.length - 1 && <span className="text-white/20">|</span>}
         </Fragment>
       ))}
@@ -142,6 +157,7 @@ const ActionButtons = ({
 export default function ProposalCard({ proposal }: ProposalCardProps) {
   const router = useRouter();
   const mounted = useMounted();
+  const { openModal } = useModal();
   const {
     status,
     lifecycleStage,
@@ -155,15 +171,15 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
   const votingEndsIn = mounted
     ? calculateVotingEndsIn(votingEndsInValue)
     : null;
-  const votingStatusText = getVotingStatusText(status, votingEndsIn);
+  const votingStatusValue = getVotingStatusValue(status, votingEndsIn);
   const actionButtonText = getActionButtonText(lifecycleStage, status);
   const showActionButton = Boolean(actionButtonText);
   const showModifyButton = shouldShowModifyButton(lifecycleStage, status);
 
-  const detailItems = [
-    `Quorum ${quorumPercent}%`,
-    `Required ${formatNumber(solRequired)} SOL`,
-    votingStatusText,
+  const detailItems: VotingDetailItem[] = [
+    { label: "Quorum", value: `${quorumPercent}%` },
+    { label: "Required", value: `${formatNumber(solRequired)} SOL` },
+    { label: "Voting Ends In", value: votingStatusValue },
   ];
 
   const handleCardClick = () => {
@@ -172,17 +188,28 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
 
   const handleButtonClick: MouseEventHandler<HTMLButtonElement> = (event) => {
     event.stopPropagation();
-    toast.success(
-      (event.target as HTMLButtonElement).innerText + " Successfully"
-    );
+    const buttonText = (event.target as HTMLButtonElement).innerText;
+
+    if (buttonText === "Modify Vote") {
+      // TODO: Pass the actual proposal public key when available
+      openModal("modify-vote", { proposalId: "" });
+    } else if (buttonText === "Cast Vote") {
+      // TODO: Pass the actual proposal public key when available
+      openModal("cast-vote", { proposalId: "" });
+    } else if (buttonText === "Support") {
+      // TODO: Pass the actual proposal public key when available
+      openModal("support-proposal", { proposalId: "" });
+    }
   };
 
   return (
-    <div
+    <motion.div
       className="glass-card border p-6 transition-all cursor-pointer"
       role="link"
       tabIndex={0}
       onClick={handleCardClick}
+      whileTap={{ scale: 0.95, backgroundColor: "rgba(255, 255, 255, 0.05)" }}
+      transition={{ duration: 0.15, ease: "easeInOut" }}
     >
       {/* Mobile Layout*/}
       <div className="md:hidden space-y-4">
@@ -246,7 +273,7 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
           />
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 

@@ -18,7 +18,7 @@ export interface GovernanceDashboardLayoutProps {
   canSwitchView: boolean;
   walletData: WalletData;
   stats: GovernanceDashboardStats;
-  network: "mainnet" | "testnet" | "devnet";
+  network: "mainnet" | "testnet" | "devnet" | "custom";
 }
 
 export function GovernanceDashboardLayout({

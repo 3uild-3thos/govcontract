@@ -22,8 +22,14 @@ import {
 } from "@/components/ui/table";
 import { columns } from "@/components/governance/validator/ValidatorColumns";
 import { TableFilters } from "@/components/governance/shared/TableFilters";
-import { TablePaginationMobile, TablePaginationDesktop } from "@/components/governance/shared/TablePagination";
-import { MobileRowDrawer, DetailRow } from "@/components/governance/shared/MobileRowDrawer";
+import {
+  TablePaginationMobile,
+  TablePaginationDesktop,
+} from "@/components/governance/shared/TablePagination";
+import {
+  MobileRowDrawer,
+  DetailRow,
+} from "@/components/governance/shared/MobileRowDrawer";
 import { CopyableAddress } from "@/components/governance/shared/CopyableAddress";
 import {
   formatAddress,
@@ -47,12 +53,16 @@ const stakeSizeOptions = [
 export function VoteAccountsTable({ data }: VoteAccountsTableProps) {
   // State Management
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    [],
+  );
   const [searchValue, setSearchValue] = React.useState("");
   const [stakeSizeFilter, setStakeSizeFilter] = React.useState("All");
 
   // Mobile drawer state
-  const [selectedRow, setSelectedRow] = React.useState<VoteAccountData | null>(null);
+  const [selectedRow, setSelectedRow] = React.useState<VoteAccountData | null>(
+    null,
+  );
   const [drawerOpen, setDrawerOpen] = React.useState(false);
 
   // Data Filtering
@@ -61,7 +71,7 @@ export function VoteAccountsTable({ data }: VoteAccountsTableProps) {
 
     if (searchValue) {
       filtered = filtered.filter((row) =>
-        row.vote_account.toLowerCase().includes(searchValue.toLowerCase())
+        row.vote_account.toLowerCase().includes(searchValue.toLowerCase()),
       );
     }
 
@@ -115,6 +125,7 @@ export function VoteAccountsTable({ data }: VoteAccountsTableProps) {
         searchPlaceholder="Search vote accounts..."
         filters={[
           {
+            label: "Stake Size",
             value: stakeSizeFilter,
             onChange: setStakeSizeFilter,
             options: stakeSizeOptions,
@@ -136,20 +147,32 @@ export function VoteAccountsTable({ data }: VoteAccountsTableProps) {
                 >
                   {headerGroup.headers.map((header) => {
                     const columnId = header.column.id;
-                    const isMobileHidden = ["identity", "commission", "lastVote", "credits"].includes(columnId);
+                    const isMobileHidden = [
+                      "identity",
+                      "commission",
+                      "lastVote",
+                      "credits",
+                    ].includes(columnId);
 
                     return (
                       <TableHead
                         key={header.id}
                         className={`text-xs font-semibold uppercase tracking-wide text-white/50 text-center px-2 sm:px-4
                           ${isMobileHidden ? "hidden sm:table-cell" : ""}
-                          ${columnId === "vote_account" ? "w-3/5 sm:w-auto" : ""}
-                          ${columnId === "active_stake" ? "w-2/5 sm:w-auto" : ""}
+                          ${
+                            columnId === "vote_account" ? "w-3/5 sm:w-auto" : ""
+                          }
+                          ${
+                            columnId === "active_stake" ? "w-2/5 sm:w-auto" : ""
+                          }
                         `}
                       >
                         {header.isPlaceholder
                           ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
                       </TableHead>
                     );
                   })}
@@ -166,7 +189,12 @@ export function VoteAccountsTable({ data }: VoteAccountsTableProps) {
                   >
                     {row.getVisibleCells().map((cell) => {
                       const columnId = cell.column.id;
-                      const isMobileHidden = ["identity", "commission", "lastVote", "credits"].includes(columnId);
+                      const isMobileHidden = [
+                        "identity",
+                        "commission",
+                        "lastVote",
+                        "credits",
+                      ].includes(columnId);
 
                       return (
                         <TableCell
@@ -175,7 +203,10 @@ export function VoteAccountsTable({ data }: VoteAccountsTableProps) {
                             ${isMobileHidden ? "hidden sm:table-cell" : ""}
                           `}
                         >
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
                         </TableCell>
                       );
                     })}
@@ -229,7 +260,11 @@ export function VoteAccountsTable({ data }: VoteAccountsTableProps) {
             />
             <DetailRow
               label="Identity"
-              value={selectedRow.identity ? formatAddress(selectedRow.identity, 8) : "-"}
+              value={
+                selectedRow.identity
+                  ? formatAddress(selectedRow.identity, 8)
+                  : "-"
+              }
               fullWidth
             />
             <DetailRow

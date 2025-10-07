@@ -1,5 +1,5 @@
 import { Fragment } from "react";
-import type { ProposalRecord } from "@/dummy-data/proposals";
+import type { ProposalRecord } from "@/types";
 import { PHASES } from "./constants";
 import { PhaseNode } from "./PhaseNode";
 import { ConnectorLine } from "./ConnectorLine";

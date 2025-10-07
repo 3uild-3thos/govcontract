@@ -6,8 +6,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-
-import type { ProposalLifecycleStage } from "@/dummy-data/proposals";
+import type { ProposalLifecycleStage } from "@/types";
 import { Circle, Loader } from "lucide-react";
 
 const STAGE_ORDER: ProposalLifecycleStage[] = [
@@ -44,7 +43,7 @@ export default function LifecycleIndicator({ stage }: LifecycleIndicatorProps) {
         <span
           key={value}
           className={`h-2 w-2 rounded-full transition ${
-            index === activeIndex ? "bg-white" : "bg-white/20"
+            index <= activeIndex ? "bg-foreground/80" : "bg-white/10"
           }`}
         />
       ))}

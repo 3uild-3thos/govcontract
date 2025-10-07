@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { Toaster } from "@/components/ui/sonner";
 import Providers from "./providers";
+import { ModalProvider } from "@/contexts/ModalContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -37,12 +38,16 @@ export default function RootLayout({
         className={`${inter.variable} ${plusJakartaSans.variable} ${jetBrainsMono.variable} antialiased`}
       >
         <Providers>
-          <Navbar />
-          <div className="w-full overflow-x-hidden">
-            <div className="max-w-7xl mx-auto px-4 sm:px-8">{children}</div>
-          </div>
-          <Footer />
-          <Toaster theme="dark" position="bottom-right" />
+          <ModalProvider>
+            <Navbar />
+            <div className="w-full overflow-x-hidden">
+              <div className="max-w-7xl mx-auto px-4 sm:px-8">
+                {children}
+              </div>
+            </div>
+            <Footer />
+            <Toaster theme="dark" position="bottom-right" />
+          </ModalProvider>
         </Providers>
       </body>
     </html>

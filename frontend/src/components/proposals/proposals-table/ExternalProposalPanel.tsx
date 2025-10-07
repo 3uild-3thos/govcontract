@@ -5,7 +5,8 @@ import Link from "next/link";
 import { AppButton } from "@/components/ui/AppButton";
 import { GitHubIcon } from "@/components/icons/SvgIcons";
 import { Spade } from "lucide-react";
-import { toast } from "sonner";
+import { useModal } from "@/contexts/ModalContext";
+
 const VOTE_STATE_LABEL: Record<ProposalRow["vote"]["state"], string> = {
   "in-progress": "In Progress",
   finished: "Finished",
@@ -72,7 +73,16 @@ function LifecycleStageBar({
   );
 }
 
-function VoteActions({ state }: { state: ProposalRow["lifecycleStage"] }) {
+function VoteActions({
+  state,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  proposalId,
+}: {
+  state: ProposalRow["lifecycleStage"];
+  proposalId: string;
+}) {
+  const { openModal } = useModal();
+
   return (
     <div className="flex flex-col gap-3">
       {state === "voting" && (
@@ -80,20 +90,25 @@ function VoteActions({ state }: { state: ProposalRow["lifecycleStage"] }) {
           variant="outline"
           text="Modify Vote"
           className="w-full justify-center border-white/15 bg-white/10 text-sm font-medium text-white/75 hover:text-white"
-          onClick={() => toast.success("Modify Vote Successfully")}
+          onClick={() => {
+            // TODO: Pass the actual proposal public key when available from API
+            openModal("modify-vote", { proposalId: "" });
+          }}
         />
       )}
       <AppButton
         variant="gradient"
         text={state === "voting" ? "Cast Vote" : "Support"}
         className="w-full justify-center text-sm font-semibold text-foreground"
-        onClick={() =>
-          toast.success(
-            state === "voting"
-              ? "Cast Vote Successfully"
-              : "Support Proposal Successfully",
-          )
-        }
+        onClick={() => {
+          if (state === "voting") {
+            // TODO: Pass the actual proposal public key when available
+            openModal("cast-vote", { proposalId: "" });
+          } else {
+            // TODO: Pass the actual proposal public key when available
+            openModal("support-proposal", { proposalId: "" });
+          }
+        }}
       />
     </div>
   );
@@ -118,7 +133,10 @@ function VotingPanel({ proposal }: { proposal: ProposalRow }) {
 
       {(proposal.lifecycleStage === "support" ||
         proposal.lifecycleStage === "voting") && (
-        <VoteActions state={proposal.lifecycleStage} />
+        <VoteActions
+          state={proposal.lifecycleStage}
+          proposalId={proposal.simd}
+        />
       )}
     </aside>
   );

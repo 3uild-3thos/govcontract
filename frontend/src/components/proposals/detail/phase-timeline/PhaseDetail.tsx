@@ -11,7 +11,7 @@ export function PhaseDetail({ currentPhase, status }: PhaseDetailProps) {
     currentPhase === "finalized" && status === "finalizing"
       ? "finalizing"
       : currentPhase;
-  const detail = PHASE_DETAILS[detailKey];
+  const detail = PHASE_DETAILS[detailKey] ;
 
   if (!detail) return null;
 
