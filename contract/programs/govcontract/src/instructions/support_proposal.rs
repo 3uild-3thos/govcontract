@@ -48,9 +48,17 @@ pub struct SupportProposal<'info> {
 
 impl<'info> SupportProposal<'info> {
     pub fn support_proposal(&mut self, bumps: &SupportProposalBumps) -> Result<()> {
+        let clock = Clock::get()?;
+        
         // Ensure proposal is eligible for support
-        require!(Clock::get()?.epoch <= self.proposal.start_epoch, GovernanceError::ProposalClosed);
+        require!(clock.epoch <= self.proposal.start_epoch, GovernanceError::ProposalClosed);
         require!(!self.proposal.finalized, GovernanceError::ProposalFinalized);
+        
+        // Check if support period has expired
+        require!(
+            clock.epoch <= self.proposal.creation_epoch + MAX_SUPPORT_EPOCHS,
+            GovernanceError::SupportPeriodExpired
+        );
 
         // Validate snapshot program ownership
         require!(
@@ -98,8 +106,6 @@ impl<'info> SupportProposal<'info> {
             self.signer.key(),
             GovernanceError::InvalidVoteAccount
         );
-
-        let clock = Clock::get()?;
 
         verify_merkle_proof_cpi(
             &self.meta_merkle_proof.to_account_info(),

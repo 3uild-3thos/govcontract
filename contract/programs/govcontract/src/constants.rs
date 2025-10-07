@@ -4,6 +4,7 @@ pub const MAX_DESCRIPTION_LENGTH: usize = 250;
 
 // Voting limits
 pub const MAX_VOTING_EPOCHS: u64 = 10; // Maximum 10 epochs for voting
+pub const MAX_SUPPORT_EPOCHS: u64 = 10; // Maximum 10 epochs for support phase
 
 pub const BASIS_POINTS_MAX: u64 = 10_000;
 

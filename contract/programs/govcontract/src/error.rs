@@ -78,4 +78,6 @@ pub enum GovernanceError {
     SnapshotProgramUpgraded,
     #[msg("Merkle root hash has not been set for this proposal")]
     MerkleRootNotSet,
+    #[msg("Support period has expired for this proposal")]
+    SupportPeriodExpired,
 }
