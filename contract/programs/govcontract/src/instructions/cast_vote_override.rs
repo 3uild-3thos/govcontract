@@ -180,7 +180,7 @@ impl<'info> CastVoteOverride<'info> {
         // Check that validator vote exists
         // If account does not exist, call cache_votes_override to store staker's vote in override PDA
 
-        if self.validator_vote.data_len() == Vote::INIT_SPACE
+        if self.validator_vote.data_len() == (8 + Vote::INIT_SPACE)
             && self.validator_vote.owner == &crate::ID
             && Vote::deserialize(&mut self.validator_vote.data.borrow().as_ref()).is_ok()
         {
@@ -253,7 +253,7 @@ impl<'info> CastVoteOverride<'info> {
         }
         else {
             // Store delegator's vote in a the cache PDA
-            if self.vote_override_cache.data_len() == VoteOverrideCache::INIT_SPACE
+            if self.vote_override_cache.data_len() == (8 + VoteOverrideCache::INIT_SPACE)
                 && self.vote_override_cache.owner == &crate::ID
                 && VoteOverrideCache::deserialize(&mut self.vote_override_cache.data.borrow().as_ref()).is_ok() {
 

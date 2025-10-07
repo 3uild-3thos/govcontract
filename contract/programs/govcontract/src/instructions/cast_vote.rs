@@ -157,7 +157,7 @@ impl<'info> CastVote<'info> {
 
         // Check if ovveride PDA exists
         // If it does, update lamports with the override amount
-        if self.vote_override_cache.data_len() == VoteOverrideCache::INIT_SPACE
+        if self.vote_override_cache.data_len() == (8 + VoteOverrideCache::INIT_SPACE)
                 && self.vote_override_cache.owner == &crate::ID
                 && VoteOverrideCache::deserialize(&mut self.vote_override_cache.data.borrow().as_ref()).is_ok() {
 
