@@ -213,8 +213,6 @@ impl<'info> CastVote<'info> {
                 abstain_votes_lamports,
             )?;
 
-            self.proposal.vote_count += 1;
-
             // Store the vote distribution in the Vote PDA
             self.vote.set_inner(Vote {
                 validator: self.signer.key(),
@@ -245,6 +243,8 @@ impl<'info> CastVote<'info> {
                 vote_timestamp: clock.unix_timestamp,
             });
         }
+
+        self.proposal.vote_count += 1;
 
         Ok(())
     }
