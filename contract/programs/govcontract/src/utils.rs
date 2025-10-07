@@ -1,4 +1,3 @@
-
 /// Calculates the validator's stake weight in basis points (1 bp = 0.01%) relative to the cluster stake.
 ///
 /// This macro uses integer arithmetic to compute the stake weight by multiplying the validator's stake

@@ -1,7 +1,11 @@
 use anchor_lang::{
     prelude::*,
     solana_program::{
-        borsh0_10::try_from_slice_unchecked, program::invoke_signed, stake::program as stake_program, system_instruction::create_account, vote::{program as vote_program, state::VoteState}
+        borsh0_10::try_from_slice_unchecked,
+        program::invoke_signed,
+        stake::program as stake_program,
+        system_instruction::create_account,
+        vote::{program as vote_program, state::VoteState},
     },
 };
 
@@ -94,7 +98,10 @@ impl<'info> CastVoteOverride<'info> {
             .checked_add(against_votes_bp)
             .and_then(|sum| sum.checked_add(abstain_votes_bp))
             .ok_or(GovernanceError::ArithmeticOverflow)?;
-        require!(total_bp == BASIS_POINTS_MAX, GovernanceError::InvalidVoteDistribution);
+        require!(
+            total_bp == BASIS_POINTS_MAX,
+            GovernanceError::InvalidVoteDistribution
+        );
 
         // Validate snapshot program ownership
         require!(
@@ -107,13 +114,17 @@ impl<'info> CastVoteOverride<'info> {
         );
 
         let consensus_result_data = self.consensus_result.try_borrow_data()?;
-        let consensus_result = try_from_slice_unchecked::<ConsensusResult>(&consensus_result_data[8..])
-            .map_err(|e| {
-                msg!("Error deserializing ConsensusResult: {}", e);
-                GovernanceError::CantDeserializeConsensusResult
-            })?;
+        let consensus_result = try_from_slice_unchecked::<ConsensusResult>(
+            &consensus_result_data[8..],
+        )
+        .map_err(|e| {
+            msg!("Error deserializing ConsensusResult: {}", e);
+            GovernanceError::CantDeserializeConsensusResult
+        })?;
 
-        let merkle_root = self.proposal.merkle_root_hash
+        let merkle_root = self
+            .proposal
+            .merkle_root_hash
             .ok_or(GovernanceError::MerkleRootNotSet)?;
         require!(
             consensus_result.ballot.meta_merkle_root == merkle_root,
@@ -184,7 +195,8 @@ impl<'info> CastVoteOverride<'info> {
             && self.validator_vote.owner == &crate::ID
             && Vote::deserialize(&mut self.validator_vote.data.borrow().as_ref()).is_ok()
         {
-            let mut validator_vote = Vote::deserialize(&mut self.validator_vote.data.borrow().as_ref())?;
+            let mut validator_vote =
+                Vote::deserialize(&mut self.validator_vote.data.borrow().as_ref())?;
 
             // Subtract validator's vote
             self.proposal.sub_vote_lamports(
@@ -250,14 +262,18 @@ impl<'info> CastVoteOverride<'info> {
                 against_votes_lamports,
                 abstain_votes_lamports,
             });
-        }
-        else {
+        } else {
             // Store delegator's vote in a the cache PDA
             if self.vote_override_cache.data_len() == (8 + VoteOverrideCache::INIT_SPACE)
                 && self.vote_override_cache.owner == &crate::ID
-                && VoteOverrideCache::deserialize(&mut self.vote_override_cache.data.borrow().as_ref()).is_ok() {
-
-                let mut vote_override_cache = VoteOverrideCache::deserialize(&mut self.vote_override_cache.data.borrow().as_ref())?;
+                && VoteOverrideCache::deserialize(
+                    &mut self.vote_override_cache.data.borrow().as_ref(),
+                )
+                .is_ok()
+            {
+                let mut vote_override_cache = VoteOverrideCache::deserialize(
+                    &mut self.vote_override_cache.data.borrow().as_ref(),
+                )?;
 
                 // Check if cache is for the same validator and proposal
                 if vote_override_cache.proposal != self.proposal.key()
@@ -267,15 +283,36 @@ impl<'info> CastVoteOverride<'info> {
                 }
 
                 // Add delegator's vote to cache
-                vote_override_cache.for_votes_bp = vote_override_cache.for_votes_bp.checked_add(for_votes_bp).ok_or(GovernanceError::ArithmeticOverflow)?;
-                vote_override_cache.against_votes_bp = vote_override_cache.against_votes_bp.checked_add(against_votes_bp).ok_or(GovernanceError::ArithmeticOverflow)?;
-                vote_override_cache.abstain_votes_bp = vote_override_cache.abstain_votes_bp.checked_add(abstain_votes_bp).ok_or(GovernanceError::ArithmeticOverflow)?;
+                vote_override_cache.for_votes_bp = vote_override_cache
+                    .for_votes_bp
+                    .checked_add(for_votes_bp)
+                    .ok_or(GovernanceError::ArithmeticOverflow)?;
+                vote_override_cache.against_votes_bp = vote_override_cache
+                    .against_votes_bp
+                    .checked_add(against_votes_bp)
+                    .ok_or(GovernanceError::ArithmeticOverflow)?;
+                vote_override_cache.abstain_votes_bp = vote_override_cache
+                    .abstain_votes_bp
+                    .checked_add(abstain_votes_bp)
+                    .ok_or(GovernanceError::ArithmeticOverflow)?;
 
-                vote_override_cache.for_votes_lamports = vote_override_cache.for_votes_lamports.checked_add(for_votes_lamports).ok_or(GovernanceError::ArithmeticOverflow)?;
-                vote_override_cache.against_votes_lamports = vote_override_cache.against_votes_lamports.checked_add(against_votes_lamports).ok_or(GovernanceError::ArithmeticOverflow)?;
-                vote_override_cache.abstain_votes_lamports = vote_override_cache.abstain_votes_lamports.checked_add(abstain_votes_lamports).ok_or(GovernanceError::ArithmeticOverflow)?;
+                vote_override_cache.for_votes_lamports = vote_override_cache
+                    .for_votes_lamports
+                    .checked_add(for_votes_lamports)
+                    .ok_or(GovernanceError::ArithmeticOverflow)?;
+                vote_override_cache.against_votes_lamports = vote_override_cache
+                    .against_votes_lamports
+                    .checked_add(against_votes_lamports)
+                    .ok_or(GovernanceError::ArithmeticOverflow)?;
+                vote_override_cache.abstain_votes_lamports = vote_override_cache
+                    .abstain_votes_lamports
+                    .checked_add(abstain_votes_lamports)
+                    .ok_or(GovernanceError::ArithmeticOverflow)?;
 
-                vote_override_cache.total_stake = vote_override_cache.total_stake.checked_add(delegator_stake).ok_or(GovernanceError::ArithmeticOverflow)?;
+                vote_override_cache.total_stake = vote_override_cache
+                    .total_stake
+                    .checked_add(delegator_stake)
+                    .ok_or(GovernanceError::ArithmeticOverflow)?;
 
                 // Serialize the updated cache back to the account data
                 let mut account_data = self.vote_override_cache.data.borrow_mut();
@@ -284,8 +321,7 @@ impl<'info> CastVoteOverride<'info> {
                     GovernanceError::ArithmeticOverflow
                 })?;
                 account_data[0..serialized.len()].copy_from_slice(&serialized);
-            }
-            else {
+            } else {
                 // Initialize account thourgh CPI to system program
                 let proposal_key = self.proposal.key();
                 let validator_vote_key = self.validator_vote.key();
@@ -302,12 +338,12 @@ impl<'info> CastVoteOverride<'info> {
                     (8 + VoteOverrideCache::INIT_SPACE) as u64,
                     &crate::ID,
                 );
-        
+
                 invoke_signed(
                     &ix,
                     &[
-                        self.signer.to_account_info(), 
-                        self.vote_override_cache.to_account_info(), 
+                        self.signer.to_account_info(),
+                        self.vote_override_cache.to_account_info(),
                         self.system_program.to_account_info(),
                     ],
                     &[seeds],
@@ -327,7 +363,7 @@ impl<'info> CastVoteOverride<'info> {
                     total_stake: delegator_stake,
                     bump: bumps.vote_override_cache,
                 };
-                
+
                 // Serialize the initialized cache to the account data
                 let mut account_data = self.vote_override_cache.data.borrow_mut();
                 let serialized = borsh::to_vec(&vote_override_cache).map_err(|e| {

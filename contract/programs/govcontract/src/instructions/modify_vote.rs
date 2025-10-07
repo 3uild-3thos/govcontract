@@ -70,7 +70,10 @@ impl<'info> ModifyVote<'info> {
             .checked_add(against_votes_bp)
             .and_then(|sum| sum.checked_add(abstain_votes_bp))
             .ok_or(GovernanceError::ArithmeticOverflow)?;
-        require!(total_bp == BASIS_POINTS_MAX, GovernanceError::InvalidVoteDistribution);
+        require!(
+            total_bp == BASIS_POINTS_MAX,
+            GovernanceError::InvalidVoteDistribution
+        );
 
         // Validate snapshot program ownership
         require!(
@@ -83,13 +86,17 @@ impl<'info> ModifyVote<'info> {
         );
 
         let consensus_result_data = self.consensus_result.try_borrow_data()?;
-        let consensus_result = try_from_slice_unchecked::<ConsensusResult>(&consensus_result_data[8..])
-            .map_err(|e| {
-                msg!("Error deserializing ConsensusResult: {}", e);
-                GovernanceError::CantDeserializeConsensusResult
-            })?;
+        let consensus_result = try_from_slice_unchecked::<ConsensusResult>(
+            &consensus_result_data[8..],
+        )
+        .map_err(|e| {
+            msg!("Error deserializing ConsensusResult: {}", e);
+            GovernanceError::CantDeserializeConsensusResult
+        })?;
 
-        let merkle_root = self.proposal.merkle_root_hash
+        let merkle_root = self
+            .proposal
+            .merkle_root_hash
             .ok_or(GovernanceError::MerkleRootNotSet)?;
         require!(
             consensus_result.ballot.meta_merkle_root == merkle_root,

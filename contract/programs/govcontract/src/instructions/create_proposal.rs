@@ -5,12 +5,11 @@ use anchor_lang::{
     solana_program::{
         borsh0_10::try_from_slice_unchecked,
         epoch_stake::{get_epoch_stake_for_vote_account, get_epoch_total_stake},
-        native_token::LAMPORTS_PER_SOL,
         vote::{program as vote_program, state::VoteState},
     },
 };
 
-use gov_v1::{ConsensusResult, MetaMerkleProof};
+use gov_v1::MetaMerkleProof;
 
 use crate::{
     constants::*,

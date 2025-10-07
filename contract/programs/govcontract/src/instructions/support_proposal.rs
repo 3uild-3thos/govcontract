@@ -49,11 +49,14 @@ pub struct SupportProposal<'info> {
 impl<'info> SupportProposal<'info> {
     pub fn support_proposal(&mut self, bumps: &SupportProposalBumps) -> Result<()> {
         let clock = Clock::get()?;
-        
+
         // Ensure proposal is eligible for support
-        require!(clock.epoch <= self.proposal.start_epoch, GovernanceError::ProposalClosed);
+        require!(
+            clock.epoch <= self.proposal.start_epoch,
+            GovernanceError::ProposalClosed
+        );
         require!(!self.proposal.finalized, GovernanceError::ProposalFinalized);
-        
+
         // Check if support period has expired
         require!(
             clock.epoch <= self.proposal.creation_epoch + MAX_SUPPORT_EPOCHS,
@@ -71,13 +74,17 @@ impl<'info> SupportProposal<'info> {
         );
 
         let consensus_result_data = self.consensus_result.try_borrow_data()?;
-        let consensus_result = try_from_slice_unchecked::<ConsensusResult>(&consensus_result_data[8..])
-            .map_err(|e| {
-                msg!("Error deserializing ConsensusResult: {}", e);
-                GovernanceError::CantDeserializeConsensusResult
-            })?;
+        let consensus_result = try_from_slice_unchecked::<ConsensusResult>(
+            &consensus_result_data[8..],
+        )
+        .map_err(|e| {
+            msg!("Error deserializing ConsensusResult: {}", e);
+            GovernanceError::CantDeserializeConsensusResult
+        })?;
 
-        let merkle_root = self.proposal.merkle_root_hash
+        let merkle_root = self
+            .proposal
+            .merkle_root_hash
             .ok_or(GovernanceError::MerkleRootNotSet)?;
         require!(
             consensus_result.ballot.meta_merkle_root == merkle_root,
@@ -127,7 +134,8 @@ impl<'info> SupportProposal<'info> {
         });
 
         let cluster_stake = get_epoch_total_stake();
-        let support_scaled = (self.proposal.cluster_support_lamports as u128) * CLUSTER_SUPPORT_MULTIPLIER;
+        let support_scaled =
+            (self.proposal.cluster_support_lamports as u128) * CLUSTER_SUPPORT_MULTIPLIER;
         let cluster_scaled = (cluster_stake as u128) * CLUSTER_STAKE_MULTIPLIER;
         let voting_activated = if support_scaled >= cluster_scaled {
             // Activate voting if threshold met
