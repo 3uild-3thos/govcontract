@@ -276,6 +276,14 @@ impl<'info> CastVoteOverride<'info> {
                 vote_override_cache.abstain_votes_lamports = vote_override_cache.abstain_votes_lamports.checked_add(abstain_votes_lamports).ok_or(GovernanceError::ArithmeticOverflow)?;
 
                 vote_override_cache.total_stake = vote_override_cache.total_stake.checked_add(delegator_stake).ok_or(GovernanceError::ArithmeticOverflow)?;
+
+                // Serialize the updated cache back to the account data
+                let mut account_data = self.vote_override_cache.data.borrow_mut();
+                let serialized = borsh::to_vec(&vote_override_cache).map_err(|e| {
+                    msg!("Error serializing VoteOverrideCache: {}", e);
+                    GovernanceError::ArithmeticOverflow
+                })?;
+                account_data[0..serialized.len()].copy_from_slice(&serialized);
             }
             else {
                 // Initialize account thourgh CPI to system program
