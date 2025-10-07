@@ -181,7 +181,7 @@ impl<'info> CastVoteOverride<'info> {
         // If account does not exist, call cache_votes_override to store staker's vote in override PDA
 
         if self.validator_vote.data_len() == Vote::INIT_SPACE
-            && self.validator_vote.owner == &vote_program::ID
+            && self.validator_vote.owner == &crate::ID
             && Vote::deserialize(&mut self.validator_vote.data.borrow().as_ref()).is_ok()
         {
             let mut validator_vote = Vote::deserialize(&mut self.validator_vote.data.borrow().as_ref())?;
@@ -254,7 +254,7 @@ impl<'info> CastVoteOverride<'info> {
         else {
             // Store delegator's vote in a the cache PDA
             if self.vote_override_cache.data_len() == VoteOverrideCache::INIT_SPACE
-                && self.vote_override_cache.owner == &vote_program::ID
+                && self.vote_override_cache.owner == &crate::ID
                 && VoteOverrideCache::deserialize(&mut self.vote_override_cache.data.borrow().as_ref()).is_ok() {
 
                 let mut vote_override_cache = VoteOverrideCache::deserialize(&mut self.vote_override_cache.data.borrow().as_ref())?;
@@ -292,7 +292,7 @@ impl<'info> CastVoteOverride<'info> {
                     &self.vote_override_cache.key(),
                     Rent::get()?.minimum_balance(8 + VoteOverrideCache::INIT_SPACE),
                     (8 + VoteOverrideCache::INIT_SPACE) as u64,
-                    &vote_program::ID,
+                    &crate::ID,
                 );
         
                 invoke_signed(
