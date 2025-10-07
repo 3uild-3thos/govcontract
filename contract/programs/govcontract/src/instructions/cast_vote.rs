@@ -100,8 +100,10 @@ impl<'info> CastVote<'info> {
                 GovernanceError::CantDeserializeConsensusResult
             })?;
 
+        let merkle_root = self.proposal.merkle_root_hash
+            .ok_or(GovernanceError::MerkleRootNotSet)?;
         require!(
-            consensus_result.ballot.meta_merkle_root == self.proposal.merkle_root_hash.unwrap(),
+            consensus_result.ballot.meta_merkle_root == merkle_root,
             GovernanceError::InvalidMerkleRoot
         );
 
@@ -159,7 +161,7 @@ impl<'info> CastVote<'info> {
                 && self.vote_override_cache.owner == &vote_program::ID
                 && VoteOverrideCache::deserialize(&mut self.vote_override_cache.data.borrow().as_ref()).is_ok() {
 
-            let mut override_cache = VoteOverrideCache::deserialize(&mut self.vote_override_cache.data.borrow().as_ref())?;
+            let override_cache = VoteOverrideCache::deserialize(&mut self.vote_override_cache.data.borrow().as_ref())?;
 
             // Add cached votes
             self.proposal.add_vote_lamports(

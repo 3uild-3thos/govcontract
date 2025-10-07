@@ -76,4 +76,6 @@ pub enum GovernanceError {
     ArithmeticOverflow,
     #[msg("Snapshot program has been upgraded, update protection triggered")]
     SnapshotProgramUpgraded,
+    #[msg("Merkle root hash has not been set for this proposal")]
+    MerkleRootNotSet,
 }

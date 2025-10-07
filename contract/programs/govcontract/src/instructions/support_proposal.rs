@@ -69,8 +69,10 @@ impl<'info> SupportProposal<'info> {
                 GovernanceError::CantDeserializeConsensusResult
             })?;
 
+        let merkle_root = self.proposal.merkle_root_hash
+            .ok_or(GovernanceError::MerkleRootNotSet)?;
         require!(
-            consensus_result.ballot.meta_merkle_root == self.proposal.merkle_root_hash.unwrap(),
+            consensus_result.ballot.meta_merkle_root == merkle_root,
             GovernanceError::InvalidMerkleRoot
         );
 
