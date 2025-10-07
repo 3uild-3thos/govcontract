@@ -189,10 +189,16 @@ impl<'info> CastVote<'info> {
                 abstain_votes_lamports_new,
             )?;
 
-            // Store new lamports
-            self.vote.for_votes_lamports = for_votes_lamports_new;
-            self.vote.against_votes_lamports = against_votes_lamports_new;
-            self.vote.abstain_votes_lamports = abstain_votes_lamports_new;
+            // Store TOTAL votes (validator reduced + all cached delegator votes)
+            self.vote.for_votes_lamports = for_votes_lamports_new
+                .checked_add(override_cache.for_votes_lamports)
+                .ok_or(GovernanceError::ArithmeticOverflow)?;
+            self.vote.against_votes_lamports = against_votes_lamports_new
+                .checked_add(override_cache.against_votes_lamports)
+                .ok_or(GovernanceError::ArithmeticOverflow)?;
+            self.vote.abstain_votes_lamports = abstain_votes_lamports_new
+                .checked_add(override_cache.abstain_votes_lamports)
+                .ok_or(GovernanceError::ArithmeticOverflow)?;
             self.vote.override_lamports = self.vote
                 .override_lamports
                 .checked_add(override_cache.total_stake)

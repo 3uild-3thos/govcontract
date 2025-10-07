@@ -219,10 +219,16 @@ impl<'info> CastVoteOverride<'info> {
                 abstain_votes_lamports_new,
             )?;
 
-            // Store new lamports
-            validator_vote.for_votes_lamports = for_votes_lamports_new;
-            validator_vote.against_votes_lamports = against_votes_lamports_new;
-            validator_vote.abstain_votes_lamports = abstain_votes_lamports_new;
+            // Store TOTAL votes (validator reduced + delegator override)
+            validator_vote.for_votes_lamports = for_votes_lamports_new
+                .checked_add(for_votes_lamports)
+                .ok_or(GovernanceError::ArithmeticOverflow)?;
+            validator_vote.against_votes_lamports = against_votes_lamports_new
+                .checked_add(against_votes_lamports)
+                .ok_or(GovernanceError::ArithmeticOverflow)?;
+            validator_vote.abstain_votes_lamports = abstain_votes_lamports_new
+                .checked_add(abstain_votes_lamports)
+                .ok_or(GovernanceError::ArithmeticOverflow)?;
             validator_vote.override_lamports = validator_vote
                 .override_lamports
                 .checked_add(delegator_stake)
