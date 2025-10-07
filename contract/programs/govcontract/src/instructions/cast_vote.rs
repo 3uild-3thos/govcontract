@@ -186,34 +186,54 @@ impl<'info> CastVote<'info> {
 
             // Calculate new validator votes for each category based on actual lamports
             let for_votes_lamports_new =
-                calculate_vote_lamports!(new_validator_stake, self.vote.for_votes_bp)?;
+                calculate_vote_lamports!(new_validator_stake, for_votes_bp)?;
             let against_votes_lamports_new =
-                calculate_vote_lamports!(new_validator_stake, self.vote.against_votes_bp)?;
+                calculate_vote_lamports!(new_validator_stake, against_votes_bp)?;
             let abstain_votes_lamports_new =
-                calculate_vote_lamports!(new_validator_stake, self.vote.abstain_votes_bp)?;
+                calculate_vote_lamports!(new_validator_stake, abstain_votes_bp)?;
 
-            // Add validator's new vote
+            // Add validator's reduced votes to proposal
             self.proposal.add_vote_lamports(
                 for_votes_lamports_new,
                 against_votes_lamports_new,
                 abstain_votes_lamports_new,
             )?;
 
-            // Store TOTAL votes (validator reduced + all cached delegator votes)
-            self.vote.for_votes_lamports = for_votes_lamports_new
-                .checked_add(override_cache.for_votes_lamports)
-                .ok_or(GovernanceError::ArithmeticOverflow)?;
-            self.vote.against_votes_lamports = against_votes_lamports_new
-                .checked_add(override_cache.against_votes_lamports)
-                .ok_or(GovernanceError::ArithmeticOverflow)?;
-            self.vote.abstain_votes_lamports = abstain_votes_lamports_new
-                .checked_add(override_cache.abstain_votes_lamports)
-                .ok_or(GovernanceError::ArithmeticOverflow)?;
-            self.vote.override_lamports = self
-                .vote
-                .override_lamports
-                .checked_add(override_cache.total_stake)
-                .ok_or(GovernanceError::ArithmeticOverflow)?;
+            // Initialize the Vote PDA with all required fields
+            self.vote.set_inner(Vote {
+                validator: self.signer.key(),
+                proposal: self.proposal.key(),
+                for_votes_bp,
+                against_votes_bp,
+                abstain_votes_bp,
+                for_votes_lamports: for_votes_lamports_new
+                    .checked_add(override_cache.for_votes_lamports)
+                    .ok_or(GovernanceError::ArithmeticOverflow)?,
+                against_votes_lamports: against_votes_lamports_new
+                    .checked_add(override_cache.against_votes_lamports)
+                    .ok_or(GovernanceError::ArithmeticOverflow)?,
+                abstain_votes_lamports: abstain_votes_lamports_new
+                    .checked_add(override_cache.abstain_votes_lamports)
+                    .ok_or(GovernanceError::ArithmeticOverflow)?,
+                override_lamports: override_cache.total_stake,
+                stake: voter_stake,
+                vote_timestamp: clock.unix_timestamp,
+                bump: bumps.vote,
+            });
+
+            // Emit the missing VoteCast event
+            emit!(VoteCast {
+                proposal_id: self.proposal.key(),
+                voter: self.signer.key(),
+                vote_account: self.spl_vote_account.key(),
+                for_votes_bp,
+                against_votes_bp,
+                abstain_votes_bp,
+                for_votes_lamports: for_votes_lamports_new,
+                against_votes_lamports: against_votes_lamports_new,
+                abstain_votes_lamports: abstain_votes_lamports_new,
+                vote_timestamp: clock.unix_timestamp,
+            });
         } else {
             self.proposal.add_vote_lamports(
                 for_votes_lamports,
