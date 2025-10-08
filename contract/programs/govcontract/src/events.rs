@@ -75,6 +75,25 @@ pub struct MerkleRootAdded {
 }
 
 #[event]
+pub struct VoteOverrideModified {
+    pub proposal_id: Pubkey,
+    pub delegator: Pubkey,
+    pub stake_account: Pubkey,
+    pub validator: Pubkey,
+    pub old_for_votes_bp: u64,
+    pub old_against_votes_bp: u64,
+    pub old_abstain_votes_bp: u64,
+    pub new_for_votes_bp: u64,
+    pub new_against_votes_bp: u64,
+    pub new_abstain_votes_bp: u64,
+    pub for_votes_lamports: u64,
+    pub against_votes_lamports: u64,
+    pub abstain_votes_lamports: u64,
+    pub stake_amount: u64,
+    pub modification_timestamp: i64,
+}
+
+#[event]
 pub struct ProposalFinalized {
     pub proposal_id: Pubkey,
     pub finalizer: Pubkey,

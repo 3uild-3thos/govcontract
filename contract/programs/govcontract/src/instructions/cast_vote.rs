@@ -166,11 +166,11 @@ impl<'info> CastVote<'info> {
         // If it does, update lamports with the override amount
         if self.vote_override_cache.data_len() == (8 + VoteOverrideCache::INIT_SPACE)
             && self.vote_override_cache.owner == &crate::ID
-            && VoteOverrideCache::deserialize(&mut self.vote_override_cache.data.borrow().as_ref())
+            && VoteOverrideCache::deserialize(&mut &self.vote_override_cache.data.borrow()[8..])
                 .is_ok()
         {
             let override_cache = VoteOverrideCache::deserialize(
-                &mut self.vote_override_cache.data.borrow().as_ref(),
+                &mut &self.vote_override_cache.data.borrow()[8..],
             )?;
 
             // Add cached votes
@@ -206,15 +206,9 @@ impl<'info> CastVote<'info> {
                 for_votes_bp,
                 against_votes_bp,
                 abstain_votes_bp,
-                for_votes_lamports: for_votes_lamports_new
-                    .checked_add(override_cache.for_votes_lamports)
-                    .ok_or(GovernanceError::ArithmeticOverflow)?,
-                against_votes_lamports: against_votes_lamports_new
-                    .checked_add(override_cache.against_votes_lamports)
-                    .ok_or(GovernanceError::ArithmeticOverflow)?,
-                abstain_votes_lamports: abstain_votes_lamports_new
-                    .checked_add(override_cache.abstain_votes_lamports)
-                    .ok_or(GovernanceError::ArithmeticOverflow)?,
+                for_votes_lamports: for_votes_lamports_new,
+                against_votes_lamports: against_votes_lamports_new,
+                abstain_votes_lamports: abstain_votes_lamports_new,
                 override_lamports: override_cache.total_stake,
                 stake: voter_stake,
                 vote_timestamp: clock.unix_timestamp,

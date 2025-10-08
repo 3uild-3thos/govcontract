@@ -87,6 +87,25 @@ pub mod govcontract {
         Ok(())
     }
 
+    pub fn modify_vote_override(
+        ctx: Context<ModifyVoteOverride>,
+        for_votes_bp: u64,
+        against_votes_bp: u64,
+        abstain_votes_bp: u64,
+        stake_merkle_proof: Vec<[u8; 32]>,
+        stake_merkle_leaf: StakeMerkleLeaf,
+    ) -> Result<()> {
+        ctx.accounts.modify_vote_override(
+            for_votes_bp,
+            against_votes_bp,
+            abstain_votes_bp,
+            stake_merkle_proof,
+            stake_merkle_leaf,
+            &ctx.bumps,
+        )?;
+        Ok(())
+    }
+
     pub fn add_merkle_root(ctx: Context<AddMerkleRoot>, merkle_root_hash: [u8; 32]) -> Result<()> {
         ctx.accounts.add_merkle_root(merkle_root_hash)?;
         Ok(())

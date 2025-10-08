@@ -585,6 +585,185 @@
       ]
     },
     {
+      "name": "modify_vote_override",
+      "discriminator": [
+        42,
+        54,
+        123,
+        87,
+        239,
+        152,
+        22,
+        186
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "proposal",
+          "writable": true
+        },
+        {
+          "name": "validator_vote",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  111,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "proposal"
+              },
+              {
+                "kind": "account",
+                "path": "spl_vote_account"
+              }
+            ]
+          }
+        },
+        {
+          "name": "spl_vote_account"
+        },
+        {
+          "name": "vote_override",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  111,
+                  116,
+                  101,
+                  95,
+                  111,
+                  118,
+                  101,
+                  114,
+                  114,
+                  105,
+                  100,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "proposal"
+              },
+              {
+                "kind": "account",
+                "path": "spl_stake_account"
+              },
+              {
+                "kind": "account",
+                "path": "validator_vote"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vote_override_cache",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  111,
+                  116,
+                  101,
+                  95,
+                  111,
+                  118,
+                  101,
+                  114,
+                  114,
+                  105,
+                  100,
+                  101,
+                  95,
+                  99,
+                  97,
+                  99,
+                  104,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "proposal"
+              },
+              {
+                "kind": "account",
+                "path": "validator_vote"
+              }
+            ]
+          }
+        },
+        {
+          "name": "spl_stake_account"
+        },
+        {
+          "name": "snapshot_program"
+        },
+        {
+          "name": "consensus_result"
+        },
+        {
+          "name": "meta_merkle_proof"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "for_votes_bp",
+          "type": "u64"
+        },
+        {
+          "name": "against_votes_bp",
+          "type": "u64"
+        },
+        {
+          "name": "abstain_votes_bp",
+          "type": "u64"
+        },
+        {
+          "name": "stake_merkle_proof",
+          "type": {
+            "vec": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        },
+        {
+          "name": "stake_merkle_leaf",
+          "type": {
+            "defined": {
+              "name": "StakeMerkleLeaf"
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "support_proposal",
       "discriminator": [
         95,
@@ -812,6 +991,19 @@
         120,
         236
       ]
+    },
+    {
+      "name": "VoteOverrideModified",
+      "discriminator": [
+        235,
+        74,
+        153,
+        225,
+        242,
+        72,
+        228,
+        9
+      ]
     }
   ],
   "errors": [
@@ -999,6 +1191,16 @@
       "code": 6036,
       "name": "SnapshotProgramUpgraded",
       "msg": "Snapshot program has been upgraded, update protection triggered"
+    },
+    {
+      "code": 6037,
+      "name": "MerkleRootNotSet",
+      "msg": "Merkle root hash has not been set for this proposal"
+    },
+    {
+      "code": 6038,
+      "name": "SupportPeriodExpired",
+      "msg": "Support period has expired for this proposal"
     }
   ],
   "types": [
@@ -1576,6 +1778,74 @@
           },
           {
             "name": "vote_timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "VoteOverrideModified",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "proposal_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "delegator",
+            "type": "pubkey"
+          },
+          {
+            "name": "stake_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "validator",
+            "type": "pubkey"
+          },
+          {
+            "name": "old_for_votes_bp",
+            "type": "u64"
+          },
+          {
+            "name": "old_against_votes_bp",
+            "type": "u64"
+          },
+          {
+            "name": "old_abstain_votes_bp",
+            "type": "u64"
+          },
+          {
+            "name": "new_for_votes_bp",
+            "type": "u64"
+          },
+          {
+            "name": "new_against_votes_bp",
+            "type": "u64"
+          },
+          {
+            "name": "new_abstain_votes_bp",
+            "type": "u64"
+          },
+          {
+            "name": "for_votes_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "against_votes_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "abstain_votes_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "stake_amount",
+            "type": "u64"
+          },
+          {
+            "name": "modification_timestamp",
             "type": "i64"
           }
         ]

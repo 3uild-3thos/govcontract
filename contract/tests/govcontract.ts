@@ -10,6 +10,7 @@ import {
   TEST_VOTE_PARAMS,
   TEST_VOTE_MODIFY_PARAMS,
   TEST_VOTE_OVERRIDE_PARAMS,
+  TEST_VOTE_OVERRIDE_MODIFY_PARAMS,
   BALLOT_ID,
   MERKLE_ROOT_HASH,
   ERROR_TEST_PARAMS,
@@ -434,6 +435,203 @@ describe("govcontract", () => {
 
       const finalProposal = await program.account.proposal.fetch(testAccounts.proposalAccount);
       logProposalState(finalProposal, "Final After Vote Override");
+
+      removeEventListener(program, eventListener);
+    } catch (error: any) {
+      removeEventListener(program, eventListener);
+      throw error;
+    }
+  });
+
+  it("Modify Vote Override!", async () => {
+    // Use the same delegator and stake account from the previous test
+    const delegator = anchor.web3.Keypair.generate();
+    await provider.connection.confirmTransaction(
+      await provider.connection.requestAirdrop(delegator.publicKey, 2 * LAMPORTS_PER_SOL)
+    );
+
+    const delegatorStakeAccount = anchor.web3.Keypair.generate();
+    const stakeAccountSize = 200;
+    const rentExempt = await provider.connection.getMinimumBalanceForRentExemption(stakeAccountSize);
+
+    const createStakeAccountIx = SystemProgram.createAccount({
+      fromPubkey: delegator.publicKey,
+      newAccountPubkey: delegatorStakeAccount.publicKey,
+      lamports: rentExempt + LAMPORTS_PER_SOL,
+      space: stakeAccountSize,
+      programId: StakeProgram.programId,
+    });
+
+    const initializeStakeIx = StakeProgram.initialize({
+      stakePubkey: delegatorStakeAccount.publicKey,
+      authorized: {
+        staker: delegator.publicKey,
+        withdrawer: delegator.publicKey,
+      },
+    });
+
+    const stakeTx = new anchor.web3.Transaction().add(createStakeAccountIx, initializeStakeIx);
+    await provider.sendAndConfirm(stakeTx, [delegator, delegatorStakeAccount]);
+
+    // Delegate stake to validator 3
+    const delegateStakeIx = StakeProgram.delegate({
+      stakePubkey: delegatorStakeAccount.publicKey,
+      authorizedPubkey: delegator.publicKey,
+      votePubkey: testAccounts.splVoteAccounts[4].publicKey,
+    });
+
+    const delegateTx = new anchor.web3.Transaction().add(delegateStakeIx as any);
+    await provider.sendAndConfirm(delegateTx, [delegator]);
+
+    // First, cast a vote override to have something to modify
+    const stakeMerkleLeaf = {
+      votingWallet: delegator.publicKey,
+      stakeAccount: delegatorStakeAccount.publicKey,
+      activeStake: new anchor.BN(500000000), // 0.5 SOL stake
+    };
+
+    const voteOverrideAccount = deriveVoteOverrideAccount(
+      program,
+      testAccounts.proposalAccount,
+      delegatorStakeAccount.publicKey,
+      testAccounts.voteAccounts[2]
+    );
+
+    const voteOverrideCacheAccount = deriveVoteOverrideCacheAccount(
+      program,
+      testAccounts.proposalAccount,
+      testAccounts.voteAccounts[2]
+    );
+
+    // Cast initial vote override
+    await program.methods
+      .castVoteOverride(TEST_VOTE_OVERRIDE_PARAMS.for, TEST_VOTE_OVERRIDE_PARAMS.against, TEST_VOTE_OVERRIDE_PARAMS.abstain, [], stakeMerkleLeaf)
+      .accountsPartial({
+        signer: delegator.publicKey,
+        proposal: testAccounts.proposalAccount,
+        validatorVote: testAccounts.voteAccounts[2],
+        voteOverrideCache: voteOverrideCacheAccount,
+        splVoteAccount: testAccounts.splVoteAccounts[4].publicKey,
+        voteOverride: voteOverrideAccount,
+        splStakeAccount: delegatorStakeAccount.publicKey,
+        snapshotProgram: mockProgram.programId,
+        consensusResult: testAccounts.consensusResult,
+        metaMerkleProof: testAccounts.metaMerkleProofs[4],
+        systemProgram: anchor.web3.SystemProgram.programId,
+      })
+      .signers([delegator])
+      .rpc();
+
+    console.log("Initial vote override cast successfully");
+
+    // Fetch states before modification
+    const voteBefore = await program.account.vote.fetch(testAccounts.voteAccounts[2]);
+    const overrideBefore = await program.account.voteOverride.fetch(voteOverrideAccount);
+    const proposalBefore = await program.account.proposal.fetch(testAccounts.proposalAccount);
+
+    logVoteState(voteBefore, "Before Override Modification");
+    console.log("Override Before - For BP:", overrideBefore.forVotesBp.toString());
+    console.log("Override Before - Against BP:", overrideBefore.againstVotesBp.toString());
+    console.log("Override Before - Abstain BP:", overrideBefore.abstainVotesBp.toString());
+
+    let eventReceived = false;
+    let eventData: any = null;
+
+    const eventListener = createEventListener(program, 'voteOverrideModified', (event: any, slot: number) => {
+      console.log("VoteOverrideModified event received");
+      eventReceived = true;
+      eventData = event;
+    });
+
+    try {
+      // Now modify the vote override
+      const tx = await program.methods
+        .modifyVoteOverride(
+          TEST_VOTE_OVERRIDE_MODIFY_PARAMS.for,
+          TEST_VOTE_OVERRIDE_MODIFY_PARAMS.against,
+          TEST_VOTE_OVERRIDE_MODIFY_PARAMS.abstain,
+          [],
+          stakeMerkleLeaf
+        )
+        .accountsPartial({
+          signer: delegator.publicKey,
+          proposal: testAccounts.proposalAccount,
+          validatorVote: testAccounts.voteAccounts[2],
+          voteOverrideCache: voteOverrideCacheAccount,
+          splVoteAccount: testAccounts.splVoteAccounts[4].publicKey,
+          voteOverride: voteOverrideAccount,
+          splStakeAccount: delegatorStakeAccount.publicKey,
+          snapshotProgram: mockProgram.programId,
+          consensusResult: testAccounts.consensusResult,
+          metaMerkleProof: testAccounts.metaMerkleProofs[4],
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .signers([delegator])
+        .rpc();
+
+      console.log("Vote override modified successfully, signature:", tx);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Fetch states after modification
+      const voteAfter = await program.account.vote.fetch(testAccounts.voteAccounts[2]);
+      const overrideAfter = await program.account.voteOverride.fetch(voteOverrideAccount);
+      const proposalAfter = await program.account.proposal.fetch(testAccounts.proposalAccount);
+
+      logVoteState(voteAfter, "After Override Modification");
+      console.log("Override After - For BP:", overrideAfter.forVotesBp.toString());
+      console.log("Override After - Against BP:", overrideAfter.againstVotesBp.toString());
+      console.log("Override After - Abstain BP:", overrideAfter.abstainVotesBp.toString());
+
+      // Verify the changes
+      console.log("\n=== Vote Override Modification Verification ===");
+      console.log("Old For BP:", overrideBefore.forVotesBp.toString(), "-> New For BP:", overrideAfter.forVotesBp.toString());
+      console.log("Old Against BP:", overrideBefore.againstVotesBp.toString(), "-> New Against BP:", overrideAfter.againstVotesBp.toString());
+      console.log("Old Abstain BP:", overrideBefore.abstainVotesBp.toString(), "-> New Abstain BP:", overrideAfter.abstainVotesBp.toString());
+
+      // Verify proposal vote totals changed correctly
+      const forVotesChange = Number(proposalAfter.forVotesLamports) - Number(proposalBefore.forVotesLamports);
+      const againstVotesChange = Number(proposalAfter.againstVotesLamports) - Number(proposalBefore.againstVotesLamports);
+      const abstainVotesChange = Number(proposalAfter.abstainVotesLamports) - Number(proposalBefore.abstainVotesLamports);
+
+      console.log("Proposal For Votes Change:", forVotesChange / LAMPORTS_PER_SOL, "SOL");
+      console.log("Proposal Against Votes Change:", againstVotesChange / LAMPORTS_PER_SOL, "SOL");
+      console.log("Proposal Abstain Votes Change:", abstainVotesChange / LAMPORTS_PER_SOL, "SOL");
+
+      // Validate event data
+      if (eventReceived && eventData) {
+        const checks = [
+          [eventData.proposalId?.equals(testAccounts.proposalAccount), "Proposal ID"],
+          [eventData.delegator?.equals(delegator.publicKey), "Delegator"],
+          [eventData.validator?.equals(testAccounts.splVoteAccounts[4].publicKey), "Validator"],
+          [eventData.oldForVotesBp?.eq(TEST_VOTE_OVERRIDE_PARAMS.for), "Old For votes BP"],
+          [eventData.oldAgainstVotesBp?.eq(TEST_VOTE_OVERRIDE_PARAMS.against), "Old Against votes BP"],
+          [eventData.oldAbstainVotesBp?.eq(TEST_VOTE_OVERRIDE_PARAMS.abstain), "Old Abstain votes BP"],
+          [eventData.newForVotesBp?.eq(TEST_VOTE_OVERRIDE_MODIFY_PARAMS.for), "New For votes BP"],
+          [eventData.newAgainstVotesBp?.eq(TEST_VOTE_OVERRIDE_MODIFY_PARAMS.against), "New Against votes BP"],
+          [eventData.newAbstainVotesBp?.eq(TEST_VOTE_OVERRIDE_MODIFY_PARAMS.abstain), "New Abstain votes BP"]
+        ];
+        const failed = checks.filter(([passed]) => !passed).map(([, field]) => field);
+        console.log(failed.length === 0 ? "All event validations passed" :
+          `Warning: Validation failed for ${failed.join(", ")}`);
+      } else {
+        console.log("Warning: VoteOverrideModified event was not received");
+      }
+
+      // Verify the override account was updated correctly
+      const expectedForBp = TEST_VOTE_OVERRIDE_MODIFY_PARAMS.for;
+      const expectedAgainstBp = TEST_VOTE_OVERRIDE_MODIFY_PARAMS.against;
+      const expectedAbstainBp = TEST_VOTE_OVERRIDE_MODIFY_PARAMS.abstain;
+
+      if (overrideAfter.forVotesBp.eq(expectedForBp) &&
+          overrideAfter.againstVotesBp.eq(expectedAgainstBp) &&
+          overrideAfter.abstainVotesBp.eq(expectedAbstainBp)) {
+        console.log("✅ Vote override account updated correctly");
+      } else {
+        console.log("❌ Vote override account not updated correctly");
+      }
+
+      const finalProposal = await program.account.proposal.fetch(testAccounts.proposalAccount);
+      logProposalState(finalProposal, "Final After Vote Override Modification");
 
       removeEventListener(program, eventListener);
     } catch (error: any) {

@@ -292,6 +292,54 @@ enum Commands {
     },
 
     #[command(
+        about = "Modify an existing vote override on a proposal",
+        long_about = "This command allows a delegator to modify their existing vote override on a proposal. \
+                      The CLI fetches snapshot data from the operator API and submits the modification. \
+                      Requires the proposal ID and a stake account delegated by the signer. You may explicitly pass a stake \
+                      account using --stake-account <PUBKEY> (base58). If omitted, the CLI selects the first stake account \
+                      from the voter summary.\n\n\
+                      Examples:\n\
+                      # Auto-select first stake account from summary\n\
+                      $ svmgov --identity-keypair /path/to/key.json modify-vote-override --proposal-id \"123\" --for-votes 5000 --against-votes 3000 --abstain-votes 2000\n\
+                      # Use an explicit stake account\n\
+                      $ svmgov --identity-keypair /path/to/key.json modify-vote-override --proposal-id \"123\" --for-votes 5000 --against-votes 3000 --abstain-votes 2000 --stake-account <STAKE_PUBKEY>"
+    )]
+    ModifyVoteOverride {
+        /// Proposal ID for which to modify the vote override
+        #[arg(long, help = "Proposal ID")]
+        proposal_id: String,
+
+        /// Basis points for 'For' vote
+        #[arg(
+            long,
+            help = "Basis points for 'For' (must sum to 10,000 with other votes)"
+        )]
+        for_votes: u64,
+
+        /// Basis points for 'Against' vote
+        #[arg(
+            long,
+            help = "Basis points for 'Against' (must sum to 10,000 with other votes)"
+        )]
+        against_votes: u64,
+
+        /// Basis points for 'Abstain' vote
+        #[arg(
+            long,
+            help = "Basis points for 'Abstain' (must sum to 10,000 with other votes)"
+        )]
+        abstain_votes: u64,
+
+        /// Operator API endpoint (optional, uses env var by default)
+        #[arg(long, help = "Operator API endpoint for snapshot data")]
+        operator_api: Option<String>,
+
+        /// Optional specific stake account to use for override modification
+        #[arg(long, help = "Stake account to use for override modification (base58 pubkey). If omitted, the first stake account from the voter summary will be used.")]
+        stake_account: Option<String>,
+    },
+
+    #[command(
         about = "Add merkle root hash to a proposal for verification",
         long_about = "This command adds a merkle root hash to a proposal for stake verification. \
                       It requires the proposal ID and the merkle root hash as a hex string. \
@@ -419,6 +467,26 @@ async fn handle_command(cli: Cli) -> Result<()> {
             stake_account,
         } => {
             instructions::cast_vote_override(
+                proposal_id.to_string(),
+                *for_votes,
+                *against_votes,
+                *abstain_votes,
+                cli.identity_keypair,
+                cli.rpc_url,
+                operator_api.clone(),
+                stake_account.clone(),
+            )
+            .await?;
+        }
+        Commands::ModifyVoteOverride {
+            proposal_id,
+            for_votes,
+            against_votes,
+            abstain_votes,
+            operator_api,
+            stake_account,
+        } => {
+            instructions::modify_vote_override(
                 proposal_id.to_string(),
                 *for_votes,
                 *against_votes,
