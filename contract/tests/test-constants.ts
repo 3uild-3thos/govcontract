@@ -41,6 +41,12 @@ export const TEST_VOTE_OVERRIDE_PARAMS = {
   abstain: new BN(0),
 };
 
+export const TEST_VOTE_OVERRIDE_MODIFY_PARAMS = {
+  for: new BN(5_000),
+  against: new BN(2_000),
+  abstain: new BN(3_000),
+};
+
 // Proposal creation parameters
 export const TEST_PROPOSAL_PARAMS = {
   title: "Proposal1",

@@ -65,14 +65,14 @@ Here's a common sequence to get started:
 1. **Initialize index** (one-time): `svmgov init-index -i /path/to/identity_key.json`
 2. **List proposals** to find IDs: `svmgov list-proposals -r https://api.mainnet-beta.solana.com`
 3. **View proposal details**: `svmgov get-proposal --proposal-id <ID> -r https://api.mainnet-beta.solana.com`
-4. **Create a proposal** (validators): `svmgov create-proposal --title "Proposal Title" --description "https://github.com/repo/issue" --start-epoch 820 --length 20 -i /path/to/identity_key.json`
+4. **Create a proposal** (validators): `svmgov create-proposal --title "Proposal Title" --description "https://github.com/repo/issue" -i /path/to/identity_key.json`
 5. **Support a proposal** (validators): `svmgov support-proposal --proposal-id <ID> -i /path/to/identity_key.json`
 6. **Cast validator vote**: `svmgov cast-vote --proposal-id <ID> --for-votes 7000 --against-votes 2000 --abstain-votes 1000 -i /path/to/identity_key.json`
 7. **Cast vote override** (delegators): `svmgov cast-vote-override --proposal-id <ID> --for-votes 7000 --against-votes 2000 --abstain-votes 1000 -i /path/to/identity_key.json`
 8. **Modify vote** (if needed): `svmgov modify-vote --proposal-id <ID> --for-votes 8000 --against-votes 1000 --abstain-votes 1000 -i /path/to/identity_key.json`
 9. **Add merkle root** (proposal author): `svmgov add-merkle-root --proposal-id <ID> --merkle-root <HASH> -i /path/to/identity_key.json`
 10. **Finalize proposal** after voting ends: `svmgov finalize-proposal --proposal-id <ID> -i /path/to/identity_key.json`
-11. **List votes** for verification: `svmgov list-votes --proposal-id <ID> --verbose true -r https://api.mainnet-beta.solana.com`
+11. **List votes** for verification: `svmgov list-votes --proposal-id <ID> --verbose -r https://api.mainnet-beta.solana.com`
 ---
 
 ## Governance Mechanics
@@ -83,7 +83,7 @@ The Solana Validator Governance program enforces the following rules, which impa
 - **Cluster Support Threshold**: A proposal requires **500 basis points (5%) of total cluster support** to activate voting. Validators contribute to this using the `support-proposal` command. The smart contract calculates and enforces this threshold.
 - **Merkle Proof Verification**: All stake-related operations use merkle proof verification to ensure stake ownership and prevent double-voting. The CLI integrates with external APIs to fetch and verify proofs.
 - **Vote Override**: Delegators can override their validator's vote using stake account verification. This allows for more democratic participation in governance.
-- **Proposal Lifecycle**: Proposals follow a strict lifecycle: Creation → Support Phase → Voting Phase → Finalization, with appropriate validation at each step.
+- **Proposal Lifecycle**: Proposals follow a lifecycle: Creation → Support Phase → Voting Phase → Finalization. Currently, proposals are created without specific epoch-based scheduling and become available for voting once they reach the cluster support threshold.
 
 The CLI does not perform local validation of these conditions; the smart contract handles enforcement through merkle proof verification, and the CLI relays any resulting errors.
 
@@ -133,8 +133,6 @@ Create a new governance proposal with merkle proof verification.
 - `--seed <SEED>`: Optional unique seed for the proposal (used to derive the PDA).
 - `--title <TITLE>`: Proposal title (required; max 50 characters).
 - `--description <DESCRIPTION>`: Proposal description (required; must start with `https://github.com`; max 250 characters).
-- `--start-epoch <EPOCH>`: Epoch when the proposal should become active (required).
-- `--length <EPOCHS>`: Number of epochs the proposal should be open for voting (required).
 
 **Requirements**:
 - The validator's identity keypair must have at least **100,000 SOL** staked.
@@ -142,7 +140,7 @@ Create a new governance proposal with merkle proof verification.
 
 **Example**:
 ```sh
-svmgov create-proposal --title "Update Fee Structure" --description "https://github.com/repo/test-proposal" --start-epoch 820 --length 20 --identity-keypair /path/to/key.json
+svmgov create-proposal --title "Update Fee Structure" --description "https://github.com/repo/test-proposal" --identity-keypair /path/to/key.json
 ```
 
 ### `support-proposal`
