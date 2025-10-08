@@ -166,11 +166,11 @@ impl<'info> CastVote<'info> {
         // If it does, update lamports with the override amount
         if self.vote_override_cache.data_len() == (8 + VoteOverrideCache::INIT_SPACE)
             && self.vote_override_cache.owner == &crate::ID
-            && VoteOverrideCache::deserialize(&mut &self.vote_override_cache.data.borrow()[8..])
+            && VoteOverrideCache::deserialize(&mut self.vote_override_cache.data.borrow().as_ref())
                 .is_ok()
         {
             let override_cache = VoteOverrideCache::deserialize(
-                &mut &self.vote_override_cache.data.borrow()[8..],
+                &mut self.vote_override_cache.data.borrow().as_ref(),
             )?;
 
             // Add cached votes

@@ -193,7 +193,7 @@ impl<'info> CastVoteOverride<'info> {
 
         if self.validator_vote.data_len() == (8 + Vote::INIT_SPACE)
             && self.validator_vote.owner == &crate::ID
-            && Vote::deserialize(&mut &self.validator_vote.data.borrow()[8..]).is_ok()
+            && Vote::deserialize(&mut self.validator_vote.data.borrow().as_ref()).is_ok()
         {
             let mut validator_vote =
                 Vote::deserialize(&mut &self.validator_vote.data.borrow()[8..])?;
@@ -267,12 +267,12 @@ impl<'info> CastVoteOverride<'info> {
             if self.vote_override_cache.data_len() == (8 + VoteOverrideCache::INIT_SPACE)
                 && self.vote_override_cache.owner == &crate::ID
                 && VoteOverrideCache::deserialize(
-                    &mut &self.vote_override_cache.data.borrow()[8..],
+                    &mut self.vote_override_cache.data.borrow().as_ref(),
                 )
                 .is_ok()
             {
                 let mut vote_override_cache = VoteOverrideCache::deserialize(
-                    &mut &self.vote_override_cache.data.borrow()[8..],
+                    &mut self.vote_override_cache.data.borrow().as_ref(),
                 )?;
 
                 // Check if cache is for the same validator and proposal
