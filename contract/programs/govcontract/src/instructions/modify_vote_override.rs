@@ -13,7 +13,7 @@ use crate::{
     error::GovernanceError,
     events::VoteOverrideModified,
     merkle_helpers::verify_merkle_proof_cpi,
-    state::{Proposal, Vote, VoteOverride, VoteOverrideCache},
+    state::{Proposal, VoteOverride, VoteOverrideCache},
 };
 use gov_v1::{ConsensusResult, MetaMerkleProof, StakeMerkleLeaf};
 
@@ -199,15 +199,6 @@ impl<'info> ModifyVoteOverride<'info> {
         let against_votes_lamports = calculate_vote_lamports!(delegator_stake, against_votes_bp)?;
         let abstain_votes_lamports = calculate_vote_lamports!(delegator_stake, abstain_votes_bp)?;
 
-        // Validator vote must exist for modification
-        require!(
-            self.validator_vote.data_len() == (8 + Vote::INIT_SPACE)
-                && self.validator_vote.owner == &crate::ID,
-            GovernanceError::InvalidVoteAccount
-        );
-
-        let mut validator_vote =
-            Vote::deserialize(&mut &self.validator_vote.data.borrow()[8..])?;
 
         // Subtract old delegator's vote from proposal totals
         self.proposal.sub_vote_lamports(
@@ -223,32 +214,6 @@ impl<'info> ModifyVoteOverride<'info> {
             abstain_votes_lamports,
         )?;
 
-        // Update validator's total vote lamports (subtract old, add new)
-        validator_vote.for_votes_lamports = validator_vote
-            .for_votes_lamports
-            .checked_sub(old_for_votes_lamports)
-            .and_then(|val| val.checked_add(for_votes_lamports))
-            .ok_or(GovernanceError::ArithmeticOverflow)?;
-
-        validator_vote.against_votes_lamports = validator_vote
-            .against_votes_lamports
-            .checked_sub(old_against_votes_lamports)
-            .and_then(|val| val.checked_add(against_votes_lamports))
-            .ok_or(GovernanceError::ArithmeticOverflow)?;
-
-        validator_vote.abstain_votes_lamports = validator_vote
-            .abstain_votes_lamports
-            .checked_sub(old_abstain_votes_lamports)
-            .and_then(|val| val.checked_add(abstain_votes_lamports))
-            .ok_or(GovernanceError::ArithmeticOverflow)?;
-
-        // Serialize the updated validator vote back to the account
-        let mut validator_vote_data = self.validator_vote.data.borrow_mut();
-        let serialized = borsh::to_vec(&validator_vote).map_err(|e| {
-            msg!("Error serializing Vote: {}", e);
-            GovernanceError::ArithmeticOverflow
-        })?;
-        validator_vote_data[8..8 + serialized.len()].copy_from_slice(&serialized);
 
         // Update the override account with new values
         self.vote_override.for_votes_bp = for_votes_bp;
