@@ -1,6 +1,13 @@
 use anchor_lang::prelude::*;
 
+#[cfg(feature = "production")]
 use gov_v1::{
+    cpi::{accounts::VerifyMerkleProof, verify_merkle_proof},
+    StakeMerkleLeaf,
+};
+
+#[cfg(feature = "testing")]
+use mock_gov_v1::{
     cpi::{accounts::VerifyMerkleProof, verify_merkle_proof},
     StakeMerkleLeaf,
 };

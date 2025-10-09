@@ -9,7 +9,10 @@ use anchor_lang::{
     },
 };
 
+#[cfg(feature = "production")]
 use gov_v1::MetaMerkleProof;
+#[cfg(feature = "testing")]
+use mock_gov_v1::MetaMerkleProof;
 
 use crate::{
     constants::*,

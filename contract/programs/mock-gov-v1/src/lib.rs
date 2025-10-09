@@ -5,7 +5,8 @@ mod instructions;
 mod state;
 
 use instructions::*;
-use state::*;
+
+pub use state::{StakeMerkleLeaf, MetaMerkleLeaf, ConsensusResult, MetaMerkleProof};
 
 declare_id!("65smeZTDVuVRQZ1zdUF8wXRMDXhAMVTxRbV3n3MyXLPJ");
 

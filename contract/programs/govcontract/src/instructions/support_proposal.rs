@@ -7,7 +7,10 @@ use anchor_lang::{
     },
 };
 
+#[cfg(feature = "production")]
 use gov_v1::{ConsensusResult, MetaMerkleProof};
+#[cfg(feature = "testing")]
+use mock_gov_v1::{ConsensusResult, MetaMerkleProof};
 
 use crate::{
     constants::*,
