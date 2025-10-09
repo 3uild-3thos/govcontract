@@ -246,6 +246,16 @@ impl<'info> CastVoteOverride<'info> {
                 .checked_add(delegator_stake)
                 .ok_or(GovernanceError::ArithmeticOverflow)?;
 
+            // Serialize the updated validator vote back to the account
+            let mut validator_vote_data = self.validator_vote.data.borrow_mut();
+            let mut vote_bytes = &mut validator_vote_data[8..]; // Skip discriminator
+            validator_vote
+                .serialize(&mut vote_bytes)
+                .map_err(|e| {
+                    msg!("Error serializing Vote: {}", e);
+                    GovernanceError::ArithmeticOverflow
+                })?;
+
             // Store override
             self.vote_override.set_inner(VoteOverride {
                 stake_account: stake_merkle_leaf.stake_account,
