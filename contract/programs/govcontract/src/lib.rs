@@ -1,11 +1,11 @@
 #![allow(unexpected_cfgs, unused_variables, clippy::too_many_arguments)]
+mod constants;
 mod error;
 mod events;
 mod instructions;
 mod merkle_helpers;
 mod state;
 mod utils;
-mod constants;
 use anchor_lang::prelude::*;
 use instructions::*;
 
@@ -28,11 +28,8 @@ pub mod govcontract {
         title: String,
         description: String,
     ) -> Result<()> {
-        ctx.accounts.create_proposal(
-            title,
-            description,
-            &ctx.bumps,
-        )?;
+        ctx.accounts
+            .create_proposal(title, description, &ctx.bumps)?;
         Ok(())
     }
 
@@ -41,19 +38,14 @@ pub mod govcontract {
         Ok(())
     }
 
-
     pub fn cast_vote(
         ctx: Context<CastVote>,
         for_votes_bp: u64,
         against_votes_bp: u64,
         abstain_votes_bp: u64,
     ) -> Result<()> {
-        ctx.accounts.cast_vote(
-            for_votes_bp,
-            against_votes_bp,
-            abstain_votes_bp,
-            &ctx.bumps,
-        )?;
+        ctx.accounts
+            .cast_vote(for_votes_bp, against_votes_bp, abstain_votes_bp, &ctx.bumps)?;
         Ok(())
     }
 

@@ -199,7 +199,6 @@ impl<'info> ModifyVoteOverride<'info> {
         let against_votes_lamports = calculate_vote_lamports!(delegator_stake, against_votes_bp)?;
         let abstain_votes_lamports = calculate_vote_lamports!(delegator_stake, abstain_votes_bp)?;
 
-
         // Subtract old delegator's vote from proposal totals
         self.proposal.sub_vote_lamports(
             old_for_votes_lamports,
@@ -214,7 +213,6 @@ impl<'info> ModifyVoteOverride<'info> {
             abstain_votes_lamports,
         )?;
 
-
         // Update the override account with new values
         self.vote_override.for_votes_bp = for_votes_bp;
         self.vote_override.against_votes_bp = against_votes_bp;
@@ -227,14 +225,11 @@ impl<'info> ModifyVoteOverride<'info> {
         // Update vote override cache if it exists
         if self.vote_override_cache.data_len() == (8 + VoteOverrideCache::INIT_SPACE)
             && self.vote_override_cache.owner == &crate::ID
-            && VoteOverrideCache::deserialize(
-                &mut &self.vote_override_cache.data.borrow()[8..],
-            )
-            .is_ok()
+            && VoteOverrideCache::deserialize(&mut &self.vote_override_cache.data.borrow()[8..])
+                .is_ok()
         {
-            let mut vote_override_cache = VoteOverrideCache::deserialize(
-                &mut &self.vote_override_cache.data.borrow()[8..],
-            )?;
+            let mut vote_override_cache =
+                VoteOverrideCache::deserialize(&mut &self.vote_override_cache.data.borrow()[8..])?;
 
             // Update cache by subtracting old values and adding new ones
             vote_override_cache.for_votes_lamports = vote_override_cache

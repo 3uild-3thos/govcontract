@@ -249,12 +249,10 @@ impl<'info> CastVoteOverride<'info> {
             // Serialize the updated validator vote back to the account
             let mut validator_vote_data = self.validator_vote.data.borrow_mut();
             let mut vote_bytes = &mut validator_vote_data[8..]; // Skip discriminator
-            validator_vote
-                .serialize(&mut vote_bytes)
-                .map_err(|e| {
-                    msg!("Error serializing Vote: {}", e);
-                    GovernanceError::ArithmeticOverflow
-                })?;
+            validator_vote.serialize(&mut vote_bytes).map_err(|e| {
+                msg!("Error serializing Vote: {}", e);
+                GovernanceError::ArithmeticOverflow
+            })?;
 
             // Store override
             self.vote_override.set_inner(VoteOverride {
