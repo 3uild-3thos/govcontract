@@ -3,9 +3,9 @@ use std::str::FromStr;
 use anchor_client::solana_sdk::{pubkey::Pubkey, signer::Signer};
 use anchor_lang::system_program;
 use anyhow::Result;
-use gov_v1::ID as SNAPSHOT_PROGRAM_ID;
 
 use crate::{
+    constants::MOCK_SNAPSHOT_PROGRAM_ID,
     govcontract::client::{accounts, args},
     utils::{
         api_helpers::{generate_pdas_from_vote_proof_response, get_vote_account_proof},
@@ -65,7 +65,7 @@ pub async fn create_proposal(
             spl_vote_account: vote_account,
             proposal: proposal_pda,
             proposal_index: proposal_index_pda,
-            snapshot_program: SNAPSHOT_PROGRAM_ID,
+            snapshot_program: Pubkey::from_str(MOCK_SNAPSHOT_PROGRAM_ID).unwrap(),
             consensus_result: consensus_result_pda,
             meta_merkle_proof: meta_merkle_proof_pda,
             system_program: system_program::ID,

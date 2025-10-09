@@ -6,6 +6,9 @@ use gov_v1::{ConsensusResult, MetaMerkleLeaf, MetaMerkleProof, StakeMerkleLeaf};
 use serde::{Deserialize, Serialize};
 
 use crate::constants::*;
+use std::sync::OnceLock;
+
+static OFFLINE_VALIDATOR_IDENTITY: OnceLock<String> = OnceLock::new();
 
 /// Summary endpoint response structure (/voter/:voting_wallet)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -74,6 +77,11 @@ pub async fn get_voter_summary(
     wallet: &Pubkey,
     snapshot_slot: Option<u64>,
 ) -> Result<VoterSummaryResponse> {
+    if is_offline_mode() {
+        log::debug!("Using offline mode - generating mock voter summary for {}", wallet);
+        return Ok(generate_mock_voter_summary(wallet));
+    }
+
     let base_url = get_api_base_url();
     let mut url = format!("{}/voter/{}", base_url, wallet);
 
@@ -102,6 +110,12 @@ pub async fn get_vote_account_proof(
     vote_account: &str,
     snapshot_slot: Option<u64>,
 ) -> Result<VoteAccountProofResponse> {
+    if is_offline_mode() {
+        log::debug!("Using offline mode - generating mock vote account proof for {}", vote_account);
+        let validator_identity = get_offline_validator_identity();
+        return Ok(generate_mock_vote_account_proof_with_identity(vote_account, &validator_identity));
+    }
+
     let base_url = get_api_base_url();
     let mut url = format!("{}/proof/vote_account/{}", base_url, vote_account);
 
@@ -129,6 +143,11 @@ pub async fn get_stake_account_proof(
     stake_account: &str,
     snapshot_slot: Option<u64>,
 ) -> Result<StakeAccountProofResponse> {
+    if is_offline_mode() {
+        log::debug!("Using offline mode - generating mock stake account proof for {}", stake_account);
+        return Ok(generate_mock_stake_account_proof(stake_account));
+    }
+
     let base_url = get_api_base_url();
     let mut url = format!("{}/proof/stake_account/{}", base_url, stake_account);
 
@@ -150,9 +169,76 @@ pub async fn get_stake_account_proof(
     Ok(proof)
 }
 
+/// Check if offline mode is enabled
+fn is_offline_mode() -> bool {
+    std::env::var(SVMGOV_OFFLINE_ENV).unwrap_or_else(|_| "false".to_string()).to_lowercase() == "true"
+}
+
+/// Set the validator identity for offline mode
+pub fn set_offline_validator_identity(identity: &str) {
+    let _ = OFFLINE_VALIDATOR_IDENTITY.set(identity.to_string());
+}
+
+/// Get the validator identity for offline mode
+fn get_offline_validator_identity() -> String {
+    OFFLINE_VALIDATOR_IDENTITY.get().cloned().unwrap_or_else(|| "11111111111111111111111111111111".to_string())
+}
+
 /// Get the base API URL from environment or default
 fn get_api_base_url() -> String {
     std::env::var(SVMGOV_OPERATOR_URL_ENV).unwrap_or_else(|_| DEFAULT_OPERATOR_API_URL.to_string())
+}
+
+/// Generate mock voter summary for offline mode
+fn generate_mock_voter_summary(wallet: &Pubkey) -> VoterSummaryResponse {
+    VoterSummaryResponse {
+        network: "localnet".to_string(),
+        snapshot_slot: 12345,
+        voting_wallet: wallet.to_string(),
+        vote_accounts: vec![VoteAccountSummary {
+            vote_account: wallet.to_string(), // Use wallet as mock vote account
+            active_stake: 100_000_000_000_000, // 100k SOL
+        }],
+        stake_accounts: vec![StakeAccountSummary {
+            stake_account: wallet.to_string(), // Use wallet as mock stake account
+            active_stake: 100_000_000_000_000, // 100k SOL
+            vote_account: wallet.to_string(), // Use wallet as mock vote account
+        }],
+    }
+}
+
+/// Generate mock vote account proof for offline mode
+fn generate_mock_vote_account_proof_with_identity(vote_account: &str, validator_identity: &str) -> VoteAccountProofResponse {
+    let mock_proof = vec![[0u8; 32]; MOCK_MERKLE_PROOF_LEVELS];
+    
+    VoteAccountProofResponse {
+        network: "localnet".to_string(),
+        snapshot_slot: 12345,
+        meta_merkle_leaf: MetaMerkleLeafData {
+            voting_wallet: validator_identity.to_string(), // Use the validator identity
+            vote_account: vote_account.to_string(),
+            stake_merkle_root: bs58::encode([1u8; 32]).into_string(),
+            active_stake: 100_000_000_000_000, // 100k SOL
+        },
+        meta_merkle_proof: mock_proof.iter().map(|p| bs58::encode(p).into_string()).collect(),
+    }
+}
+
+/// Generate mock stake account proof for offline mode
+fn generate_mock_stake_account_proof(stake_account: &str) -> StakeAccountProofResponse {
+    let mock_proof = vec![[0u8; 32]; MOCK_MERKLE_PROOF_LEVELS];
+    
+    StakeAccountProofResponse {
+        network: "localnet".to_string(),
+        snapshot_slot: 12345,
+        vote_account: stake_account.to_string(),
+        stake_merkle_leaf: StakeMerkleLeafData {
+            voting_wallet: stake_account.to_string(),
+            stake_account: stake_account.to_string(),
+            active_stake: 100_000_000_000_000, // 100k SOL
+        },
+        stake_merkle_proof: mock_proof.iter().map(|p| bs58::encode(p).into_string()).collect(),
+    }
 }
 
 /// Convert API MetaMerkleLeafData to gov_v1 MetaMerkleLeaf

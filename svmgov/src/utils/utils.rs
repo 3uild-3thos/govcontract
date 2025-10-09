@@ -37,6 +37,7 @@ use crate::{
         accounts::{Proposal, Vote},
         program::Govcontract,
     },
+    utils::api_helpers::set_offline_validator_identity,
 };
 
 /// Creates and configures a progress spinner with a custom message
@@ -60,6 +61,9 @@ pub async fn setup_all(
     // Step 1: Load the identity keypair
     let identity_keypair = load_identity_keypair(keypair_path)?;
     let identity_keypair_arc = Arc::new(identity_keypair);
+    
+    // Set the validator identity for offline mode
+    set_offline_validator_identity(&identity_keypair_arc.pubkey().to_string());
 
     // Step 2: Set the cluster
     let cluster = set_cluster(rpc_url);
@@ -71,7 +75,22 @@ pub async fn setup_all(
     // Step 4: Find the vote account using the program's RpcClient
     let rpc_client = program.rpc();
     let validator_identity = identity_keypair_arc.pubkey();
-    let vote_account = find_spl_vote_account(&validator_identity, &rpc_client).await?;
+    let vote_account = if std::env::var("SVMGOV_OFFLINE").unwrap_or_else(|_| "false".to_string()).to_lowercase() == "true" {
+        log::debug!("Using offline mode - attempting to find real vote account first");
+        // Try to find real vote account first, fall back to identity if not found
+        match find_spl_vote_account(&validator_identity, &rpc_client).await {
+            Ok(vote_acc) => {
+                log::debug!("Found real vote account in offline mode: {}", vote_acc);
+                vote_acc
+            }
+            Err(_) => {
+                log::debug!("No real vote account found, using identity as mock vote account");
+                validator_identity
+            }
+        }
+    } else {
+        find_spl_vote_account(&validator_identity, &rpc_client).await?
+    };
 
     // Step 5: Log the setup completion
     log::debug!(
