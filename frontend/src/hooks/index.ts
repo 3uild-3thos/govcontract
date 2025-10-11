@@ -8,3 +8,5 @@ export * from "./useVoteDistribution";
 
 // data hooks
 export * from "./useProposals";
+export * from "./useProposalDetails";
+export * from "./useCastVote";

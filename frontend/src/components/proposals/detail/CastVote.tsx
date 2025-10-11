@@ -1,28 +1,42 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { AppButton } from "@/components/ui/AppButton";
+import { useModal } from "@/contexts/ModalContext";
 import { Ban, ThumbsDown, ThumbsUp } from "lucide-react";
-import { useState } from "react";
 
 interface CastVoteProps {
   proposalSimd: string;
-  userStake: string;
-  onVote?: (vote: "for" | "against" | "abstain") => void;
 }
 
-export default function CastVote({
-  proposalSimd,
-  userStake,
-  onVote,
-}: CastVoteProps) {
-  const [selectedVote, setSelectedVote] = useState<
-    "for" | "against" | "abstain" | null
-  >(null);
+export default function CastVote({}: CastVoteProps) {
+  // TODO: CAST VOTE
+  // TODO: make check if user already voted (here or in parent component)
 
-  const handleVote = (vote: "for" | "against" | "abstain") => {
-    setSelectedVote(vote);
-    onVote?.(vote);
+  const { openModal } = useModal();
+
+  const handleVoteFor = () => {
+    // TODO: CAST VOTE
+    // TODO: send proposal pubKey here as proposalId ?
+    openModal("cast-vote", {
+      proposalId: "",
+      initialVoteDist: { for: 100, abstain: 0, against: 0 },
+    });
+  };
+  const handleVoteAgainst = () => {
+    // TODO: CAST VOTE
+    // TODO: send proposal pubKey here as proposalId ?
+    openModal("cast-vote", {
+      proposalId: "",
+      initialVoteDist: { against: 100, for: 0, abstain: 0 },
+    });
+  };
+  const handleVoteAbstain = () => {
+    // TODO: CAST VOTE
+    // TODO: send proposal pubKey here as proposalId ?
+    openModal("cast-vote", {
+      proposalId: "",
+      initialVoteDist: { abstain: 100, for: 0, against: 0 },
+    });
   };
 
   return (
@@ -38,7 +52,7 @@ export default function CastVote({
 
           <div className="flex-1 space-y-4">
             <AppButton
-              onClick={() => handleVote("for")}
+              onClick={handleVoteFor}
               variant="outline"
               text="Vote For"
               icon={<ThumbsUp className="size-4" />}
@@ -47,7 +61,7 @@ export default function CastVote({
             />
 
             <AppButton
-              onClick={() => handleVote("against")}
+              onClick={handleVoteAgainst}
               variant="outline"
               text="Vote Against"
               icon={<ThumbsDown className="size-4" />}
@@ -56,7 +70,7 @@ export default function CastVote({
             />
 
             <AppButton
-              onClick={() => handleVote("abstain")}
+              onClick={handleVoteAbstain}
               variant="outline"
               text="Abstain"
               icon={<Ban className="size-4" />}

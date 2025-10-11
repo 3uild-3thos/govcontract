@@ -23,7 +23,6 @@ interface ModifyVoteModalProps {
   onClose: () => void;
 }
 
-
 export function ModifyVoteModal({
   proposalId: initialProposalId = "",
   isOpen,
@@ -41,7 +40,7 @@ export function ModifyVoteModal({
     resetDistribution,
   } = useVoteDistribution();
 
-  // TODO:Requirements state -these would be computed from actual data
+  // TODO: Requirements state -these would be computed from actual data
   const [hasVoted] = React.useState(true);
   const [isFinalized] = React.useState(false);
 
@@ -123,7 +122,7 @@ export function ModifyVoteModal({
                   className={cn(
                     "input",
                     "mt-1 w-full rounded-md border border-white/10 bg-white/5 px-3 py-1.5",
-                    "placeholder:text-sm placeholder:text-white/40",
+                    "placeholder:text-sm placeholder:text-white/40"
                   )}
                 />
                 <p className="text-xs text-white/60">

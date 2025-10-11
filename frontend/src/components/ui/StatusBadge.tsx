@@ -1,4 +1,5 @@
-type ProposalStatus = "active" | "finalizing" | "finalized";
+import { ProposalStatus } from "@/types";
+
 type StatusBadgeVariant = "default" | "pill";
 
 const STATUS_CLASSNAME: Record<

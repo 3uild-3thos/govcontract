@@ -3,7 +3,10 @@
 import * as React from "react";
 import { SupportProposalModal } from "@/components/modals/SupportProposalModal";
 import { CreateProposalModal } from "@/components/modals/CreateProposalModal";
-import { CastVoteModal } from "@/components/modals/CastVoteModal";
+import {
+  CastVoteModal,
+  CastVoteModalDataProps,
+} from "@/components/modals/CastVoteModal";
 import { ModifyVoteModal } from "@/components/modals/ModifyVoteModal";
 import { OverrideVoteModal } from "@/components/modals/OverrideVoteModal";
 import { SettingsModal } from "@/components/modals/SettingsModal";
@@ -22,9 +25,7 @@ interface ModalDataMap {
     proposalId?: string;
   };
   "create-proposal": Record<string, never>;
-  "cast-vote": {
-    proposalId?: string;
-  };
+  "cast-vote": CastVoteModalDataProps;
   "modify-vote": {
     proposalId?: string;
   };
@@ -47,7 +48,7 @@ interface ModalContextValue {
 }
 
 const ModalContext = React.createContext<ModalContextValue | undefined>(
-  undefined,
+  undefined
 );
 
 // Modal component map for dynamic rendering
@@ -77,7 +78,7 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
     <T extends ModalType>(type: T, data?: ModalDataMap[T]) => {
       setModalState({ type, data });
     },
-    [],
+    []
   );
 
   const closeModal = React.useCallback(() => {
@@ -94,7 +95,7 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
       }
       return modalState.type !== null;
     },
-    [modalState.type],
+    [modalState.type]
   );
 
   const ActiveModal = modalState.type

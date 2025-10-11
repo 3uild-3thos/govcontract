@@ -13,23 +13,31 @@ import { cn } from "@/lib/utils";
 import { AppButton } from "@/components/ui/AppButton";
 import ErrorMessage from "./shared/ErrorMessage";
 import { VoteDistributionControls } from "./shared/VoteDistributionControls";
-import { useVoteDistribution } from "@/hooks";
+import { useCastVote, useVoteDistribution, VoteDistribution } from "@/hooks";
 import { toast } from "sonner";
 
-interface CastVoteModalProps {
+export interface CastVoteModalDataProps {
   proposalId?: string;
+  initialVoteDist?: VoteDistribution;
+}
+
+interface CastVoteModalProps extends CastVoteModalDataProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
 export function CastVoteModal({
   proposalId: initialProposalId = "",
+  initialVoteDist,
   isOpen,
   onClose,
 }: CastVoteModalProps) {
   const [proposalId, setProposalId] = React.useState(initialProposalId);
+
+  // TODO: CAST VOTE
   const [voterAccount] = React.useState("4aD...bC2"); // TODO: This would come from wallet
   const [votingPower] = React.useState(20000); // TODO: This would come from API
+
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | undefined>();
   const {
@@ -39,7 +47,37 @@ export function CastVoteModal({
     handleOptionChange,
     handleQuickSelect,
     resetDistribution,
-  } = useVoteDistribution();
+  } = useVoteDistribution(initialVoteDist);
+
+  const { mutate: castVote } = useCastVote();
+
+  const handleSuccess = () => {
+    toast.success("Vote cast successfully");
+    onClose();
+    setIsLoading(false);
+  };
+  const handleError = (err: Error) => {
+    console.log("error mutating cast vote:", err);
+    toast.error(`Error voting for proposal ${proposalId}`);
+    setError(err instanceof Error ? err.message : "Failed to cast vote");
+    setIsLoading(false);
+  };
+
+  const handleVote = (voteDistribution: VoteDistribution) => {
+    castVote(
+      {
+        wallet: {},
+        proposalId,
+        forVotesBp: voteDistribution.for,
+        againstVotesBp: voteDistribution.against,
+        abstainVotesBp: voteDistribution.abstain,
+      },
+      {
+        onSuccess: handleSuccess,
+        onError: handleError,
+      }
+    );
+  };
 
   React.useEffect(() => {
     if (isOpen) {
@@ -56,17 +94,8 @@ export function CastVoteModal({
     setIsLoading(true);
     setError(undefined);
 
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log("Casting vote:", { proposalId, distribution });
-
-      toast.success("Vote cast successfully");
-      onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to cast vote");
-    } finally {
-      setIsLoading(false);
-    }
+    handleVote(distribution);
+    console.log("Casting vote:", { proposalId, distribution });
   };
 
   const handleClose = () => {
@@ -118,7 +147,7 @@ export function CastVoteModal({
                   className={cn(
                     "input",
                     "mt-1 w-full rounded-md border border-white/10 bg-white/5 px-3 py-1.5",
-                    "placeholder:text-sm placeholder:text-white/40",
+                    "placeholder:text-sm placeholder:text-white/40"
                   )}
                 />
               </div>

@@ -1,20 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import type {
-  ProposalRecord,
-  ProposalStatus,
-  ProposalLifecycleStage,
-} from "@/types";
 import { calculateTimeAgo, calculateVotingEndsIn } from "@/helpers";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { CheckIcon, CopyIcon, Github } from "lucide-react";
 import { useCopyToClipboard } from "@/hooks";
 import LifecycleIndicator from "@/components/ui/LifecycleIndicator";
 import { formatAddress } from "@/lib/governance/formatters";
+import type { ProposalRecord } from "@/types";
 
 interface ProposalDetailHeaderProps {
   proposal: ProposalRecord;
+  isLoading: boolean;
 }
 
 function InfoItem({
@@ -22,6 +19,7 @@ function InfoItem({
   children,
 }: {
   label: string;
+  isLoading: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -34,6 +32,7 @@ function InfoItem({
 
 export default function ProposalDetailHeader({
   proposal,
+  isLoading,
 }: ProposalDetailHeaderProps) {
   const createdAgo = calculateTimeAgo(proposal.creationTimestamp);
   const endsIn = calculateVotingEndsIn(proposal.votingEndsIn);
@@ -45,35 +44,25 @@ export default function ProposalDetailHeader({
         <div className="flex-1 space-y-3">
           <h2 className="h2">{proposal.title}</h2>
           <div className="lg:hidden">
-            <StatusBadge
-              status={
-                (proposal.status?.toLowerCase() || "active") as ProposalStatus
-              }
-              variant="pill"
-            />
+            <StatusBadge status={proposal.status || "active"} variant="pill" />
           </div>
           <p className=" text-sm leading-6 text-pretty text-white/60 line-clamp-3">
             {proposal.summary}
           </p>
         </div>
         <div className="hidden lg:block">
-          <StatusBadge
-            status={
-              (proposal.status?.toLowerCase() || "active") as ProposalStatus
-            }
-            variant="pill"
-          />
+          <StatusBadge status={proposal.status || "active"} variant="pill" />
         </div>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-wrap items-center gap-2 sm:gap-3 lg:gap-6 border-t border-white/10 pt-3 sm:pt-4 text-sm leading-none lg:leading-normal">
-        <InfoItem label="ID:">
+        <InfoItem label="ID:" isLoading={isLoading}>
           <span className="font-mono text-white/60 text-xs lg:text-sm">
             #{proposal.simd}
           </span>
         </InfoItem>
 
-        <InfoItem label="Author:">
+        <InfoItem label="Author:" isLoading={isLoading}>
           <span className="font-mono text-white/60 text-xs lg:text-sm">
             {formatAddress(proposal.author, 4)}
           </span>
@@ -87,13 +76,13 @@ export default function ProposalDetailHeader({
           )}
         </InfoItem>
 
-        <InfoItem label="Created:">
+        <InfoItem label="Created:" isLoading={isLoading}>
           <p className="text-white/60 text-xs lg:text-sm">{createdAgo}</p>
         </InfoItem>
-        <InfoItem label="Ends:">
+        <InfoItem label="Ends:" isLoading={isLoading}>
           <p className="text-white/60 text-xs lg:text-sm">{endsIn}</p>
         </InfoItem>
-        <InfoItem label="Link to proposal:">
+        <InfoItem label="Link to proposal:" isLoading={isLoading}>
           <Link
             href={proposal.description}
             target="_blank"
@@ -105,11 +94,7 @@ export default function ProposalDetailHeader({
         </InfoItem>
 
         <div className="hidden lg:block lg:ml-auto lg:mr-4">
-          <LifecycleIndicator
-            stage={
-              (proposal.lifecycleStage || "voting") as ProposalLifecycleStage
-            }
-          />
+          <LifecycleIndicator stage={proposal.lifecycleStage || "voting"} />
         </div>
       </div>
     </div>

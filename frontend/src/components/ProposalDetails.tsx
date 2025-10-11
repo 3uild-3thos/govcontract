@@ -1,8 +1,8 @@
-import { useLatestProposalData } from "@/hooks";
 import { LiveProposal } from "./LiveProposal";
 import { LiveResults } from "./LiveResults";
 import { LiveProposalLoadingSkeleton } from "./LiveProposalLoadingSkeleton";
 import { LiveResultsLoadingSkeleton } from "./LiveResultsLoadingSkeleton";
+import { useLatestProposalData } from "@/hooks/DEPRECATED/useLatestProposalData";
 
 export const ProposalDetails = () => {
   const { data, isLoading } = useLatestProposalData();

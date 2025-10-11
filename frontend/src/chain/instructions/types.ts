@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { PublicKey } from "@solana/web3.js";
 
 // Common types
@@ -80,7 +81,6 @@ export interface FinalizeProposalParams {
   network?: string;
 }
 
-
 // API response types (based on solgov.online API)
 export interface VoteAccountProofResponse {
   meta_merkle_leaf: {
@@ -126,4 +126,6 @@ export interface NetworkMetaResponse {
 
 // Constants
 export const BASIS_POINTS_TOTAL = 10000;
-export const SNAPSHOT_PROGRAM_ID = new PublicKey("gov4qDhw2rBudqwqhyTHXgJEPSaRdNnAZP3vT7BLwgL");
+export const SNAPSHOT_PROGRAM_ID = new PublicKey(
+  "gov4qDhw2rBudqwqhyTHXgJEPSaRdNnAZP3vT7BLwgL"
+);
