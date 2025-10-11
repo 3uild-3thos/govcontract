@@ -47,6 +47,7 @@ export function ModifyVoteModal({
 
   const { mutate: modifyVote } = useModifyVote();
 
+  // TODO: MODIFY VOTE
   // TODO: Requirements state -these would be computed from actual data
   const [hasVoted] = React.useState(true);
   const [isFinalized] = React.useState(false);
@@ -64,6 +65,7 @@ export function ModifyVoteModal({
     onClose();
     setIsLoading(false);
   };
+
   const handleError = (err: Error) => {
     console.log("error mutating cast vote:", err);
     toast.error(`Error modifying vote for proposal ${proposalId}`);
@@ -94,8 +96,8 @@ export function ModifyVoteModal({
     setIsLoading(true);
     setError(undefined);
 
-    handleModifyVote(distribution);
     console.log("Modifying vote:", { proposalId, distribution });
+    handleModifyVote(distribution);
   };
 
   const handleClose = () => {

@@ -64,6 +64,7 @@ export function CastVoteModal({
     onClose();
     setIsLoading(false);
   };
+
   const handleError = (err: Error) => {
     console.log("error mutating cast vote:", err);
     toast.error(`Error voting for proposal ${proposalId}`);
@@ -94,8 +95,8 @@ export function CastVoteModal({
     setIsLoading(true);
     setError(undefined);
 
-    handleVote(distribution);
     console.log("Casting vote:", { proposalId, distribution });
+    handleVote(distribution);
   };
 
   const handleClose = () => {
