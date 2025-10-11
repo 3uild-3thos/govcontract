@@ -14,17 +14,22 @@ import { AppButton } from "@/components/ui/AppButton";
 import ErrorMessage from "./shared/ErrorMessage";
 import RequirementItem from "./shared/RequirementItem";
 import { VoteDistributionControls } from "./shared/VoteDistributionControls";
-import { useVoteDistribution } from "@/hooks";
+import { useModifyVote, useVoteDistribution, VoteDistribution } from "@/hooks";
 import { toast } from "sonner";
 
-interface ModifyVoteModalProps {
+export interface ModifyVoteModalDataProps {
   proposalId?: string;
+  initialVoteDist?: VoteDistribution;
+}
+
+interface ModifyVoteModalProps extends ModifyVoteModalDataProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
 export function ModifyVoteModal({
   proposalId: initialProposalId = "",
+  initialVoteDist,
   isOpen,
   onClose,
 }: ModifyVoteModalProps) {
@@ -38,7 +43,9 @@ export function ModifyVoteModal({
     handleOptionChange,
     handleQuickSelect,
     resetDistribution,
-  } = useVoteDistribution();
+  } = useVoteDistribution(initialVoteDist);
+
+  const { mutate: modifyVote } = useModifyVote();
 
   // TODO: Requirements state -these would be computed from actual data
   const [hasVoted] = React.useState(true);
@@ -52,6 +59,34 @@ export function ModifyVoteModal({
     }
   }, [isOpen, initialProposalId, resetDistribution]);
 
+  const handleSuccess = () => {
+    toast.success("Vote modified successfully");
+    onClose();
+    setIsLoading(false);
+  };
+  const handleError = (err: Error) => {
+    console.log("error mutating cast vote:", err);
+    toast.error(`Error modifying vote for proposal ${proposalId}`);
+    setError(err instanceof Error ? err.message : "Failed to modify vote");
+    setIsLoading(false);
+  };
+
+  const handleModifyVote = (voteDistribution: VoteDistribution) => {
+    modifyVote(
+      {
+        wallet: {},
+        proposalId,
+        forVotesBp: voteDistribution.for,
+        againstVotesBp: voteDistribution.against,
+        abstainVotesBp: voteDistribution.abstain,
+      },
+      {
+        onSuccess: handleSuccess,
+        onError: handleError,
+      }
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!proposalId || !isValidDistribution || isLoading) return;
@@ -59,18 +94,8 @@ export function ModifyVoteModal({
     setIsLoading(true);
     setError(undefined);
 
-    try {
-      // TODO: Implement actual vote modification logic
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log("Modifying vote:", { proposalId, distribution });
-
-      toast.success("Vote modified successfully");
-      onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to modify vote");
-    } finally {
-      setIsLoading(false);
-    }
+    handleModifyVote(distribution);
+    console.log("Modifying vote:", { proposalId, distribution });
   };
 
   const handleClose = () => {

@@ -51,6 +51,14 @@ export function CastVoteModal({
 
   const { mutate: castVote } = useCastVote();
 
+  React.useEffect(() => {
+    if (isOpen) {
+      setProposalId(initialProposalId);
+      resetDistribution();
+      setError(undefined);
+    }
+  }, [isOpen, initialProposalId, resetDistribution]);
+
   const handleSuccess = () => {
     toast.success("Vote cast successfully");
     onClose();
@@ -78,14 +86,6 @@ export function CastVoteModal({
       }
     );
   };
-
-  React.useEffect(() => {
-    if (isOpen) {
-      setProposalId(initialProposalId);
-      resetDistribution();
-      setError(undefined);
-    }
-  }, [isOpen, initialProposalId, resetDistribution]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
