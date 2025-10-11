@@ -21,42 +21,33 @@ export function RoleToggle({
 
   useEffect(() => {
     const activeRef = currentView === "validator" ? validatorRef : stakerRef;
-    if (activeRef.current && canToggle) {
+
+    if (activeRef.current) {
+      const { offsetLeft, offsetWidth, offsetHeight } = activeRef.current;
       setIndicatorStyle({
-        transform: `translateX(${activeRef.current.offsetLeft}px)`,
-        width: `${activeRef.current.offsetWidth}px`,
+        left: `${offsetLeft}px`,
+        width: `${offsetWidth}px`,
+        height: `${offsetHeight}px`,
       });
     }
-  }, [currentView, canToggle]);
+  }, [currentView]);
 
-  // If can't toggle, show only one button in the same style
   if (!canToggle) {
-    return (
-      <div className="inline-flex items-center rounded-full bg-black/20 p-0.5 sm:p-0.5">
-        <div className="px-4 py-2 sm:px-3 sm:py-1.5 rounded-full text-sm sm:text-xs bg-gradient-to-r from-secondary to-gray-500/30 text-white font-semibold">
-          {currentView === "validator" ? "Validator" : "Staker"}
-        </div>
-      </div>
-    );
+    return null;
   }
 
-  // If can toggle, show both options with smooth sliding indicator
   return (
-    <div className="relative inline-flex items-center rounded-full p-0.5 sm:p-0.5 bg-black/20">
-      {/* Sliding indicator */}
-      <div
-        className="absolute h-[calc(100%-4px)] rounded-full bg-gradient-to-r from-secondary to-gray-500/30 transition-all duration-300 ease-in-out"
-        style={indicatorStyle}
-      />
+    <div className="role-toggle">
+      <div className="role-toggle-indicator" style={indicatorStyle} />
 
       {/* Buttons */}
       <button
         ref={validatorRef}
         onClick={() => onViewChange("validator")}
-        className={`relative z-10 px-4 py-2 sm:px-3 sm:py-1.5 rounded-full text-sm sm:text-xs font-medium transition-colors duration-300 ${
+        className={`role-toggle-button ${
           currentView === "validator"
-            ? "text-white font-semibold"
-            : "text-muted hover:text-white/90"
+            ? "role-toggle-button-active"
+            : "role-toggle-button-inactive"
         }`}
       >
         Validator
@@ -64,10 +55,10 @@ export function RoleToggle({
       <button
         ref={stakerRef}
         onClick={() => onViewChange("staker")}
-        className={`relative z-10 px-4 py-2 sm:px-3 sm:py-1.5 rounded-full text-sm sm:text-xs font-medium transition-colors duration-300 ${
+        className={`role-toggle-button ${
           currentView === "staker"
-            ? "text-white font-semibold"
-            : "text-muted hover:text-white/90"
+            ? "role-toggle-button-active"
+            : "role-toggle-button-inactive"
         }`}
       >
         Staker

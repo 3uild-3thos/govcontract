@@ -196,6 +196,27 @@
     -webkit-text-fill-color: transparent;
   }
 
+  /* Role toggle component */
+  .role-toggle {
+    @apply relative inline-flex items-center rounded-full overflow-hidden p-0.5 sm:p-0.5 bg-black/20 border border-white/8;
+  }
+
+  .role-toggle-indicator {
+    @apply absolute top-0.5 rounded-full bg-white/15 transition-all duration-300 ease-in-out;
+  }
+
+  .role-toggle-button {
+    @apply relative z-10 px-4 py-2 sm:px-3 sm:py-1.5 rounded-full text-sm sm:text-xs font-medium transition-colors duration-300;
+  }
+
+  .role-toggle-button-active {
+    @apply text-white font-semibold;
+  }
+
+  .role-toggle-button-inactive {
+    @apply text-muted hover:text-white/90;
+  }
+
   /* Modal layout helpers */
   .app-modal-content {
     @apply bg-background border-white/10 max-w-lg grid max-h-[80vh] overflow-hidden gap-0 sm:max-h-[85vh] sm:gap-4;
