@@ -13,6 +13,8 @@ import { cn } from "@/lib/utils";
 import { AppButton } from "@/components/ui/AppButton";
 import ErrorMessage from "./shared/ErrorMessage";
 import { toast } from "sonner";
+import { useCreateProposal } from "@/hooks";
+import { useAnchorWallet } from "@solana/wallet-adapter-react";
 
 interface CreateProposalModalProps {
   isOpen: boolean;
@@ -39,6 +41,9 @@ export function CreateProposalModal({
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | undefined>();
 
+  const wallet = useAnchorWallet();
+  const { mutate: createProposal } = useCreateProposal();
+
   React.useEffect(() => {
     if (!isOpen) {
       setFormData({
@@ -50,6 +55,18 @@ export function CreateProposalModal({
       setError(undefined);
     }
   }, [isOpen]);
+
+  const handleSuccess = () => {
+    toast.success("Proposal created successfully");
+    onClose();
+    setIsLoading(false);
+  };
+
+  const handleError = (err: Error) => {
+    console.log("error creating proposal:", err);
+    setError(err instanceof Error ? err.message : "Failed to create proposal");
+    setIsLoading(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,19 +82,20 @@ export function CreateProposalModal({
     setIsLoading(true);
     setError(undefined);
 
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log("Creating proposal:", formData);
-
-      toast.success("Proposal created successfully");
-      onClose();
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to create proposal",
-      );
-    } finally {
-      setIsLoading(false);
-    }
+    console.log("Creating proposal:", formData);
+    createProposal(
+      {
+        title: formData.title,
+        description: formData.description,
+        startEpoch: +formData.startEpoch,
+        votingLengthEpochs: +formData.votingLength,
+        wallet,
+      },
+      {
+        onSuccess: handleSuccess,
+        onError: handleError,
+      }
+    );
   };
 
   const handleClose = () => {
@@ -143,7 +161,7 @@ export function CreateProposalModal({
                   className={cn(
                     "input",
                     "w-full rounded-md border border-white/10 bg-white/5 px-3 py-1.5",
-                    "placeholder:text-sm placeholder:text-white/40 mt-1",
+                    "placeholder:text-sm placeholder:text-white/40 mt-1"
                   )}
                 />
               </div>
@@ -167,7 +185,7 @@ export function CreateProposalModal({
                   className={cn(
                     "input",
                     "w-full rounded-md border bg-white/5 px-3 py-1.5",
-                    "placeholder:text-sm placeholder:text-white/40 mt-1",
+                    "placeholder:text-sm placeholder:text-white/40 mt-1"
                   )}
                 />
               </div>
@@ -191,7 +209,7 @@ export function CreateProposalModal({
                   className={cn(
                     "input",
                     "w-full rounded-md border bg-white/5 px-3 py-1.5",
-                    "placeholder:text-sm placeholder:text-white/40 mt-1",
+                    "placeholder:text-sm placeholder:text-white/40 mt-1"
                   )}
                 />
               </div>
@@ -215,7 +233,7 @@ export function CreateProposalModal({
                   className={cn(
                     "input",
                     "w-full rounded-md border bg-white/5 px-3 py-1.5",
-                    "placeholder:text-sm placeholder:text-white/40 mt-1",
+                    "placeholder:text-sm placeholder:text-white/40 mt-1"
                   )}
                 />
               </div>

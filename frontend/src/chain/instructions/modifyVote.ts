@@ -24,7 +24,7 @@ export async function modifyVote(
     voteAccount,
   } = params;
 
-  if (!wallet.connected || !wallet.publicKey) {
+  if (!wallet || !wallet.publicKey) {
     throw new Error("Wallet not connected");
   }
 

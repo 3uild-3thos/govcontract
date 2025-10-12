@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { AnchorWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 
 // Common types
@@ -15,7 +16,7 @@ export interface CreateProposalParams {
   startEpoch: number;
   votingLengthEpochs: number;
   seed?: number;
-  wallet: any; // Wallet adapter
+  wallet: AnchorWallet | undefined;
   voteAccount?: PublicKey;
   programId?: PublicKey;
   network?: string;
@@ -27,7 +28,7 @@ export interface CastVoteParams {
   forVotesBp: number;
   againstVotesBp: number;
   abstainVotesBp: number;
-  wallet: any;
+  wallet: AnchorWallet | undefined;
   voteAccount?: PublicKey;
   programId?: PublicKey;
   network?: string;
@@ -39,10 +40,11 @@ export interface ModifyVoteParams {
   forVotesBp: number;
   againstVotesBp: number;
   abstainVotesBp: number;
-  wallet: any;
+  wallet: AnchorWallet | undefined;
   voteAccount?: PublicKey;
   programId?: PublicKey;
   network?: string;
+  endpoint?: string;
 }
 
 export interface CastVoteOverrideParams {

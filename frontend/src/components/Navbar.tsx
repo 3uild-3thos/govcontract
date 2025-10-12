@@ -17,6 +17,11 @@ import {
 } from "@/components/ui/drawer";
 import { formatAddress } from "@/lib/governance/formatters";
 import { useModal } from "@/contexts/ModalContext";
+import {
+  useWalletModal,
+  WalletMultiButton,
+} from "@solana/wallet-adapter-react-ui";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 type NavLink = {
   href: string;
@@ -28,13 +33,14 @@ const navLinks: NavLink[] = [
   { href: "/dashboard", label: "Dashboard" },
 ];
 
-const wallet = "7K3iFhqVpF4xnwMGWKmQRgNvWqKAoZGmZN6vLkPvJXbd"; // Test wallet address
-
 export default function Navbar() {
   const pathname = usePathname();
   const { openModal } = useModal();
   const [isOpen, setIsOpen] = useState(false);
-  const [walletAddress, setWalletAddress] = useState(false);
+
+  const { publicKey: walletAddress, connected, disconnect } = useWallet();
+
+  const { setVisible } = useWalletModal();
 
   useEffect(() => {
     setIsOpen(false);
@@ -164,13 +170,13 @@ export default function Navbar() {
               className="text-muted rounded-full hidden lg:flex"
               onClick={() => openModal("settings")}
             />
-            {walletAddress ? (
+            {connected && walletAddress ? (
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-4 flex-row-reverse">
                   <span className="size-2 rounded-full bg-emerald-400" />
                   <div className="flex flex-col items-end">
                     <span className="text-sm font-medium font-mono text-foreground">
-                      {formatAddress(wallet, 4)}
+                      {formatAddress(walletAddress.toString(), 4)}
                     </span>
                     <span className="text-xs text-emerald-400">Connected</span>
                   </div>
@@ -182,7 +188,7 @@ export default function Navbar() {
                   aria-label="Disconnect"
                   icon={<LogOut className="size-5" />}
                   className="text-muted border-none"
-                  onClick={() => setWalletAddress(false)}
+                  onClick={disconnect}
                 />
               </div>
             ) : (
@@ -193,7 +199,7 @@ export default function Navbar() {
                 size="lg"
                 className="rounded-full font-plus-jakarta-sans font-bold lg:h-9 lg:px-6"
                 text="Connect Wallet"
-                onClick={() => setWalletAddress(true)}
+                onClick={() => setVisible(true)}
               />
             )}
           </div>

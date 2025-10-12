@@ -16,6 +16,7 @@ import RequirementItem from "./shared/RequirementItem";
 import { VoteDistributionControls } from "./shared/VoteDistributionControls";
 import { useModifyVote, useVoteDistribution, VoteDistribution } from "@/hooks";
 import { toast } from "sonner";
+import { useAnchorWallet } from "@solana/wallet-adapter-react";
 
 export interface ModifyVoteModalDataProps {
   proposalId?: string;
@@ -44,6 +45,8 @@ export function ModifyVoteModal({
     handleQuickSelect,
     resetDistribution,
   } = useVoteDistribution(initialVoteDist);
+
+  const wallet = useAnchorWallet();
 
   const { mutate: modifyVote } = useModifyVote();
 
@@ -76,11 +79,12 @@ export function ModifyVoteModal({
   const handleModifyVote = (voteDistribution: VoteDistribution) => {
     modifyVote(
       {
-        wallet: {},
+        wallet,
         proposalId,
-        forVotesBp: voteDistribution.for,
-        againstVotesBp: voteDistribution.against,
-        abstainVotesBp: voteDistribution.abstain,
+        // convert basis points to BN, not %
+        forVotesBp: voteDistribution.for * 100,
+        againstVotesBp: voteDistribution.against * 100,
+        abstainVotesBp: voteDistribution.abstain * 100,
       },
       {
         onSuccess: handleSuccess,

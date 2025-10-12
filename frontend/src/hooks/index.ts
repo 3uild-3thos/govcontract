@@ -11,3 +11,4 @@ export * from "./useProposals";
 export * from "./useProposalDetails";
 export * from "./useCastVote";
 export * from "./useModifyVote";
+export * from "./useCreateProposal";

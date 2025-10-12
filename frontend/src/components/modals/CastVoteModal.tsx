@@ -15,6 +15,7 @@ import ErrorMessage from "./shared/ErrorMessage";
 import { VoteDistributionControls } from "./shared/VoteDistributionControls";
 import { useCastVote, useVoteDistribution, VoteDistribution } from "@/hooks";
 import { toast } from "sonner";
+import { useAnchorWallet } from "@solana/wallet-adapter-react";
 
 export interface CastVoteModalDataProps {
   proposalId?: string;
@@ -49,6 +50,8 @@ export function CastVoteModal({
     resetDistribution,
   } = useVoteDistribution(initialVoteDist);
 
+  const wallet = useAnchorWallet();
+
   const { mutate: castVote } = useCastVote();
 
   React.useEffect(() => {
@@ -75,11 +78,12 @@ export function CastVoteModal({
   const handleVote = (voteDistribution: VoteDistribution) => {
     castVote(
       {
-        wallet: {},
+        wallet,
         proposalId,
-        forVotesBp: voteDistribution.for,
-        againstVotesBp: voteDistribution.against,
-        abstainVotesBp: voteDistribution.abstain,
+        // convert basis points to BN, not %
+        forVotesBp: voteDistribution.for * 100,
+        againstVotesBp: voteDistribution.against * 100,
+        abstainVotesBp: voteDistribution.abstain * 100,
       },
       {
         onSuccess: handleSuccess,
@@ -107,7 +111,7 @@ export function CastVoteModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={() => {}}>
+    <Dialog open={isOpen}>
       <DialogContent
         className="app-modal-content"
         onPointerDownOutside={(e) => e.preventDefault()}
