@@ -71,6 +71,10 @@ pub async fn list_proposals(
                     "creation_timestamp": proposal.creation_timestamp,
                     "vote_count": proposal.vote_count,
                     "index": proposal.index,
+                    "merkle_root_hash": proposal.merkle_root_hash.map(|hash|
+                        format!("0x{}", hex::encode(hash))
+                    ),
+                    "snapshot_slot": proposal.snapshot_slot,
                 })
             })
             .collect();

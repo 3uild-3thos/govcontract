@@ -344,6 +344,12 @@ impl fmt::Display for Proposal {
             "Finalized:",
             if self.finalized { "Yes" } else { "No" }
         )?;
+        if let Some(merkle_root) = self.merkle_root_hash {
+            writeln!(f, "{:<25} 0x{}", "Merkle Root Hash:", hex::encode(merkle_root))?;
+        } else {
+            writeln!(f, "{:<25} Not set", "Merkle Root Hash:")?;
+        }
+        writeln!(f, "{:<25} {}", "Snapshot Slot:", self.snapshot_slot)?;
         writeln!(f, "{:<25}", "Description:")?;
         for line in wrapped_desc {
             writeln!(f, "  {}", line)?;
