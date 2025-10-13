@@ -422,15 +422,17 @@ pub fn derive_proposal_index_pda(program_id: &Pubkey) -> Pubkey {
     pda
 }
 
+/// Derives the Support PDA using the seeds [b"support", proposal, spl_vote_account]
+/// This matches the on-chain derivation in the support_proposal instruction.
 pub fn derive_support_pda(
     proposal_pubkey: &Pubkey,
-    validator_pubkey: &Pubkey,
+    vote_account: &Pubkey,
     program_id: &Pubkey,
 ) -> Pubkey {
     let seeds = &[
         b"support",
         proposal_pubkey.as_ref(),
-        validator_pubkey.as_ref(),
+        vote_account.as_ref(),
     ];
     let (pda, _) = Pubkey::find_program_address(seeds, program_id);
     pda
