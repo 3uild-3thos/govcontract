@@ -7,16 +7,18 @@ use anchor_client::{
 
 use anchor_lang::prelude::Pubkey;
 use anyhow::{Result, anyhow};
-use indicatif::{ProgressBar, ProgressStyle};
+use serde_json::{Value, json};
 
 use crate::{
-    anchor_client_setup,
+    anchor_client_setup, create_spinner, find_delegator_stake_accounts,
     govcontract::accounts::{Proposal, Vote},
 };
 
 pub async fn list_proposals(
     rpc_url: Option<String>,
     proposal_filter: Option<String>,
+    limit: Option<usize>,
+    json_output: bool,
 ) -> Result<()> {
     // Create a mock Payer
     let mock_payer = Arc::new(Keypair::new());
@@ -25,35 +27,64 @@ pub async fn list_proposals(
     let program = anchor_client_setup(rpc_url, mock_payer)?;
 
     // Create a spinner for progress indication
-    let spinner = ProgressBar::new_spinner();
-    spinner.set_style(
-        ProgressStyle::default_spinner()
-            .template("{spinner:.green} {msg}")
-            .unwrap()
-            .tick_strings(&["⠏", "⠇", "⠦", "⠴", "⠼", "⠸", "⠹", "⠙", "⠋", "⠓"])
-    );
+    let spinner = create_spinner("Getting all proposals...");
+    let mut proposals = program.accounts::<Proposal>(vec![]).await?;
 
-    spinner.set_message("Getting all proposals...");
-    spinner.enable_steady_tick(std::time::Duration::from_millis(100));
-    let proposals = program.accounts::<Proposal>(vec![]).await?;
-
-    let filtered_proposals = if let Some(filter) = proposal_filter {
-        if filter == "active" {
-            proposals.into_iter().filter(|p| p.1.voting).collect()
-        } else {
-            proposals
-        }
-    } else {
-        proposals
-    };
-
-    // Stop the spinner 
+    // Stop the spinner
     spinner.finish_with_message("Proposals collected.");
 
-    for proposal in filtered_proposals {
-        println!("\nProposal id: {}, \n{}", proposal.0, proposal.1);
+    if proposals.is_empty() {
+        println!("No proposals found.");
+        return Ok(());
     }
-    
+
+    if let Some(filter) = proposal_filter {
+        if filter == "active" {
+            proposals.retain(|p| p.1.voting);
+        }
+    }
+
+    if let Some(lim) = limit {
+        proposals.truncate(lim);
+    }
+
+    if json_output {
+        let json_proposals: Vec<Value> = proposals
+            .iter()
+            .map(|(pubkey, proposal)| {
+                json!({
+                    "pubkey": pubkey.to_string(),
+                    "author": proposal.author.to_string(),
+                    "title": proposal.title,
+                    "description": proposal.description,
+                    "creation_epoch": proposal.creation_epoch,
+                    "start_epoch": proposal.start_epoch,
+                    "end_epoch": proposal.end_epoch,
+                    "proposer_stake_weight_bp": proposal.proposer_stake_weight_bp,
+                    "cluster_support_lamports": proposal.cluster_support_lamports,
+                    "for_votes_lamports": proposal.for_votes_lamports,
+                    "against_votes_lamports": proposal.against_votes_lamports,
+                    "abstain_votes_lamports": proposal.abstain_votes_lamports,
+                    "voting": proposal.voting,
+                    "finalized": proposal.finalized,
+                    "proposal_bump": proposal.proposal_bump,
+                    "creation_timestamp": proposal.creation_timestamp,
+                    "vote_count": proposal.vote_count,
+                    "index": proposal.index,
+                    "merkle_root_hash": proposal.merkle_root_hash.map(|hash|
+                        format!("0x{}", hex::encode(hash))
+                    ),
+                    "snapshot_slot": proposal.snapshot_slot,
+                })
+            })
+            .collect();
+        let json_out = serde_json::to_string_pretty(&json_proposals)?;
+        println!("{}", json_out);
+    } else {
+        for proposal in proposals {
+            println!("\nProposal id: {}, \n{}", proposal.0, proposal.1);
+        }
+    }
 
     Ok(())
 }
@@ -62,9 +93,11 @@ pub async fn list_votes(
     rpc_url: Option<String>,
     proposal_id: &String,
     verbose: bool,
+    limit: Option<usize>,
+    json_output: bool,
 ) -> Result<()> {
     // Parse the proposal ID into a Pubkey
-    let proposal_pubkey = Pubkey::from_str(&proposal_id)
+    let proposal_pubkey = Pubkey::from_str(proposal_id)
         .map_err(|_| anyhow!("Invalid proposal ID: {}", proposal_id))?;
     // Create a mock Payer
     let mock_payer = Arc::new(Keypair::new());
@@ -79,23 +112,41 @@ pub async fn list_votes(
     ))];
 
     // Create a spinner for progress indication
-    let spinner = ProgressBar::new_spinner();
-    spinner.set_style(
-        ProgressStyle::default_spinner()
-            .template("{spinner:.green} {msg}")
-            .unwrap()
-            .tick_strings(&["⠏", "⠇", "⠦", "⠴", "⠼", "⠸", "⠹", "⠙", "⠋", "⠓"])
-    );
+    let spinner = create_spinner("Getting all vote accounts...");
 
-    spinner.set_message("Getting all vote accounts...");
-    spinner.enable_steady_tick(std::time::Duration::from_millis(100));
+    let mut votes = program.accounts::<Vote>(filter).await?;
 
-    let votes = program.accounts::<Vote>(filter).await?;
-
-    // Stop the spinner 
+    // Stop the spinner
     spinner.finish_with_message("Vote accounts collected.");
-    
-    if verbose {
+
+    if votes.is_empty() {
+        println!("No votes found for proposal {}.", proposal_id);
+        return Ok(());
+    }
+
+    if let Some(lim) = limit {
+        votes.truncate(lim);
+    }
+
+    if json_output {
+        let json_votes: Vec<Value> = votes
+            .iter()
+            .map(|(pubkey, vote)| {
+                json!({
+                    "pubkey": pubkey.to_string(),
+                    "validator": vote.validator.to_string(),
+                    "proposal": vote.proposal.to_string(),
+                    "for_votes_bp": vote.for_votes_bp,
+                    "against_votes_bp": vote.against_votes_bp,
+                    "abstain_votes_bp": vote.abstain_votes_bp,
+                    "vote_timestamp": vote.vote_timestamp,
+                    "bump": vote.bump,
+                })
+            })
+            .collect();
+        let json_out = serde_json::to_string_pretty(&json_votes)?;
+        println!("{}", json_out);
+    } else if verbose {
         for vote in votes {
             println!("Vote for proposal {}: \n{}", proposal_id, vote.1);
         }
@@ -110,7 +161,7 @@ pub async fn list_votes(
 
 pub async fn get_proposal(rpc_url: Option<String>, proposal_id: &String) -> Result<()> {
     // Parse the proposal ID into a Pubkey
-    let proposal_pubkey = Pubkey::from_str(&proposal_id)
+    let proposal_pubkey = Pubkey::from_str(proposal_id)
         .map_err(|_| anyhow!("Invalid proposal ID: {}", proposal_id))?;
     // Create a mock Payer
     let mock_payer = Arc::new(Keypair::new());
@@ -121,6 +172,26 @@ pub async fn get_proposal(rpc_url: Option<String>, proposal_id: &String) -> Resu
     let proposal_acc = program.account::<Proposal>(proposal_pubkey).await?;
 
     println!("Proposal id:  {} \n{}", proposal_id, proposal_acc);
+
+    Ok(())
+}
+
+pub async fn list_stake_accounts(rpc_url: Option<String>, delegator_wallet: Pubkey) -> Result<()> {
+    // Create a mock Payer
+    let mock_payer = Arc::new(Keypair::new());
+
+    // Set up RPC client via anchor setup (consistent with other commands)
+    let program = anchor_client_setup(rpc_url, mock_payer)?;
+    let rpc_client = program.rpc();
+
+    // Fetch and log
+    let stakes = find_delegator_stake_accounts(&delegator_wallet, &rpc_client).await?;
+    for (stake_pk, vote_pk, active_stake) in stakes {
+        println!(
+            "Stake Account: {}, Vote Account: {}, Active Stake: {}",
+            stake_pk, vote_pk, active_stake
+        );
+    }
 
     Ok(())
 }

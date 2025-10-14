@@ -1,10 +1,18 @@
-#![allow(unexpected_cfgs, unused_variables)]
+#![allow(unexpected_cfgs, unused_variables, clippy::too_many_arguments)]
+mod constants;
 mod error;
+mod events;
 mod instructions;
+mod merkle_helpers;
 mod state;
 mod utils;
 use anchor_lang::prelude::*;
 use instructions::*;
+
+#[cfg(feature = "production")]
+use gov_v1::StakeMerkleLeaf;
+#[cfg(feature = "testing")]
+use mock_gov_v1::StakeMerkleLeaf;
 
 declare_id!("GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc");
 
@@ -22,16 +30,9 @@ pub mod govcontract {
         seed: u64,
         title: String,
         description: String,
-        start_epoch: u64,
-        voting_length_epochs: u64,
     ) -> Result<()> {
-        ctx.accounts.create_proposal(
-            title,
-            description,
-            start_epoch,
-            voting_length_epochs,
-            &ctx.bumps,
-        )?;
+        ctx.accounts
+            .create_proposal(title, description, &ctx.bumps)?;
         Ok(())
     }
 
@@ -39,11 +40,6 @@ pub mod govcontract {
         ctx.accounts.support_proposal(&ctx.bumps)?;
         Ok(())
     }
-
-    // pub fn modify_proposal(ctx: Context<CreateProposal>) -> Result<()> {
-    //     msg!("Greetings from: {:?}", ctx.program_id);
-    //     Ok(())
-    // }
 
     pub fn cast_vote(
         ctx: Context<CastVote>,
@@ -67,11 +63,51 @@ pub mod govcontract {
         Ok(())
     }
 
-    pub fn tally_votes<'info>(
-        ctx: Context<'_, '_, 'info, 'info, TallyVotes<'info>>,
-        finalize: bool,
+    pub fn cast_vote_override(
+        ctx: Context<CastVoteOverride>,
+        for_votes_bp: u64,
+        against_votes_bp: u64,
+        abstain_votes_bp: u64,
+        stake_merkle_proof: Vec<[u8; 32]>,
+        stake_merkle_leaf: StakeMerkleLeaf,
     ) -> Result<()> {
-        ctx.accounts.tally_votes(ctx.remaining_accounts, finalize)?;
+        ctx.accounts.cast_vote_override(
+            for_votes_bp,
+            against_votes_bp,
+            abstain_votes_bp,
+            stake_merkle_proof,
+            stake_merkle_leaf,
+            &ctx.bumps,
+        )?;
+        Ok(())
+    }
+
+    pub fn modify_vote_override(
+        ctx: Context<ModifyVoteOverride>,
+        for_votes_bp: u64,
+        against_votes_bp: u64,
+        abstain_votes_bp: u64,
+        stake_merkle_proof: Vec<[u8; 32]>,
+        stake_merkle_leaf: StakeMerkleLeaf,
+    ) -> Result<()> {
+        ctx.accounts.modify_vote_override(
+            for_votes_bp,
+            against_votes_bp,
+            abstain_votes_bp,
+            stake_merkle_proof,
+            stake_merkle_leaf,
+            &ctx.bumps,
+        )?;
+        Ok(())
+    }
+
+    pub fn add_merkle_root(ctx: Context<AddMerkleRoot>, merkle_root_hash: [u8; 32]) -> Result<()> {
+        ctx.accounts.add_merkle_root(merkle_root_hash)?;
+        Ok(())
+    }
+
+    pub fn finalize_proposal(ctx: Context<FinalizeProposal>) -> Result<()> {
+        ctx.accounts.finalize_proposal()?;
 
         Ok(())
     }

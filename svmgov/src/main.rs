@@ -1,9 +1,12 @@
+mod constants;
+mod instructions;
+mod utils;
+
 use anchor_client::anchor_lang::declare_program;
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use env_logger;
-mod instructions;
-mod utils;
+
+use constants::*;
 use utils::{commands, utils::*};
 
 declare_program!(govcontract);
@@ -31,17 +34,17 @@ struct Cli {
         long,
         help = "Path to the identity keypair JSON file (or set via SVMGOV_KEY env var)",
         global = true,
-        env = "SVMGOV_KEY"
+        env = SVMGOV_KEY_ENV
     )]
     identity_keypair: Option<String>,
 
     /// Custom rpc url. This argument is also global and can be used with any subcommand.
     #[arg(
-        short, 
-        long, 
-        help = "Custom rpc url (or set via SVMGOV_RPC env var)", 
-        global = true, 
-        env = "SVMGOV_RPC"
+        short,
+        long,
+        help = "Custom rpc url (or set via SVMGOV_RPC env var)",
+        global = true,
+        env = SVMGOV_RPC_ENV
     )]
     rpc_url: Option<String>,
 
@@ -58,7 +61,7 @@ enum Commands {
                       It requires a title and a GitHub link for the proposal description, and optionally a unique seed to derive the proposal's address (PDA). \
                       The identity keypair is required to sign the transaction, and an optional RPC URL can be provided to connect to the chain.\n\n\
                       Examples:\n\
-                      $ svmgov --identity-keypair /path/to/key.json create-proposal --title \"New Governance Rule\" --description \"https://github.com/repo/proposal\" --start-epoch 820 --length 20\n\
+                      $ svmgov --identity-keypair /path/to/key.json create-proposal --title \"New Governance Rule\" --description \"https://github.com/repo/proposal\"\n\
                       $ svmgov --identity-keypair /path/to/key.json --rpc-url https://api.mainnet-beta.solana.com create-proposal --seed 42 --title \"New Governance Rule\" --description \"https://github.com/repo/proposal\""
     )]
     CreateProposal {
@@ -74,16 +77,6 @@ enum Commands {
         #[arg(long, help = "GitHub link for the proposal description")]
         description: String,
 
-        /// Start epoch of proposal.
-        #[arg(long, help = "The start epoch for the proposal")]
-        start_epoch: u64,
-
-        /// Length in epochs for the proposal to go active for support and eventually voting.
-        #[arg(
-            long,
-            help = "The length of the voting period for the proposal in epochs"
-        )]
-        length: u64,
     },
 
     #[command(
@@ -157,16 +150,16 @@ enum Commands {
     },
 
     #[command(
-        about = "Tally votes for a specified proposal",
-        long_about = "This command sends a transaction to tally all votes cast on a specified governance proposal, providing a summary of the voting results. \
+        about = "Finalize a proposal after voting period has ended",
+        long_about = "This command sends a transaction to finalize a governance proposal after its voting period has ended. \
                       It requires the proposal ID and the identity keypair to interact with the chain. \
                       An optional RPC URL can be provided to connect to the chain. \
-                      Ensure the proposal is in a state where tallying is possible (e.g., voting has ended).\n\n\
+                      The proposal must be in a finalized state (voting period ended) to be finalized.\n\n\
                       Example:\n\
-                      $ svmgov --identity-keypair /path/to/key.json --rpc-url https://api.mainnet-beta.solana.com tally-votes --proposal-id \"123\""
+                      $ svmgov --identity-keypair /path/to/key.json --rpc-url https://api.mainnet-beta.solana.com finalize-proposal --proposal-id \"123\""
     )]
-    TallyVotes {
-        /// Proposal ID to tally.
+    FinalizeProposal {
+        /// Proposal ID to finalize.
         #[arg(long, help = "Proposal ID")]
         proposal_id: String,
     },
@@ -188,25 +181,41 @@ enum Commands {
         about = "List all governance proposals. Use the get-proposal command for individual proposal details",
         long_about = "This command retrieves and displays a list of all governance proposals from the Solana Validator Governance program. \
                       You can optionally filter proposals by their status (e.g., 'active') using the --status flag. \
+                      Use --limit to restrict the number of proposals listed (default: 0, meaning no limit). \
+                      Use --json to output in JSON format (default: false). \
                       An optional RPC URL can be provided to connect to the chain; otherwise, a default URL is used.\n\n\
                       Examples:\n\
                       $ svmgov --rpc-url https://api.mainnet-beta.solana.com list-proposals\n\
-                      $ svmgov -r https://api.mainnet-beta.solana.com list-proposals --status \"active\""
+                      $ svmgov -r https://api.mainnet-beta.solana.com list-proposals --status \"active\" --limit 5 --json true"
     )]
     ListProposals {
         /// Filter on status of the proposals <active>.
         #[arg(long, help = "Status of proposal")]
         status: Option<String>,
+
+        /// Limit the number of proposals listed
+        #[arg(
+            long,
+            help = "Limit the number of proposals listed",
+            default_value_t = 0
+        )]
+        limit: usize,
+
+        /// Output in JSON format
+        #[arg(long, help = "Output in JSON format", default_value_t = false)]
+        json: bool,
     },
 
     #[command(
         about = "List all votes for a specified proposal",
         long_about = "This command retrieves and displays all votes cast on a specified governance proposal. \
                       It requires the proposal ID, and use the --verbose flag for detailed output. \
+                      Use --limit to restrict the number of votes listed (default: 0, meaning no limit). \
+                      Use --json to output in JSON format (default: false). \
                       An optional RPC URL can be provided to connect to the chain; otherwise, a default URL is used.\n\n\
                       Examples:\n\
                       $ svmgov --rpc-url https://api.mainnet-beta.solana.com list-votes --proposal-id \"123\"\n\
-                      $ svmgov -r https://api.mainnet-beta.solana.com list-votes --proposal-id \"123\" --verbose true"
+                      $ svmgov -r https://api.mainnet-beta.solana.com list-votes --proposal-id \"123\" --verbose true --limit 10 --json true"
     )]
     ListVotes {
         /// Proposal id to get votes for.
@@ -215,6 +224,14 @@ enum Commands {
         /// Verbose vote list
         #[arg(long, help = "List votes verbose", default_value_t = false)]
         verbose: bool,
+
+        /// Limit the number of votes listed
+        #[arg(long, help = "Limit the number of votes listed", default_value_t = 0)]
+        limit: usize,
+
+        /// Output in JSON format
+        #[arg(long, help = "Output in JSON format", default_value_t = false)]
+        json: bool,
     },
 
     #[command(
@@ -225,6 +242,120 @@ enum Commands {
                       $ svmgov --identity-keypair /path/to/key.json --rpc-url https://api.mainnet-beta.solana.com init-index"
     )]
     InitIndex {},
+
+    #[command(
+        about = "Override validator vote with delegator vote",
+        long_about = "This command allows a delegator to override their validator's vote on a proposal. \
+                      The CLI fetches snapshot data from the operator API and submits the override. \
+                      Requires the proposal ID and a stake account delegated by the signer. You may explicitly pass a stake \
+                      account using --stake-account <PUBKEY> (base58). If omitted, the CLI selects the first stake account \
+                      from the voter summary.\n\n\
+                      Examples:\n\
+                      # Auto-select first stake account from summary\n\
+                      $ svmgov --identity-keypair /path/to/key.json cast-vote-override --proposal-id \"123\" --for-votes 6000 --against-votes 3000 --abstain-votes 1000\n\
+                      # Use an explicit stake account\n\
+                      $ svmgov --identity-keypair /path/to/key.json cast-vote-override --proposal-id \"123\" --for-votes 6000 --against-votes 3000 --abstain-votes 1000 --stake-account <STAKE_PUBKEY>"
+    )]
+    CastVoteOverride {
+        /// Proposal ID for which to override the vote
+        #[arg(long, help = "Proposal ID")]
+        proposal_id: String,
+
+        /// Basis points for 'For' vote
+        #[arg(
+            long,
+            help = "Basis points for 'For' (must sum to 10,000 with other votes)"
+        )]
+        for_votes: u64,
+
+        /// Basis points for 'Against' vote
+        #[arg(
+            long,
+            help = "Basis points for 'Against' (must sum to 10,000 with other votes)"
+        )]
+        against_votes: u64,
+
+        /// Basis points for 'Abstain' vote
+        #[arg(
+            long,
+            help = "Basis points for 'Abstain' (must sum to 10,000 with other votes)"
+        )]
+        abstain_votes: u64,
+
+        /// Operator API endpoint (optional, uses env var by default)
+        #[arg(long, help = "Operator API endpoint for snapshot data")]
+        operator_api: Option<String>,
+
+        /// Optional specific stake account to use for override
+        #[arg(long, help = "Stake account to use for override (base58 pubkey). If omitted, the first stake account from the voter summary will be used.")]
+        stake_account: Option<String>,
+    },
+
+    #[command(
+        about = "Modify an existing vote override on a proposal",
+        long_about = "This command allows a delegator to modify their existing vote override on a proposal. \
+                      The CLI fetches snapshot data from the operator API and submits the modification. \
+                      Requires the proposal ID and a stake account delegated by the signer. You may explicitly pass a stake \
+                      account using --stake-account <PUBKEY> (base58). If omitted, the CLI selects the first stake account \
+                      from the voter summary.\n\n\
+                      Examples:\n\
+                      # Auto-select first stake account from summary\n\
+                      $ svmgov --identity-keypair /path/to/key.json modify-vote-override --proposal-id \"123\" --for-votes 5000 --against-votes 3000 --abstain-votes 2000\n\
+                      # Use an explicit stake account\n\
+                      $ svmgov --identity-keypair /path/to/key.json modify-vote-override --proposal-id \"123\" --for-votes 5000 --against-votes 3000 --abstain-votes 2000 --stake-account <STAKE_PUBKEY>"
+    )]
+    ModifyVoteOverride {
+        /// Proposal ID for which to modify the vote override
+        #[arg(long, help = "Proposal ID")]
+        proposal_id: String,
+
+        /// Basis points for 'For' vote
+        #[arg(
+            long,
+            help = "Basis points for 'For' (must sum to 10,000 with other votes)"
+        )]
+        for_votes: u64,
+
+        /// Basis points for 'Against' vote
+        #[arg(
+            long,
+            help = "Basis points for 'Against' (must sum to 10,000 with other votes)"
+        )]
+        against_votes: u64,
+
+        /// Basis points for 'Abstain' vote
+        #[arg(
+            long,
+            help = "Basis points for 'Abstain' (must sum to 10,000 with other votes)"
+        )]
+        abstain_votes: u64,
+
+        /// Operator API endpoint (optional, uses env var by default)
+        #[arg(long, help = "Operator API endpoint for snapshot data")]
+        operator_api: Option<String>,
+
+        /// Optional specific stake account to use for override modification
+        #[arg(long, help = "Stake account to use for override modification (base58 pubkey). If omitted, the first stake account from the voter summary will be used.")]
+        stake_account: Option<String>,
+    },
+
+    #[command(
+        about = "Add merkle root hash to a proposal for verification",
+        long_about = "This command adds a merkle root hash to a proposal for stake verification. \
+                      It requires the proposal ID and the merkle root hash as a hex string. \
+                      Only the original proposal author can call this command.\n\n\
+                      Example:\n\
+                      $ svmgov --identity-keypair /path/to/key.json add-merkle-root --proposal-id \"123\" --merkle-root \"0x1234567890abcdef...\""
+    )]
+    AddMerkleRoot {
+        /// Proposal ID to add the merkle root to
+        #[arg(long, help = "Proposal ID")]
+        proposal_id: String,
+
+        /// Merkle root hash as a hex string
+        #[arg(long, help = "Merkle root hash (hex string)")]
+        merkle_root: String,
+    },
 }
 
 async fn handle_command(cli: Cli) -> Result<()> {
@@ -237,82 +368,148 @@ async fn handle_command(cli: Cli) -> Result<()> {
 
     match &cli.command {
         Commands::CreateProposal {
-                        seed,
-                        title,
-                        description,
-                        start_epoch,
-                        length,
-            } => {
-                instructions::create_proposal(
-                    title.to_string(),
-                    description.to_string(),
-                    *seed,
-                    cli.identity_keypair,
-                    cli.rpc_url,
-                    *start_epoch,
-                    *length,
-                )
-                .await?;
-            }
+            seed,
+            title,
+            description,
+        } => {
+            instructions::create_proposal(
+                title.to_string(),
+                description.to_string(),
+                *seed,
+                cli.identity_keypair,
+                cli.rpc_url,
+            )
+            .await?;
+        }
         Commands::SupportProposal { proposal_id } => {
-                instructions::support_proposal(
-                    proposal_id.to_string(),
-                    cli.identity_keypair,
-                    cli.rpc_url,
-                )
-                .await?;
-            }
+            instructions::support_proposal(
+                proposal_id.to_string(),
+                cli.identity_keypair,
+                cli.rpc_url,
+            )
+            .await?;
+        }
         Commands::CastVote {
-                proposal_id,
-                for_votes,
-                against_votes,
-                abstain_votes,
-            } => {
-                instructions::cast_vote(
-                    proposal_id.to_string(),
-                    *for_votes,
-                    *against_votes,
-                    *abstain_votes,
-                    cli.identity_keypair,
-                    cli.rpc_url,
-                )
-                .await?;
-            }
+            proposal_id,
+            for_votes,
+            against_votes,
+            abstain_votes,
+        } => {
+            instructions::cast_vote(
+                proposal_id.to_string(),
+                *for_votes,
+                *against_votes,
+                *abstain_votes,
+                cli.identity_keypair,
+                cli.rpc_url,
+            )
+            .await?;
+        }
         Commands::ModifyVote {
-                proposal_id,
-                for_votes,
-                against_votes,
-                abstain_votes,
-            } => {
-                instructions::modify_vote(
-                    proposal_id.to_string(),
-                    *for_votes,
-                    *against_votes,
-                    *abstain_votes,
-                    cli.identity_keypair,
-                    cli.rpc_url,
-                )
+            proposal_id,
+            for_votes,
+            against_votes,
+            abstain_votes,
+        } => {
+            instructions::modify_vote(
+                proposal_id.to_string(),
+                *for_votes,
+                *against_votes,
+                *abstain_votes,
+                cli.identity_keypair,
+                cli.rpc_url,
+            )
+            .await?;
+        }
+        Commands::FinalizeProposal { proposal_id } => {
+            instructions::finalize_proposal(
+                proposal_id.to_string(),
+                cli.identity_keypair,
+                cli.rpc_url,
+            )
+            .await?;
+        }
+        Commands::ListProposals {
+            status,
+            limit,
+            json,
+        } => {
+            commands::list_proposals(cli.rpc_url.clone(), status.clone(), Some(*limit), *json)
                 .await?;
-            }
-        Commands::TallyVotes { proposal_id } => {
-                instructions::tally_votes(proposal_id.to_string(), cli.identity_keypair, cli.rpc_url)
-                    .await?;
-            }
-        Commands::ListProposals { status } => {
-                commands::list_proposals(cli.rpc_url, status.clone()).await?;
-            }
+        }
         Commands::GetProposal { proposal_id } => {
-                commands::get_proposal(cli.rpc_url, proposal_id).await?;
-            }
+            commands::get_proposal(cli.rpc_url.clone(), proposal_id).await?;
+        }
         Commands::ListVotes {
+            proposal_id,
+            verbose,
+            limit,
+            json,
+        } => {
+            commands::list_votes(
+                cli.rpc_url.clone(),
                 proposal_id,
-                verbose,
-            } => {
-                commands::list_votes(cli.rpc_url, proposal_id, *verbose).await?;
-            }
-        Commands::InitIndex {  } => {
+                *verbose,
+                Some(*limit),
+                *json,
+            )
+            .await?;
+        }
+        Commands::InitIndex {} => {
             instructions::initialize_index(cli.identity_keypair, cli.rpc_url).await?;
-        },
+        }
+        Commands::CastVoteOverride {
+            proposal_id,
+            for_votes,
+            against_votes,
+            abstain_votes,
+            operator_api,
+            stake_account,
+        } => {
+            instructions::cast_vote_override(
+                proposal_id.to_string(),
+                *for_votes,
+                *against_votes,
+                *abstain_votes,
+                cli.identity_keypair,
+                cli.rpc_url,
+                operator_api.clone(),
+                stake_account.clone(),
+            )
+            .await?;
+        }
+        Commands::ModifyVoteOverride {
+            proposal_id,
+            for_votes,
+            against_votes,
+            abstain_votes,
+            operator_api,
+            stake_account,
+        } => {
+            instructions::modify_vote_override(
+                proposal_id.to_string(),
+                *for_votes,
+                *against_votes,
+                *abstain_votes,
+                cli.identity_keypair,
+                cli.rpc_url,
+                operator_api.clone(),
+                stake_account.clone(),
+            )
+            .await?;
+        }
+        Commands::AddMerkleRoot {
+            proposal_id,
+            merkle_root,
+        } => {
+            instructions::add_merkle_root(
+                proposal_id.to_string(),
+                merkle_root.to_string(),
+                cli.identity_keypair,
+                cli.rpc_url,
+            )
+            .await?;
+        }
     }
 
     Ok(())

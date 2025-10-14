@@ -1,81 +1,133 @@
 use anchor_lang::{
     prelude::*,
     solana_program::{
-        epoch_stake::{get_epoch_stake_for_vote_account, get_epoch_total_stake},
+        borsh0_10::try_from_slice_unchecked,
+        epoch_stake::get_epoch_total_stake,
         vote::{program as vote_program, state::VoteState},
     },
 };
 
+#[cfg(feature = "production")]
+use gov_v1::{ConsensusResult, MetaMerkleProof};
+#[cfg(feature = "testing")]
+use mock_gov_v1::{ConsensusResult, MetaMerkleProof};
+
 use crate::{
+    constants::*,
     error::GovernanceError,
+    events::ProposalSupported,
+    merkle_helpers::verify_merkle_proof_cpi,
     state::{Proposal, Support},
 };
 
 #[derive(Accounts)]
 pub struct SupportProposal<'info> {
     #[account(mut)]
-    pub signer: Signer<'info>,
-    /// CHECK: Vote account is too big to deserialize, so we check on owner and size, then compare node_pubkey with signer
-    #[account(
-        constraint = spl_vote_account.owner == &vote_program::ID @ ProgramError::InvalidAccountOwner,
-        constraint = spl_vote_account.data_len() == VoteState::size_of() @ GovernanceError::InvalidVoteAccountSize
-    )]
-    pub spl_vote_account: AccountInfo<'info>,
+    pub signer: Signer<'info>, // Proposal supporter (validator)
     #[account(mut)]
     pub proposal: Account<'info, Proposal>,
     #[account(
         init,
         payer = signer,
-        space = 8 + Support::INIT_SPACE,
-        seeds = [b"support", proposal.key().as_ref(), spl_vote_account.key.as_ref()],
+        space = ANCHOR_DISCRIMINATOR + Support::INIT_SPACE,
+        seeds = [b"support", proposal.key().as_ref(), spl_vote_account.key().as_ref()],
         bump
     )]
-    pub support: Account<'info, Support>,
+    pub support: Account<'info, Support>, // New support account
+    /// CHECK: Vote account is too big to deserialize, so we check on owner and size, then compare node_pubkey with signer
+    #[account(
+        constraint = spl_vote_account.owner == &vote_program::ID @ ProgramError::InvalidAccountOwner,
+        constraint = spl_vote_account.data_len() == VoteState::size_of() @ GovernanceError::InvalidVoteAccountSize
+    )]
+    pub spl_vote_account: UncheckedAccount<'info>,
+    /// CHECK: The snapshot program (gov-v1 or mock)
+    pub snapshot_program: UncheckedAccount<'info>,
+    /// CHECK: Consensus result account owned by snapshot program
+    pub consensus_result: UncheckedAccount<'info>,
+    /// CHECK: Meta merkle proof account owned by snapshot program
+    pub meta_merkle_proof: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }
 
 impl<'info> SupportProposal<'info> {
     pub fn support_proposal(&mut self, bumps: &SupportProposalBumps) -> Result<()> {
-        require!(!self.proposal.voting, GovernanceError::ProposalClosed);
+        let clock = Clock::get()?;
+
+        // Ensure proposal is eligible for support
+        require!(
+            clock.epoch <= self.proposal.start_epoch,
+            GovernanceError::ProposalClosed
+        );
         require!(!self.proposal.finalized, GovernanceError::ProposalFinalized);
 
-        let vote_account_data = &self.spl_vote_account.data.borrow();
-
-        let version = u32::from_le_bytes(
-            vote_account_data[0..4]
-                .try_into()
-                .map_err(|_| GovernanceError::InvalidVoteAccountVersion)?,
+        // Check if support period has expired
+        require!(
+            clock.epoch <= self.proposal.creation_epoch + MAX_SUPPORT_EPOCHS,
+            GovernanceError::SupportPeriodExpired
         );
 
-        require!(version <= 2, GovernanceError::InvalidVoteAccount);
+        // Validate snapshot program ownership
+        require!(
+            self.consensus_result.owner == self.snapshot_program.key,
+            GovernanceError::MustBeOwnedBySnapshotProgram
+        );
+        require!(
+            self.meta_merkle_proof.owner == self.snapshot_program.key,
+            GovernanceError::MustBeOwnedBySnapshotProgram
+        );
 
-        // 4 bytes discriminant, 32 bytes node_pubkey
-        let node_pubkey = Pubkey::try_from(&vote_account_data[4..36])
-            .map_err(|_| GovernanceError::InvalidVoteAccount)?;
+        let consensus_result_data = self.consensus_result.try_borrow_data()?;
+        let consensus_result = try_from_slice_unchecked::<ConsensusResult>(
+            &consensus_result_data[ANCHOR_DISCRIMINATOR..],
+        )
+        .map_err(|e| {
+            msg!("Error deserializing ConsensusResult: {}", e);
+            GovernanceError::CantDeserializeConsensusResult
+        })?;
 
-        // Validator identity must be part of the Vote account
-        require_keys_eq!(
-            node_pubkey,
+        let merkle_root = self
+            .proposal
+            .merkle_root_hash
+            .ok_or(GovernanceError::MerkleRootNotSet)?;
+        require!(
+            consensus_result.ballot.meta_merkle_root == merkle_root,
+            GovernanceError::InvalidMerkleRoot
+        );
+
+        // Deserialize MetaMerkleProof for crosschecking
+        let account_data = self.meta_merkle_proof.try_borrow_data()?;
+        let meta_merkle_proof = try_from_slice_unchecked::<MetaMerkleProof>(&account_data[ANCHOR_DISCRIMINATOR..])
+            .map_err(|e| {
+                msg!("Error deserializing MetaMerkleProof: {}", e);
+                GovernanceError::CantDeserializeMMPPDA
+            })?;
+        let meta_merkle_leaf = meta_merkle_proof.meta_merkle_leaf;
+
+        // Crosscheck consensus result
+        require_eq!(
+            meta_merkle_proof.consensus_result,
+            self.consensus_result.key(),
+            GovernanceError::InvalidConsensusResultPDA
+        );
+
+        // Ensure leaf matches signer and has sufficient stake
+        require_eq!(
+            meta_merkle_leaf.voting_wallet,
             self.signer.key(),
             GovernanceError::InvalidVoteAccount
         );
 
-        // Get cluster stake
-        let cluster_stake = get_epoch_total_stake();
-        require_gt!(cluster_stake, 0u64, GovernanceError::InvalidClusterStake);
+        verify_merkle_proof_cpi(
+            &self.meta_merkle_proof.to_account_info(),
+            &self.consensus_result.to_account_info(),
+            &self.snapshot_program.to_account_info(),
+            None,
+            None,
+        )?;
 
-        // Get supporter stake
-        let supporter_stake = get_epoch_stake_for_vote_account(self.spl_vote_account.key);
-
-        // Ensure the supporter has some stake
-        require!(supporter_stake > 0, GovernanceError::NotEnoughStake);
-
-        // Add the supporter's raw stake (in lamports) to the proposal's cluster support
-        self.proposal.cluster_support_lamports = self
-            .proposal
-            .cluster_support_lamports
-            .checked_add(supporter_stake)
-            .ok_or(ProgramError::ArithmeticOverflow)?;
+        // Add the supporter's stake (from verified leaf) to the proposal's cluster support
+        self.proposal
+            .add_cluster_support(meta_merkle_leaf.active_stake)?;
 
         // Initialize the support account
         self.support.set_inner(Support {
@@ -84,18 +136,26 @@ impl<'info> SupportProposal<'info> {
             bump: bumps.support,
         });
 
-        // Check if cluster support reaches 5% of total cluster stake
-        // Use u128 to avoid overflow: check if (cluster_support_lamports * 100) >= (cluster_stake * 5)
-        let support_scaled = (self.proposal.cluster_support_lamports as u128)
-            .checked_mul(100)
-            .ok_or(ProgramError::ArithmeticOverflow)?;
-        let cluster_scaled = (cluster_stake as u128)
-            .checked_mul(5)
-            .ok_or(ProgramError::ArithmeticOverflow)?;
-        if support_scaled >= cluster_scaled {
-            // Set proposal.voting to true, indicating it’s active and can be voted on
-            self.proposal.voting = true;
-        }
+        let cluster_stake = get_epoch_total_stake();
+        let support_scaled =
+            (self.proposal.cluster_support_lamports as u128) * CLUSTER_SUPPORT_MULTIPLIER;
+        let cluster_scaled = (cluster_stake as u128) * CLUSTER_STAKE_MULTIPLIER;
+        let voting_activated = if support_scaled >= cluster_scaled {
+            // Activate voting if threshold met
+            self.proposal.start_epoch = clock.epoch + 4;
+            self.proposal.end_epoch = self.proposal.start_epoch + 3;
+            true
+        } else {
+            false
+        };
+
+        emit!(ProposalSupported {
+            proposal_id: self.proposal.key(),
+            supporter: self.signer.key(),
+            cluster_support_lamports: self.proposal.cluster_support_lamports,
+            voting_activated,
+        });
+
         Ok(())
     }
 }

@@ -1,12 +1,13 @@
 {
   "license": "ISC",
+  "type": "module",
   "scripts": {
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.31.1",
-    "@solana/web3.js": "^1.98.2"
+    "@solana/web3.js": "^1.95.8"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.0",

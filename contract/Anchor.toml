@@ -6,7 +6,8 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-govcontract = "5BU5KsgU7dpLj6t9tZWy7297rLvpfVHhdTkQrx1MJJ2x"
+govcontract = "AXnkQnEEMBsKcJ1gSXP1aW6tZMGWodzEaoB6b3bRib2r"
+mock_gov_v1 = "65smeZTDVuVRQZ1zdUF8wXRMDXhAMVTxRbV3n3MyXLPJ"
 
 [programs.devnet]
 govcontract = "GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc"
@@ -18,8 +19,11 @@ govcontract = "GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "testnet"
+cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+
+[test.validator]
+slot_per_epoc = "32"

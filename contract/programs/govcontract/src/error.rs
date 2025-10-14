@@ -4,8 +4,12 @@ use anchor_lang::prelude::*;
 pub enum GovernanceError {
     #[msg("Minimum stake required to create proposal is 100k")]
     NotEnoughStake,
+    #[msg("The title of the proposal cannot be empty")]
+    TitleEmpty,
     #[msg("The title of the proposal is too long, max 50 char")]
     TitleTooLong,
+    #[msg("The description of the proposal cannot be empty")]
+    DescriptionEmpty,
     #[msg("The description of the proposal is too long, max 250 char")]
     DescriptionTooLong,
     #[msg("The description of the proposal must point to a github link")]
@@ -38,8 +42,42 @@ pub enum GovernanceError {
     InvalidVotingLength,
     #[msg("Invalid Vote account version")]
     InvalidVoteAccountVersion,
-    #[msg("Invaid Vote account size")]
+    #[msg("Invalid Vote account size")]
     InvalidVoteAccountSize,
-    #[msg("All votes cast on the proposal must be counted to finalize")]
-    AllVotesCount,
+    #[msg("Stake account invalid")]
+    InvalidStakeAccount,
+    #[msg("Stake account invalid")]
+    InvalidStakeState,
+    #[msg("Invalid Stake account size")]
+    InvalidStakeAccountSize,
+    #[msg("Invalid Snapshot program: provided program ID does not match the expected Merkle Verifier Service program")]
+    InvalidSnapshotProgram,
+    #[msg("Only the original proposal author can add the merkle root hash")]
+    UnauthorizedMerkleRootUpdate,
+    #[msg("Merkle root hash is already set for this proposal")]
+    MerkleRootAlreadySet,
+    #[msg("Merkle root hash cannot be all zeros")]
+    InvalidMerkleRoot,
+    #[msg("Invalid snapshot slot: snapshot slot must be less past or current slot")]
+    InvalidSnapshotSlot,
+    #[msg("Account must be owned by Snapshot program")]
+    MustBeOwnedBySnapshotProgram,
+    #[msg("Invalid consensus result PDA")]
+    InvalidConsensusResultPDA,
+    #[msg("Can't deserialize MetaMerkleProof PDA")]
+    CantDeserializeMMPPDA,
+    #[msg("Can't deserialize ConsensusResult")]
+    CantDeserializeConsensusResult,
+    #[msg("Cannot modify proposal after voting has started")]
+    CannotModifyAfterStart,
+    #[msg("Voting length exceeds maximum allowed epochs")]
+    VotingLengthTooLong,
+    #[msg("Arithmetic overflow occurred")]
+    ArithmeticOverflow,
+    #[msg("Snapshot program has been upgraded, update protection triggered")]
+    SnapshotProgramUpgraded,
+    #[msg("Merkle root hash has not been set for this proposal")]
+    MerkleRootNotSet,
+    #[msg("Support period has expired for this proposal")]
+    SupportPeriodExpired,
 }
