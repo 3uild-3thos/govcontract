@@ -34,7 +34,7 @@ pub struct CreateProposal<'info> {
         payer = signer,
         seeds = [b"proposal", seed.to_le_bytes().as_ref(), spl_vote_account.key().as_ref()],
         bump,
-        space = 8 + Proposal::INIT_SPACE,
+        space = ANCHOR_DISCRIMINATOR + Proposal::INIT_SPACE,
     )]
     pub proposal: Account<'info, Proposal>,
     #[account(
@@ -94,7 +94,7 @@ impl<'info> CreateProposal<'info> {
         // Deserialize MetaMerkleProof for crosschecking
         let account_data = self.meta_merkle_proof.try_borrow_data()?;
 
-        let meta_merkle_proof = try_from_slice_unchecked::<MetaMerkleProof>(&account_data[8..])
+        let meta_merkle_proof = try_from_slice_unchecked::<MetaMerkleProof>(&account_data[ANCHOR_DISCRIMINATOR..])
             .map_err(|e| {
                 msg!("Error deserializing MetaMerkleProof: {}", e);
                 GovernanceError::CantDeserializeMMPPDA

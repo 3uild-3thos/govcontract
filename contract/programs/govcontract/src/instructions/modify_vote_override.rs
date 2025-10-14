@@ -114,7 +114,7 @@ impl<'info> ModifyVoteOverride<'info> {
 
         let consensus_result_data = self.consensus_result.try_borrow_data()?;
         let consensus_result = try_from_slice_unchecked::<ConsensusResult>(
-            &consensus_result_data[8..],
+            &consensus_result_data[ANCHOR_DISCRIMINATOR..],
         )
         .map_err(|e| {
             msg!("Error deserializing ConsensusResult: {}", e);
@@ -133,7 +133,7 @@ impl<'info> ModifyVoteOverride<'info> {
         // Deserialize MetaMerkleProof for crosschecking
         let meta_account_data = self.meta_merkle_proof.try_borrow_data()?;
         let meta_merkle_proof =
-            try_from_slice_unchecked::<MetaMerkleProof>(&meta_account_data[8..]).map_err(|e| {
+            try_from_slice_unchecked::<MetaMerkleProof>(&meta_account_data[ANCHOR_DISCRIMINATOR..]).map_err(|e| {
                 msg!("Error deserializing MetaMerkleProof: {}", e);
                 GovernanceError::CantDeserializeMMPPDA
             })?;
@@ -226,13 +226,13 @@ impl<'info> ModifyVoteOverride<'info> {
         self.vote_override.vote_override_timestamp = clock.unix_timestamp;
 
         // Update vote override cache if it exists
-        if self.vote_override_cache.data_len() == (8 + VoteOverrideCache::INIT_SPACE)
+        if self.vote_override_cache.data_len() == (ANCHOR_DISCRIMINATOR + VoteOverrideCache::INIT_SPACE)
             && self.vote_override_cache.owner == &crate::ID
-            && VoteOverrideCache::deserialize(&mut &self.vote_override_cache.data.borrow()[8..])
+            && VoteOverrideCache::deserialize(&mut &self.vote_override_cache.data.borrow()[ANCHOR_DISCRIMINATOR..])
                 .is_ok()
         {
             let mut vote_override_cache =
-                VoteOverrideCache::deserialize(&mut &self.vote_override_cache.data.borrow()[8..])?;
+                VoteOverrideCache::deserialize(&mut &self.vote_override_cache.data.borrow()[ANCHOR_DISCRIMINATOR..])?;
 
             // Update cache by subtracting old values and adding new ones
             vote_override_cache.for_votes_lamports = vote_override_cache

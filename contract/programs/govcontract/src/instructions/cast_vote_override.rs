@@ -44,7 +44,7 @@ pub struct CastVoteOverride<'info> {
     #[account(
         init,
         payer = signer,
-        space = 8 + VoteOverride::INIT_SPACE,
+        space = ANCHOR_DISCRIMINATOR + VoteOverride::INIT_SPACE,
         seeds = [b"vote_override", proposal.key().as_ref(), spl_stake_account.key.as_ref(), validator_vote.key().as_ref()],
         bump
     )]
@@ -118,7 +118,7 @@ impl<'info> CastVoteOverride<'info> {
 
         let consensus_result_data = self.consensus_result.try_borrow_data()?;
         let consensus_result = try_from_slice_unchecked::<ConsensusResult>(
-            &consensus_result_data[8..],
+            &consensus_result_data[ANCHOR_DISCRIMINATOR..],
         )
         .map_err(|e| {
             msg!("Error deserializing ConsensusResult: {}", e);
@@ -137,7 +137,7 @@ impl<'info> CastVoteOverride<'info> {
         // Deserialize MetaMerkleProof for crosschecking
         let meta_account_data = self.meta_merkle_proof.try_borrow_data()?;
         let meta_merkle_proof =
-            try_from_slice_unchecked::<MetaMerkleProof>(&meta_account_data[8..]).map_err(|e| {
+            try_from_slice_unchecked::<MetaMerkleProof>(&meta_account_data[ANCHOR_DISCRIMINATOR..]).map_err(|e| {
                 msg!("Error deserializing MetaMerkleProof: {}", e);
                 GovernanceError::CantDeserializeMMPPDA
             })?;
@@ -194,12 +194,12 @@ impl<'info> CastVoteOverride<'info> {
         // Check that validator vote exists
         // If account does not exist, call cache_votes_override to store staker's vote in override PDA
 
-        if self.validator_vote.data_len() == (8 + Vote::INIT_SPACE)
+        if self.validator_vote.data_len() == (ANCHOR_DISCRIMINATOR + Vote::INIT_SPACE)
             && self.validator_vote.owner == &crate::ID
             && Vote::deserialize(&mut self.validator_vote.data.borrow().as_ref()).is_ok()
         {
             let mut validator_vote =
-                Vote::deserialize(&mut &self.validator_vote.data.borrow()[8..])?;
+                Vote::deserialize(&mut &self.validator_vote.data.borrow()[ANCHOR_DISCRIMINATOR..])?;
 
             // Subtract validator's vote
             self.proposal.sub_vote_lamports(
@@ -251,7 +251,7 @@ impl<'info> CastVoteOverride<'info> {
 
             // Serialize the updated validator vote back to the account
             let mut validator_vote_data = self.validator_vote.data.borrow_mut();
-            let mut vote_bytes = &mut validator_vote_data[8..]; // Skip discriminator
+            let mut vote_bytes = &mut validator_vote_data[ANCHOR_DISCRIMINATOR..]; // Skip discriminator
             validator_vote.serialize(&mut vote_bytes).map_err(|e| {
                 msg!("Error serializing Vote: {}", e);
                 GovernanceError::ArithmeticOverflow
@@ -275,7 +275,7 @@ impl<'info> CastVoteOverride<'info> {
             });
         } else {
             // Store delegator's vote in a the cache PDA
-            if self.vote_override_cache.data_len() == (8 + VoteOverrideCache::INIT_SPACE)
+            if self.vote_override_cache.data_len() == (ANCHOR_DISCRIMINATOR + VoteOverrideCache::INIT_SPACE)
                 && self.vote_override_cache.owner == &crate::ID
                 && VoteOverrideCache::deserialize(
                     &mut self.vote_override_cache.data.borrow().as_ref(),
@@ -345,8 +345,8 @@ impl<'info> CastVoteOverride<'info> {
                 let ix = create_account(
                     &self.signer.key(),
                     &self.vote_override_cache.key(),
-                    Rent::get()?.minimum_balance(8 + VoteOverrideCache::INIT_SPACE),
-                    (8 + VoteOverrideCache::INIT_SPACE) as u64,
+                    Rent::get()?.minimum_balance(ANCHOR_DISCRIMINATOR + VoteOverrideCache::INIT_SPACE),
+                    (ANCHOR_DISCRIMINATOR + VoteOverrideCache::INIT_SPACE) as u64,
                     &crate::ID,
                 );
 

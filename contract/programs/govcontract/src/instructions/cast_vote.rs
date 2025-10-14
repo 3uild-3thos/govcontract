@@ -28,7 +28,7 @@ pub struct CastVote<'info> {
     #[account(
         init,
         payer = signer,
-        space = 8 + Vote::INIT_SPACE,
+        space = ANCHOR_DISCRIMINATOR + Vote::INIT_SPACE,
         seeds = [b"vote", proposal.key().as_ref(), spl_vote_account.key().as_ref()],
         bump
     )]
@@ -101,7 +101,7 @@ impl<'info> CastVote<'info> {
 
         let consensus_result_data = self.consensus_result.try_borrow_data()?;
         let consensus_result = try_from_slice_unchecked::<ConsensusResult>(
-            &consensus_result_data[8..],
+            &consensus_result_data[ANCHOR_DISCRIMINATOR..],
         )
         .map_err(|e| {
             msg!("Error deserializing ConsensusResult: {}", e);
@@ -119,7 +119,7 @@ impl<'info> CastVote<'info> {
 
         // Deserialize MetaMerkleProof for crosschecking
         let account_data = self.meta_merkle_proof.try_borrow_data()?;
-        let meta_merkle_proof = try_from_slice_unchecked::<MetaMerkleProof>(&account_data[8..])
+        let meta_merkle_proof = try_from_slice_unchecked::<MetaMerkleProof>(&account_data[ANCHOR_DISCRIMINATOR..])
             .map_err(|e| {
                 msg!("Error deserializing MetaMerkleProof: {}", e);
                 GovernanceError::CantDeserializeMMPPDA
@@ -167,7 +167,7 @@ impl<'info> CastVote<'info> {
 
         // Check if ovveride PDA exists
         // If it does, update lamports with the override amount
-        if self.vote_override_cache.data_len() == (8 + VoteOverrideCache::INIT_SPACE)
+        if self.vote_override_cache.data_len() == (ANCHOR_DISCRIMINATOR + VoteOverrideCache::INIT_SPACE)
             && self.vote_override_cache.owner == &crate::ID
             && VoteOverrideCache::deserialize(&mut self.vote_override_cache.data.borrow().as_ref())
                 .is_ok()

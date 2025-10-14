@@ -8,8 +8,10 @@ This repository contains a Solana program that enables a decentralized governanc
 
 * **Proposal creation**: Validators can create new proposals with a title, description, and voting period, with merkle proof verification for stake validation.
 * **Proposal support**: Validators can show support for a proposal, which helps to activate voting with enhanced stake verification.
-* **Voting**: Validators can cast votes on a proposal, with their vote weight determined by their stake, including vote override functionality for delegators.
-* **Vote override**: Delegators can override their validator's vote using stake account verification and merkle proofs.
+* **Voting**: Validators can cast votes on a proposal, with their vote weight determined by their stake.
+* **Delegator voting**: Delegators can vote independently on proposals using their stake accounts, either before their validator votes (cached) or as an override after the validator has voted.
+* **Vote override**: When a validator has already voted, delegators can override their validator's vote using stake account verification and merkle proofs.
+* **Vote caching**: When delegators vote before their validator, their votes are cached and will be applied when the validator eventually votes.
 * **Merkle proof verification**: Comprehensive integration with external snapshot programs for stake verification.
 * **PDA utilities**: Robust program-derived address derivation for all contract accounts.
 * **Enhanced validation**: Improved error handling and input validation throughout the contract.
@@ -22,7 +24,7 @@ The contract is organized into several modules:
 * `lib.rs`: Contains the main program logic, including functions for creating proposals, casting votes, and finalizing results.
 * `merkle_helpers.rs`: Provides utilities for merkle proof verification and cross-program invocation.
 * `utils.rs`: Provides utility functions, such as calculating stake weights in basis points and PDA derivation.
-* `state`: Defines the data structures used to store proposal, vote, and vote override information.
+* `state`: Defines the data structures used to store proposal, vote, vote override, and vote override cache information.
 * `instructions`: Contains the implementation of each instruction, including create proposal, cast vote, cast vote override, modify vote, support proposal, finalize proposal, and add merkle root.
 
 
@@ -39,7 +41,9 @@ To use this contract, you'll need to:
 3. **Create a proposal**: Use the `create_proposal` instruction to create a new proposal with merkle proof verification for stake validation.
 4. **Support a proposal**: Use the `support_proposal` instruction to show support for a proposal with stake verification.
 5. **Cast a vote**: Use the `cast_vote` instruction to cast a validator vote on a proposal.
-6. **Cast vote override**: Use the `cast_vote_override` instruction for delegators to override their validator's vote.
+6. **Cast delegator vote**: Use the `cast_vote_override` instruction for delegators to vote on a proposal. This works in two scenarios:
+   - **Independent voting**: If the validator hasn't voted yet, the delegator's vote is cached and will be applied when the validator votes
+   - **Override voting**: If the validator has already voted, the delegator's vote overrides the validator's vote for their stake portion
 7. **Modify vote**: Use the `modify_vote` instruction to update an existing vote.
 8. **Add merkle root**: Use the `add_merkle_root` instruction to set the merkle root hash for a proposal.
 9. **Finalize proposal**: Use the `finalize_proposal` instruction to determine the outcome after voting ends.
@@ -98,7 +102,7 @@ Emitted when a validator casts their vote.
 </details>
 
 ### VoteOverrideCast
-Emitted when a delegator overrides their validator's vote.
+Emitted when a delegator votes on a proposal, either as an independent vote (cached if validator hasn't voted) or as an override of their validator's existing vote.
 
 <details>
 <summary><strong>Click to view event fields</strong></summary>
@@ -190,10 +194,10 @@ const voteListener = program.addEventListener('VoteCast', (event, slot) => {
   // Update voting results in real-time
 });
 
-// Listen for vote overrides
+// Listen for delegator votes (both independent and override)
 const overrideListener = program.addEventListener('VoteOverrideCast', (event, slot) => {
-  console.log('Vote override by delegator');
-  // Update delegator voting status
+  console.log('Delegator vote cast:', event.forVotesBp, 'basis points');
+  // Update delegator voting status (could be cached or override)
 });
 
 // Cleanup listeners when component unmounts

@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::state::ProposalIndex;
+use crate::{constants::*, state::ProposalIndex};
 
 #[derive(Accounts)]
 pub struct InitializedIndex<'info> {
@@ -9,7 +9,7 @@ pub struct InitializedIndex<'info> {
     #[account(
         init,
         payer = signer,
-        space = 8 + ProposalIndex::INIT_SPACE,
+        space = ANCHOR_DISCRIMINATOR + ProposalIndex::INIT_SPACE,
         seeds = [b"index"],
         bump
     )]
