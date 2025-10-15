@@ -13,3 +13,13 @@ export * from "./useVoteAccounts";
 export * from "./useCastVote";
 export * from "./useModifyVote";
 export * from "./useCreateProposal";
+
+// DEPRECATED
+export * from "./DEPRECATED/useGetValidators";
+export * from "./DEPRECATED/useGetValidatorsBubbleChart";
+export * from "./DEPRECATED/useGetValidatorsTable";
+export * from "./DEPRECATED/useGetValidatorsTableMobile";
+export * from "./DEPRECATED/useLatestProposalData";
+export * from "./DEPRECATED/useValidatorsVoterSplits";
+export * from "./DEPRECATED/useVoteAccountsWithValidators";
+export * from "./DEPRECATED/useVotes";

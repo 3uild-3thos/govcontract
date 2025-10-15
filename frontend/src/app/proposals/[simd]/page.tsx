@@ -8,7 +8,7 @@ interface ProposalDetailsPageProps {
   params: Promise<{ simd: string }>;
 }
 
-export const ProposalDetailsPage = ({ params }: ProposalDetailsPageProps) => {
+const ProposalDetailsPage = ({ params }: ProposalDetailsPageProps) => {
   const paramsAwaited = use(params);
   const { simd } = paramsAwaited;
 

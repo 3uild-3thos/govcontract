@@ -1,4 +1,4 @@
-import type { ProposalRecord } from "@/dummy-data/proposals";
+import { ProposalRecord } from "@/types";
 
 export type ProposalRow = ProposalRecord & {
   id: string;

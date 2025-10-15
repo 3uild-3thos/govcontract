@@ -1,7 +1,7 @@
-import { useLatestProposalData } from "@/hooks";
 import { PhaseTimeline } from "./ui";
 import { CurrentPhaseLoadingSkeleton } from "./CurrentPhaseLoadingSkeleton";
 import { getProposalPhase } from "@/lib/proposals";
+import { useLatestProposalData } from "@/hooks/DEPRECATED/useLatestProposalData";
 
 export const CurrentPhase = () => {
   const { data, isLoading } = useLatestProposalData();

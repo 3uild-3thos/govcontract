@@ -84,15 +84,10 @@ export function GovernanceDashboardLayout({
             )}
           </div>
 
-          {showValidatorView && (
-            <ValidatorActionPanel voteAccounts={walletData.vote_accounts} />
-          )}
+          {showValidatorView && <ValidatorActionPanel />}
 
           {showStakerView && (
-            <StakerActionPanel
-              proposalStats={walletData.proposalStats}
-              stakeAccounts={walletData.stake_accounts}
-            />
+            <StakerActionPanel proposalStats={walletData.proposalStats} />
           )}
         </div>
       </div>
