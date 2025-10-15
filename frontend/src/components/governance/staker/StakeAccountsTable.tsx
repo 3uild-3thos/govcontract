@@ -11,7 +11,6 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import type { StakeAccountData } from "@/dummy-data/wallets";
 import { columns } from "@/components/governance/staker/StakerColumns";
 import {
   Table,
@@ -33,10 +32,8 @@ import {
 import { CopyableAddress } from "@/components/governance/shared/CopyableAddress";
 import { formatLamportsDisplay } from "@/lib/governance/formatters";
 import { StakeAccountStatus } from "@/components/governance/staker/StakeAccountStatus";
-
-interface StakeAccountsTableProps {
-  data: StakeAccountData[];
-}
+import { StakeAccountData } from "@/types/stakeAccounts";
+import { useStakeAccounts } from "@/hooks/useStakeAccounts";
 
 const stakeAmountOptions = [
   { value: "All", label: "Stake Amount" },
@@ -56,11 +53,11 @@ const stakeStatusOptions: { value: StakeStatusType; label: string }[] = [
   { value: "deactivating", label: "Deactivating" },
 ];
 
-export function StakeAccountsTable({ data }: StakeAccountsTableProps) {
+export function StakeAccountsTable() {
   // State Management
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    [],
+    []
   );
   const [searchValue, setSearchValue] = React.useState("");
   const [stakeSizeFilter, setStakeSizeFilter] = React.useState("All");
@@ -69,9 +66,16 @@ export function StakeAccountsTable({ data }: StakeAccountsTableProps) {
 
   // Mobile drawer state
   const [selectedRow, setSelectedRow] = React.useState<StakeAccountData | null>(
-    null,
+    null
   );
   const [drawerOpen, setDrawerOpen] = React.useState(false);
+
+  const { data: stakeAccountsData, isLoading } = useStakeAccounts();
+
+  const data = React.useMemo(
+    () => stakeAccountsData || [],
+    [stakeAccountsData]
+  );
 
   // Data Filtering
   const filteredData = React.useMemo(() => {
@@ -80,19 +84,19 @@ export function StakeAccountsTable({ data }: StakeAccountsTableProps) {
     if (searchValue) {
       filtered = filtered.filter(
         (row) =>
-          row.stake_account.toLowerCase().includes(searchValue.toLowerCase()) ||
-          row.vote_account.toLowerCase().includes(searchValue.toLowerCase()),
+          row.stakeAccount.toLowerCase().includes(searchValue.toLowerCase()) ||
+          row.voteAccount.toLowerCase().includes(searchValue.toLowerCase())
       );
     }
 
     if (stakeSizeFilter !== "All") {
       const threshold = parseFloat(stakeSizeFilter) * 1e9;
-      filtered = filtered.filter((row) => row.active_stake >= threshold);
+      filtered = filtered.filter((row) => row.activeStake >= threshold);
     }
 
     if (stakeStatusFilter !== "All") {
       filtered = filtered.filter(
-        (row) => (row.state ?? "active") === stakeStatusFilter,
+        (row) => (row.state ?? "active") === stakeStatusFilter
       );
     }
 
@@ -195,7 +199,7 @@ export function StakeAccountsTable({ data }: StakeAccountsTableProps) {
                           ? null
                           : flexRender(
                               header.column.columnDef.header,
-                              header.getContext(),
+                              header.getContext()
                             )}
                       </TableHead>
                     );
@@ -204,8 +208,40 @@ export function StakeAccountsTable({ data }: StakeAccountsTableProps) {
               ))}
             </TableHeader>
             <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
+              {(() => {
+                if (isLoading) {
+                  return (
+                    <>
+                      {[...Array(4)].map((_, i) => (
+                        <TableRow
+                          key={`skeleton-${i}`}
+                          className="animate-pulse"
+                        >
+                          {table.getAllColumns().map((col) => (
+                            <TableCell
+                              key={col.id}
+                              className="py-5 px-6 text-center"
+                            >
+                              <div className="mx-auto h-4 w-3/4 rounded bg-white/10" />
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      ))}
+                    </>
+                  );
+                }
+                if (table.getRowModel().rows.length === 0) {
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-24 text-center text-white/60"
+                    >
+                      No results.
+                    </TableCell>
+                  </TableRow>;
+                }
+
+                return table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
                     className="border-white/10 hover:bg-white/5 sm:hover:bg-transparent cursor-pointer sm:cursor-default"
@@ -227,23 +263,14 @@ export function StakeAccountsTable({ data }: StakeAccountsTableProps) {
                         >
                           {flexRender(
                             cell.column.columnDef.cell,
-                            cell.getContext(),
+                            cell.getContext()
                           )}
                         </TableCell>
                       );
                     })}
                   </TableRow>
-                ))
-              ) : (
-                <TableRow className="hover:bg-transparent">
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center text-white/60"
-                  >
-                    No results.
-                  </TableCell>
-                </TableRow>
-              )}
+                ));
+              })()}
             </TableBody>
           </Table>
         </div>
@@ -273,7 +300,7 @@ export function StakeAccountsTable({ data }: StakeAccountsTableProps) {
               label="Stake Account"
               value={
                 <CopyableAddress
-                  address={selectedRow.stake_account}
+                  address={selectedRow.stakeAccount}
                   shortenedLength={8}
                   copyLabel="Copy full address"
                 />
@@ -284,7 +311,7 @@ export function StakeAccountsTable({ data }: StakeAccountsTableProps) {
               label="Delegated Validator"
               value={
                 <CopyableAddress
-                  address={selectedRow.vote_account}
+                  address={selectedRow.voteAccount}
                   shortenedLength={8}
                   copyLabel="Copy vote account"
                 />
@@ -293,7 +320,7 @@ export function StakeAccountsTable({ data }: StakeAccountsTableProps) {
             />
             <DetailRow
               label="Amount"
-              value={formatLamportsDisplay(selectedRow.active_stake).value}
+              value={formatLamportsDisplay(selectedRow.activeStake).value}
             />
             <DetailRow
               label="State"

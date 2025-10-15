@@ -1,5 +1,5 @@
 import { PublicKey, Connection } from "@solana/web3.js";
-import { AnchorProvider, Program, BN, Wallet } from "@coral-xyz/anchor";
+import { AnchorProvider, Program, BN } from "@coral-xyz/anchor";
 import idl from "@/chain/idl/govcontract.json";
 import {
   VoteAccountProofResponse,
@@ -80,6 +80,7 @@ export function createProgramWithWallet(
   wallet: AnchorWallet,
   programId?: PublicKey,
   endpoint?: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
   // Use provided endpoint or default to devnet
   const rpcEndpoint = endpoint || "https://api.devnet.solana.com";
@@ -92,6 +93,7 @@ export function createProgramWithWallet(
   // Use the exact same pattern as the working chain/helpers.ts
   // If a custom programId is provided, we'll ignore it for now to get it working
   // The IDL contains the program ID, so this should work
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const program = new Program(idl, provider) as any;
 
   return program;
@@ -273,6 +275,7 @@ export function convertMerkleProofStrings(proofStrings: string[]): PublicKey[] {
 }
 
 // Convert stake merkle leaf data to IDL type
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function convertStakeMerkleLeafDataToIdlType(leafData: any): any {
   // This is a placeholder - you'll need to implement the actual conversion
   // based on your IDL structure

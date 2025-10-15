@@ -29,7 +29,7 @@ export function determineWalletRole(walletData: WalletData): WalletRole {
 }
 
 export function getDefaultView(
-  role: WalletRole,
+  role: WalletRole
 ): "validator" | "staker" | null {
   switch (role) {
     case WalletRole.VALIDATOR:

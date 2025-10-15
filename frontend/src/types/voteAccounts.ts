@@ -1,0 +1,21 @@
+export interface VoteAccountData {
+  voteAccount: string;
+  activeStake: number;
+  identity?: string;
+  commission?: number;
+  lastVote?: number;
+  credits?: number;
+  epochCredits?: number;
+  activatedStake?: number;
+}
+
+export interface RawVoteAccountData {
+  vote_account: string;
+  active_stake: number;
+  identity?: string;
+  commission?: number;
+  lastVote?: number;
+  credits?: number;
+  epochCredits?: number;
+  activated_stake?: number;
+}

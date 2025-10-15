@@ -17,10 +17,7 @@ import {
 } from "@/components/ui/drawer";
 import { formatAddress } from "@/lib/governance/formatters";
 import { useModal } from "@/contexts/ModalContext";
-import {
-  useWalletModal,
-  WalletMultiButton,
-} from "@solana/wallet-adapter-react-ui";
+import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { useWallet } from "@solana/wallet-adapter-react";
 
 type NavLink = {

@@ -11,7 +11,6 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import type { VoteAccountData } from "@/dummy-data/wallets";
 import {
   Table,
   TableBody,
@@ -37,10 +36,8 @@ import {
   formatLamportsDisplay,
   formatOptionalCount,
 } from "@/lib/governance/formatters";
-
-interface VoteAccountsTableProps {
-  data: VoteAccountData[];
-}
+import { VoteAccountData } from "@/types";
+import { useVoteAccounts } from "@/hooks";
 
 const stakeSizeOptions = [
   { value: "All", label: "Stake Size" },
@@ -50,20 +47,27 @@ const stakeSizeOptions = [
   { value: "1000000", label: "> 1,000,000 SOL" },
 ];
 
-export function VoteAccountsTable({ data }: VoteAccountsTableProps) {
+export function VoteAccountsTable() {
   // State Management
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    [],
+    []
   );
   const [searchValue, setSearchValue] = React.useState("");
   const [stakeSizeFilter, setStakeSizeFilter] = React.useState("All");
 
   // Mobile drawer state
   const [selectedRow, setSelectedRow] = React.useState<VoteAccountData | null>(
-    null,
+    null
   );
   const [drawerOpen, setDrawerOpen] = React.useState(false);
+
+  const { data: votingAccountsData, isLoading } = useVoteAccounts();
+
+  const data = React.useMemo(
+    () => votingAccountsData || [],
+    [votingAccountsData]
+  );
 
   // Data Filtering
   const filteredData = React.useMemo(() => {
@@ -71,13 +75,13 @@ export function VoteAccountsTable({ data }: VoteAccountsTableProps) {
 
     if (searchValue) {
       filtered = filtered.filter((row) =>
-        row.vote_account.toLowerCase().includes(searchValue.toLowerCase()),
+        row.voteAccount.toLowerCase().includes(searchValue.toLowerCase())
       );
     }
 
     if (stakeSizeFilter !== "All") {
       const threshold = parseFloat(stakeSizeFilter) * 1e9;
-      filtered = filtered.filter((row) => row.active_stake >= threshold);
+      filtered = filtered.filter((row) => row.activeStake >= threshold);
     }
 
     return filtered;
@@ -171,7 +175,7 @@ export function VoteAccountsTable({ data }: VoteAccountsTableProps) {
                           ? null
                           : flexRender(
                               header.column.columnDef.header,
-                              header.getContext(),
+                              header.getContext()
                             )}
                       </TableHead>
                     );
@@ -180,8 +184,42 @@ export function VoteAccountsTable({ data }: VoteAccountsTableProps) {
               ))}
             </TableHeader>
             <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
+              {(() => {
+                if (isLoading) {
+                  return (
+                    <>
+                      {[...Array(4)].map((_, i) => (
+                        <TableRow
+                          key={`skeleton-${i}`}
+                          className="animate-pulse"
+                        >
+                          {table.getAllColumns().map((col) => (
+                            <TableCell
+                              key={col.id}
+                              className="py-5 px-6 text-center"
+                            >
+                              <div className="mx-auto h-4 w-3/4 rounded bg-white/10" />
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      ))}
+                    </>
+                  );
+                }
+                if (table.getRowModel().rows.length === 0) {
+                  return (
+                    <TableRow className="hover:bg-transparent">
+                      <TableCell
+                        colSpan={columns.length}
+                        className="h-24 text-center text-white/60"
+                      >
+                        No results.
+                      </TableCell>
+                    </TableRow>
+                  );
+                }
+
+                return table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
                     className="border-white/10 hover:bg-white/5 sm:hover:bg-transparent cursor-pointer sm:cursor-default"
@@ -205,23 +243,14 @@ export function VoteAccountsTable({ data }: VoteAccountsTableProps) {
                         >
                           {flexRender(
                             cell.column.columnDef.cell,
-                            cell.getContext(),
+                            cell.getContext()
                           )}
                         </TableCell>
                       );
                     })}
                   </TableRow>
-                ))
-              ) : (
-                <TableRow className="hover:bg-transparent">
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center text-white/60"
-                  >
-                    No results.
-                  </TableCell>
-                </TableRow>
-              )}
+                ));
+              })()}
             </TableBody>
           </Table>
         </div>
@@ -251,7 +280,7 @@ export function VoteAccountsTable({ data }: VoteAccountsTableProps) {
               label="Vote Account"
               value={
                 <CopyableAddress
-                  address={selectedRow.vote_account}
+                  address={selectedRow.voteAccount}
                   shortenedLength={8}
                   copyLabel="Copy full address"
                 />
@@ -269,7 +298,7 @@ export function VoteAccountsTable({ data }: VoteAccountsTableProps) {
             />
             <DetailRow
               label="Delegated Stake"
-              value={formatLamportsDisplay(selectedRow.active_stake).value}
+              value={formatLamportsDisplay(selectedRow.activeStake).value}
             />
             <DetailRow
               label="Commission"

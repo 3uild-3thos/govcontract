@@ -155,7 +155,7 @@ export function GovernanceDashboardLayout({
                 </section>
               )}
 
-              <VoteAccountsTable data={walletData.vote_accounts} />
+              <VoteAccountsTable />
             </div>
           )}
 
@@ -189,7 +189,7 @@ export function GovernanceDashboardLayout({
               )}
 
               <SummaryStats stats={walletData.proposalStats} />
-              <StakeAccountsTable data={walletData.stake_accounts} />
+              <StakeAccountsTable />
             </div>
           )}
         </div>

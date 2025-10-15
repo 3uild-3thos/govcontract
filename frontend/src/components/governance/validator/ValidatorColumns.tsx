@@ -1,7 +1,6 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import type { VoteAccountData } from "@/dummy-data/wallets";
 import {
   formatAddress,
   formatCommission,
@@ -10,13 +9,14 @@ import {
 } from "@/lib/governance/formatters";
 import { CopyableAddress } from "@/components/governance/shared/CopyableAddress";
 import { SortableHeaderButton } from "@/components/governance/shared/SortableHeaderButton";
+import { VoteAccountData } from "@/types";
 
 export const columns: ColumnDef<VoteAccountData>[] = [
   {
-    accessorKey: "vote_account",
+    accessorKey: "voteAccount",
     header: "VOTE ACCOUNT",
     cell: ({ row }) => {
-      const account = row.getValue("vote_account") as string;
+      const account = row.getValue("voteAccount") as string;
       return (
         <>
           {/* Mobile: Simple text without copy button */}
@@ -44,14 +44,18 @@ export const columns: ColumnDef<VoteAccountData>[] = [
       const identity = row.getValue("identity") as string | undefined;
       if (!identity) return <div className="hidden sm:block">-</div>;
       const displayIdentity = formatAddress(identity, 6);
-      return <p className="hidden sm:block font-mono text-xs lg:text-sm">{displayIdentity}</p>;
+      return (
+        <p className="hidden sm:block font-mono text-xs lg:text-sm">
+          {displayIdentity}
+        </p>
+      );
     },
   },
   {
-    accessorKey: "active_stake",
+    accessorKey: "activeStake",
     header: "DELEGATED STAKE",
     cell: ({ row }) => {
-      const stake = row.getValue("active_stake") as number;
+      const stake = row.getValue("activeStake") as number;
       const solAmount = formatLamportsDisplay(stake);
       return <div>{solAmount.value}</div>;
     },

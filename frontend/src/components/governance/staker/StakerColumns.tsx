@@ -1,24 +1,27 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import type { StakeAccountData } from "@/dummy-data/wallets";
 import { StakeAccountStatus } from "@/components/governance/staker/StakeAccountStatus";
 import { CopyableAddress } from "@/components/governance/shared/CopyableAddress";
-import { formatLamportsDisplay, formatAddress } from "@/lib/governance/formatters";
+import {
+  formatLamportsDisplay,
+  formatAddress,
+} from "@/lib/governance/formatters";
 import { SortableHeaderButton } from "@/components/governance/shared/SortableHeaderButton";
+import { StakeAccountData } from "@/types/stakeAccounts";
 
 export const columns: ColumnDef<StakeAccountData>[] = [
   {
-    accessorKey: "stake_account",
+    accessorKey: "stakeAccount",
     header: "STAKE ACCOUNT",
     cell: ({ row }) => {
-      const account = row.getValue("stake_account") as string;
+      const account = row.getValue("stakeAccount") as string;
       return (
         <>
           {/* Mobile: Simple text without copy button */}
           <div className="sm:hidden">
             <p className="font-mono text-white/90 text-xs">
-              {formatAddress(account, 4)}
+              {formatAddress(account)}
             </p>
           </div>
           {/* Desktop: Full CopyableAddress component */}
@@ -34,23 +37,23 @@ export const columns: ColumnDef<StakeAccountData>[] = [
     },
   },
   {
-    accessorKey: "active_stake",
+    accessorKey: "activeStake",
     header: ({ column }) => (
       <div className="hidden sm:block">
         <SortableHeaderButton column={column} label="AMOUNT" />
       </div>
     ),
     cell: ({ row }) => {
-      const stake = row.getValue("active_stake") as number;
+      const stake = row.getValue("activeStake") as number;
       const solAmount = formatLamportsDisplay(stake);
       return <div className="hidden sm:block">{solAmount.value}</div>;
     },
   },
   {
-    accessorKey: "vote_account",
+    accessorKey: "voteAccount",
     header: () => <span className="hidden sm:inline">DELEGATED VOTER</span>,
     cell: ({ row }) => {
-      const validator = row.getValue("vote_account") as string;
+      const validator = row.getValue("voteAccount") as string;
       return (
         <div className="hidden sm:block">
           <CopyableAddress

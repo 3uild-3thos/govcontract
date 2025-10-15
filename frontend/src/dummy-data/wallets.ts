@@ -1,32 +1,17 @@
+import { RawVoteAccountData } from "@/types";
+import { RawStakeAccountData } from "@/types/stakeAccounts";
+
 export interface ProposalStats {
   total: number;
   active: number;
   history: number;
 }
 
-export interface VoteAccountData {
-  vote_account: string;
-  active_stake: number;
-  identity?: string;
-  commission?: number;
-  lastVote?: number;
-  credits?: number;
-  epochCredits?: number;
-  activatedStake?: number;
-}
-
-export interface StakeAccountData {
-  stake_account: string;
-  active_stake: number;
-  vote_account: string;
-  state?: "active" | "inactive" | "activating" | "deactivating";
-}
-
 export interface WalletData {
   snapshot_slot: number;
   voting_wallet: string;
-  vote_accounts: VoteAccountData[];
-  stake_accounts: StakeAccountData[];
+  vote_accounts: RawVoteAccountData[];
+  stake_accounts: RawStakeAccountData[];
   proposalStats: ProposalStats;
 }
 
@@ -50,7 +35,7 @@ export const validatorOnlyWallet: WalletData = {
       lastVote: 245789455,
       credits: 950000,
       epochCredits: 8500,
-      activatedStake: 1020450000000000,
+      activated_stake: 1020450000000000,
     },
     {
       vote_account: "8hgr2l2pd5kFGMwBXdudvWHYwtNgNhvLuCertusDeBmq",
@@ -60,7 +45,7 @@ export const validatorOnlyWallet: WalletData = {
       lastVote: 245789456,
       credits: 890000,
       epochCredits: 8200,
-      activatedStake: 850300000000000,
+      activated_stake: 850300000000000,
     },
     {
       vote_account: "b2k1m9as5kFGMwBXdudvWHYwtNgNhvLuCertusDeTest",
@@ -70,7 +55,7 @@ export const validatorOnlyWallet: WalletData = {
       lastVote: 245789454,
       credits: 560000,
       epochCredits: 5600,
-      activatedStake: 560000000000000,
+      activated_stake: 560000000000000,
     },
     {
       vote_account: "c3lmp8qw7kFGMwBXdudvWHYwtNgNhvLuValidatorX",
@@ -80,7 +65,7 @@ export const validatorOnlyWallet: WalletData = {
       lastVote: 245789456,
       credits: 100000,
       epochCredits: 1000,
-      activatedStake: 100273000000000,
+      activated_stake: 100273000000000,
     },
     {
       vote_account: "d4mnq9rx5kFGMwBXdudvWHYwtNgNhvLuSmallVal",
@@ -90,7 +75,7 @@ export const validatorOnlyWallet: WalletData = {
       lastVote: 245789450,
       credits: 17000,
       epochCredits: 170,
-      activatedStake: 17100000000000,
+      activated_stake: 17100000000000,
     },
   ],
   stake_accounts: [],
@@ -264,7 +249,7 @@ export const validatorAndStakerWallet: WalletData = {
       lastVote: 245789455,
       credits: 950000,
       epochCredits: 8500,
-      activatedStake: 1020450000000000,
+      activated_stake: 1020450000000000,
     },
     {
       vote_account: "8hgr2l2pd5kFGMwBXdudvWHYwtNgNhvLuCertusDeBmq",
@@ -274,7 +259,7 @@ export const validatorAndStakerWallet: WalletData = {
       lastVote: 245789456,
       credits: 890000,
       epochCredits: 8200,
-      activatedStake: 850300000000000,
+      activated_stake: 850300000000000,
     },
   ],
   stake_accounts: [
