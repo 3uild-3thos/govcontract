@@ -13,12 +13,12 @@ export const queryClient = new QueryClient({
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <EndpointProvider>
-      <ProgramIdProvider>
-        <AppWalletProvider>
-          <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-        </AppWalletProvider>
-      </ProgramIdProvider>
-    </EndpointProvider>
+    <QueryClientProvider client={queryClient}>
+      <EndpointProvider>
+        <ProgramIdProvider>
+          <AppWalletProvider>{children}</AppWalletProvider>
+        </ProgramIdProvider>
+      </EndpointProvider>
+    </QueryClientProvider>
   );
 }

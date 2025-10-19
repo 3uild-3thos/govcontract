@@ -1,3 +1,4 @@
+import { BlockchainParams, createProgramWitDummyWallet } from "@/chain";
 import { proposalsMockData } from "@/dummy-data/proposals";
 import {
   ProposalLifecycleStage,
@@ -8,10 +9,20 @@ import {
 
 // TODO: feel free to create a new file for the blockchain fetching logic, and rename this one to proposalsMapper or smth like that
 
-export const getProposals = async (): Promise<ProposalRecord[]> => {
+export const getProposals = async (
+  blockchainParams: BlockchainParams
+): Promise<ProposalRecord[]> => {
   // TODO: Juan, do your magic here
   // const response = await fetch("SOMEWHERE IN SOLANA BLOCKCHAIN");
   // if (error) throw new Error("Failed to fetch proposals");
+
+  const program = createProgramWitDummyWallet(
+    blockchainParams.endpoint
+    // params.programId,
+  );
+
+  const proposalAccs = await program.account.proposal.all();
+  console.log("proposalAccs:", proposalAccs);
 
   const responsePromise = Promise.resolve(proposalsMockData);
 

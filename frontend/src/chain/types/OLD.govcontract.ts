@@ -1,5 +1,7 @@
-
-export type Govcontract = {
+/**
+ * @deprecated old program types
+ */
+export type GovcontractOLD = {
   address: "GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc";
   metadata: {
     name: "govcontract";

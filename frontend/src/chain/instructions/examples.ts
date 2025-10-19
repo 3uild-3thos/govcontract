@@ -3,6 +3,7 @@
  * These examples show how to integrate with wallet adapters and handle results
  */
 
+import { RPC_URLS } from "@/contexts/EndpointContext";
 import {
   createProposal,
   castVote,
@@ -23,16 +24,19 @@ export async function exampleCreateProposal(
 ): Promise<string | null> {
   console.log("Creating new proposal...");
 
-  const result = await createProposal({
-    title: "Increase Validator Commission Cap",
-    description:
-      "Proposal to increase the maximum validator commission from 10% to 15%. See: https://github.com/solana-labs/solana/issues/12345",
-    startEpoch: 550, // Start voting in epoch 550
-    votingLengthEpochs: 5, // Vote for 5 epochs
-    wallet,
-    // seed: 123456789, // Optional: specify seed for reproducible PDA
-    // voteAccount: new PublicKey("..."), // Optional: specify vote account
-  });
+  const result = await createProposal(
+    {
+      title: "Increase Validator Commission Cap",
+      description:
+        "Proposal to increase the maximum validator commission from 10% to 15%. See: https://github.com/solana-labs/solana/issues/12345",
+      startEpoch: 550, // Start voting in epoch 550
+      votingLengthEpochs: 5, // Vote for 5 epochs
+      wallet,
+      // seed: 123456789, // Optional: specify seed for reproducible PDA
+      // voteAccount: new PublicKey("..."), // Optional: specify vote account
+    },
+    { endpoint: RPC_URLS.devnet }
+  );
 
   if (result.success) {
     console.log("✅ Proposal created successfully!");
@@ -59,13 +63,16 @@ export async function exampleCastVote(
 ): Promise<void> {
   console.log("Casting vote on proposal...");
 
-  const result = await castVote({
-    proposalId,
-    forVotesBp: 7500, // 75% in favor
-    againstVotesBp: 2500, // 25% against
-    abstainVotesBp: 0, // 0% abstain
-    wallet,
-  });
+  const result = await castVote(
+    {
+      proposalId,
+      forVotesBp: 7500, // 75% in favor
+      againstVotesBp: 2500, // 25% against
+      abstainVotesBp: 0, // 0% abstain
+      wallet,
+    },
+    { endpoint: RPC_URLS.devnet }
+  );
 
   if (result.success) {
     console.log("✅ Vote cast successfully!");
@@ -87,13 +94,16 @@ export async function exampleModifyVote(
 ): Promise<void> {
   console.log("Modifying existing vote...");
 
-  const result = await modifyVote({
-    proposalId,
-    forVotesBp: 5000, // Change to 50% in favor
-    againstVotesBp: 3000, // 30% against
-    abstainVotesBp: 2000, // 20% abstain
-    wallet,
-  });
+  const result = await modifyVote(
+    {
+      proposalId,
+      forVotesBp: 5000, // Change to 50% in favor
+      againstVotesBp: 3000, // 30% against
+      abstainVotesBp: 2000, // 20% abstain
+      wallet,
+    },
+    { endpoint: RPC_URLS.devnet }
+  );
 
   if (result.success) {
     console.log("✅ Vote modified successfully!");
@@ -116,14 +126,17 @@ export async function exampleCastVoteOverride(
 ): Promise<void> {
   console.log("Casting vote override...");
 
-  const result = await castVoteOverride({
-    proposalId,
-    forVotesBp: 10000, // 100% in favor
-    againstVotesBp: 0, // 0% against
-    abstainVotesBp: 0, // 0% abstain
-    stakeAccount,
-    wallet,
-  });
+  const result = await castVoteOverride(
+    {
+      proposalId,
+      forVotesBp: 10000, // 100% in favor
+      againstVotesBp: 0, // 0% against
+      abstainVotesBp: 0, // 0% abstain
+      stakeAccount,
+      wallet,
+    },
+    { endpoint: RPC_URLS.devnet }
+  );
 
   if (result.success) {
     console.log("✅ Vote override cast successfully!");
@@ -145,10 +158,13 @@ export async function exampleSupportProposal(
 ): Promise<void> {
   console.log("Supporting proposal...");
 
-  const result = await supportProposal({
-    proposalId,
-    wallet,
-  });
+  const result = await supportProposal(
+    {
+      proposalId,
+      wallet,
+    },
+    { endpoint: RPC_URLS.devnet }
+  );
 
   if (result.success) {
     console.log("✅ Proposal supported successfully!");
@@ -197,10 +213,13 @@ export async function exampleFinalizeProposal(
 ): Promise<void> {
   console.log("Finalizing proposal...");
 
-  const result = await finalizeProposal({
-    proposalId,
-    wallet,
-  });
+  const result = await finalizeProposal(
+    {
+      proposalId,
+      wallet,
+    },
+    { endpoint: RPC_URLS.devnet }
+  );
 
   if (result.success) {
     console.log("✅ Proposal finalized successfully!");

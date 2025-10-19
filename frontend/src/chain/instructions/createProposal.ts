@@ -1,6 +1,10 @@
 import { SystemProgram, PublicKey } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
-import { CreateProposalParams, TransactionResult } from "./types";
+import {
+  BlockchainParams,
+  CreateProposalParams,
+  TransactionResult,
+} from "./types";
 import {
   createProgramWithWallet,
   deriveProposalPda,
@@ -12,13 +16,14 @@ import {
  * Creates a new governance proposal
  */
 export async function createProposal(
-  params: CreateProposalParams
+  params: CreateProposalParams,
+  blockchainParams: BlockchainParams
 ): Promise<TransactionResult> {
   const {
     title,
     description,
-    startEpoch,
-    votingLengthEpochs,
+    // startEpoch,
+    // votingLengthEpochs,
     seed,
     wallet,
     voteAccount,
@@ -38,8 +43,8 @@ export async function createProposal(
 
   const program = createProgramWithWallet(
     wallet,
-    params.programId,
-    params.endpoint
+    blockchainParams.endpoint
+    // blockchainParams.programId,
   );
 
   // Derive proposal PDA using the test pattern
@@ -67,9 +72,10 @@ export async function createProposal(
     .createProposal(
       seedValue,
       title,
-      description,
-      new BN(startEpoch),
-      new BN(votingLengthEpochs)
+      description
+      // TODO: Juan, types complain about these 2 arguments
+      // new BN(startEpoch),
+      // new BN(votingLengthEpochs)
     )
     .accountsPartial({
       signer: wallet.publicKey,

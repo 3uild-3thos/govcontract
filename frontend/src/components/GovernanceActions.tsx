@@ -15,19 +15,22 @@ import {
   TransactionResult,
 } from "@/chain/instructions";
 
+/**
+ * @deprecated was created by Juan but is not used anywhere, prob just created for example use
+ */
 export default function GovernanceActions() {
   const wallet = useWallet();
   const anchorWallet = useAnchorWallet();
-  const { endpoint, setEndpoint, resetToDefault } = useEndpoint();
+  const { endpointUrl, setEndpoint, resetToDefault } = useEndpoint();
   const {
-    programId,
+    // programId,
     programIdString,
     setProgramId,
     resetToDefault: resetProgramId,
   } = useProgramId();
   const [loading, setLoading] = useState<string | null>(null);
   const [result, setResult] = useState<TransactionResult | null>(null);
-  const [endpointInput, setEndpointInput] = useState(endpoint);
+  const [endpointInput, setEndpointInput] = useState(endpointUrl);
   const [showEndpointConfig, setShowEndpointConfig] = useState(false);
   const [programIdInput, setProgramIdInput] = useState(programIdString);
   const [showProgramIdConfig, setShowProgramIdConfig] = useState(false);
@@ -35,8 +38,8 @@ export default function GovernanceActions() {
 
   // Update input when endpoint changes
   useEffect(() => {
-    setEndpointInput(endpoint);
-  }, [endpoint]);
+    setEndpointInput(endpointUrl);
+  }, [endpointUrl]);
 
   // Update input when program ID changes
   useEffect(() => {
@@ -45,7 +48,7 @@ export default function GovernanceActions() {
 
   const handleEndpointSave = () => {
     if (endpointInput.trim()) {
-      setEndpoint(endpointInput.trim());
+      setEndpoint("custom", endpointInput.trim());
       setShowEndpointConfig(false);
       setResult({
         signature: "",
@@ -124,17 +127,20 @@ export default function GovernanceActions() {
   const handleCreateProposal = () => {
     handleAction(
       () =>
-        createProposal({
-          title: "Test Proposal",
-          description:
-            "A test proposal for demonstration purposes. See: https://github.com/example/proposal",
-          startEpoch: 600,
-          votingLengthEpochs: 5,
-          wallet: anchorWallet,
-          programId,
-          network,
-          endpoint,
-        }),
+        createProposal(
+          {
+            title: "Test Proposal",
+            description:
+              "A test proposal for demonstration purposes. See: https://github.com/example/proposal",
+            startEpoch: 600,
+            votingLengthEpochs: 5,
+            wallet: anchorWallet,
+          },
+          {
+            endpoint: endpointUrl,
+            network: network,
+          }
+        ),
       "Creating Proposal"
     );
   };
@@ -145,16 +151,19 @@ export default function GovernanceActions() {
 
     handleAction(
       () =>
-        castVote({
-          proposalId,
-          forVotesBp: 5000,
-          againstVotesBp: 5000,
-          abstainVotesBp: 0,
-          wallet: anchorWallet,
-          programId,
-          network,
-          endpoint,
-        }),
+        castVote(
+          {
+            proposalId,
+            forVotesBp: 5000,
+            againstVotesBp: 5000,
+            abstainVotesBp: 0,
+            wallet: anchorWallet,
+          },
+          {
+            endpoint: endpointUrl,
+            network: network,
+          }
+        ),
       "Casting Vote"
     );
   };
@@ -165,13 +174,16 @@ export default function GovernanceActions() {
 
     handleAction(
       () =>
-        supportProposal({
-          proposalId,
-          wallet: anchorWallet,
-          programId,
-          network,
-          endpoint,
-        }),
+        supportProposal(
+          {
+            proposalId,
+            wallet: anchorWallet,
+          },
+          {
+            endpoint: endpointUrl,
+            network: network,
+          }
+        ),
       "Supporting Proposal"
     );
   };
@@ -182,15 +194,19 @@ export default function GovernanceActions() {
 
     handleAction(
       () =>
-        modifyVote({
-          proposalId,
-          forVotesBp: 3000,
-          againstVotesBp: 3000,
-          abstainVotesBp: 4000,
-          wallet: anchorWallet,
-          programId,
-          network,
-        }),
+        modifyVote(
+          {
+            proposalId,
+            forVotesBp: 3000,
+            againstVotesBp: 3000,
+            abstainVotesBp: 4000,
+            wallet: anchorWallet,
+          },
+          {
+            endpoint: endpointUrl,
+            network: network,
+          }
+        ),
       "Modifying Vote"
     );
   };
@@ -215,7 +231,7 @@ export default function GovernanceActions() {
           </div>
 
           <div className="text-xs text-gray-600 break-all">
-            Current: {endpoint}
+            Current: {endpointUrl}
           </div>
 
           {showEndpointConfig && (

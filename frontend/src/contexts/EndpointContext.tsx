@@ -1,49 +1,83 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { clusterApiUrl } from "@solana/web3.js";
-import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
+import React, { createContext, useContext, useState, ReactNode } from "react";
+import { RPCEndpoint } from "@/types";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface EndpointContextType {
-  endpoint: string;
-  setEndpoint: (endpoint: string) => void;
+  endpointType: RPCEndpoint;
+  endpointUrl: string;
+  setEndpoint: (type: RPCEndpoint, url?: string) => void;
   resetToDefault: () => void;
 }
 
-const EndpointContext = createContext<EndpointContextType | undefined>(undefined);
+const EndpointContext = createContext<EndpointContextType | undefined>(
+  undefined
+);
 
-const DEFAULT_ENDPOINT = clusterApiUrl(WalletAdapterNetwork.Devnet);
+export const RPC_URLS: Record<Exclude<RPCEndpoint, "custom">, string> = {
+  mainnet: "https://api.mainnet-beta.solana.com",
+  testnet: "https://api.testnet.solana.com",
+  devnet: "https://api.devnet.solana.com",
+};
+
+const DEFAULT_TYPE: RPCEndpoint = "devnet";
+const DEFAULT_URL = RPC_URLS[DEFAULT_TYPE];
+
 const STORAGE_KEY = "solana-rpc-endpoint";
 
-export function EndpointProvider({ children }: { children: ReactNode }) {
-  const [endpoint, setEndpointState] = useState<string>(DEFAULT_ENDPOINT);
-
-  // Load endpoint from localStorage on mount
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        setEndpointState(saved);
+const getStoredValues = () => {
+  if (typeof window !== "undefined") {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const { type, url } = JSON.parse(saved);
+        return { endpointType: type, endpointUrl: url };
+      } catch {
+        console.error("error parsing rpc endpoint from local storage");
+        // fallback
+        return { endpointType: DEFAULT_TYPE, endpointUrl: DEFAULT_URL };
       }
     }
-  }, []);
+  }
+  return { endpointType: DEFAULT_TYPE, endpointUrl: DEFAULT_URL };
+};
 
-  const setEndpoint = (newEndpoint: string) => {
-    setEndpointState(newEndpoint);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(STORAGE_KEY, newEndpoint);
-    }
+export function EndpointProvider({ children }: { children: ReactNode }) {
+  const [endpoint, setEndpoint] = useState<{
+    endpointType: RPCEndpoint;
+    endpointUrl: string;
+  }>(getStoredValues());
+
+  const queryClient = useQueryClient();
+
+  const setEndpointData = (type: RPCEndpoint, customUrl?: string) => {
+    const url = type === "custom" ? customUrl ?? "" : RPC_URLS[type];
+    setEndpoint({
+      endpointType: type,
+      endpointUrl: url,
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ type, url }));
+    queryClient.removeQueries();
   };
 
   const resetToDefault = () => {
-    setEndpointState(DEFAULT_ENDPOINT);
-    if (typeof window !== "undefined") {
-      localStorage.removeItem(STORAGE_KEY);
-    }
+    setEndpoint({
+      endpointType: DEFAULT_TYPE,
+      endpointUrl: DEFAULT_URL,
+    });
+    localStorage.removeItem(STORAGE_KEY);
   };
 
   return (
-    <EndpointContext.Provider value={{ endpoint, setEndpoint, resetToDefault }}>
+    <EndpointContext.Provider
+      value={{
+        endpointType: endpoint.endpointType,
+        endpointUrl: endpoint.endpointUrl,
+        setEndpoint: setEndpointData,
+        resetToDefault,
+      }}
+    >
       {children}
     </EndpointContext.Provider>
   );

@@ -1,3 +1,5 @@
+"use client";
+
 import { AppButton } from "@/components/ui/AppButton";
 import { ViewType } from "@/types/governance";
 import {
@@ -8,7 +10,12 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useModal } from "@/contexts/ModalContext";
-
+import { useWallet } from "@solana/wallet-adapter-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface GovernanceActionsProps {
   variant: ViewType;
@@ -25,6 +32,7 @@ interface ActionButtonConfig {
   icon?: React.ReactNode;
   onClick: () => void;
   className: string;
+  disabled?: boolean;
 }
 
 interface ActionGridProps {
@@ -46,6 +54,7 @@ function ActionGrid({ actions, gridClassName }: ActionGridProps) {
           className={action.className}
           icon={action.icon}
           size="lg"
+          disabled={action.disabled}
         />
       ))}
     </div>
@@ -54,6 +63,7 @@ function ActionGrid({ actions, gridClassName }: ActionGridProps) {
 
 function getValidatorConfig(
   openModal: ReturnType<typeof useModal>["openModal"],
+  disabled?: boolean
 ) {
   return {
     title: "Governance Actions",
@@ -69,6 +79,7 @@ function getValidatorConfig(
         onClick: () => openModal("create-proposal"),
         className: "governance-action-primary",
         icon: <PlusCircle className="size-4" />,
+        disabled,
       },
       {
         label: "Support Proposal",
@@ -76,6 +87,7 @@ function getValidatorConfig(
         onClick: () => openModal("support-proposal"),
         className: "governance-action-secondary",
         icon: <ThumbsUp className="size-4" />,
+        disabled,
       },
       {
         label: "Cast Vote",
@@ -83,6 +95,7 @@ function getValidatorConfig(
         onClick: () => openModal("cast-vote"),
         className: "governance-action-secondary",
         icon: <MapPinCheckInside className="size-4" />,
+        disabled,
       },
       {
         label: "Modify Vote",
@@ -90,12 +103,16 @@ function getValidatorConfig(
         onClick: () => openModal("modify-vote"),
         className: "governance-action-secondary",
         icon: <PencilLine className="size-4" />,
+        disabled,
       },
     ] satisfies ActionButtonConfig[],
   };
 }
 
-function getStakerConfig(openModal: ReturnType<typeof useModal>["openModal"]) {
+function getStakerConfig(
+  openModal: ReturnType<typeof useModal>["openModal"],
+  disabled?: boolean
+) {
   return {
     title: "Governance Actions",
     description:
@@ -110,6 +127,7 @@ function getStakerConfig(openModal: ReturnType<typeof useModal>["openModal"]) {
         onClick: () => openModal("override-vote"),
         className: "governance-action-primary",
         icon: <MapPinCheckInside className="size-4" />,
+        disabled,
       },
       {
         label: "Modify Vote",
@@ -117,6 +135,7 @@ function getStakerConfig(openModal: ReturnType<typeof useModal>["openModal"]) {
         onClick: () => openModal("modify-vote"),
         className: "governance-action-secondary",
         icon: <PencilLine className="size-4" />,
+        disabled,
       },
     ] satisfies ActionButtonConfig[],
   };
@@ -131,16 +150,17 @@ export function GovernanceActions({
   className,
 }: GovernanceActionsProps) {
   const { openModal } = useModal();
+  const { connected } = useWallet();
   const config =
     variant === "validator"
-      ? getValidatorConfig(openModal)
-      : getStakerConfig(openModal);
+      ? getValidatorConfig(openModal, !connected)
+      : getStakerConfig(openModal, !connected);
   const resolvedTitle = title ?? config.title;
   const resolvedDescription =
     description === undefined ? config.description : description;
   const resolvedWrapperClassName = cn(
     wrapperClassName ?? config.wrapperClassName,
-    className,
+    className
   );
   const resolvedGridClassName = gridClassName ?? config.gridClassName;
 
@@ -152,10 +172,29 @@ export function GovernanceActions({
           <p className={config.descriptionClassName}>{resolvedDescription}</p>
         )}
       </div>
-      <ActionGrid
-        actions={config.actions}
-        gridClassName={resolvedGridClassName}
-      />
+      {connected ? (
+        <ActionGrid
+          actions={config.actions}
+          gridClassName={resolvedGridClassName}
+        />
+      ) : (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span>
+              <ActionGrid
+                actions={config.actions}
+                gridClassName={resolvedGridClassName}
+              />
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            <p className="text-sm text-red-500/80">
+              Wallet not connected, please connect your wallet to be able to
+              perform these actions
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      )}
     </div>
   );
 }

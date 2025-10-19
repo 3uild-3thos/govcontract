@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,8 +10,9 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { AppButton } from "../ui/AppButton";
-
-type RPCEndpoint = "mainnet" | "testnet" | "devnet" | "custom";
+import { useEffect, useState } from "react";
+import { RPC_URLS, useEndpoint } from "@/contexts/EndpointContext";
+import { RPCEndpoint } from "@/types";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -21,36 +21,28 @@ interface SettingsModalProps {
 
 const ENDPOINTS = ["mainnet", "testnet", "devnet", "custom"];
 
-const RPC_URLS: Record<string, string> = {
-  mainnet: "https://api.mainnet-beta.solana.com",
-  testnet: "https://api.testnet.solana.com",
-  devnet: "https://api.devnet.solana.com",
-};
-
-// TODO: Only for demo purposes, need to be global state
-// So the dashboard stats network can be updated simultaneously
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
-  const [selectedEndpoint, setSelectedEndpoint] =
-    React.useState<RPCEndpoint>("devnet");
-  const [customUrl, setCustomUrl] = React.useState("");
+  const { endpointType, endpointUrl, setEndpoint } = useEndpoint();
 
-  React.useEffect(() => {
+  const [selectedEndpoint, setSelectedEndpoint] =
+    useState<RPCEndpoint>(endpointType);
+
+  const [customUrl, setCustomUrl] = useState("");
+
+  // Sync modal state when opened
+  useEffect(() => {
     if (isOpen) {
-      setSelectedEndpoint("devnet");
-      setCustomUrl("");
+      setSelectedEndpoint(endpointType);
+      setCustomUrl(endpointType === "custom" ? endpointUrl : "");
     }
-  }, [isOpen]);
+  }, [isOpen, endpointType, endpointUrl]);
 
   const handleSave = () => {
-    const rpcUrl =
+    const url =
       selectedEndpoint === "custom" ? customUrl : RPC_URLS[selectedEndpoint];
-    console.log("RPC Settings saved:", {
-      endpoint: selectedEndpoint,
-      url: rpcUrl,
-    });
+    setEndpoint(selectedEndpoint, url);
     onClose();
   };
-
   const handleClose = () => {
     setSelectedEndpoint("devnet");
     setCustomUrl("");
@@ -102,7 +94,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                       "flex items-center gap-3 cursor-pointer p-3 mt-4 rounded-xl border transition-all",
                       selectedEndpoint === endpoint
                         ? "border-primary bg-primary/10"
-                        : "border-white/10 hover:border-white/20 hover:bg-white/5",
+                        : "border-white/10 hover:border-white/20 hover:bg-white/5"
                     )}
                   >
                     <input
@@ -131,7 +123,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                       "input",
                       "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3",
                       "placeholder:text-sm placeholder:text-white/40",
-                      "focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/50",
+                      "focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/50"
                     )}
                   />
                 )}

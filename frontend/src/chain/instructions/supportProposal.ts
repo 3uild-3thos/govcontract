@@ -1,6 +1,10 @@
 import { PublicKey, SystemProgram } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
-import { SupportProposalParams, TransactionResult } from "./types";
+import {
+  BlockchainParams,
+  SupportProposalParams,
+  TransactionResult,
+} from "./types";
 import {
   createProgramWithWallet,
   deriveSupportPda,
@@ -12,23 +16,20 @@ import {
  * Supports a governance proposal
  */
 export async function supportProposal(
-  params: SupportProposalParams
+  params: SupportProposalParams,
+  blockchainParams: BlockchainParams
 ): Promise<TransactionResult> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { proposalId, wallet, voteAccount } = params;
 
-    if (!wallet.connected || !wallet.publicKey) {
+    if (!wallet || !wallet.publicKey) {
       throw new Error("Wallet not connected");
     }
 
     const proposalPubkey = new PublicKey(proposalId);
     // const splVoteAccount = voteAccount || wallet.publicKey;
-    const program = createProgramWithWallet(
-      wallet,
-      params.programId,
-      params.endpoint
-    );
+    const program = createProgramWithWallet(wallet, blockchainParams.endpoint);
 
     // Derive support PDA - based on IDL, it uses proposal and signer
     const supportPda = deriveSupportPda(

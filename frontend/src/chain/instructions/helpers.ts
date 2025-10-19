@@ -1,4 +1,4 @@
-import { PublicKey, Connection } from "@solana/web3.js";
+import { PublicKey, Connection, Keypair } from "@solana/web3.js";
 import { AnchorProvider, Program, BN } from "@coral-xyz/anchor";
 import idl from "@/chain/idl/govcontract.json";
 import {
@@ -7,6 +7,8 @@ import {
   VoterSummaryResponse,
 } from "./types";
 import { AnchorWallet } from "@solana/wallet-adapter-react";
+import { Govcontract } from "../types";
+import { RPC_URLS } from "@/contexts/EndpointContext";
 
 // PDA derivation functions (based on test implementation)
 export function deriveProposalPda(
@@ -78,12 +80,11 @@ export function deriveVoteOverridePda(
 // Create program instance with wallet
 export function createProgramWithWallet(
   wallet: AnchorWallet,
-  programId?: PublicKey,
+  // programId?: PublicKey,
   endpoint?: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): any {
+) {
   // Use provided endpoint or default to devnet
-  const rpcEndpoint = endpoint || "https://api.devnet.solana.com";
+  const rpcEndpoint = endpoint || RPC_URLS.devnet;
   const connection = new Connection(rpcEndpoint, "confirmed");
 
   const provider = new AnchorProvider(connection, wallet, {
@@ -93,8 +94,32 @@ export function createProgramWithWallet(
   // Use the exact same pattern as the working chain/helpers.ts
   // If a custom programId is provided, we'll ignore it for now to get it working
   // The IDL contains the program ID, so this should work
+  const program = new Program(idl, provider) as Program<Govcontract>;
+
+  return program;
+}
+
+// Create program instance with dummy wallet (just for data fetching)
+export function createProgramWitDummyWallet(endpoint?: string) {
+  // Use provided endpoint or default to devnet
+  const rpcEndpoint = endpoint || RPC_URLS.devnet;
+  const connection = new Connection(rpcEndpoint, "confirmed");
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const program = new Program(idl, provider) as any;
+  const dummyWallet: any = {
+    publicKey: Keypair.generate().publicKey,
+    signAllTransactions: async () => {},
+    signTransaction: async () => {},
+  };
+
+  const provider = new AnchorProvider(connection, dummyWallet, {
+    commitment: "confirmed",
+  });
+
+  // Use the exact same pattern as the working chain/helpers.ts
+  // If a custom programId is provided, we'll ignore it for now to get it working
+  // The IDL contains the program ID, so this should work
+  const program = new Program(idl, provider) as Program<Govcontract>;
 
   return program;
 }

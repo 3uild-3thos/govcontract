@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { AnchorWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 
@@ -7,6 +6,12 @@ export interface TransactionResult {
   signature: string;
   success: boolean;
   error?: string;
+}
+
+export interface BlockchainParams {
+  // programId?: PublicKey;
+  network?: string;
+  endpoint?: string;
 }
 
 // Instruction parameter types
@@ -18,9 +23,6 @@ export interface CreateProposalParams {
   seed?: number;
   wallet: AnchorWallet | undefined;
   voteAccount?: PublicKey;
-  programId?: PublicKey;
-  network?: string;
-  endpoint?: string;
 }
 
 export interface CastVoteParams {
@@ -30,9 +32,6 @@ export interface CastVoteParams {
   abstainVotesBp: number;
   wallet: AnchorWallet | undefined;
   voteAccount?: PublicKey;
-  programId?: PublicKey;
-  network?: string;
-  endpoint?: string;
 }
 
 export interface ModifyVoteParams {
@@ -42,9 +41,6 @@ export interface ModifyVoteParams {
   abstainVotesBp: number;
   wallet: AnchorWallet | undefined;
   voteAccount?: PublicKey;
-  programId?: PublicKey;
-  network?: string;
-  endpoint?: string;
 }
 
 export interface CastVoteOverrideParams {
@@ -53,34 +49,25 @@ export interface CastVoteOverrideParams {
   againstVotesBp: number;
   abstainVotesBp: number;
   stakeAccount: string;
-  wallet: any;
+  wallet: AnchorWallet | undefined;
   voteAccount?: PublicKey;
-  programId?: PublicKey;
-  network?: string;
 }
 
 export interface SupportProposalParams {
   proposalId: string;
-  wallet: any;
+  wallet: AnchorWallet | undefined;
   voteAccount?: PublicKey;
-  programId?: PublicKey;
-  network?: string;
-  endpoint?: string;
 }
 
 export interface AddMerkleRootParams {
   proposalId: string;
   merkleRootHash: string;
-  wallet: any;
-  programId?: PublicKey;
-  network?: string;
+  wallet: AnchorWallet | undefined;
 }
 
 export interface FinalizeProposalParams {
   proposalId: string;
-  wallet: any;
-  programId?: PublicKey;
-  network?: string;
+  wallet: AnchorWallet | undefined;
 }
 
 // API response types (based on solgov.online API)
@@ -98,7 +85,7 @@ export interface VoteAccountProofResponse {
 
 export interface StakeAccountProofResponse {
   stake_merkle_leaf: {
-    [key: string]: any;
+    [key: string]: unknown;
   };
   stake_merkle_proof: string[];
   network: string;
@@ -109,7 +96,7 @@ export interface VoterSummaryResponse {
   network: string;
   snapshot_slot: number;
   stake_accounts: Array<{
-    [key: string]: any;
+    [key: string]: unknown;
   }>;
   vote_accounts: Array<{
     active_stake: number;

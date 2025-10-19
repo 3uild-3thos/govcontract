@@ -1,4 +1,5 @@
 import {
+  BlockchainParams,
   createProposal,
   CreateProposalParams,
   TransactionResult,
@@ -9,7 +10,8 @@ import {
 // probably not much to do regarding mutations, erase this once you check everything is working properly
 
 export const createProposalMutation = async (
-  params: CreateProposalParams
+  params: CreateProposalParams,
+  blockchainParams: BlockchainParams
 ): Promise<TransactionResult> => {
-  return createProposal(params);
+  return createProposal(params, blockchainParams);
 };

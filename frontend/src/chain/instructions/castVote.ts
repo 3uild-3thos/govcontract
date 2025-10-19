@@ -1,6 +1,6 @@
 import { PublicKey, SystemProgram } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
-import { CastVoteParams, TransactionResult } from "./types";
+import { BlockchainParams, CastVoteParams, TransactionResult } from "./types";
 import {
   createProgramWithWallet,
   deriveVotePda,
@@ -13,7 +13,8 @@ import {
  * Casts a vote on a governance proposal
  */
 export async function castVote(
-  params: CastVoteParams
+  params: CastVoteParams,
+  blockchainParams: BlockchainParams
 ): Promise<TransactionResult> {
   const {
     proposalId,
@@ -35,8 +36,8 @@ export async function castVote(
   const splVoteAccount = voteAccount || wallet.publicKey;
   const program = createProgramWithWallet(
     wallet,
-    params.programId,
-    params.endpoint
+    blockchainParams.endpoint
+    // params.programId,
   );
 
   // Derive vote PDA - based on IDL, it uses proposal and signer
