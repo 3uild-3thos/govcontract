@@ -1,9 +1,9 @@
 import type { BN, Program, ProgramAccount } from "@coral-xyz/anchor";
-import type { Govcontract } from "./govcontract";
 
 import { PublicKey } from "@solana/web3.js";
+import { GovcontractOLD } from "./OLD.govcontract";
 
-export type GovContract = Program<Govcontract>;
+export type GovContract = Program<GovcontractOLD>;
 
 export interface Proposal {
   author: PublicKey;

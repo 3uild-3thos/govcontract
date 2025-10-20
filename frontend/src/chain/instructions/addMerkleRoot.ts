@@ -5,16 +5,18 @@ import { createProgramWithWallet, hexToBytes } from "./helpers";
 /**
  * Adds a merkle root hash to a proposal
  */
-export async function addMerkleRoot(params: AddMerkleRootParams): Promise<TransactionResult> {
+export async function addMerkleRoot(
+  params: AddMerkleRootParams
+): Promise<TransactionResult> {
   try {
     const { proposalId, merkleRootHash, wallet } = params;
 
-    if (!wallet.connected || !wallet.publicKey) {
+    if (!wallet || !wallet.publicKey) {
       throw new Error("Wallet not connected");
     }
 
     const proposalPubkey = new PublicKey(proposalId);
-    const program = createProgramWithWallet(wallet, params.programId);
+    const program = createProgramWithWallet(wallet);
 
     // Convert hex string to byte array
     const merkleRootBytes = hexToBytes(merkleRootHash);

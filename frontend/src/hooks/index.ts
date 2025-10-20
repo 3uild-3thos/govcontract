@@ -1,10 +1,25 @@
 export * from "./useIsBelowMd";
-export * from "./useLatestProposalData";
-export * from "./useVotes";
-export * from "./useGetValidators";
-export * from "./useGetValidatorsTable";
-export * from "./useValidatorsVoterSplits";
-export * from "./useGetValidatorsTableMobile";
-export * from "./useGetValidatorsBubbleChart";
-export * from "./useVoteAccountsWithValidators";
 export * from "./useCollision";
+export * from "./useCopyToClipboard";
+export * from "./useGovernanceDashboard";
+export * from "./useMounted";
+export * from "./useWalletRole";
+export * from "./useVoteDistribution";
+
+// data hooks
+export * from "./useProposals";
+export * from "./useProposalDetails";
+export * from "./useVoteAccounts";
+export * from "./useCastVote";
+export * from "./useModifyVote";
+export * from "./useCreateProposal";
+
+// DEPRECATED
+export * from "./DEPRECATED/useGetValidators";
+export * from "./DEPRECATED/useGetValidatorsBubbleChart";
+export * from "./DEPRECATED/useGetValidatorsTable";
+export * from "./DEPRECATED/useGetValidatorsTableMobile";
+export * from "./DEPRECATED/useLatestProposalData";
+export * from "./DEPRECATED/useValidatorsVoterSplits";
+export * from "./DEPRECATED/useVoteAccountsWithValidators";
+export * from "./DEPRECATED/useVotes";

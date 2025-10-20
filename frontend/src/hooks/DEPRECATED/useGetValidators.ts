@@ -2,7 +2,10 @@ import { connection } from "@/chain/helpers";
 import { getStakeWizValidators } from "@/data";
 import { Validator, Validators } from "@/types";
 import { useQuery } from "@tanstack/react-query";
-
+/**
+ * DEPRECATED
+ * @returns
+ */
 export const useGetValidators = () => {
   return useQuery({
     staleTime: 1000 * 120, // 2 minutes
