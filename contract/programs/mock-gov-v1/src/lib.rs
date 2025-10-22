@@ -8,7 +8,7 @@ use instructions::*;
 
 pub use state::{StakeMerkleLeaf, MetaMerkleLeaf, ConsensusResult, MetaMerkleProof};
 
-declare_id!("65smeZTDVuVRQZ1zdUF8wXRMDXhAMVTxRbV3n3MyXLPJ");
+declare_id!("B6EPNBUkhLxa6XPZy6BJENvdScCg4UsRMgYFjeP12cGE");
 
 #[program]
 pub mod mock_gov_v1 {

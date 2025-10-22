@@ -284,7 +284,7 @@ export default function GovernanceActions() {
                   type="text"
                   value={programIdInput}
                   onChange={(e) => setProgramIdInput(e.target.value)}
-                  placeholder="GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc"
+                  placeholder="6RHAsY36k1uzcBzfQs8Qyuw48uyDfHGvLPjTBvZfTwEu"
                   className="w-full px-3 py-2 border rounded text-sm font-mono"
                 />
                 <p className="text-xs text-gray-500 mt-1">

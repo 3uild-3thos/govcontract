@@ -5,25 +5,37 @@ package_manager = "yarn"
 resolution = true
 skip-lint = false
 
+[programs.devnet]
+govcontract = "AXnkQnEEMBsKcJ1gSXP1aW6tZMGWodzEaoB6b3bRib2r"
+mock_gov_v1 = "65smeZTDVuVRQZ1zdUF8wXRMDXhAMVTxRbV3n3MyXLPJ"
+
 [programs.localnet]
 govcontract = "AXnkQnEEMBsKcJ1gSXP1aW6tZMGWodzEaoB6b3bRib2r"
 mock_gov_v1 = "65smeZTDVuVRQZ1zdUF8wXRMDXhAMVTxRbV3n3MyXLPJ"
 
-[programs.devnet]
-govcontract = "GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc"
+[programs.mainnet]
+govcontract = "6RHAsY36k1uzcBzfQs8Qyuw48uyDfHGvLPjTBvZfTwEu"
 
 [programs.testnet]
-govcontract = "GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc"
+govcontract = "6RHAsY36k1uzcBzfQs8Qyuw48uyDfHGvLPjTBvZfTwEu"
+mock_gov_v1 = "B6EPNBUkhLxa6XPZy6BJENvdScCg4UsRMgYFjeP12cGE"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
 
+[test]
+startup_wait = 5000
+shutdown_wait = 2000
+upgradeable = false
+
 [test.validator]
-slot_per_epoc = "32"
+bind_address = "0.0.0.0"
+ledger = ".anchor/test-ledger"
+rpc_port = 8899

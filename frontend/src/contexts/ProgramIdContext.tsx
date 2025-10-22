@@ -12,7 +12,7 @@ interface ProgramIdContextType {
 
 const ProgramIdContext = createContext<ProgramIdContextType | undefined>(undefined);
 
-const DEFAULT_PROGRAM_ID = "GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc";
+const DEFAULT_PROGRAM_ID = "6RHAsY36k1uzcBzfQs8Qyuw48uyDfHGvLPjTBvZfTwEu";
 const STORAGE_KEY = "solana-program-id";
 
 export function ProgramIdProvider({ children }: { children: ReactNode }) {
