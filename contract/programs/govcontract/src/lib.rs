@@ -14,7 +14,7 @@ use gov_v1::StakeMerkleLeaf;
 #[cfg(feature = "testing")]
 use mock_gov_v1::StakeMerkleLeaf;
 
-declare_id!("6RHAsY36k1uzcBzfQs8Qyuw48uyDfHGvLPjTBvZfTwEu");
+declare_id!("GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc");
 
 #[program]
 pub mod govcontract {
