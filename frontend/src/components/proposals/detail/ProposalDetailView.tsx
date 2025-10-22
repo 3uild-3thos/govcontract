@@ -7,6 +7,12 @@ import VoteBreakdown from "./VoteBreakdown";
 import CastVote from "./CastVote";
 import PhaseTimeline from "./phase-timeline";
 import TopVotersTable from "./TopVotersTable";
+import { useWallet } from "@solana/wallet-adapter-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ProposalDetailViewProps {
   proposal: ProposalRecord;
@@ -17,6 +23,8 @@ export default function ProposalDetailView({
   proposal,
   isLoading,
 }: ProposalDetailViewProps) {
+  const { connected } = useWallet();
+
   return (
     <div className="space-y-6 sm:space-y-8">
       <ProposalBreadcrumb simd={proposal.simd} isLoading={isLoading} />
@@ -24,11 +32,32 @@ export default function ProposalDetailView({
 
       <div className="grid gap-6 md:grid-cols-[2fr_1fr] lg:grid-cols-[2fr_1fr]">
         <VoteBreakdown proposal={proposal} />
-        <CastVote
-          proposalSimd={proposal.simd}
-          // TODO: needed?
-          // userStake="1000 SOL"
-        />
+        {connected ? (
+          <CastVote
+            proposalId={proposal.publicKey.toBase58()}
+            // TODO: needed?
+            // userStake="1000 SOL"
+          />
+        ) : (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span>
+                <CastVote
+                  proposalId={proposal.publicKey.toBase58()}
+                  disabled
+                  // TODO: needed?
+                  // userStake="1000 SOL"
+                />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p className="text-sm text-red-500/80">
+                Wallet not connected, please connect your wallet to be able to
+                perform these actions
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        )}
       </div>
       <PhaseTimeline
         proposal={proposal}

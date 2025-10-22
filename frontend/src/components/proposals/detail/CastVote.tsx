@@ -5,10 +5,11 @@ import { useModal } from "@/contexts/ModalContext";
 import { Ban, ThumbsDown, ThumbsUp } from "lucide-react";
 
 interface CastVoteProps {
-  proposalSimd: string;
+  proposalId: string;
+  disabled?: boolean;
 }
 
-export default function CastVote({}: CastVoteProps) {
+export default function CastVote({ proposalId, disabled }: CastVoteProps) {
   // TODO: CAST VOTE
   // TODO: make check if user already voted (here or in parent component)
 
@@ -18,7 +19,7 @@ export default function CastVote({}: CastVoteProps) {
     // TODO: CAST VOTE
     // TODO: send proposal pubKey here as proposalId ?
     openModal("cast-vote", {
-      proposalId: "",
+      proposalId,
       initialVoteDist: { for: 100, abstain: 0, against: 0 },
     });
   };
@@ -26,7 +27,7 @@ export default function CastVote({}: CastVoteProps) {
     // TODO: CAST VOTE
     // TODO: send proposal pubKey here as proposalId ?
     openModal("cast-vote", {
-      proposalId: "",
+      proposalId,
       initialVoteDist: { against: 100, for: 0, abstain: 0 },
     });
   };
@@ -34,7 +35,7 @@ export default function CastVote({}: CastVoteProps) {
     // TODO: CAST VOTE
     // TODO: send proposal pubKey here as proposalId ?
     openModal("cast-vote", {
-      proposalId: "",
+      proposalId,
       initialVoteDist: { abstain: 100, for: 0, against: 0 },
     });
   };
@@ -58,6 +59,7 @@ export default function CastVote({}: CastVoteProps) {
               icon={<ThumbsUp className="size-4" />}
               className="w-full rounded-full bg-white/3"
               size="lg"
+              disabled={disabled}
             />
 
             <AppButton
@@ -67,6 +69,7 @@ export default function CastVote({}: CastVoteProps) {
               icon={<ThumbsDown className="size-4" />}
               className="w-full rounded-full bg-white/3"
               size="lg"
+              disabled={disabled}
             />
 
             <AppButton
@@ -76,6 +79,7 @@ export default function CastVote({}: CastVoteProps) {
               icon={<Ban className="size-4" />}
               className="w-full rounded-full bg-white/3"
               size="lg"
+              disabled={disabled}
             />
           </div>
         </div>

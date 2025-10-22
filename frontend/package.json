@@ -31,6 +31,7 @@
     "@tanstack/react-table": "^8.21.3",
     "@tw-classed/react": "^1.8.0",
     "axios": "^1.9.0",
+    "bn.js": "^5.2.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "d3": "^7.9.0",

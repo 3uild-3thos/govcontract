@@ -43,10 +43,10 @@ export const columns: ColumnDef<VoteAccountData>[] = [
     cell: ({ row }) => {
       const identity = row.getValue("identity") as string | undefined;
       if (!identity) return <div className="hidden sm:block">-</div>;
-      const displayIdentity = formatAddress(identity, 6);
+
       return (
         <p className="hidden sm:block font-mono text-xs lg:text-sm">
-          {displayIdentity}
+          {identity}
         </p>
       );
     },

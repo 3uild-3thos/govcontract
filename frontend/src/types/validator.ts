@@ -10,12 +10,12 @@ export interface Validator {
   asn?: string;
   description?: string;
   stake_weight?: number;
+  credits?: number;
+  epoch_credits: number;
+  last_vote: number;
   // rank: number;
   // identity: string;
-  // last_vote: number;
   // root_slot: number;
-  // credits: number;
-  // epoch_credits: number;
   // version: string;
   // delinquent: boolean;
   // skip_rate: number;

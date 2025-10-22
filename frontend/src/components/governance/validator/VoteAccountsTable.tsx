@@ -37,7 +37,7 @@ import {
   formatOptionalCount,
 } from "@/lib/governance/formatters";
 import { VoteAccountData } from "@/types";
-import { useVoteAccounts } from "@/hooks";
+import { useVoteAccountsWithValidators, VoteValidatorEntry } from "@/hooks";
 
 const stakeSizeOptions = [
   { value: "All", label: "Stake Size" },
@@ -62,12 +62,19 @@ export function VoteAccountsTable() {
   );
   const [drawerOpen, setDrawerOpen] = React.useState(false);
 
-  const { data: votingAccountsData, isLoading } = useVoteAccounts();
+  const {
+    data: votingAccountsValidators,
+    isLoading,
+    // TODO: PEDRO we need some UI to show errors
+    // error,
+  } = useVoteAccountsWithValidators();
 
-  const data = React.useMemo(
-    () => votingAccountsData || [],
-    [votingAccountsData]
-  );
+  const data = React.useMemo(() => {
+    const values: VoteValidatorEntry[] = votingAccountsValidators
+      ? Object.values(votingAccountsValidators.voteMap)
+      : [];
+    return values.flatMap((v) => v.voteAccount);
+  }, [votingAccountsValidators]);
 
   // Data Filtering
   const filteredData = React.useMemo(() => {
