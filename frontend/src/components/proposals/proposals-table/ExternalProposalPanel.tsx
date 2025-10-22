@@ -6,6 +6,12 @@ import { AppButton } from "@/components/ui/AppButton";
 import { GitHubIcon } from "@/components/icons/SvgIcons";
 import { Spade } from "lucide-react";
 import { useModal } from "@/contexts/ModalContext";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 const VOTE_STATE_LABEL: Record<ProposalRow["vote"]["state"], string> = {
   "in-progress": "In Progress",
@@ -75,11 +81,12 @@ function LifecycleStageBar({
 
 function VoteActions({
   state,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   proposalId,
+  disabled,
 }: {
   state: ProposalRow["lifecycleStage"];
   proposalId: string;
+  disabled?: boolean;
 }) {
   const { openModal } = useModal();
 
@@ -90,9 +97,9 @@ function VoteActions({
           variant="outline"
           text="Modify Vote"
           className="w-full justify-center border-white/15 bg-white/10 text-sm font-medium text-white/75 hover:text-white"
+          disabled={disabled}
           onClick={() => {
-            // TODO: Pass the actual proposal public key when available from API
-            openModal("modify-vote", { proposalId: "" });
+            openModal("modify-vote", { proposalId });
           }}
         />
       )}
@@ -100,13 +107,12 @@ function VoteActions({
         variant="gradient"
         text={state === "voting" ? "Cast Vote" : "Support"}
         className="w-full justify-center text-sm font-semibold text-foreground"
+        disabled={disabled}
         onClick={() => {
           if (state === "voting") {
-            // TODO: Pass the actual proposal public key when available
-            openModal("cast-vote", { proposalId: "" });
+            openModal("cast-vote", { proposalId });
           } else {
-            // TODO: Pass the actual proposal public key when available
-            openModal("support-proposal", { proposalId: "" });
+            openModal("support-proposal", { proposalId });
           }
         }}
       />
@@ -115,6 +121,7 @@ function VoteActions({
 }
 
 function VotingPanel({ proposal }: { proposal: ProposalRow }) {
+  const { connected } = useWallet();
   return (
     <aside className="w-full glass-card p-6 lg:w-80 xl:w-80">
       <header className="mb-6">
@@ -131,12 +138,35 @@ function VotingPanel({ proposal }: { proposal: ProposalRow }) {
         </div>
       </header>
 
-      {(proposal.lifecycleStage === "support" ||
-        proposal.lifecycleStage === "voting") && (
-        <VoteActions
-          state={proposal.lifecycleStage}
-          proposalId={proposal.simd}
-        />
+      {connected ? (
+        (proposal.lifecycleStage === "support" ||
+          proposal.lifecycleStage === "voting") && (
+          <VoteActions
+            state={proposal.lifecycleStage}
+            proposalId={proposal.publicKey.toBase58()}
+          />
+        )
+      ) : (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span>
+              {(proposal.lifecycleStage === "support" ||
+                proposal.lifecycleStage === "voting") && (
+                <VoteActions
+                  state={proposal.lifecycleStage}
+                  proposalId={""}
+                  disabled
+                />
+              )}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            <p className="text-sm text-red-500/80">
+              Wallet not connected, please connect your wallet to be able to
+              perform these actions
+            </p>
+          </TooltipContent>
+        </Tooltip>
       )}
     </aside>
   );

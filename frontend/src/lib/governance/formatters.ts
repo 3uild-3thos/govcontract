@@ -42,19 +42,19 @@ export function formatCommission(commission: number | undefined): string {
 }
 
 export function formatOptionalSlot(
-  slot: number | null | undefined,
+  slot: number | null | undefined
 ): string | number {
   return isValidNumber(slot) ? slot : "-";
 }
 
 export function formatOptionalCount(
-  count: number | null | undefined,
+  count: number | null | undefined
 ): string | number {
   return isValidNumber(count) ? count : "-";
 }
 
 export function formatLamportsDisplay(
-  lamports: number | null | undefined,
+  lamports: number | null | undefined
 ): LamportsDisplay {
   if (!isValidNumber(lamports)) {
     return {

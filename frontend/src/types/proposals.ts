@@ -1,8 +1,12 @@
+import { ProposalAccount } from "@/chain";
+import { PublicKey } from "@solana/web3.js";
+
 export type ProposalStatus = "active" | "finalizing" | "finalized";
 
 export type ProposalLifecycleStage = "support" | "voting" | "finalized";
 
 export type ProposalRecord = {
+  publicKey: PublicKey;
   id: string; // used for table
   // Identity
   simd: string;
@@ -51,6 +55,11 @@ export type ProposalRecord = {
 // RAW DATA, that will come from our govcontract program. we will later transform into frontend data structure
 
 // Input type depends on your data source
+
+export interface RawProposalAccount {
+  account: ProposalAccount;
+  publicKey: PublicKey;
+}
 export interface RawProposal {
   simd: string;
   title: string;
