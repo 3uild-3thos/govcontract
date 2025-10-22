@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 
-export type ViewType = "validator" | "staker";
+export type ViewType = "all" | "validator" | "staker";
 
 interface RoleToggleProps {
   currentView: ViewType;
@@ -16,11 +16,17 @@ export function RoleToggle({
   canToggle,
 }: RoleToggleProps) {
   const [indicatorStyle, setIndicatorStyle] = useState<React.CSSProperties>({});
+  const allRef = useRef<HTMLButtonElement>(null);
   const validatorRef = useRef<HTMLButtonElement>(null);
   const stakerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    const activeRef = currentView === "validator" ? validatorRef : stakerRef;
+    const activeRef =
+      currentView === "validator"
+        ? validatorRef
+        : currentView === "all"
+        ? allRef
+        : stakerRef;
 
     if (activeRef.current) {
       const { offsetLeft, offsetWidth, offsetHeight } = activeRef.current;
@@ -41,6 +47,17 @@ export function RoleToggle({
       <div className="role-toggle-indicator" style={indicatorStyle} />
 
       {/* Buttons */}
+      <button
+        ref={allRef}
+        onClick={() => onViewChange("all")}
+        className={`role-toggle-button ${
+          currentView === "all"
+            ? "role-toggle-button-active"
+            : "role-toggle-button-inactive"
+        }`}
+      >
+        All
+      </button>
       <button
         ref={validatorRef}
         onClick={() => onViewChange("validator")}
