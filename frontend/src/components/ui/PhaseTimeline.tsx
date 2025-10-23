@@ -1,14 +1,15 @@
 import { cn } from "@/lib/utils";
+import { ProposalStatus } from "@/types";
 import { Vote, PenLine, MessageSquareText } from "lucide-react";
 
 interface Props {
-  currentPhase: "Support" | "Voting" | "Finished" | undefined;
+  currentPhase: ProposalStatus | undefined;
 }
 
 export const PhaseTimeline = ({ currentPhase }: Props) => {
-  const isSupporting = currentPhase === "Support";
-  const isVoting = currentPhase === "Voting";
-  const isFinished = currentPhase === "Finished";
+  const isSupporting = currentPhase === "support";
+  const isVoting = currentPhase === "voting";
+  const isFinished = currentPhase === "finalized";
 
   return (
     <>

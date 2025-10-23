@@ -3,7 +3,6 @@
 import type { ProposalRecord } from "@/types";
 import { Fragment, type MouseEventHandler } from "react";
 import { AppButton } from "@/components/ui/AppButton";
-import { calculateVotingEndsIn } from "@/helpers";
 import { formatNumber } from "@/helpers";
 
 import LifecycleIndicator from "@/components/ui/LifecycleIndicator";
@@ -32,21 +31,6 @@ interface ActionButtonsProps {
 interface ProposalCardProps {
   proposal: ProposalRecord;
 }
-
-const STATUS_LABEL_FOR_ENDED = "Ended";
-
-const getVotingStatusValue = (status: ProposalStatus) => {
-  if (status === "finalized") {
-    return "Ended";
-  }
-  if (!votingEndsInText || votingEndsInText === "-") {
-    return "Not Started Yet";
-  }
-  if (votingEndsInText) {
-    return votingEndsInText;
-  }
-  return "Not Started Yet";
-};
 
 const getActionButtonText = (status: ProposalStatus) => {
   if (status === "voting") {
@@ -145,8 +129,15 @@ const ActionButtons = ({
 export default function ProposalCard({ proposal }: ProposalCardProps) {
   const router = useRouter();
   const { openModal } = useModal();
-  const { status, quorumPercent, solRequired, title, simd, endEpoch } =
-    proposal;
+  const {
+    status,
+    quorumPercent,
+    solRequired,
+    title,
+    simd,
+    publicKey,
+    endEpoch,
+  } = proposal;
 
   const actionButtonText = getActionButtonText(status);
   const showActionButton = Boolean(actionButtonText);
@@ -159,7 +150,7 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
   ];
 
   const handleCardClick = () => {
-    router.push(`/proposals/${simd.toLowerCase()}`);
+    router.push(`/proposals/${publicKey.toBase58()}`);
   };
 
   const handleButtonClick: MouseEventHandler<HTMLButtonElement> = (event) => {
@@ -193,7 +184,7 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="text-xs font-plus-jakarta-sans font-semibold text-dao-color-gray">
-                {simd}
+                {simd || "-"}
               </span>
               <LifecycleIndicator stage={status} />
             </div>
@@ -224,7 +215,7 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
         <div className="flex-1 space-y-3">
           <div className="flex items-center gap-3">
             <span className="text-xs font-plus-jakarta-sans font-semibold text-white/60">
-              {simd}
+              {simd || "-"}
             </span>
             <LifecycleIndicator stage={status} />
           </div>

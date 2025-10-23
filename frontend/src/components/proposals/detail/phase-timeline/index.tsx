@@ -73,7 +73,7 @@ export default function PhaseTimeline({
         </div>
       </div>
 
-      <PhaseDetail currentPhase={currentPhase} status={proposal.status} />
+      <PhaseDetail currentPhase={currentPhase} />
     </div>
   );
 }

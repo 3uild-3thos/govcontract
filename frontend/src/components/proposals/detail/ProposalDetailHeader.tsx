@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { calculateTimeAgo, calculateVotingEndsIn } from "@/helpers";
+import { calculateTimeAgo } from "@/helpers";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { CheckIcon, CopyIcon, Github } from "lucide-react";
 import { useCopyToClipboard } from "@/hooks";
