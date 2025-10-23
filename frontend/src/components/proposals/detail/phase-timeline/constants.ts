@@ -1,11 +1,8 @@
 import type { CSSProperties } from "react";
-import type { ProposalLifecycleStage } from "@/types";
+import type { ProposalStatus } from "@/types";
 import type { PhaseDefinition, PhaseDetail, ConnectorVariant } from "./types";
 
-export const PHASE_DETAILS: Record<
-  ProposalLifecycleStage | "finalizing",
-  PhaseDetail
-> = {
+export const PHASE_DETAILS: Record<ProposalStatus, PhaseDetail> = {
   support: {
     title: "Current: Support Phase",
     body: "This proposal is gathering the required support. Once the threshold is met it will move into the voting phase.",
@@ -14,10 +11,10 @@ export const PHASE_DETAILS: Record<
     title: "Current: Voting Phase",
     body: "This proposal is currently in the voting phase. It will conclude in 4 days. If the quorum is met and the 'For' votes are in the majority, the proposal will be queued for execution.",
   },
-  finalizing: {
-    title: "Current: Finalizing",
-    body: "Voting has ended and the final tally is being confirmed. Once settlement completes, the proposal will be marked finalized.",
-  },
+  // finalizing: {
+  //   title: "Current: Finalizing",
+  //   body: "Voting has ended and the final tally is being confirmed. Once settlement completes, the proposal will be marked finalized.",
+  // },
   finalized: {
     title: "Current: Finalized",
     body: "Voting has concluded and the results are finalized. Review the outcome and any follow-up actions that may be required.",

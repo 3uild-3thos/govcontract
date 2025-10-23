@@ -1,6 +1,6 @@
-import type { ProposalLifecycleStage } from "@/types";
+import { ProposalStatus } from "@/types";
 
-export type PhaseKey = ProposalLifecycleStage;
+export type PhaseKey = ProposalStatus;
 export type PhaseState = "passed" | "active" | "upcoming";
 export type PhaseIconKey = "check" | "voting" | "clock";
 export type ConnectorVariant = "complete" | "active" | "upcoming";

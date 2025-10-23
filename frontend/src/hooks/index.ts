@@ -14,11 +14,18 @@ export * from "./useCastVote";
 export * from "./useModifyVote";
 export * from "./useCreateProposal";
 
+export * from "./useGetValidators";
+export * from "./useVoteAccountsWithValidators";
+
+// proposal simd and description hooks
+export * from "./useProposalSimd";
+export * from "./useProposalSimdDescription";
+
+export * from "./useProposalOverviewStats";
+
 // DEPRECATED
-export * from "./DEPRECATED/useGetValidators";
 export * from "./DEPRECATED/useGetValidatorsBubbleChart";
 export * from "./DEPRECATED/useGetValidatorsTable";
 export * from "./DEPRECATED/useGetValidatorsTableMobile";
 export * from "./DEPRECATED/useValidatorsVoterSplits";
-export * from "./DEPRECATED/useVoteAccountsWithValidators";
 export * from "./DEPRECATED/useVotes";

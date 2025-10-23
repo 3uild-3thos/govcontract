@@ -14,7 +14,7 @@ export interface GovernanceDashboardState {
   network: "mainnet" | "testnet" | "devnet";
 }
 
-export type ViewType = "all" | "validator" | "staker";
+export type ViewType = "validator" | "staker";
 
 export interface RoleSwitchProps {
   currentView: ViewType;

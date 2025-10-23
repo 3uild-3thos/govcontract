@@ -13,21 +13,24 @@ import {
 } from "@/components/ui/tooltip";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { ProposalDescription } from "../ProposalDescription";
+import { ProposalStatus } from "@/types";
 
-const VOTE_STATE_LABEL: Record<ProposalRow["vote"]["state"], string> = {
-  "in-progress": "In Progress",
-  finished: "Finished",
+const VOTE_STATE_LABEL: Record<ProposalRow["status"], string> = {
+  support: "Not started",
+  voting: "In Progress",
+  finalized: "Finished",
 };
 
 function ProposalInfo({ proposal }: { proposal: ProposalRow }) {
   return (
     <div className="flex flex-1 flex-col justify-between gap-6">
       <Link
-        href={`/proposals/${proposal.simd.toLowerCase()}`}
+        href={`/proposals/${proposal.publicKey.toBase58()}`}
         className="space-y-3 block"
       >
         <h3 className="h3 whitespace-pre-wrap text-lg font-semibold tracking-tight text-white sm:text-xl hover-gradient-text transition-all duration-200">
-          {proposal.simd}: {proposal.title}
+          {proposal.simd && `${proposal.simd}: `}
+          {proposal.title}
         </h3>
         <ProposalDescription githubUrl={proposal.description} />
       </Link>
@@ -52,16 +55,8 @@ function ProposalInfo({ proposal }: { proposal: ProposalRow }) {
   );
 }
 
-function LifecycleStageBar({
-  stage,
-}: {
-  stage: ProposalRow["lifecycleStage"];
-}) {
-  const stages: ProposalRow["lifecycleStage"][] = [
-    "support",
-    "voting",
-    "finalized",
-  ];
+function LifecycleStageBar({ stage }: { stage: ProposalStatus }) {
+  const stages: ProposalStatus[] = ["support", "voting", "finalized"];
   const activeIndex = stages.indexOf(stage);
 
   return (
@@ -83,7 +78,7 @@ function VoteActions({
   proposalId,
   disabled,
 }: {
-  state: ProposalRow["lifecycleStage"];
+  state: ProposalStatus;
   proposalId: string;
   disabled?: boolean;
 }) {
@@ -125,23 +120,22 @@ function VotingPanel({ proposal }: { proposal: ProposalRow }) {
     <aside className="w-full glass-card p-6 lg:w-80 xl:w-80">
       <header className="mb-6">
         <span className="block text-[11px] uppercase tracking-[0.24em] text-white/45 mb-3">
-          {proposal.lifecycleStage === "finalized" ? "Vote" : "Stage"}
+          {proposal.status === "finalized" ? "Vote" : "Stage"}
         </span>
         <div className="flex items-center justify-between gap-4">
           <span className="text-lg font-semibold text-white">
             {VOTE_STATE_LABEL[proposal.vote.state]}
           </span>
           <div className="w-20">
-            <LifecycleStageBar stage={proposal.lifecycleStage} />
+            <LifecycleStageBar stage={proposal.status} />
           </div>
         </div>
       </header>
 
       {connected ? (
-        (proposal.lifecycleStage === "support" ||
-          proposal.lifecycleStage === "voting") && (
+        (proposal.status === "support" || proposal.status === "voting") && (
           <VoteActions
-            state={proposal.lifecycleStage}
+            state={proposal.status}
             proposalId={proposal.publicKey.toBase58()}
           />
         )
@@ -149,13 +143,9 @@ function VotingPanel({ proposal }: { proposal: ProposalRow }) {
         <Tooltip>
           <TooltipTrigger asChild>
             <span>
-              {(proposal.lifecycleStage === "support" ||
-                proposal.lifecycleStage === "voting") && (
-                <VoteActions
-                  state={proposal.lifecycleStage}
-                  proposalId={""}
-                  disabled
-                />
+              {(proposal.status === "support" ||
+                proposal.status === "voting") && (
+                <VoteActions state={proposal.status} proposalId={""} disabled />
               )}
             </span>
           </TooltipTrigger>

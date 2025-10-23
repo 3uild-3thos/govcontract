@@ -5,22 +5,21 @@ import { ColumnDef } from "@tanstack/react-table";
 import { ChevronDown } from "lucide-react";
 import StatusBadge from "@/components/ui/StatusBadge";
 import LifecycleIndicator from "@/components/ui/LifecycleIndicator";
-import { formatDate, calculateVotingEndsIn, formatNumber } from "@/helpers";
-import { useMounted } from "@/hooks";
+import { formatNumber } from "@/helpers";
 import { SortableHeaderButton } from "@/components/SortableHeaderButton";
 
-function VotingEndsInCell({ votingEndsIn }: { votingEndsIn: string }) {
-  const mounted = useMounted();
+// function VotingEndsInCell({ votingEndsIn }: { votingEndsIn: string }) {
+//   const mounted = useMounted();
 
-  if (!mounted) {
-    return <span className="text-sm font-medium text-white/60">-</span>;
-  }
+//   if (!mounted) {
+//     return <span className="text-sm font-medium text-white/60">-</span>;
+//   }
 
-  const value = calculateVotingEndsIn(votingEndsIn);
-  return (
-    <span className="text-sm font-medium text-white/60">{value || "-"}</span>
-  );
-}
+//   const value = calculateVotingEndsIn(votingEndsIn);
+//   return (
+//     <span className="text-sm font-medium text-white/60">{value || "-"}</span>
+//   );
+// }
 
 export const columns: ColumnDef<ProposalRow>[] = [
   {
@@ -28,18 +27,17 @@ export const columns: ColumnDef<ProposalRow>[] = [
     header: "Proposal SIMD",
     cell: ({ row }) => (
       <div className="text-sm font-medium text-white/90">
-        {row.original.simd}
+        {row.original.simd || "-"}
       </div>
     ),
   },
   {
-    accessorKey: "lifecycleStage",
+    id: "lifecycleStage",
+    accessorKey: "status",
     header: ({ column }) => (
       <SortableHeaderButton column={column} label="Lifecycle Stage" />
     ),
-    cell: ({ row }) => (
-      <LifecycleIndicator stage={row.original.lifecycleStage} />
-    ),
+    cell: ({ row }) => <LifecycleIndicator stage={row.original.status} />,
   },
   {
     accessorKey: "quorumPercent",
@@ -60,12 +58,12 @@ export const columns: ColumnDef<ProposalRow>[] = [
     ),
   },
   {
-    accessorKey: "votingStart",
+    accessorKey: "startEpoch",
     header: ({ column }) => (
       <SortableHeaderButton column={column} label="Voting Start" />
     ),
     cell: ({ row }) => {
-      const value = formatDate(row.original.votingStart);
+      const value = row.original.startEpoch;
       return (
         <span className="text-sm font-medium text-white/60">
           {value || "-"}
@@ -74,13 +72,18 @@ export const columns: ColumnDef<ProposalRow>[] = [
     },
   },
   {
-    accessorKey: "votingEndsIn",
+    accessorKey: "endEpoch",
     header: ({ column }) => (
       <SortableHeaderButton column={column} label="Voting End" />
     ),
-    cell: ({ row }) => (
-      <VotingEndsInCell votingEndsIn={row.original.votingEndsIn ?? ""} />
-    ),
+    cell: ({ row }) => {
+      const value = row.original.endEpoch;
+      return (
+        <span className="text-sm font-medium text-white/60">
+          {value || "-"}
+        </span>
+      );
+    },
   },
   {
     accessorKey: "status",

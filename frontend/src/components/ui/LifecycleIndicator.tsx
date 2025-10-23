@@ -6,22 +6,18 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { ProposalLifecycleStage } from "@/types";
+import type { ProposalStatus } from "@/types";
 import { Circle, Loader } from "lucide-react";
 
-const STAGE_ORDER: ProposalLifecycleStage[] = [
-  "support",
-  "voting",
-  "finalized",
-];
+const STAGE_ORDER: ProposalStatus[] = ["support", "voting", "finalized"];
 
-const STAGE_LABEL: Record<ProposalLifecycleStage, string> = {
+const STAGE_LABEL: Record<ProposalStatus, string> = {
   support: "Support",
   voting: "Voting",
   finalized: "Finished",
 };
 
-const STAGE_DESCRIPTION: Record<ProposalLifecycleStage, string> = {
+const STAGE_DESCRIPTION: Record<ProposalStatus, string> = {
   support:
     "During this period we take a snapshot of all active validators on Solana to make them eligible for the next vote.",
   voting:
@@ -31,7 +27,7 @@ const STAGE_DESCRIPTION: Record<ProposalLifecycleStage, string> = {
 };
 
 type LifecycleIndicatorProps = {
-  stage: ProposalLifecycleStage;
+  stage: ProposalStatus;
 };
 
 export default function LifecycleIndicator({ stage }: LifecycleIndicatorProps) {

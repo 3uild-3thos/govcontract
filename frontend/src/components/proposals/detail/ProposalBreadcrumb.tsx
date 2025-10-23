@@ -8,17 +8,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
-interface ProposalBreadcrumbProps {
-  isLoading: boolean;
-  simd: string;
-}
-
-export default function ProposalBreadcrumb({
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  isLoading,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  simd,
-}: ProposalBreadcrumbProps) {
+export default function ProposalBreadcrumb() {
   return (
     <Breadcrumb>
       <BreadcrumbList className="text-white/30">

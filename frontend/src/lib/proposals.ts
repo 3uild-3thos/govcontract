@@ -1,8 +1,12 @@
-export const getProposalPhase = (voting: boolean, finalized: boolean) => {
-  let currentPhase: "Support" | "Voting" | "Finished" | undefined = undefined;
-  if (!voting && !finalized) currentPhase = "Support";
-  else if (voting && !finalized) currentPhase = "Voting";
-  else if (!voting && finalized) currentPhase = "Finished";
+import type { ProposalStatus } from "@/types";
 
-  return currentPhase;
+export const getProposalStatus = (
+  voting: boolean,
+  finalized: boolean
+): ProposalStatus => {
+  if (!voting && !finalized) return "support";
+  else if (voting && !finalized) return "voting";
+  else if (!voting && finalized) return "finalized";
+
+  return "support";
 };

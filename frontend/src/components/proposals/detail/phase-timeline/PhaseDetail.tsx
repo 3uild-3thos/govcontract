@@ -3,15 +3,10 @@ import type { PhaseKey } from "./types";
 
 interface PhaseDetailProps {
   currentPhase: PhaseKey;
-  status: string;
 }
 
-export function PhaseDetail({ currentPhase, status }: PhaseDetailProps) {
-  const detailKey =
-    currentPhase === "finalized" && status === "finalizing"
-      ? "finalizing"
-      : currentPhase;
-  const detail = PHASE_DETAILS[detailKey] ;
+export function PhaseDetail({ currentPhase }: PhaseDetailProps) {
+  const detail = PHASE_DETAILS[currentPhase];
 
   if (!detail) return null;
 

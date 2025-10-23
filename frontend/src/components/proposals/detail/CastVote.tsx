@@ -2,42 +2,56 @@
 
 import { AppButton } from "@/components/ui/AppButton";
 import { useModal } from "@/contexts/ModalContext";
+import { PublicKey } from "@solana/web3.js";
 import { Ban, ThumbsDown, ThumbsUp } from "lucide-react";
 
 interface CastVoteProps {
-  proposalId: string;
+  proposalPublicKey: PublicKey | undefined;
+  isLoading: boolean;
   disabled?: boolean;
 }
 
-export default function CastVote({ proposalId, disabled }: CastVoteProps) {
+export default function CastVote({
+  proposalPublicKey,
+  isLoading,
+  disabled,
+}: CastVoteProps) {
   // TODO: CAST VOTE
   // TODO: make check if user already voted (here or in parent component)
 
   const { openModal } = useModal();
 
+  const disabledButtons = disabled || isLoading || !proposalPublicKey;
+
   const handleVoteFor = () => {
-    // TODO: CAST VOTE
-    // TODO: send proposal pubKey here as proposalId ?
-    openModal("cast-vote", {
-      proposalId,
-      initialVoteDist: { for: 100, abstain: 0, against: 0 },
-    });
+    if (proposalPublicKey) {
+      // TODO: CAST VOTE
+      // TODO: send proposal pubKey here as proposalPublicKey ?
+      openModal("cast-vote", {
+        proposalId: proposalPublicKey.toBase58(),
+        initialVoteDist: { for: 100, abstain: 0, against: 0 },
+      });
+    }
   };
   const handleVoteAgainst = () => {
-    // TODO: CAST VOTE
-    // TODO: send proposal pubKey here as proposalId ?
-    openModal("cast-vote", {
-      proposalId,
-      initialVoteDist: { against: 100, for: 0, abstain: 0 },
-    });
+    if (proposalPublicKey) {
+      // TODO: CAST VOTE
+      // TODO: send proposal pubKey here as proposalPublicKey ?
+      openModal("cast-vote", {
+        proposalId: proposalPublicKey.toBase58(),
+        initialVoteDist: { against: 100, for: 0, abstain: 0 },
+      });
+    }
   };
   const handleVoteAbstain = () => {
-    // TODO: CAST VOTE
-    // TODO: send proposal pubKey here as proposalId ?
-    openModal("cast-vote", {
-      proposalId,
-      initialVoteDist: { abstain: 100, for: 0, against: 0 },
-    });
+    if (proposalPublicKey) {
+      // TODO: CAST VOTE
+      // TODO: send proposal pubKey here as proposalPublicKey ?
+      openModal("cast-vote", {
+        proposalId: proposalPublicKey.toBase58(),
+        initialVoteDist: { abstain: 100, for: 0, against: 0 },
+      });
+    }
   };
 
   return (
@@ -59,7 +73,7 @@ export default function CastVote({ proposalId, disabled }: CastVoteProps) {
               icon={<ThumbsUp className="size-4" />}
               className="w-full rounded-full bg-white/3"
               size="lg"
-              disabled={disabled}
+              disabled={disabledButtons}
             />
 
             <AppButton
@@ -69,7 +83,7 @@ export default function CastVote({ proposalId, disabled }: CastVoteProps) {
               icon={<ThumbsDown className="size-4" />}
               className="w-full rounded-full bg-white/3"
               size="lg"
-              disabled={disabled}
+              disabled={disabledButtons}
             />
 
             <AppButton
@@ -79,7 +93,7 @@ export default function CastVote({ proposalId, disabled }: CastVoteProps) {
               icon={<Ban className="size-4" />}
               className="w-full rounded-full bg-white/3"
               size="lg"
-              disabled={disabled}
+              disabled={disabledButtons}
             />
           </div>
         </div>

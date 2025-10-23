@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/tooltip";
 
 interface ProposalDetailViewProps {
-  proposal: ProposalRecord;
+  proposal: ProposalRecord | undefined;
   isLoading: boolean;
 }
 
@@ -27,14 +27,15 @@ export default function ProposalDetailView({
 
   return (
     <div className="space-y-6 sm:space-y-8">
-      <ProposalBreadcrumb simd={proposal.simd} isLoading={isLoading} />
+      <ProposalBreadcrumb />
       <ProposalDetailHeader proposal={proposal} isLoading={isLoading} />
 
       <div className="grid gap-6 md:grid-cols-[2fr_1fr] lg:grid-cols-[2fr_1fr]">
-        <VoteBreakdown proposal={proposal} />
-        {connected ? (
+        <VoteBreakdown proposal={proposal} isLoading={isLoading} />
+        {connected && proposal ? (
           <CastVote
-            proposalId={proposal.publicKey.toBase58()}
+            proposalPublicKey={proposal.publicKey}
+            isLoading={isLoading}
             // TODO: needed?
             // userStake="1000 SOL"
           />
@@ -43,7 +44,8 @@ export default function ProposalDetailView({
             <TooltipTrigger asChild>
               <span>
                 <CastVote
-                  proposalId={proposal.publicKey.toBase58()}
+                  proposalPublicKey={proposal?.publicKey}
+                  isLoading={isLoading}
                   disabled
                   // TODO: needed?
                   // userStake="1000 SOL"
@@ -59,10 +61,7 @@ export default function ProposalDetailView({
           </Tooltip>
         )}
       </div>
-      <PhaseTimeline
-        proposal={proposal}
-        currentPhase={proposal.lifecycleStage}
-      />
+      <PhaseTimeline proposal={proposal} isLoading={isLoading} />
       <TopVotersTable />
     </div>
   );

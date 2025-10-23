@@ -82,7 +82,7 @@ async function fetchProposalFromGitHub({
   return data;
 }
 
-export function useSimdProposalDescription(githubUrl: string) {
+export function useProposalSimdDescription(githubUrl: string) {
   return useQuery({
     queryKey: ["simd-proposal", githubUrl],
     queryFn: fetchProposalFromGitHub,

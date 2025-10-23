@@ -1,15 +1,13 @@
 import { ProposalAccount } from "@/chain";
 import { PublicKey } from "@solana/web3.js";
 
-export type ProposalStatus = "active" | "finalizing" | "finalized";
-
-export type ProposalLifecycleStage = "support" | "voting" | "finalized";
+export type ProposalStatus = "support" | "voting" | "finalized";
 
 export type ProposalRecord = {
   publicKey: PublicKey;
   id: string; // used for table
   // Identity
-  simd: string;
+  simd: string | undefined;
   title: string;
   summary: string; // Short text description for list view
   description: string; // GitHub URL (renamed from 'link')
@@ -20,8 +18,6 @@ export type ProposalRecord = {
   startEpoch: number;
   endEpoch: number;
   creationTimestamp: number; // Unix timestamp
-  votingStart: string | null;
-  votingEndsIn: string | null;
 
   // Vote Data (in lamports)
   clusterSupportLamports: number;
@@ -36,7 +32,6 @@ export type ProposalRecord = {
   proposerStakeWeightBp: number; // Basis points
 
   // Status
-  lifecycleStage: ProposalLifecycleStage;
   status: ProposalStatus;
   voting: boolean; // Is currently voting
   finalized: boolean; // Is finalized
@@ -47,7 +42,7 @@ export type ProposalRecord = {
 
   // Legacy (keep for now)
   vote: {
-    state: "in-progress" | "finished";
+    state: ProposalStatus;
     lastUpdated: string;
   };
 };

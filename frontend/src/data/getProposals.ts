@@ -1,10 +1,7 @@
 import { BlockchainParams, createProgramWitDummyWallet } from "@/chain";
-import {
-  ProposalLifecycleStage,
-  ProposalRecord,
-  ProposalStatus,
-  RawProposalAccount,
-} from "@/types";
+import { getSimd } from "@/hooks";
+import { getProposalStatus } from "@/lib/proposals";
+import type { ProposalRecord, RawProposalAccount } from "@/types";
 
 // TODO: feel free to create a new file for the blockchain fetching logic, and rename this one to proposalsMapper or smth like that
 
@@ -33,13 +30,13 @@ export function mapProposalDto(
   index: number
 ): ProposalRecord {
   const raw = rawAccount.account;
-  const lifecycleStage = getLifecycleStage(raw);
-  const status = "finalizing";
+  const status = getProposalStatus(raw.voting, raw.finalized);
+  const simd = getSimd(raw.description);
 
   return {
     publicKey: rawAccount.publicKey,
     id: index.toString(),
-    simd: `simd${index}`,
+    simd,
     title: raw.title,
     summary: raw.description,
     description: raw.description,
@@ -49,8 +46,6 @@ export function mapProposalDto(
     startEpoch: raw.startEpoch.toNumber(),
     endEpoch: raw.endEpoch.toNumber(),
     creationTimestamp: raw.creationTimestamp?.toNumber() || 0,
-    votingStart: null,
-    votingEndsIn: null,
 
     clusterSupportLamports: raw.clusterSupportLamports?.toNumber() || 0,
     forVotesLamports: raw.forVotesLamports?.toNumber() || 0,
@@ -62,34 +57,16 @@ export function mapProposalDto(
     solRequired: 100, // TODO ?
     proposerStakeWeightBp: raw.proposerStakeWeightBp?.toNumber() || 0,
 
-    lifecycleStage,
     status,
-    voting: lifecycleStage === "voting",
-    finalized: status === "finalizing",
+    voting: raw.voting,
+    finalized: raw.finalized,
 
     proposalBump: raw.proposalBump,
     index: raw.index,
 
     vote: {
-      state: raw.voting ? "in-progress" : "finished",
+      state: status,
       lastUpdated: "raw.voteCount.toString()",
     },
   };
 }
-
-function normalizeLifecycleStage(value: string): ProposalLifecycleStage {
-  if (["support", "voting", "finalized"].includes(value))
-    return value as ProposalLifecycleStage;
-  return "support";
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function normalizeStatus(value: string): ProposalStatus {
-  if (["active", "finalizing", "finalized"].includes(value))
-    return value as ProposalStatus;
-  return "active";
-}
-
-const getLifecycleStage = (raw: RawProposalAccount["account"]) => {
-  return normalizeLifecycleStage(raw.voting ? "voting" : "finalized");
-};

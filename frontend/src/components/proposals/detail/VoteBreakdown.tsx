@@ -13,16 +13,20 @@ import {
 const HAVE_VOTED = true;
 
 interface VoteBreakdownProps {
-  proposal: ProposalRecord;
+  proposal: ProposalRecord | undefined;
+  isLoading: boolean;
   onVoteFor?: () => void;
 }
 
 export default function VoteBreakdown({
   proposal,
+  isLoading,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onVoteFor,
 }: VoteBreakdownProps) {
   const votes = useMemo(() => {
+    if (!proposal) return undefined;
+
     const total =
       proposal.forVotesLamports +
       proposal.againstVotesLamports +
@@ -39,6 +43,10 @@ export default function VoteBreakdown({
         total > 0 ? (proposal.abstainVotesLamports / total) * 100 : 0,
     };
   }, [proposal]);
+
+  // TODO: PEDRO check proper loading skeletongs
+  if (isLoading) return <div>Loading</div>;
+  if (!proposal || !votes) return <div>No proposal data...</div>;
 
   return (
     <div className="glass-card flex h-full flex-col p-6 md:p-6 lg:p-8">

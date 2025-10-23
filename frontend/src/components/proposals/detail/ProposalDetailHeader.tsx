@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { calculateTimeAgo, calculateVotingEndsIn } from "@/helpers";
+import { calculateTimeAgo } from "@/helpers";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { CheckIcon, CopyIcon, Github } from "lucide-react";
 import { useCopyToClipboard } from "@/hooks";
@@ -10,7 +10,7 @@ import { formatAddress } from "@/lib/governance/formatters";
 import type { ProposalRecord } from "@/types";
 
 interface ProposalDetailHeaderProps {
-  proposal: ProposalRecord;
+  proposal: ProposalRecord | undefined;
   isLoading: boolean;
 }
 
@@ -34,9 +34,14 @@ export default function ProposalDetailHeader({
   proposal,
   isLoading,
 }: ProposalDetailHeaderProps) {
-  const createdAgo = calculateTimeAgo(proposal.creationTimestamp);
-  const endsIn = calculateVotingEndsIn(proposal.votingEndsIn);
   const { copied, copyToClipboard } = useCopyToClipboard();
+
+  // TODO: PEDRO check proper loading skeletongs
+  if (isLoading) return <div>Loading</div>;
+  if (!proposal) return <div>No proposal data...</div>;
+
+  const createdAgo = calculateTimeAgo(proposal.creationTimestamp);
+  const endsIn = proposal.endEpoch;
 
   return (
     <div className="glass-card space-y-6 p-6">
@@ -94,7 +99,7 @@ export default function ProposalDetailHeader({
         </InfoItem>
 
         <div className="hidden lg:block lg:ml-auto lg:mr-4">
-          <LifecycleIndicator stage={proposal.lifecycleStage || "voting"} />
+          <LifecycleIndicator stage={proposal.status || "voting"} />
         </div>
       </div>
     </div>
