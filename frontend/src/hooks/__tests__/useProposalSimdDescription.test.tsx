@@ -1,7 +1,7 @@
 import React from "react";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useSimdProposalDescription } from "../useSimdProposalDescription";
+import { useProposalSimdDescription } from "../useProposalSimdDescription";
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -35,7 +35,7 @@ const createWrapper = () => {
   return Wrapper;
 };
 
-describe("useSimdProposalDescription", () => {
+describe("useProposalSimdDescription", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     localStorage.clear();
@@ -57,7 +57,7 @@ This is the summary text
 `,
     });
 
-    const { result } = renderHook(() => useSimdProposalDescription(githubUrl), {
+    const { result } = renderHook(() => useProposalSimdDescription(githubUrl), {
       wrapper: createWrapper(),
     });
 
@@ -85,7 +85,7 @@ This is the summary text
       })
     );
 
-    const { result } = renderHook(() => useSimdProposalDescription(githubUrl), {
+    const { result } = renderHook(() => useProposalSimdDescription(githubUrl), {
       wrapper: createWrapper(),
     });
 
@@ -99,7 +99,7 @@ This is the summary text
   it.skip("throws error for invalid GitHub URL", async () => {
     const githubUrl = "https://github.com/invalid-url.md";
 
-    const { result } = renderHook(() => useSimdProposalDescription(githubUrl), {
+    const { result } = renderHook(() => useProposalSimdDescription(githubUrl), {
       wrapper: createWrapper(),
     });
 

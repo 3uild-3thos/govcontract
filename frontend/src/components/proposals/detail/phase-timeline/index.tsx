@@ -9,22 +9,25 @@ import {
   resolveConnectorVariant,
   shouldAnimateConnector,
 } from "./utils";
-import type { PhaseKey } from "./types";
 
 interface PhaseTimelineProps {
-  proposal: ProposalRecord;
-  currentPhase: PhaseKey;
+  proposal: ProposalRecord | undefined;
+  isLoading: boolean;
 }
 
 export default function PhaseTimeline({
   proposal,
-  currentPhase,
+  isLoading,
 }: PhaseTimelineProps) {
+  // TODO: PEDRO check proper loading skeletongs
+  if (isLoading) return <div>Loading</div>;
+  if (!proposal) return <div>No proposal data...</div>;
+
+  const currentPhase = proposal.status;
+
   const currentPhaseIndex = PHASES.findIndex(
-    (phase) => phase.key === currentPhase,
+    (phase) => phase.key === currentPhase
   );
-  const isFinalizing = proposal.status === "finalizing";
-  const isFinalized = proposal.status === "finalized";
 
   return (
     <div className="glass-card space-y-6 p-6">
@@ -36,12 +39,12 @@ export default function PhaseTimeline({
             const phaseState = resolvePhaseState(
               currentPhase,
               index,
-              currentPhaseIndex,
+              currentPhaseIndex
             );
             const nextState = resolvePhaseState(
               currentPhase,
               index + 1,
-              currentPhaseIndex,
+              currentPhaseIndex
             );
 
             const isLastPhase = index === PHASES.length - 1;
@@ -51,13 +54,7 @@ export default function PhaseTimeline({
 
             const animateConnector =
               connectorVariant !== null
-                ? shouldAnimateConnector(
-                    connectorVariant,
-                    index,
-                    currentPhase,
-                    isFinalizing,
-                    isFinalized,
-                  )
+                ? shouldAnimateConnector(connectorVariant, index, currentPhase)
                 : false;
 
             return (

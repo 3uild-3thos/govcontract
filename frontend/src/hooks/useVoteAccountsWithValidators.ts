@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { useGetValidators } from "./useGetValidators"; // your exist
+import { useGetValidators } from "./useGetValidators";
 import { Validator, VoteAccountData } from "@/types";
-import { useVoteAccounts } from "../useVoteAccounts";
+import { useVoteAccounts } from "./useVoteAccounts";
 import { formatAddress } from "@/lib/governance/formatters";
 
 export type VoteValidatorEntry = {

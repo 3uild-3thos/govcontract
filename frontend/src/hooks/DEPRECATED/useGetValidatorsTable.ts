@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { useGetValidators } from "./useGetValidators";
 import { useValidatorsVoterSplits } from "./useValidatorsVoterSplits";
 import { Validator } from "@/types";
 import { roundDecimals } from "@/lib/helpers";
+import { useGetValidators } from "../useGetValidators";
 
 export type SortBy = "weight" | "name" | "percentage" | "date";
 

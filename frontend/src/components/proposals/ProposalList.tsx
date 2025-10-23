@@ -59,7 +59,7 @@ export default function ProposalList() {
 
       <div className="space-y-4">
         {filteredProposals.map((proposal) => (
-          <ProposalCard key={proposal.simd} proposal={proposal} />
+          <ProposalCard key={proposal.id} proposal={proposal} />
         ))}
       </div>
 

@@ -44,7 +44,7 @@ export default function Navbar() {
   }, [pathname]);
 
   const renderNavLinks = ({ href, label }: NavLink) => {
-    const isActive = pathname === href;
+    const isActive = pathname.startsWith(href);
     return (
       <li key={href}>
         <Link

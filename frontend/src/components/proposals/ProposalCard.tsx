@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import type { ProposalRecord } from "@/types";
@@ -6,7 +5,6 @@ import { Fragment, type MouseEventHandler } from "react";
 import { AppButton } from "@/components/ui/AppButton";
 import { calculateVotingEndsIn } from "@/helpers";
 import { formatNumber } from "@/helpers";
-import { useMounted } from "@/hooks";
 
 import LifecycleIndicator from "@/components/ui/LifecycleIndicator";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -15,7 +13,6 @@ import { useModal } from "@/contexts/ModalContext";
 import { motion } from "framer-motion";
 
 type ProposalStatus = ProposalRecord["status"];
-type ProposalLifecycleStage = ProposalRecord["lifecycleStage"];
 interface VotingDetailItem {
   label: string;
   value: string;
@@ -38,11 +35,8 @@ interface ProposalCardProps {
 
 const STATUS_LABEL_FOR_ENDED = "Ended";
 
-const getVotingStatusValue = (
-  status: ProposalStatus,
-  votingEndsInText: string | null,
-) => {
-  if (status === "finalized" || votingEndsInText === STATUS_LABEL_FOR_ENDED) {
+const getVotingStatusValue = (status: ProposalStatus) => {
+  if (status === "finalized") {
     return "Ended";
   }
   if (!votingEndsInText || votingEndsInText === "-") {
@@ -54,25 +48,19 @@ const getVotingStatusValue = (
   return "Not Started Yet";
 };
 
-const getActionButtonText = (
-  lifecycleStage: ProposalLifecycleStage,
-  status: ProposalStatus,
-) => {
-  if (lifecycleStage === "voting") {
+const getActionButtonText = (status: ProposalStatus) => {
+  if (status === "voting") {
     return "Cast Vote";
   }
 
-  if (lifecycleStage === "support") {
+  if (status === "support") {
     return "Support";
   }
 
   return null;
 };
 
-const shouldShowModifyButton = (
-  lifecycleStage: ProposalLifecycleStage,
-  status: ProposalStatus,
-) => lifecycleStage === "voting";
+const shouldShowModifyButton = (status: ProposalStatus) => status === "voting";
 
 const VotingDetails = ({ items, layout }: VotingDetailsProps) => {
   if (items.length === 0) {
@@ -156,30 +144,18 @@ const ActionButtons = ({
 
 export default function ProposalCard({ proposal }: ProposalCardProps) {
   const router = useRouter();
-  const mounted = useMounted();
   const { openModal } = useModal();
-  const {
-    status,
-    lifecycleStage,
-    quorumPercent,
-    solRequired,
-    title,
-    simd,
-    votingEndsIn: votingEndsInValue,
-  } = proposal;
+  const { status, quorumPercent, solRequired, title, simd, endEpoch } =
+    proposal;
 
-  const votingEndsIn = mounted
-    ? calculateVotingEndsIn(votingEndsInValue)
-    : null;
-  const votingStatusValue = getVotingStatusValue(status, votingEndsIn);
-  const actionButtonText = getActionButtonText(lifecycleStage, status);
+  const actionButtonText = getActionButtonText(status);
   const showActionButton = Boolean(actionButtonText);
-  const showModifyButton = shouldShowModifyButton(lifecycleStage, status);
+  const showModifyButton = shouldShowModifyButton(status);
 
   const detailItems: VotingDetailItem[] = [
     { label: "Quorum", value: `${quorumPercent}%` },
     { label: "Required", value: `${formatNumber(solRequired)} SOL` },
-    { label: "Voting Ends In", value: votingStatusValue },
+    { label: "Voting End", value: `${endEpoch}` },
   ];
 
   const handleCardClick = () => {
@@ -219,7 +195,7 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
               <span className="text-xs font-plus-jakarta-sans font-semibold text-dao-color-gray">
                 {simd}
               </span>
-              <LifecycleIndicator stage={lifecycleStage} />
+              <LifecycleIndicator stage={status} />
             </div>
             <StatusBadge
               status={status}
@@ -250,7 +226,7 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
             <span className="text-xs font-plus-jakarta-sans font-semibold text-white/60">
               {simd}
             </span>
-            <LifecycleIndicator stage={lifecycleStage} />
+            <LifecycleIndicator stage={status} />
           </div>
           <h4 className="h4 font-medium text-foreground leading-tight line-clamp-2 text-balance">
             {title}

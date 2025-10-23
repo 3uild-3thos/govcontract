@@ -47,9 +47,7 @@ export function resolveConnectorVariant(
 export function shouldAnimateConnector(
   variant: ConnectorVariant,
   phaseIndex: number,
-  currentPhase: PhaseKey,
-  isFinalizing: boolean,
-  isFinalized: boolean
+  currentPhase: PhaseKey
 ): boolean {
   if (variant === "upcoming") {
     return false;
@@ -60,12 +58,7 @@ export function shouldAnimateConnector(
   }
 
   if (currentPhase === "finalized") {
-    if (isFinalizing) {
-      return true;
-    }
-    if (isFinalized) {
-      return false;
-    }
+    return true;
   }
 
   return false;

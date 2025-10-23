@@ -6,15 +6,16 @@ const STATUS_CLASSNAME: Record<
   ProposalStatus,
   Record<StatusBadgeVariant, string>
 > = {
-  active: {
-    default:
-      "bg-[var(--color-dao-status-active)]/5 text-[var(--color-dao-status-active)]",
-    pill: "bg-[var(--color-dao-status-active)]/30 text-[var(--color-dao-status-active)]",
-  },
-  finalizing: {
+  // TODO: PEDRO. check this color. we dont have "finalizing" status, but we do have support (when it not voting nor finalized)
+  support: {
     default:
       "bg-[var(--color-dao-status-finalizing)]/5 text-[var(--color-dao-status-finalizing)]",
     pill: "bg-[var(--color-dao-status-finalizing)]/30 text-[var(--color-dao-status-finalizing)]",
+  },
+  voting: {
+    default:
+      "bg-[var(--color-dao-status-active)]/5 text-[var(--color-dao-status-active)]",
+    pill: "bg-[var(--color-dao-status-active)]/30 text-[var(--color-dao-status-active)]",
   },
   finalized: {
     default:
