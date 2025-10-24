@@ -41,6 +41,7 @@ pub struct SupportProposal<'info> {
     )]
     pub spl_vote_account: UncheckedAccount<'info>,
     /// CHECK: The snapshot program (gov-v1 or mock)
+    // #[account(constraint = snapshot_program.key() == gov_v1::ID @ GovernanceError::InvalidSnapshotProgram)]
     pub snapshot_program: UncheckedAccount<'info>,
     /// CHECK: Consensus result account owned by snapshot program
     pub consensus_result: UncheckedAccount<'info>,
@@ -55,7 +56,7 @@ impl<'info> SupportProposal<'info> {
 
         // Ensure proposal is eligible for support
         require!(
-            clock.epoch <= self.proposal.start_epoch,
+            self.proposal.voting == false && self.proposal.finalized == false,
             GovernanceError::ProposalClosed
         );
         require!(!self.proposal.finalized, GovernanceError::ProposalFinalized);

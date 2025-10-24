@@ -20,7 +20,7 @@ impl<'info> AddMerkleRoot<'info> {
     pub fn add_merkle_root(&mut self, merkle_root_hash: [u8; 32]) -> Result<()> {
         let clock = Clock::get()?;
         require!(
-            clock.epoch <= self.proposal.start_epoch,
+            self.proposal.voting == false && self.proposal.finalized == false,
             GovernanceError::CannotModifyAfterStart
         );
 
