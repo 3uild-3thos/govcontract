@@ -7,6 +7,7 @@ export const getVoteAccounts = async (
   const program = createProgramWitDummyWallet(blockchainParams.endpoint);
 
   const voteAccs = await program.account.vote.all();
+  console.log("voteAccs:", voteAccs);
   return voteAccs.map(mapVoteAccountDto);
 };
 
@@ -19,13 +20,26 @@ export function mapVoteAccountDto(
   const raw = rawAccount.account;
 
   return {
-    voteAccount: rawAccount.publicKey.toBase58(),
+    voteAccount: rawAccount.publicKey,
+    proposal: raw.proposal,
+    // validator data
     activeStake: raw.stake?.toNumber() || 0,
-    identity: raw.validator.toBase58(),
+    identity: raw.validator,
     commission: 0,
     lastVote: 0,
     credits: 0,
     epochCredits: 0,
     activatedStake: 0,
+    // vote data
+    forVotesBp: raw.forVotesBp,
+    againstVotesBp: raw.againstVotesBp,
+    abstainVotesBp: raw.abstainVotesBp,
+    forVotesLamports: raw.forVotesLamports,
+    againstVotesLamports: raw.againstVotesLamports,
+    abstainVotesLamports: raw.abstainVotesLamports,
+    stake: raw.stake,
+    overrideLamports: raw.overrideLamports,
+    voteTimestamp: raw.voteTimestamp,
+    bump: raw.bump,
   };
 }

@@ -16,19 +16,19 @@ export const columns: ColumnDef<VoteAccountData>[] = [
     accessorKey: "voteAccount",
     header: "VOTE ACCOUNT",
     cell: ({ row }) => {
-      const account = row.getValue("voteAccount") as string;
+      const account = row.original.voteAccount;
       return (
         <>
           {/* Mobile: Simple text without copy button */}
           <div className="sm:hidden">
             <p className="font-mono text-white/90 text-xs">
-              {formatAddress(account, 4)}
+              {formatAddress(account.toBase58(), 4)}
             </p>
           </div>
           {/* Desktop: Full CopyableAddress component */}
           <div className="hidden sm:block">
             <CopyableAddress
-              address={account}
+              address={account.toBase58()}
               shortenedLength={4}
               copyLabel="Copy full address"
             />
@@ -41,12 +41,15 @@ export const columns: ColumnDef<VoteAccountData>[] = [
     accessorKey: "identity",
     header: () => <span className="hidden sm:inline">IDENTITY</span>,
     cell: ({ row }) => {
-      const identity = row.getValue("identity") as string | undefined;
-      if (!identity) return <div className="hidden sm:block">-</div>;
+      const identity = row.original.identity?.toBase58();
+      let cellValue: string | undefined = formatAddress(identity || "", 6);
+      if (!identity) {
+        cellValue = row.original.name;
+      }
 
       return (
         <p className="hidden sm:block font-mono text-xs lg:text-sm">
-          {identity}
+          {cellValue || "-"}
         </p>
       );
     },

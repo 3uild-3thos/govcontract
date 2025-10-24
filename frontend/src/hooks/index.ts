@@ -17,6 +17,8 @@ export * from "./useCreateProposal";
 export * from "./useGetValidators";
 export * from "./useVoteAccountsWithValidators";
 
+export * from "./useProposalVoteBreakdown";
+
 // proposal simd and description hooks
 export * from "./useProposalSimd";
 export * from "./useProposalSimdDescription";
