@@ -141,7 +141,7 @@ impl<'info> SupportProposal<'info> {
         let support_scaled =
             (self.proposal.cluster_support_lamports as u128) * CLUSTER_SUPPORT_MULTIPLIER;
         let cluster_scaled = (cluster_stake as u128) * CLUSTER_STAKE_MULTIPLIER;
-        let voting_activated = if support_scaled >= cluster_scaled {
+        self.proposal.voting = if support_scaled >= cluster_scaled {
             // Activate voting if threshold met
             self.proposal.start_epoch = clock.epoch + 4;
             self.proposal.end_epoch = self.proposal.start_epoch + 3;
@@ -154,7 +154,7 @@ impl<'info> SupportProposal<'info> {
             proposal_id: self.proposal.key(),
             supporter: self.signer.key(),
             cluster_support_lamports: self.proposal.cluster_support_lamports,
-            voting_activated,
+            voting_activated: self.proposal.voting,
         });
 
         Ok(())
