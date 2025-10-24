@@ -1,4 +1,4 @@
-import { RawVoteAccountData } from "@/types";
+import { VoteAccount } from "@/chain";
 import { RawStakeAccountData } from "@/types/stakeAccounts";
 
 export interface ProposalStats {
@@ -10,7 +10,7 @@ export interface ProposalStats {
 export interface WalletData {
   snapshot_slot: number;
   voting_wallet: string;
-  vote_accounts: RawVoteAccountData[];
+  vote_accounts: VoteAccount[];
   stake_accounts: RawStakeAccountData[];
   proposalStats: ProposalStats;
 }
@@ -23,64 +23,64 @@ export const dummyProposalStats: ProposalStats = {
 };
 
 // Validator Only Wallet
-export const validatorOnlyWallet: WalletData = {
-  snapshot_slot: 245789456,
-  voting_wallet: "CG4tRANBKDoM7dN9LssTdVkFhDykeq7A8CZurA5AQSFJH",
-  vote_accounts: [
-    {
-      vote_account: "4fjd8k7so9jK5kFGMwBXdudvWHYwtNgNhvLu",
-      active_stake: 1020450000000000,
-      identity: "CG4tRANBKDoM7dN9LssTdVkFhDykeq7A8CZurA5AQSFJH",
-      commission: 5,
-      lastVote: 245789455,
-      credits: 950000,
-      epochCredits: 8500,
-      activated_stake: 1020450000000000,
-    },
-    {
-      vote_account: "8hgr2l2pd5kFGMwBXdudvWHYwtNgNhvLuCertusDeBmq",
-      active_stake: 850300000000000,
-      identity: "CG4tRANBKDoM7dN9LssTdVkFhDykeq7A8CZurA5AQSFJH",
-      commission: 5,
-      lastVote: 245789456,
-      credits: 890000,
-      epochCredits: 8200,
-      activated_stake: 850300000000000,
-    },
-    {
-      vote_account: "b2k1m9as5kFGMwBXdudvWHYwtNgNhvLuCertusDeTest",
-      active_stake: 560000000000000,
-      identity: "CG4tRANBKDoM7dN9LssTdVkFhDykeq7A8CZurA5AQSFJH",
-      commission: 5,
-      lastVote: 245789454,
-      credits: 560000,
-      epochCredits: 5600,
-      activated_stake: 560000000000000,
-    },
-    {
-      vote_account: "c3lmp8qw7kFGMwBXdudvWHYwtNgNhvLuValidatorX",
-      active_stake: 100273000000000,
-      identity: "CG4tRANBKDoM7dN9LssTdVkFhDykeq7A8CZurA5AQSFJH",
-      commission: 5,
-      lastVote: 245789456,
-      credits: 100000,
-      epochCredits: 1000,
-      activated_stake: 100273000000000,
-    },
-    {
-      vote_account: "d4mnq9rx5kFGMwBXdudvWHYwtNgNhvLuSmallVal",
-      active_stake: 17100000000000,
-      identity: "CG4tRANBKDoM7dN9LssTdVkFhDykeq7A8CZurA5AQSFJH",
-      commission: 5,
-      lastVote: 245789450,
-      credits: 17000,
-      epochCredits: 170,
-      activated_stake: 17100000000000,
-    },
-  ],
-  stake_accounts: [],
-  proposalStats: dummyProposalStats,
-};
+// export const validatorOnlyWallet: WalletData = {
+//   snapshot_slot: 245789456,
+//   voting_wallet: "CG4tRANBKDoM7dN9LssTdVkFhDykeq7A8CZurA5AQSFJH",
+//   vote_accounts: [
+//     {
+//       vote_account: "4fjd8k7so9jK5kFGMwBXdudvWHYwtNgNhvLu",
+//       active_stake: 1020450000000000,
+//       identity: "CG4tRANBKDoM7dN9LssTdVkFhDykeq7A8CZurA5AQSFJH",
+//       commission: 5,
+//       lastVote: 245789455,
+//       credits: 950000,
+//       epochCredits: 8500,
+//       activated_stake: 1020450000000000,
+//     },
+//     {
+//       vote_account: "8hgr2l2pd5kFGMwBXdudvWHYwtNgNhvLuCertusDeBmq",
+//       active_stake: 850300000000000,
+//       identity: "CG4tRANBKDoM7dN9LssTdVkFhDykeq7A8CZurA5AQSFJH",
+//       commission: 5,
+//       lastVote: 245789456,
+//       credits: 890000,
+//       epochCredits: 8200,
+//       activated_stake: 850300000000000,
+//     },
+//     {
+//       vote_account: "b2k1m9as5kFGMwBXdudvWHYwtNgNhvLuCertusDeTest",
+//       active_stake: 560000000000000,
+//       identity: "CG4tRANBKDoM7dN9LssTdVkFhDykeq7A8CZurA5AQSFJH",
+//       commission: 5,
+//       lastVote: 245789454,
+//       credits: 560000,
+//       epochCredits: 5600,
+//       activated_stake: 560000000000000,
+//     },
+//     {
+//       vote_account: "c3lmp8qw7kFGMwBXdudvWHYwtNgNhvLuValidatorX",
+//       active_stake: 100273000000000,
+//       identity: "CG4tRANBKDoM7dN9LssTdVkFhDykeq7A8CZurA5AQSFJH",
+//       commission: 5,
+//       lastVote: 245789456,
+//       credits: 100000,
+//       epochCredits: 1000,
+//       activated_stake: 100273000000000,
+//     },
+//     {
+//       vote_account: "d4mnq9rx5kFGMwBXdudvWHYwtNgNhvLuSmallVal",
+//       active_stake: 17100000000000,
+//       identity: "CG4tRANBKDoM7dN9LssTdVkFhDykeq7A8CZurA5AQSFJH",
+//       commission: 5,
+//       lastVote: 245789450,
+//       credits: 17000,
+//       epochCredits: 170,
+//       activated_stake: 17100000000000,
+//     },
+//   ],
+//   stake_accounts: [],
+//   proposalStats: dummyProposalStats,
+// };
 
 // Staker Only Wallet
 export const stakerOnlyWallet: WalletData = {
@@ -241,26 +241,26 @@ export const validatorAndStakerWallet: WalletData = {
   snapshot_slot: 245789456,
   voting_wallet: "7Np41oeYqPefeNQEHSv1UDhYrehxin3NStELsSKCT4K2",
   vote_accounts: [
-    {
-      vote_account: "4fjd8k7so9jK5kFGMwBXdudvWHYwtNgNhvLu",
-      active_stake: 1020450000000000,
-      identity: "7Np41oeYqPefeNQEHSv1UDhYrehxin3NStELsSKCT4K2",
-      commission: 5,
-      lastVote: 245789455,
-      credits: 950000,
-      epochCredits: 8500,
-      activated_stake: 1020450000000000,
-    },
-    {
-      vote_account: "8hgr2l2pd5kFGMwBXdudvWHYwtNgNhvLuCertusDeBmq",
-      active_stake: 850300000000000,
-      identity: "7Np41oeYqPefeNQEHSv1UDhYrehxin3NStELsSKCT4K2",
-      commission: 5,
-      lastVote: 245789456,
-      credits: 890000,
-      epochCredits: 8200,
-      activated_stake: 850300000000000,
-    },
+    // {
+    //   vote_account: "4fjd8k7so9jK5kFGMwBXdudvWHYwtNgNhvLu",
+    //   active_stake: 1020450000000000,
+    //   identity: "7Np41oeYqPefeNQEHSv1UDhYrehxin3NStELsSKCT4K2",
+    //   commission: 5,
+    //   lastVote: 245789455,
+    //   credits: 950000,
+    //   epochCredits: 8500,
+    //   activated_stake: 1020450000000000,
+    // },
+    // {
+    //   vote_account: "8hgr2l2pd5kFGMwBXdudvWHYwtNgNhvLuCertusDeBmq",
+    //   active_stake: 850300000000000,
+    //   identity: "7Np41oeYqPefeNQEHSv1UDhYrehxin3NStELsSKCT4K2",
+    //   commission: 5,
+    //   lastVote: 245789456,
+    //   credits: 890000,
+    //   epochCredits: 8200,
+    //   activated_stake: 850300000000000,
+    // },
   ],
   stake_accounts: [
     {
@@ -290,7 +290,8 @@ export const noRoleWallet: WalletData = {
 
 // Export all wallet scenarios
 export const dummyWallets = {
-  validatorOnly: validatorOnlyWallet,
+  // validatorOnly: validatorOnlyWallet,
+  validatorOnly: [],
   stakerOnly: stakerOnlyWallet,
   both: validatorAndStakerWallet,
   noRole: noRoleWallet,

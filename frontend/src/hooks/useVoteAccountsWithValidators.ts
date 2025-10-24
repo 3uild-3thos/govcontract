@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useGetValidators } from "./useGetValidators";
 import { Validator, VoteAccountData } from "@/types";
 import { useVoteAccounts } from "./useVoteAccounts";
-import { formatAddress } from "@/lib/governance/formatters";
 
 export type VoteValidatorEntry = {
   votePDA: string;
@@ -50,16 +49,17 @@ export const useVoteAccountsWithValidators = () => {
 
       for (const vote of votes) {
         const validator = validators.find(
-          (v) => vote.identity === v.vote_identity
+          (v) => vote.identity?.toBase58() === v.vote_identity
         );
-        const votePk = vote.voteAccount;
+        const votePk = vote.voteAccount.toBase58();
         if (validator) {
           const entry: VoteValidatorEntry = {
-            votePDA: vote.voteAccount,
+            votePDA: vote.voteAccount.toBase58(),
             // enrich vote account info with matched validator data
             voteAccount: {
               ...vote,
-              identity: validator.name,
+              identity: undefined,
+              name: validator.name,
               credits: validator.credits,
               lastVote: validator.last_vote,
               activeStake: validator.activated_stake,
@@ -78,10 +78,10 @@ export const useVoteAccountsWithValidators = () => {
         } else {
           console.warn("no validator found");
           const entry: VoteValidatorEntry = {
-            votePDA: vote.voteAccount,
+            votePDA: vote.voteAccount.toBase58(),
             voteAccount: {
               ...vote,
-              identity: formatAddress(vote.identity || "", 6),
+              identity: vote.identity,
             },
             validator: undefined,
           };

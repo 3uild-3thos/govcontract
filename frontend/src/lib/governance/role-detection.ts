@@ -13,6 +13,8 @@ export function determineWalletRole(walletData: WalletData): WalletRole {
   const hasStakeAccounts =
     walletData.stake_accounts && walletData.stake_accounts.length > 0;
 
+  // TODO: PEDRO implement wallet detection for stake and vote accounts
+  return WalletRole.BOTH;
   if (hasVoteAccounts && hasStakeAccounts) {
     return WalletRole.BOTH;
   }

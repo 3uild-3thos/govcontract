@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import type { ProposalRecord } from "@/types";
 import { CircleCheck, CircleX } from "lucide-react";
 import VoteItem from "./VoteItem";
@@ -9,44 +8,42 @@ import {
   formatLamportsDisplay,
   formatPercentage,
 } from "@/lib/governance/formatters";
+import { useProposalVoteBreakdown } from "@/hooks";
 
-const HAVE_VOTED = true;
-
-interface VoteBreakdownProps {
+interface VoteBreakdownWrapperProps {
   proposal: ProposalRecord | undefined;
   isLoading: boolean;
-  onVoteFor?: () => void;
+}
+interface VoteBreakdownProps {
+  proposal: ProposalRecord;
 }
 
-export default function VoteBreakdown({
+export default function VoteBreakdownWrapper({
   proposal,
   isLoading,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  onVoteFor,
-}: VoteBreakdownProps) {
-  const votes = useMemo(() => {
-    if (!proposal) return undefined;
-
-    const total =
-      proposal.forVotesLamports +
-      proposal.againstVotesLamports +
-      proposal.abstainVotesLamports;
-    return {
-      for: proposal.forVotesLamports,
-      against: proposal.againstVotesLamports,
-      abstain: proposal.abstainVotesLamports,
-      total,
-      forPercentage: total > 0 ? (proposal.forVotesLamports / total) * 100 : 0,
-      againstPercentage:
-        total > 0 ? (proposal.againstVotesLamports / total) * 100 : 0,
-      abstainPercentage:
-        total > 0 ? (proposal.abstainVotesLamports / total) * 100 : 0,
-    };
-  }, [proposal]);
-
+}: VoteBreakdownWrapperProps) {
   // TODO: PEDRO check proper loading skeletongs
   if (isLoading) return <div>Loading</div>;
-  if (!proposal || !votes) return <div>No proposal data...</div>;
+  if (!proposal) return <div>No proposal data...</div>;
+
+  return <VoteBreakdown proposal={proposal} />;
+}
+
+const VoteBreakdown = ({ proposal }: VoteBreakdownProps) => {
+  const { data: votes, isLoading } = useProposalVoteBreakdown(
+    proposal.publicKey
+  );
+
+  // TODO: PEDRO check if user has votes here
+  const HAVE_VOTED = true;
+
+  if (isLoading) {
+    // TODO: PEDRO fix this loading state, create skeletons
+    return <div>Loading</div>;
+  }
+
+  // TODO: PEDRO show data with "0" values here? empty donut?
+  if (!votes) return <div>No vote breakdown</div>;
 
   return (
     <div className="glass-card flex h-full flex-col p-6 md:p-6 lg:p-8">
@@ -54,9 +51,9 @@ export default function VoteBreakdown({
         {/* Quorum Donut Chart */}
         <div className="flex flex-1 items-center justify-center">
           <QuorumDonut
-            forLamports={votes.for}
-            againstLamports={votes.against}
-            abstainLamports={votes.abstain}
+            forLamports={votes.forStake}
+            againstLamports={votes.againstStake}
+            abstainLamports={votes.abstainStake}
             quorumPercentage={proposal.quorumPercent / 100}
           />
         </div>
@@ -74,20 +71,20 @@ export default function VoteBreakdown({
           <div className="flex-1 space-y-2 md:space-y-3 lg:space-y-4 mt-1 lg:mt-0">
             <VoteItem
               label="For"
-              amount={formatLamportsDisplay(votes.for).value}
-              percentage={formatPercentage(votes.forPercentage)}
+              amount={formatLamportsDisplay(votes.forStake).value}
+              percentage={formatPercentage(votes.forVotesPercentage)}
               color="bg-primary"
             />
             <VoteItem
               label="Against"
-              amount={formatLamportsDisplay(votes.against).value}
-              percentage={formatPercentage(votes.againstPercentage)}
+              amount={formatLamportsDisplay(votes.againstStake).value}
+              percentage={formatPercentage(votes.againstVotesPercentage)}
               color="bg-destructive"
             />
             <VoteItem
               label="Abstain"
-              amount={formatLamportsDisplay(votes.abstain).value}
-              percentage={formatPercentage(votes.abstainPercentage)}
+              amount={formatLamportsDisplay(votes.abstainStake).value}
+              percentage={formatPercentage(votes.abstainVotesPercentage)}
               color="bg-white/30"
             />
           </div>
@@ -105,4 +102,4 @@ export default function VoteBreakdown({
       </div>
     </div>
   );
-}
+};
