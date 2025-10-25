@@ -23,7 +23,6 @@ export * from "./useProposalSimd";
 export * from "./useProposalSimdDescription";
 
 export * from "./useProposalOverviewStats";
-export * from "./useVoteProposals";
 
 // DEPRECATED
 export * from "./DEPRECATED/useGetValidatorsBubbleChart";
