@@ -1,4 +1,4 @@
-import { RPC_URLS, useEndpoint } from "@/contexts/EndpointContext";
+import { useEndpoint } from "@/contexts/EndpointContext";
 import { getStakeWizValidators } from "@/data";
 import { Validator, Validators } from "@/types";
 import { Connection } from "@solana/web3.js";
@@ -15,9 +15,7 @@ export const useGetValidators = () => {
 };
 
 const getValidators = async (endpoint: string): Promise<Validators> => {
-  // const voteAccounts = await connection.getVoteAccounts();
-  const rpcEndpoint = endpoint || RPC_URLS.devnet;
-  const connection = new Connection(rpcEndpoint, "confirmed");
+  const connection = new Connection(endpoint, "confirmed");
 
   const [stakeWizValidators, voteAccounts] = await Promise.allSettled([
     getStakeWizValidators(),

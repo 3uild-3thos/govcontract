@@ -1,7 +1,6 @@
 export * from "./useIsBelowMd";
 export * from "./useCollision";
 export * from "./useCopyToClipboard";
-export * from "./useGovernanceDashboard";
 export * from "./useMounted";
 export * from "./useWalletRole";
 export * from "./useVoteDistribution";
@@ -24,6 +23,7 @@ export * from "./useProposalSimd";
 export * from "./useProposalSimdDescription";
 
 export * from "./useProposalOverviewStats";
+export * from "./useVoteProposals";
 
 // DEPRECATED
 export * from "./DEPRECATED/useGetValidatorsBubbleChart";

@@ -24,6 +24,7 @@ interface GovernanceActionsProps {
   gridClassName?: string;
   wrapperClassName?: string;
   className?: string;
+  isLoading?: boolean;
 }
 
 interface ActionButtonConfig {
@@ -38,9 +39,10 @@ interface ActionButtonConfig {
 interface ActionGridProps {
   actions: ActionButtonConfig[];
   gridClassName: string;
+  isLoading?: boolean;
 }
 
-function ActionGrid({ actions, gridClassName }: ActionGridProps) {
+function ActionGrid({ actions, gridClassName, isLoading }: ActionGridProps) {
   return (
     <div className={gridClassName}>
       {actions.map((action) => (
@@ -54,7 +56,7 @@ function ActionGrid({ actions, gridClassName }: ActionGridProps) {
           className={action.className}
           icon={action.icon}
           size="lg"
-          disabled={action.disabled}
+          disabled={action.disabled || isLoading}
         />
       ))}
     </div>
@@ -148,6 +150,7 @@ export function GovernanceActions({
   gridClassName,
   wrapperClassName,
   className,
+  isLoading,
 }: GovernanceActionsProps) {
   const { openModal } = useModal();
   const { connected } = useWallet();
@@ -176,6 +179,7 @@ export function GovernanceActions({
         <ActionGrid
           actions={config.actions}
           gridClassName={resolvedGridClassName}
+          isLoading={isLoading}
         />
       ) : (
         <Tooltip>

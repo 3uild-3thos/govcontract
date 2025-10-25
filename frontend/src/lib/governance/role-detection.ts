@@ -1,4 +1,4 @@
-import type { WalletData } from "@/dummy-data/wallets";
+import { ViewType } from "@/types";
 
 export enum WalletRole {
   VALIDATOR = "validator",
@@ -7,32 +7,21 @@ export enum WalletRole {
   NONE = "none",
 }
 
-export function determineWalletRole(walletData: WalletData): WalletRole {
-  const hasVoteAccounts =
-    walletData.vote_accounts && walletData.vote_accounts.length > 0;
-  const hasStakeAccounts =
-    walletData.stake_accounts && walletData.stake_accounts.length > 0;
+export function determineWalletRole(
+  stakeAccounts: unknown[] | undefined,
+  delegatedStakeAccounts: unknown[] | undefined
+): WalletRole {
+  const hasStake = !!stakeAccounts?.length;
+  const hasDelegated = !!delegatedStakeAccounts?.length;
 
-  // TODO: PEDRO implement wallet detection for stake and vote accounts
-  return WalletRole.BOTH;
-  if (hasVoteAccounts && hasStakeAccounts) {
-    return WalletRole.BOTH;
-  }
-
-  if (hasVoteAccounts) {
-    return WalletRole.VALIDATOR;
-  }
-
-  if (hasStakeAccounts) {
-    return WalletRole.STAKER;
-  }
+  if (hasStake && hasDelegated) return WalletRole.BOTH;
+  else if (hasStake) return WalletRole.STAKER;
+  else if (hasDelegated) return WalletRole.VALIDATOR;
 
   return WalletRole.NONE;
 }
 
-export function getDefaultView(
-  role: WalletRole
-): "validator" | "staker" | null {
+export function getDefaultView(role: WalletRole): ViewType | undefined {
   switch (role) {
     case WalletRole.VALIDATOR:
       return "validator";
@@ -41,6 +30,6 @@ export function getDefaultView(
     case WalletRole.BOTH:
       return "validator";
     default:
-      return null;
+      return undefined;
   }
 }

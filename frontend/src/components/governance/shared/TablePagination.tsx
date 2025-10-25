@@ -21,6 +21,7 @@ interface TablePaginationProps<TData> {
   totalLabel: string;
   totalCount: number;
   pageSizeOptions?: number[];
+  disabled?: boolean;
 }
 
 export function TablePaginationMobile<TData>({
@@ -28,6 +29,7 @@ export function TablePaginationMobile<TData>({
   totalLabel,
   totalCount,
   pageSizeOptions = [10, 20, 30],
+  disabled,
 }: TablePaginationProps<TData>) {
   return (
     <div className="flex flex-col gap-3 px-2 text-sm text-white/60 sm:hidden">
@@ -41,6 +43,7 @@ export function TablePaginationMobile<TData>({
           <Select
             value={`${table.getState().pagination.pageSize}`}
             onValueChange={(value) => table.setPageSize(Number(value))}
+            disabled={disabled}
           >
             <SelectTrigger className="h-8 w-[70px]">
               <SelectValue />
@@ -66,7 +69,7 @@ export function TablePaginationMobile<TData>({
           variant="outline"
           size="icon"
           onClick={() => table.setPageIndex(0)}
-          disabled={!table.getCanPreviousPage()}
+          disabled={!table.getCanPreviousPage() || disabled}
           className="size-9 border-white/10 text-white hover:bg-white/5 disabled:opacity-50"
         >
           <ChevronsLeft className="size-4" />
@@ -75,7 +78,7 @@ export function TablePaginationMobile<TData>({
           variant="outline"
           size="icon"
           onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
+          disabled={!table.getCanPreviousPage() || disabled}
           className="size-9 border-white/10 text-white hover:bg-white/5 disabled:opacity-50"
         >
           <ChevronLeft className="size-4" />
@@ -91,7 +94,7 @@ export function TablePaginationMobile<TData>({
           variant="outline"
           size="icon"
           onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
+          disabled={!table.getCanNextPage() || disabled}
           className="size-9 border-white/10 text-white hover:bg-white/5 disabled:opacity-50"
         >
           <ChevronRight className="size-4" />
@@ -100,7 +103,7 @@ export function TablePaginationMobile<TData>({
           variant="outline"
           size="icon"
           onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-          disabled={!table.getCanNextPage()}
+          disabled={!table.getCanNextPage() || disabled}
           className="size-9 border-white/10 text-white hover:bg-white/5 disabled:opacity-50"
         >
           <ChevronsRight className="size-4" />
@@ -115,6 +118,7 @@ export function TablePaginationDesktop<TData>({
   totalLabel,
   totalCount,
   pageSizeOptions = [10, 20, 30, 40, 50],
+  disabled,
 }: TablePaginationProps<TData>) {
   return (
     <div className="hidden sm:flex flex-row items-center justify-between gap-4 px-2 text-sm text-white/60">
@@ -128,6 +132,7 @@ export function TablePaginationDesktop<TData>({
           <Select
             value={`${table.getState().pagination.pageSize}`}
             onValueChange={(value) => table.setPageSize(Number(value))}
+            disabled={disabled}
           >
             <SelectTrigger className="h-8 w-[70px]">
               <SelectValue />
@@ -151,7 +156,7 @@ export function TablePaginationDesktop<TData>({
             variant="outline"
             size="icon"
             onClick={() => table.setPageIndex(0)}
-            disabled={!table.getCanPreviousPage()}
+            disabled={!table.getCanPreviousPage() || disabled}
             className="size-8 border-white/10 text-white hover:bg-white/5 disabled:opacity-50"
           >
             <ChevronsLeft className="size-4" />
@@ -160,7 +165,7 @@ export function TablePaginationDesktop<TData>({
             variant="outline"
             size="icon"
             onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
+            disabled={!table.getCanPreviousPage() || disabled}
             className="size-8 border-white/10 text-white hover:bg-white/5 disabled:opacity-50"
           >
             <ChevronLeft className="size-4" />
@@ -180,7 +185,7 @@ export function TablePaginationDesktop<TData>({
             variant="outline"
             size="icon"
             onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
+            disabled={!table.getCanNextPage() || disabled}
             className="size-8 border-white/10 text-white hover:bg-white/5 disabled:opacity-50"
           >
             <ChevronRight className="size-4" />
@@ -189,7 +194,7 @@ export function TablePaginationDesktop<TData>({
             variant="outline"
             size="icon"
             onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-            disabled={!table.getCanNextPage()}
+            disabled={!table.getCanNextPage() || disabled}
             className="size-8 border-white/10 text-white hover:bg-white/5 disabled:opacity-50"
           >
             <ChevronsRight className="size-4" />

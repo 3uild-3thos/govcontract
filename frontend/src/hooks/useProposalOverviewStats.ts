@@ -8,29 +8,6 @@ export type Stat = {
   value: number;
 };
 
-export const proposalStats: Stat[] = [
-  {
-    id: "active-proposals",
-    label: "Active Proposals",
-    value: 15,
-  },
-  {
-    id: "support-phase-proposals",
-    label: "Support Phase Proposals",
-    value: 34,
-  },
-  {
-    id: "number-of-validators",
-    label: "Number of Validators",
-    value: 550332,
-  },
-  {
-    id: "number-of-stakers",
-    label: "Number of Stakers",
-    value: 123232232,
-  },
-];
-
 export interface Stats {
   stats: Stat[];
   isLoading: boolean;
@@ -45,11 +22,11 @@ export const useProposalOverviewStats = (): Stats => {
   const isLoading = isLoadingProposals || isLoadingValidators;
 
   const activeProposals = useMemo(
-    () => proposals?.map((p) => p.status === "voting").length || 0,
+    () => proposals?.filter((p) => p.status === "voting").length || 0,
     [proposals]
   );
   const supportingProposals = useMemo(
-    () => proposals?.map((p) => p.status === "support").length || 0,
+    () => proposals?.filter((p) => p.status === "support").length || 0,
     [proposals]
   );
 

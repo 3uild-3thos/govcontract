@@ -11,7 +11,7 @@ export interface TransactionResult {
 export interface BlockchainParams {
   // programId?: PublicKey;
   network?: string;
-  endpoint?: string;
+  endpoint: string;
 }
 
 // Instruction parameter types

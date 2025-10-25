@@ -1,39 +1,26 @@
 "use client";
 
 import { GovernanceEmptyState } from "./shared/GovernanceEmptyState";
-import { useGovernanceDashboard } from "@/hooks";
 import { GovernanceDashboardLayout } from "@/components/governance/GovernanceDashboardLayout";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 
 export function GovernanceDashboard() {
-  const {
-    walletRole,
-    selectedView,
-    setSelectedView,
-    canSwitchView,
-    walletData,
-    stats,
-    network,
-    isEmptyState,
-  } = useGovernanceDashboard();
+  const { connected, publicKey } = useWallet();
+  const { setVisible } = useWalletModal();
 
-  // If no role, only show empty state
-  if (isEmptyState) {
+  const handleConnectWallet = () => {
+    setVisible(true);
+  };
+
+  // If not connected, only show empty state
+  if (!connected || !publicKey) {
     return (
       <div className="space-y-6">
-        <GovernanceEmptyState />
+        <GovernanceEmptyState onAction={handleConnectWallet} />
       </div>
     );
   }
 
-  return (
-    <GovernanceDashboardLayout
-      walletRole={walletRole}
-      selectedView={selectedView}
-      setSelectedView={setSelectedView}
-      canSwitchView={canSwitchView}
-      walletData={walletData}
-      stats={stats}
-      network={network}
-    />
-  );
+  return <GovernanceDashboardLayout userPubKey={publicKey} />;
 }
