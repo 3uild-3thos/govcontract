@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import {
   ColumnFiltersState,
   SortingState,
@@ -32,8 +31,11 @@ import {
 import { CopyableAddress } from "@/components/governance/shared/CopyableAddress";
 import { formatLamportsDisplay } from "@/lib/governance/formatters";
 import { StakeAccountStatus } from "@/components/governance/staker/StakeAccountStatus";
+import { StakeAccountVoteProposals } from "@/components/governance/staker/StakeAccountVoteProposals";
 import { StakeAccountData } from "@/types/stakeAccounts";
-import { useStakeAccounts } from "@/hooks/useStakeAccounts";
+import { useStakeAccounts } from "@/hooks";
+import { ChevronDown, ChevronRight } from "lucide-react";
+import { Fragment, useMemo, useState } from "react";
 
 const stakeAmountOptions = [
   { value: "All", label: "Stake Amount" },
@@ -64,33 +66,36 @@ export function StakeAccountsTable({
   isLoading: isParentLoading,
 }: Props) {
   // State Management
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
     []
   );
-  const [searchValue, setSearchValue] = React.useState("");
-  const [stakeSizeFilter, setStakeSizeFilter] = React.useState("All");
+  const [searchValue, setSearchValue] = useState("");
+  const [stakeSizeFilter, setStakeSizeFilter] = useState("All");
   const [stakeStatusFilter, setStakeStatusFilter] =
-    React.useState<StakeStatusType>("All");
+    useState<StakeStatusType>("All");
 
   // Mobile drawer state
-  const [selectedRow, setSelectedRow] = React.useState<StakeAccountData | null>(
+  const [selectedRow, setSelectedRow] = useState<StakeAccountData | null>(
     null
   );
-  const [drawerOpen, setDrawerOpen] = React.useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Expanded rows state
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const enabled = !isParentLoading;
   const { data: stakeAccountsData, isLoading } = useStakeAccounts(
     userPubKey,
     enabled
   );
 
-  const data = React.useMemo(
+  const data = useMemo(
     () => stakeAccountsData || [],
     [stakeAccountsData]
   );
 
   // Data Filtering
-  const filteredData = React.useMemo(() => {
+  const filteredData = useMemo(() => {
     let filtered = [...data];
 
     if (searchValue) {
@@ -146,6 +151,18 @@ export function StakeAccountsTable({
       setSelectedRow(rowData);
       setDrawerOpen(true);
     }
+  };
+
+  const toggleRowExpansion = (stakeAccountPubKey: string) => {
+    setExpandedRows(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(stakeAccountPubKey)) {
+        newSet.delete(stakeAccountPubKey);
+      } else {
+        newSet.add(stakeAccountPubKey);
+      }
+      return newSet;
+    });
   };
 
   return (
@@ -217,6 +234,11 @@ export function StakeAccountsTable({
                       </TableHead>
                     );
                   })}
+                  
+                  {/* Expand Column Header */}
+                  <TableHead className="text-xs font-semibold uppercase tracking-wide text-white/50 text-center px-2 sm:px-4 w-12">
+                    <span className="sr-only">Expand</span>
+                  </TableHead>
                 </TableRow>
               ))}
             </TableHeader>
@@ -238,6 +260,10 @@ export function StakeAccountsTable({
                               <div className="mx-auto h-4 w-3/4 rounded bg-white/10" />
                             </TableCell>
                           ))}
+                          {/* Skeleton for expand column */}
+                          <TableCell className="py-5 px-6 text-center">
+                            <div className="mx-auto h-4 w-4 rounded bg-white/10" />
+                          </TableCell>
                         </TableRow>
                       ))}
                     </>
@@ -246,7 +272,7 @@ export function StakeAccountsTable({
                 if (table.getRowModel().rows.length === 0) {
                   <TableRow className="hover:bg-transparent">
                     <TableCell
-                      colSpan={columns.length}
+                      colSpan={columns.length + 1}
                       className="h-24 text-center text-white/60"
                     >
                       No results.
@@ -254,35 +280,71 @@ export function StakeAccountsTable({
                   </TableRow>;
                 }
 
-                return table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    className="border-white/10 hover:bg-white/5 sm:hover:bg-transparent cursor-pointer sm:cursor-default"
-                    onClick={() => handleRowClick(row.original)}
-                  >
-                    {row.getVisibleCells().map((cell) => {
-                      const columnId = cell.column.id;
-                      const isMobileHidden = [
-                        "active_stake",
-                        "vote_account",
-                      ].includes(columnId);
+                return table.getRowModel().rows.map((row) => {
+                  const isExpanded = expandedRows.has(row.original.stakeAccount);
+                  
+                  return (
+                    <Fragment key={row.id}>
+                      {/* Main Row */}
+                      <TableRow
+                        className="border-white/10 hover:bg-white/5 sm:hover:bg-transparent cursor-pointer sm:cursor-default"
+                        onClick={() => handleRowClick(row.original)}
+                      >
+                        {row.getVisibleCells().map((cell) => {
+                          const columnId = cell.column.id;
+                          const isMobileHidden = [
+                            "active_stake",
+                            "vote_account",
+                          ].includes(columnId);
 
-                      return (
-                        <TableCell
-                          key={cell.id}
-                          className={`py-4 text-white/80 text-center px-2 sm:px-4
-                            ${isMobileHidden ? "hidden sm:table-cell" : ""}
-                          `}
-                        >
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
+                          return (
+                            <TableCell
+                              key={cell.id}
+                              className={`py-4 text-white/80 text-center px-2 sm:px-4
+                                ${isMobileHidden ? "hidden sm:table-cell" : ""}
+                              `}
+                            >
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext()
+                              )}
+                            </TableCell>
+                          );
+                        })}
+                        
+                        {/* Expand Button */}
+                        <TableCell className="py-4 px-2 sm:px-4">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleRowExpansion(row.original.stakeAccount);
+                            }}
+                            className="p-1 hover:bg-white/10 rounded transition-colors"
+                            aria-label={isExpanded ? "Collapse row" : "Expand row"}
+                          >
+                            {isExpanded ? (
+                              <ChevronDown className="h-4 w-4 text-white/60" />
+                            ) : (
+                              <ChevronRight className="h-4 w-4 text-white/60" />
+                            )}
+                          </button>
                         </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                ));
+                      </TableRow>
+
+                      {/* Expanded Content Row */}
+                      {isExpanded && (
+                        <TableRow className="border-white/10">
+                          <TableCell 
+                            colSpan={columns.length + 1} 
+                            className="p-0 bg-white/2"
+                          >
+                            <StakeAccountVoteProposals stakeAccount={row.original} />
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </Fragment>
+                  );
+                });
               })()}
             </TableBody>
           </Table>

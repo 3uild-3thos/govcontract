@@ -3,18 +3,12 @@ import { getSimd } from "@/hooks";
 import { getProposalStatus } from "@/lib/proposals";
 import type { ProposalRecord, RawProposalAccount } from "@/types";
 
-// TODO: feel free to create a new file for the blockchain fetching logic, and rename this one to proposalsMapper or smth like that
 
 export const getProposals = async (
   blockchainParams: BlockchainParams
 ): Promise<ProposalRecord[]> => {
-  // TODO: Juan, do your magic here
-  // const response = await fetch("SOMEWHERE IN SOLANA BLOCKCHAIN");
-  // if (error) throw new Error("Failed to fetch proposals");
-
   const program = createProgramWitDummyWallet(
     blockchainParams.endpoint
-    // params.programId,
   );
 
   const proposalAccs = await program.account.proposal.all();
