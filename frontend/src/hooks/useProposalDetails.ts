@@ -2,7 +2,7 @@ import { useProposals } from "./useProposals";
 import { ProposalRecord } from "@/types";
 import { useMemo } from "react";
 
-const findProposalBySimd = (
+const findProposalByPubKey = (
   proposals: ProposalRecord[],
   proposalPublicKey: string
 ) =>
@@ -14,7 +14,7 @@ export const useProposalDetails = (proposalPublicKey: string) => {
   const { data: proposalsData, ...restQueryConfig } = useProposals();
 
   const proposalDetails = useMemo(
-    () => findProposalBySimd(proposalsData || [], proposalPublicKey),
+    () => findProposalByPubKey(proposalsData || [], proposalPublicKey),
     [proposalsData, proposalPublicKey]
   );
 
