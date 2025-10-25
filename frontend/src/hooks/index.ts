@@ -23,6 +23,7 @@ export * from "./useProposalSimd";
 export * from "./useProposalSimdDescription";
 
 export * from "./useProposalOverviewStats";
+export * from "./useSummaryStats";
 export * from "./useVoteProposals";
 
 export * from "./useStakeAccounts";
