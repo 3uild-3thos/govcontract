@@ -1,40 +1,40 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { WalletRole, type ViewType } from "@/types";
-import type { WalletData } from "@/dummy-data/wallets";
 import {
   determineWalletRole,
   getDefaultView,
 } from "@/lib/governance/role-detection";
+import { useStakeAccounts } from "./useStakeAccounts";
+import { useDelegatedStakeAccounts } from "./useDelegatedStakeAccounts";
 
 interface UseWalletRoleReturn {
-  walletData: WalletData;
   walletRole: WalletRole;
-  selectedView: ViewType | null;
-  setSelectedView: (view: ViewType) => void;
-  canSwitchView: boolean;
+  selectedView: ViewType | undefined;
+  setSelectedView: (view: ViewType | undefined) => void;
+  isLoading: boolean;
 }
 
-export function useWalletRole(walletData: WalletData): UseWalletRoleReturn {
-  const walletRole = useMemo(
-    () => determineWalletRole(walletData),
-    [walletData],
+export function useWalletRole(userPubKey: string): UseWalletRoleReturn {
+  const [walletRole, setWalletRole] = useState<WalletRole>(WalletRole.STAKER);
+  const [selectedView, setSelectedView] = useState<ViewType | undefined>(
+    "staker"
   );
-  const defaultView = useMemo(() => getDefaultView(walletRole), [walletRole]);
-  const [selectedView, setSelectedView] = useState<ViewType | null>(
-    defaultView,
-  );
+
+  const { data: stakeAccounts, isLoading: isLoadingStake } =
+    useStakeAccounts(userPubKey);
+  const { data: delegatedStakeAccounts, isLoading: isLoadingDelegated } =
+    useDelegatedStakeAccounts(userPubKey);
+
+  const isLoading = isLoadingStake || isLoadingDelegated;
 
   useEffect(() => {
-    setSelectedView(defaultView);
-  }, [defaultView]);
+    if (isLoading) return;
 
-  const canSwitchView = walletRole === WalletRole.BOTH;
+    const role = determineWalletRole(stakeAccounts, delegatedStakeAccounts);
 
-  return {
-    walletData,
-    walletRole,
-    selectedView,
-    setSelectedView,
-    canSwitchView,
-  };
+    setWalletRole(role);
+    setSelectedView((prev) => prev ?? getDefaultView(role));
+  }, [isLoading, stakeAccounts, delegatedStakeAccounts]);
+
+  return { walletRole, selectedView, setSelectedView, isLoading };
 }

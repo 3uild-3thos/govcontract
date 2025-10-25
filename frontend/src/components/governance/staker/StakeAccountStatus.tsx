@@ -1,36 +1,46 @@
 import { cn } from "@/lib/utils";
-
-export type StakeAccountState = "active" | "inactive" | "activating" | "deactivating";
+import { StakeAccountState } from "@/types/stakeAccounts";
 
 interface StakeAccountStatusProps {
   state: StakeAccountState;
   className?: string;
 }
 
-const stateStyles: Record<StakeAccountState, { bg: string; text: string; label: string }> = {
-  active: {
+const stateStyles: Record<
+  StakeAccountState,
+  { bg: string; text: string; label: string }
+> = {
+  delegated: {
     bg: "bg-green-500/20",
     text: "text-green-400",
-    label: "Active"
+    label: "Delegated",
+  },
+  initialized: {
+    bg: "bg-blue-500/20",
+    text: "text-blue-400",
+    label: "Initialized",
   },
   inactive: {
     bg: "bg-gray-500/20",
     text: "text-gray-400",
-    label: "Inactive"
-  },
-  activating: {
-    bg: "bg-blue-500/20",
-    text: "text-blue-400",
-    label: "Activating"
+    label: "Inactive",
   },
   deactivating: {
     bg: "bg-orange-500/20",
     text: "text-orange-400",
-    label: "Deactivating"
-  }
+    label: "Deactivating",
+  },
+  cooldown: {
+    bg: "bg-orange-500/20",
+    text: "text-orange-400",
+    label: "Cooldown",
+  },
 };
 
-export function StakeAccountStatus({ state, className }: StakeAccountStatusProps) {
+export function StakeAccountStatus({
+  state,
+  className,
+}: StakeAccountStatusProps) {
   const style = stateStyles[state];
 
   return (

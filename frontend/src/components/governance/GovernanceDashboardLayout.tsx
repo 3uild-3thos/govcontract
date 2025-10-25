@@ -1,6 +1,5 @@
-import type { WalletData } from "@/dummy-data/wallets";
-import type { ViewType } from "@/types/governance";
-import type { GovernanceDashboardStats } from "@/hooks";
+"use client";
+
 import { WalletRole } from "@/lib/governance/role-detection";
 import { DashboardStats } from "@/components/governance/shared/DashboardStats";
 import { RoleToggle } from "@/components/governance/shared/RoleToggle";
@@ -10,29 +9,25 @@ import { StakerActionPanel } from "@/components/governance/staker/StakerActionPa
 import { VoteAccountsTable } from "@/components/governance/validator/VoteAccountsTable";
 import { StakeAccountsTable } from "@/components/governance/staker/StakeAccountsTable";
 import { SummaryStats } from "@/components/governance/staker/SummaryStats";
+import { PublicKey } from "@solana/web3.js";
+import { useWalletRole } from "@/hooks";
 
-export interface GovernanceDashboardLayoutProps {
-  walletRole: WalletRole;
-  selectedView: ViewType | null;
-  setSelectedView: (view: ViewType) => void;
-  canSwitchView: boolean;
-  walletData: WalletData;
-  stats: GovernanceDashboardStats;
-  network: "mainnet" | "testnet" | "devnet" | "custom";
+interface Props {
+  userPubKey: PublicKey;
 }
 
-export function GovernanceDashboardLayout({
-  walletRole,
-  selectedView,
-  setSelectedView,
-  canSwitchView,
-  walletData,
-  stats,
-  network,
-}: GovernanceDashboardLayoutProps) {
-  const activeView = selectedView ?? "validator";
-  const hasSelectedView = selectedView !== null;
-  const showStats = walletRole !== WalletRole.NONE && hasSelectedView;
+export function GovernanceDashboardLayout({ userPubKey }: Props) {
+  const {
+    walletRole,
+    selectedView,
+    setSelectedView,
+    isLoading: isLoadingView,
+  } = useWalletRole(userPubKey.toBase58());
+
+  const hasSelectedView = selectedView !== undefined;
+
+  const showStats =
+    (walletRole !== WalletRole.NONE && hasSelectedView) || isLoadingView;
 
   const showValidatorView =
     walletRole === WalletRole.VALIDATOR ||
@@ -42,6 +37,8 @@ export function GovernanceDashboardLayout({
     walletRole === WalletRole.STAKER ||
     (walletRole === WalletRole.BOTH && selectedView === "staker");
 
+  const canSwitchView = walletRole == WalletRole.BOTH;
+  console.log("showStakerView_", showStakerView, walletRole, selectedView);
   return (
     <>
       {/* Desktop Layout - hidden on mobile/tablet */}
@@ -53,14 +50,17 @@ export function GovernanceDashboardLayout({
                 <h2 className="h2 text-foreground mb-2">
                   Governance Dashboard
                 </h2>
-                {walletRole !== WalletRole.NONE && (
-                  <p className="text-[var(--color-dao-color-gray)] text-sm">
-                    You are viewing as a{" "}
+
+                <p className="text-(--color-dao-color-gray) text-sm flex items-center">
+                  You are viewing as a{" "}
+                  {true ? (
+                    <span className="flex h-3 w-20 bg-white/10 animate-pulse rounded-full ml-2" />
+                  ) : (
                     <span className="font-semibold gradient-text-primary-secondary">
-                      {activeView === "validator" ? "Validator" : "Staker"}
+                      {selectedView === "validator" ? "Validator" : "Staker"}
                     </span>
-                  </p>
-                )}
+                  )}
+                </p>
               </div>
               {walletRole !== WalletRole.NONE && selectedView && (
                 <RoleToggle
@@ -73,13 +73,8 @@ export function GovernanceDashboardLayout({
 
             {showStats && selectedView && (
               <DashboardStats
-                network={network}
-                snapshotSlot={walletData.snapshot_slot}
                 currentView={selectedView}
-                delegationsReceived={stats.delegationsReceived}
-                totalStaked={stats.totalStaked}
-                activeValidators={walletData.stake_accounts.length}
-                voteAccountsCount={walletData.vote_accounts.length}
+                isLoading={isLoadingView}
               />
             )}
           </div>
@@ -87,7 +82,10 @@ export function GovernanceDashboardLayout({
           {showValidatorView && <ValidatorActionPanel />}
 
           {showStakerView && (
-            <StakerActionPanel proposalStats={walletData.proposalStats} />
+            <StakerActionPanel
+              userPubKey={userPubKey.toBase58()}
+              isLoading={isLoadingView}
+            />
           )}
         </div>
       </div>
@@ -98,12 +96,20 @@ export function GovernanceDashboardLayout({
           <header className="space-y-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <h1 className="text-3xl font-semibold text-foreground">
-                  {activeView === "validator" ? "Validator" : "Staker"}
-                </h1>
-                <p className="text-sm text-white/60">
-                  Oversee your {activeView} operations and governance.
-                </p>
+                {isLoadingView ? (
+                  <div className="h-7 w-30 my-1 bg-white/10 animate-pulse rounded-lg" />
+                ) : (
+                  <h1 className="text-3xl font-semibold text-foreground">
+                    {selectedView === "validator" ? "Validator" : "Staker"}
+                  </h1>
+                )}
+                {isLoadingView ? (
+                  <div className="h-4 w-60 mt-1 bg-white/10 animate-pulse rounded-lg" />
+                ) : (
+                  <p className="text-sm text-white/60">
+                    Oversee your {selectedView} operations and governance.
+                  </p>
+                )}
               </div>
               {walletRole !== WalletRole.NONE && selectedView && (
                 <div className="sm:self-start">
@@ -126,6 +132,7 @@ export function GovernanceDashboardLayout({
                   description=""
                   wrapperClassName="space-y-4"
                   gridClassName="grid grid-cols-1 gap-y-5 sm:grid-cols-2 sm:gap-x-4 sm:gap-y-5"
+                  isLoading={isLoadingView}
                 />
               </div>
 
@@ -138,13 +145,8 @@ export function GovernanceDashboardLayout({
                   </div>
                   <div className="glass-card p-5">
                     <DashboardStats
-                      network={network}
-                      snapshotSlot={walletData.snapshot_slot}
                       currentView="validator"
-                      delegationsReceived={stats.delegationsReceived}
-                      totalStaked={stats.totalStaked}
-                      activeValidators={walletData.stake_accounts.length}
-                      voteAccountsCount={walletData.vote_accounts.length}
+                      isLoading={isLoadingView}
                     />
                   </div>
                 </section>
@@ -162,6 +164,7 @@ export function GovernanceDashboardLayout({
                 description=""
                 wrapperClassName="space-y-4"
                 gridClassName="grid grid-cols-1 gap-y-5 sm:grid-cols-2 sm:gap-x-4 sm:gap-y-5"
+                isLoading={isLoadingView}
               />
 
               {showStats && (
@@ -171,24 +174,90 @@ export function GovernanceDashboardLayout({
                   </div>
                   <div className="glass-card p-5">
                     <DashboardStats
-                      network={network}
-                      snapshotSlot={walletData.snapshot_slot}
                       currentView="staker"
-                      delegationsReceived={stats.delegationsReceived}
-                      totalStaked={stats.totalStaked}
-                      activeValidators={walletData.stake_accounts.length}
-                      voteAccountsCount={walletData.vote_accounts.length}
+                      isLoading={isLoadingView}
                     />
                   </div>
                 </section>
               )}
 
-              <SummaryStats stats={walletData.proposalStats} />
-              <StakeAccountsTable />
+              <SummaryStats isLoading={isLoadingView} />
+              <StakeAccountsTable userPubKey={userPubKey.toBase58()} />
             </div>
           )}
         </div>
       </div>
     </>
   );
+  // return (
+  //   <div>
+  //     implementing stuff
+  //     <div>
+  //       <Button onClick={createAndDelegateStakeAccount}>
+  //         create stake account
+  //       </Button>
+  //     </div>
+  //   </div>
+  // );
 }
+
+// local vote account
+// const YOUR_VOTE_ACCOUNT_PUBKEY = new PublicKey(
+//   "GMJdVGehfUr327xwwCspjZ5aAL1vZ3KS3FV6ZasK38vQ"
+// );
+
+// async function createAndDelegateStakeAccount() {
+//   const connection = new Connection(endpoint, "confirmed");
+
+//   const stakeAccount = Keypair.generate();
+//   const rentExemption = await connection.getMinimumBalanceForRentExemption(
+//     StakeProgram.space
+//   );
+
+//   // Amount to stake (1 SOL)
+//   const amount = 1 * LAMPORTS_PER_SOL;
+
+//   const lamportsToFund = Math.ceil(rentExemption + amount);
+
+//   // 1️⃣ Create and fund the stake account
+//   const createTx = StakeProgram.createAccount({
+//     fromPubkey: userPubKey,
+//     stakePubkey: stakeAccount.publicKey,
+//     authorized: { staker: userPubKey, withdrawer: userPubKey },
+//     lamports: lamportsToFund,
+//   });
+
+//   const sig1 = await sendTransaction(createTx, connection, {
+//     signers: [stakeAccount],
+//   });
+//   await connection.confirmTransaction(sig1, "confirmed");
+
+//   // 2️⃣ Choose a validator’s vote account (any testnet one)
+//   // const { current } = await connection.getVoteAccounts();
+
+//   // 3️⃣ Delegate the stake
+//   const delegateTx = StakeProgram.delegate({
+//     stakePubkey: stakeAccount.publicKey,
+//     authorizedPubkey: userPubKey,
+//     votePubkey: YOUR_VOTE_ACCOUNT_PUBKEY,
+//   });
+
+//   const sig2 = await sendTransaction(delegateTx, connection);
+//   await connection.confirmTransaction(sig2, "confirmed");
+//   console.log("Stake delegated to:", YOUR_VOTE_ACCOUNT_PUBKEY.toBase58());
+
+//   // // 4️⃣ Send both in one transaction
+//   // const tx = new Transaction().add(
+//   //   ...createTx.instructions,
+//   //   ...delegateTx.instructions
+//   // );
+
+//   // const signature = await sendTransaction(tx, connection, {
+//   //   signers: [stakeAccount],
+//   // });
+//   // console.log(
+//   //   "Stake account created & delegated:",
+//   //   stakeAccount.publicKey.toBase58()
+//   // );
+//   // console.log("Transaction:", signature);
+// }

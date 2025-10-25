@@ -44,7 +44,7 @@ export const columns: ColumnDef<StakeAccountData>[] = [
       </div>
     ),
     cell: ({ row }) => {
-      const stake = row.getValue("activeStake") as number;
+      const stake = row.original.activeStake;
       const solAmount = formatLamportsDisplay(stake);
       return <div className="hidden sm:block">{solAmount.value}</div>;
     },
@@ -53,7 +53,9 @@ export const columns: ColumnDef<StakeAccountData>[] = [
     accessorKey: "voteAccount",
     header: () => <span className="hidden sm:inline">DELEGATED VOTER</span>,
     cell: ({ row }) => {
-      const validator = row.getValue("voteAccount") as string;
+      const validator = row.original.voteAccount;
+      if (!validator) return <div className="hidden sm:block">-</div>;
+
       return (
         <div className="hidden sm:block">
           <CopyableAddress
@@ -70,7 +72,7 @@ export const columns: ColumnDef<StakeAccountData>[] = [
     header: "STATE",
     cell: ({ row }) => {
       const state = row.getValue("state") as StakeAccountData["state"];
-      return <StakeAccountStatus state={state || "active"} />;
+      return <StakeAccountStatus state={state || "initialized"} />;
     },
   },
 ];

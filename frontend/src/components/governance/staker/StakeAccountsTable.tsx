@@ -47,13 +47,22 @@ type StakeStatusType = NonNullable<StakeAccountData["state"]> | "All";
 
 const stakeStatusOptions: { value: StakeStatusType; label: string }[] = [
   { value: "All", label: "Status" },
-  { value: "active", label: "Active" },
+  { value: "delegated", label: "Delegated" },
   { value: "inactive", label: "Inactive" },
-  { value: "activating", label: "Activating" },
+  { value: "initialized", label: "Initialized" },
   { value: "deactivating", label: "Deactivating" },
+  { value: "cooldown", label: "Cooldown" },
 ];
 
-export function StakeAccountsTable() {
+interface Props {
+  userPubKey: string;
+  isLoading?: boolean;
+}
+
+export function StakeAccountsTable({
+  userPubKey,
+  isLoading: isParentLoading,
+}: Props) {
   // State Management
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -69,8 +78,11 @@ export function StakeAccountsTable() {
     null
   );
   const [drawerOpen, setDrawerOpen] = React.useState(false);
-
-  const { data: stakeAccountsData, isLoading } = useStakeAccounts();
+  const enabled = !isParentLoading;
+  const { data: stakeAccountsData, isLoading } = useStakeAccounts(
+    userPubKey,
+    enabled
+  );
 
   const data = React.useMemo(
     () => stakeAccountsData || [],
@@ -85,7 +97,7 @@ export function StakeAccountsTable() {
       filtered = filtered.filter(
         (row) =>
           row.stakeAccount.toLowerCase().includes(searchValue.toLowerCase()) ||
-          row.voteAccount.toLowerCase().includes(searchValue.toLowerCase())
+          row.voteAccount?.toLowerCase().includes(searchValue.toLowerCase())
       );
     }
 
@@ -163,6 +175,7 @@ export function StakeAccountsTable() {
           },
         ]}
         onReset={handleReset}
+        disabled={isLoading}
       />
 
       {/* Table */}
@@ -281,11 +294,13 @@ export function StakeAccountsTable() {
         table={table}
         totalLabel="Total"
         totalCount={filteredData.length}
+        disabled={isLoading}
       />
       <TablePaginationDesktop
         table={table}
         totalLabel="Total Accounts"
         totalCount={filteredData.length}
+        disabled={isLoading}
       />
 
       {/* Mobile Row Details Drawer */}
@@ -311,7 +326,7 @@ export function StakeAccountsTable() {
               label="Delegated Validator"
               value={
                 <CopyableAddress
-                  address={selectedRow.voteAccount}
+                  address={selectedRow.voteAccount || ""}
                   shortenedLength={8}
                   copyLabel="Copy vote account"
                 />
@@ -325,7 +340,9 @@ export function StakeAccountsTable() {
             <DetailRow
               label="State"
               value={
-                <StakeAccountStatus state={selectedRow.state || "active"} />
+                <StakeAccountStatus
+                  state={selectedRow.state || "initialized"}
+                />
               }
             />
           </>

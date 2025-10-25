@@ -32,6 +32,7 @@ interface TableFiltersProps {
     className?: string;
   }[];
   onReset: () => void;
+  disabled?: boolean;
 }
 
 export function TableFilters({
@@ -41,6 +42,7 @@ export function TableFilters({
   searchPlaceholder,
   filters = [],
   onReset,
+  disabled,
 }: TableFiltersProps) {
   const [filterModalOpen, setFilterModalOpen] = React.useState(false);
 
@@ -50,7 +52,7 @@ export function TableFilters({
       filter.value &&
       filter.value !== "all" &&
       filter.value !== "All" &&
-      filter.value !== "",
+      filter.value !== ""
   ).length;
 
   return (
@@ -62,13 +64,14 @@ export function TableFilters({
 
         {/* Search, Filters and Reset - aligned right on tablet */}
         <div className="flex items-center gap-3 justify-end md:flex-1">
-          <div className="relative flex-1 max-w-xs md:max-w-[200px] lg:max-w-md">
+          <div className="relative flex-1 max-w-xs md:max-w-[200px] lg:max-w-md has-[input:disabled]:opacity-50 ">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-white/50" />
             <input
               placeholder={searchPlaceholder}
               value={searchValue}
               onChange={(e) => onSearchChange(e.target.value)}
               className="w-full pl-10 pr-4 py-2 input"
+              disabled={disabled}
             />
           </div>
 
@@ -79,6 +82,7 @@ export function TableFilters({
               aria-label="Open filters"
               onClick={() => setFilterModalOpen(true)}
               className="size-10 border-white/15 bg-transparent text-white hover:bg-white/10"
+              disabled={disabled}
             >
               <ListFilter className="size-4" />
             </Button>
@@ -94,6 +98,7 @@ export function TableFilters({
             variant="outline"
             onClick={onReset}
             className="bg-transparent text-white lg:hidden"
+            disabled={disabled}
           >
             Reset
           </AppButton>
@@ -105,6 +110,7 @@ export function TableFilters({
                 key={index}
                 value={filter.value}
                 onValueChange={filter.onChange}
+                disabled={disabled}
               >
                 <SelectTrigger
                   className={filter.className || "w-[180px] text-white/60"}
@@ -129,6 +135,7 @@ export function TableFilters({
               variant="outline"
               onClick={onReset}
               className="bg-transparent text-white"
+              disabled={disabled}
             >
               Reset
             </AppButton>

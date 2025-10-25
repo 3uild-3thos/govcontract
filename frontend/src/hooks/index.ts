@@ -1,7 +1,6 @@
 export * from "./useIsBelowMd";
 export * from "./useCollision";
 export * from "./useCopyToClipboard";
-export * from "./useGovernanceDashboard";
 export * from "./useMounted";
 export * from "./useWalletRole";
 export * from "./useVoteDistribution";
