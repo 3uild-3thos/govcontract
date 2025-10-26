@@ -62,7 +62,7 @@ export default function ProposalDetailView({
         )}
       </div>
       <PhaseTimeline proposal={proposal} isLoading={isLoading} />
-      <TopVotersTable />
+      <TopVotersTable proposal={proposal} />
     </div>
   );
 }
