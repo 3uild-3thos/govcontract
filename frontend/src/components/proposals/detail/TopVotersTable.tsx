@@ -11,7 +11,7 @@ import {
 } from "@tanstack/react-table";
 import { Download, Search } from "lucide-react";
 
-import { topVoters } from "@/dummy-data/top-voters";
+import { useProposalVotes } from "@/hooks/useProposalVotes";
 import { topVoterColumns } from "./TopVotersColumns";
 import {
   Table,
@@ -22,61 +22,65 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { AppButton } from "@/components/ui/AppButton";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import {
   TablePaginationDesktop,
   TablePaginationMobile,
 } from "@/components/governance/shared/TablePagination";
 import { cn } from "@/lib/utils";
+import type { ProposalRecord } from "@/types";
 
-type VoteOutcomeFilter = "all" | "for" | "against" | "abstain";
+// type VoteOutcomeFilter = "all" | "for" | "against" | "abstain";
 
-const FILTER_OPTIONS: { label: string; value: VoteOutcomeFilter }[] = [
-  { label: "All Outcomes", value: "all" },
-  { label: "For", value: "for" },
-  { label: "Against", value: "against" },
-  { label: "Abstain", value: "abstain" },
-];
+// const FILTER_OPTIONS: { label: string; value: VoteOutcomeFilter }[] = [
+//   { label: "All Outcomes", value: "all" },
+//   { label: "For", value: "for" },
+//   { label: "Against", value: "against" },
+//   { label: "Abstain", value: "abstain" },
+// ];
 
 const DEFAULT_SORTING: SortingState = [{ id: "stakedLamports", desc: true }];
 
 const TABLE_COLUMNS = topVoterColumns;
 
-export default function TopVotersTable() {
+interface TopVotersTableProps {
+  proposal: ProposalRecord | undefined;
+}
+
+export default function TopVotersTable({ proposal }: TopVotersTableProps) {
   const [searchValue, setSearchValue] = React.useState("");
-  const [outcomeFilter, setOutcomeFilter] =
-    React.useState<VoteOutcomeFilter>("all");
+  // const [outcomeFilter, setOutcomeFilter] =
+  //   React.useState<VoteOutcomeFilter>("all");
   const [sorting, setSorting] = React.useState<SortingState>(() => [
     ...DEFAULT_SORTING,
   ]);
 
-  const filteredData = React.useMemo(() => {
-    const searchTerm = searchValue.trim().toLowerCase();
+  // Fetch votes for the proposal
+  const { data: topVoters = [], isLoading: isLoadingVotes } = useProposalVotes(
+    proposal?.publicKey
+  );
 
-    return topVoters.filter((voter) => {
-      if (outcomeFilter !== "all" && voter.voteOutcome !== outcomeFilter) {
-        return false;
-      }
+  // const filteredData = React.useMemo(() => {
+  //   const searchTerm = searchValue.trim().toLowerCase();
 
-      if (searchTerm.length === 0) {
-        return true;
-      }
+  //   return topVoters.filter((voter) => {
+  //     if (outcomeFilter !== "all" && voter.voteOutcome !== outcomeFilter) {
+  //       return false;
+  //     }
 
-      return (
-        voter.validatorName.toLowerCase().includes(searchTerm) ||
-        voter.validatorIdentity.toLowerCase().includes(searchTerm)
-      );
-    });
-  }, [outcomeFilter, searchValue]);
+  //     if (searchTerm.length === 0) {
+  //       return true;
+  //     }
+
+  //     return (
+  //       voter.validatorName.toLowerCase().includes(searchTerm) ||
+  //       voter.validatorIdentity.toLowerCase().includes(searchTerm)
+  //     );
+  //   });
+  // }, [outcomeFilter, searchValue]);
 
   const table = useReactTable({
-    data: filteredData,
+    data: topVoters,
     columns: TABLE_COLUMNS,
     state: {
       sorting,
@@ -97,7 +101,7 @@ export default function TopVotersTable() {
   const handleReset = () => {
     const nextSorting: SortingState = [...DEFAULT_SORTING];
     setSearchValue("");
-    setOutcomeFilter("all");
+    // setOutcomeFilter("all");
     table.setSorting(nextSorting);
     table.setPageIndex(0);
   };
@@ -117,7 +121,7 @@ export default function TopVotersTable() {
             />
           </div>
           <div className="flex gap-3 w-full sm:w-auto">
-            <Select
+            {/* <Select
               key="outcomeFilter"
               value={outcomeFilter}
               onValueChange={(value) =>
@@ -138,7 +142,7 @@ export default function TopVotersTable() {
                   </SelectItem>
                 ))}
               </SelectContent>
-            </Select>
+            </Select> */}
             <AppButton
               variant="outline"
               onClick={handleReset}
@@ -175,14 +179,14 @@ export default function TopVotersTable() {
                         "px-6 py-4 text-xs font-semibold uppercase tracking-wider text-white/50",
                         columnId === "validatorName"
                           ? "text-left"
-                          : "text-center",
+                          : "text-center"
                       )}
                     >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
-                            header.getContext(),
+                            header.getContext()
                           )}
                     </TableHead>
                   );
@@ -191,7 +195,16 @@ export default function TopVotersTable() {
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows.length ? (
+            {isLoadingVotes ? (
+              <TableRow className="hover:bg-transparent">
+                <TableCell
+                  colSpan={TABLE_COLUMNS.length}
+                  className="h-28 text-center text-sm text-white/60"
+                >
+                  Loading votes...
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
@@ -204,12 +217,12 @@ export default function TopVotersTable() {
                         "px-6 py-5 text-sm",
                         cell.column.id === "validatorName"
                           ? "text-left"
-                          : "text-center",
+                          : "text-center"
                       )}
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext(),
+                        cell.getContext()
                       )}
                     </TableCell>
                   ))}
@@ -221,7 +234,7 @@ export default function TopVotersTable() {
                   colSpan={TABLE_COLUMNS.length}
                   className="h-28 text-center text-sm text-white/60"
                 >
-                  No voters match the current filters.
+                  No votes found for this proposal.
                 </TableCell>
               </TableRow>
             )}
@@ -233,13 +246,13 @@ export default function TopVotersTable() {
         <TablePaginationMobile
           table={table}
           totalLabel="Voters"
-          totalCount={filteredData.length}
+          totalCount={topVoters.length}
           pageSizeOptions={[10, 20, 30]}
         />
         <TablePaginationDesktop
           table={table}
           totalLabel="Total Voters"
-          totalCount={filteredData.length}
+          totalCount={topVoters.length}
           pageSizeOptions={[10, 20, 30, 40, 50]}
         />
       </div>

@@ -15,6 +15,7 @@ export * from "./useCreateProposal";
 
 export * from "./useGetValidators";
 export * from "./useVoteAccountsWithValidators";
+export * from "./useProposalVotes";
 
 export * from "./useProposalVoteBreakdown";
 
