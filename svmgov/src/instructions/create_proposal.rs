@@ -19,6 +19,8 @@ pub async fn create_proposal(
     seed: Option<u64>,
     identity_keypair: Option<String>,
     rpc_url: Option<String>,
+    snapshot_slot: u64,
+    network: String,
 ) -> Result<()> {
     log::debug!(
         "create_proposal: title={}, description={}, seed={:?}, identity_keypair={:?}, rpc_url={:?}",
@@ -37,7 +39,8 @@ pub async fn create_proposal(
 
     let proposal_index_pda = derive_proposal_index_pda(&program.id());
 
-    let proof_response = get_vote_account_proof(&vote_account.to_string(), None).await?;
+    let proof_response =
+        get_vote_account_proof(&vote_account.to_string(), snapshot_slot, &network).await?;
 
     let (consensus_result_pda, meta_merkle_proof_pda) =
         generate_pdas_from_vote_proof_response(&proof_response)?;

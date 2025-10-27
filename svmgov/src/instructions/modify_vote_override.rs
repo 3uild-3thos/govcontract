@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use anchor_client::solana_sdk::{pubkey::Pubkey, signer::Signer};
 use anchor_lang::system_program;
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use gov_v1::ID as SNAPSHOT_PROGRAM_ID;
 
 use crate::{
@@ -14,7 +14,10 @@ use crate::{
             generate_pdas_from_vote_proof_response, get_stake_account_proof,
             get_vote_account_proof, get_voter_summary,
         },
-        utils::{create_spinner, derive_vote_override_pda, derive_vote_override_cache_pda, derive_vote_pda, setup_all},
+        utils::{
+            create_spinner, derive_vote_override_cache_pda, derive_vote_override_pda,
+            derive_vote_pda, setup_all,
+        },
     },
 };
 
@@ -27,6 +30,8 @@ pub async fn modify_vote_override(
     rpc_url: Option<String>,
     _operator_api: Option<String>,
     stake_account_override: Option<String>,
+    snapshot_slot: u64,
+    network: String,
 ) -> Result<()> {
     if for_votes + against_votes + abstain_votes != BASIS_POINTS_TOTAL {
         return Err(anyhow!(
@@ -43,7 +48,7 @@ pub async fn modify_vote_override(
     let stake_account_str = if let Some(sa) = stake_account_override.as_ref() {
         sa.clone()
     } else {
-        let voter_summary = get_voter_summary(&payer.pubkey(), None).await?;
+        let voter_summary = get_voter_summary(&payer.pubkey(), Some(snapshot_slot)).await?;
         voter_summary
             .stake_accounts
             .first()
@@ -52,8 +57,10 @@ pub async fn modify_vote_override(
             .clone()
     };
 
-    let meta_merkle_proof = get_vote_account_proof(&vote_account.to_string(), None).await?;
-    let stake_merkle_proof = get_stake_account_proof(&stake_account_str, None).await?;
+    let meta_merkle_proof =
+        get_vote_account_proof(&vote_account.to_string(), snapshot_slot, &network).await?;
+    let stake_merkle_proof =
+        get_stake_account_proof(&stake_account_str, Some(snapshot_slot)).await?;
 
     let (consensus_result_pda, meta_merkle_proof_pda) =
         generate_pdas_from_vote_proof_response(&meta_merkle_proof)?;
@@ -65,7 +72,8 @@ pub async fn modify_vote_override(
         &validator_vote_pda,
         &program.id(),
     );
-    let vote_override_cache_pda = derive_vote_override_cache_pda(&proposal_pubkey, &validator_vote_pda, &program.id());
+    let vote_override_cache_pda =
+        derive_vote_override_cache_pda(&proposal_pubkey, &validator_vote_pda, &program.id());
 
     let stake_merkle_proof_vec =
         convert_merkle_proof_strings(&stake_merkle_proof.stake_merkle_proof)?;

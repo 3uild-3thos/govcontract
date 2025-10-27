@@ -1,8 +1,9 @@
 use std::str::FromStr;
 
 use anchor_lang::prelude::Pubkey;
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use gov_v1::{ConsensusResult, MetaMerkleLeaf, MetaMerkleProof, StakeMerkleLeaf};
+use log::info;
 use serde::{Deserialize, Serialize};
 
 use crate::constants::*;
@@ -100,18 +101,19 @@ pub async fn get_voter_summary(
 /// Endpoint: GET /proof/vote_account/:vote_account?snapshot_slot=...
 pub async fn get_vote_account_proof(
     vote_account: &str,
-    snapshot_slot: Option<u64>,
+    snapshot_slot: u64,
+    network: &str,
 ) -> Result<VoteAccountProofResponse> {
     let base_url = get_api_base_url();
-    let mut url = format!("{}/proof/vote_account/{}", base_url, vote_account);
-
-    if let Some(slot) = snapshot_slot {
-        url.push_str(&format!("?snapshot_slot={}", slot));
-    }
+    let mut url = format!(
+        "{}/proof/vote_account/{}?slot={}&network={}",
+        base_url, vote_account, snapshot_slot, network
+    );
 
     log::debug!("Fetching vote account proof from: {}", url);
 
     let response = reqwest::get(&url).await?;
+    info!("Response: {:?}", url);
     let proof: VoteAccountProofResponse = response.json().await?;
 
     log::debug!(
@@ -152,7 +154,12 @@ pub async fn get_stake_account_proof(
 
 /// Get the base API URL from environment or default
 fn get_api_base_url() -> String {
-    std::env::var(SVMGOV_OPERATOR_URL_ENV).unwrap_or_else(|_| DEFAULT_OPERATOR_API_URL.to_string())
+    dotenv::dotenv().ok();
+
+    let url = std::env::var(SVMGOV_OPERATOR_URL_ENV)
+        .unwrap_or_else(|_| DEFAULT_OPERATOR_API_URL.to_string());
+    info!("API base URL: {}", url);
+    url
 }
 
 /// Convert API MetaMerkleLeafData to gov_v1 MetaMerkleLeaf

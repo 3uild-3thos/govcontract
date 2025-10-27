@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use anchor_client::solana_sdk::{pubkey::Pubkey, signer::Signer};
 use anchor_lang::system_program;
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use gov_v1::ID as SNAPSHOT_PROGRAM_ID;
 
 use crate::{
@@ -10,7 +10,7 @@ use crate::{
     govcontract::client::{accounts, args},
     utils::{
         api_helpers::{generate_pdas_from_vote_proof_response, get_vote_account_proof},
-        utils::{create_spinner, derive_vote_pda, derive_vote_override_cache_pda, setup_all},
+        utils::{create_spinner, derive_vote_override_cache_pda, derive_vote_pda, setup_all},
     },
 };
 
@@ -21,6 +21,8 @@ pub async fn cast_vote(
     abstain: u64,
     identity_keypair: Option<String>,
     rpc_url: Option<String>,
+    snapshot_slot: u64,
+    network: String,
 ) -> Result<()> {
     if votes_for + votes_against + abstain != BASIS_POINTS_TOTAL {
         return Err(anyhow!(
@@ -34,13 +36,14 @@ pub async fn cast_vote(
 
     let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
 
-    let proof_response = get_vote_account_proof(&vote_account.to_string(), None).await?;
+    let proof_response = get_vote_account_proof(&vote_account.to_string(), snapshot_slot, &network).await?;
 
     let (consensus_result_pda, meta_merkle_proof_pda) =
         generate_pdas_from_vote_proof_response(&proof_response)?;
 
     let vote_pda = derive_vote_pda(&proposal_pubkey, &vote_account, &program.id());
-    let vote_override_cache_pda = derive_vote_override_cache_pda(&proposal_pubkey, &vote_pda, &program.id());
+    let vote_override_cache_pda =
+        derive_vote_override_cache_pda(&proposal_pubkey, &vote_pda, &program.id());
 
     let spinner = create_spinner("Sending cast-vote transaction...");
 

@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use anchor_client::solana_sdk::{pubkey::Pubkey, signer::Signer};
 use anchor_lang::system_program;
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use gov_v1::ID as SNAPSHOT_PROGRAM_ID;
 
 use crate::{
@@ -21,6 +21,8 @@ pub async fn modify_vote(
     abstain_votes: u64,
     identity_keypair: Option<String>,
     rpc_url: Option<String>,
+    snapshot_slot: u64,
+    network: String,
 ) -> Result<()> {
     if for_votes + against_votes + abstain_votes != BASIS_POINTS_TOTAL {
         return Err(anyhow!(
@@ -34,7 +36,7 @@ pub async fn modify_vote(
 
     let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
 
-    let proof_response = get_vote_account_proof(&vote_account.to_string(), None).await?;
+    let proof_response = get_vote_account_proof(&vote_account.to_string(), snapshot_slot, &network).await?;
 
     let (consensus_result_pda, meta_merkle_proof_pda) =
         generate_pdas_from_vote_proof_response(&proof_response)?;

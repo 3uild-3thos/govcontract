@@ -77,6 +77,13 @@ enum Commands {
         #[arg(long, help = "GitHub link for the proposal description")]
         description: String,
 
+        /// Snapshot slot for fetching merkle proofs
+        #[arg(long, help = "Snapshot slot for fetching merkle proofs")]
+        snapshot_slot: u64,
+
+        /// Network for fetching merkle proofs
+        #[arg(long, help = "Network for fetching merkle proofs")]
+        network: String,
     },
 
     #[command(
@@ -90,6 +97,14 @@ enum Commands {
     SupportProposal {
         #[arg(long, help = "Proposal ID")]
         proposal_id: String,
+
+        /// Snapshot slot for fetching merkle proofs
+        #[arg(long, help = "Snapshot slot for fetching merkle proofs")]
+        snapshot_slot: u64,
+
+        /// Network for fetching merkle proofs
+        #[arg(long, help = "Network for fetching merkle proofs")]
+        network: String,
     },
 
     #[command(
@@ -121,6 +136,14 @@ enum Commands {
         /// Basis points for 'Abstain' vote.
         #[arg(long, help = "Basis points for 'Abstain'")]
         abstain_votes: u64,
+
+        /// Snapshot slot for fetching merkle proofs
+        #[arg(long, help = "Snapshot slot for fetching merkle proofs")]
+        snapshot_slot: u64,
+
+        /// Network for fetching merkle proofs
+        #[arg(long, help = "Network for fetching merkle proofs")]
+        network: String,
     },
 
     #[command(
@@ -147,6 +170,14 @@ enum Commands {
         /// Basis points for 'Abstain' vote.
         #[arg(long, help = "Basis points for 'Abstain'")]
         abstain_votes: u64,
+
+        /// Snapshot slot for fetching merkle proofs
+        #[arg(long, help = "Snapshot slot for fetching merkle proofs")]
+        snapshot_slot: u64,
+
+        /// Network for fetching merkle proofs
+        #[arg(long, help = "Network for fetching merkle proofs")]
+        network: String,
     },
 
     #[command(
@@ -287,8 +318,19 @@ enum Commands {
         operator_api: Option<String>,
 
         /// Optional specific stake account to use for override
-        #[arg(long, help = "Stake account to use for override (base58 pubkey). If omitted, the first stake account from the voter summary will be used.")]
+        #[arg(
+            long,
+            help = "Stake account to use for override (base58 pubkey). If omitted, the first stake account from the voter summary will be used."
+        )]
         stake_account: Option<String>,
+
+        /// Snapshot slot for fetching merkle proofs
+        #[arg(long, help = "Snapshot slot for fetching merkle proofs")]
+        snapshot_slot: u64,
+
+        /// Network for fetching merkle proofs
+        #[arg(long, help = "Network for fetching merkle proofs")]
+        network: String,
     },
 
     #[command(
@@ -335,8 +377,19 @@ enum Commands {
         operator_api: Option<String>,
 
         /// Optional specific stake account to use for override modification
-        #[arg(long, help = "Stake account to use for override modification (base58 pubkey). If omitted, the first stake account from the voter summary will be used.")]
+        #[arg(
+            long,
+            help = "Stake account to use for override modification (base58 pubkey). If omitted, the first stake account from the voter summary will be used."
+        )]
         stake_account: Option<String>,
+
+        /// Snapshot slot for fetching merkle proofs
+        #[arg(long, help = "Snapshot slot for fetching merkle proofs")]
+        snapshot_slot: u64,
+
+        /// Network for fetching merkle proofs
+        #[arg(long, help = "Network for fetching merkle proofs")]
+        network: String,
     },
 
     #[command(
@@ -371,6 +424,8 @@ async fn handle_command(cli: Cli) -> Result<()> {
             seed,
             title,
             description,
+            snapshot_slot,
+            network,
         } => {
             instructions::create_proposal(
                 title.to_string(),
@@ -378,14 +433,22 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 *seed,
                 cli.identity_keypair,
                 cli.rpc_url,
+                snapshot_slot.clone(),
+                network.clone(),
             )
             .await?;
         }
-        Commands::SupportProposal { proposal_id } => {
+        Commands::SupportProposal {
+            proposal_id,
+            snapshot_slot,
+            network,
+        } => {
             instructions::support_proposal(
                 proposal_id.to_string(),
                 cli.identity_keypair,
                 cli.rpc_url,
+                snapshot_slot.clone(),
+                network.clone(),
             )
             .await?;
         }
@@ -394,6 +457,8 @@ async fn handle_command(cli: Cli) -> Result<()> {
             for_votes,
             against_votes,
             abstain_votes,
+            snapshot_slot,
+            network,
         } => {
             instructions::cast_vote(
                 proposal_id.to_string(),
@@ -402,6 +467,8 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 *abstain_votes,
                 cli.identity_keypair,
                 cli.rpc_url,
+                snapshot_slot.clone(),
+                network.clone(),
             )
             .await?;
         }
@@ -410,6 +477,8 @@ async fn handle_command(cli: Cli) -> Result<()> {
             for_votes,
             against_votes,
             abstain_votes,
+            snapshot_slot,
+            network,
         } => {
             instructions::modify_vote(
                 proposal_id.to_string(),
@@ -418,6 +487,8 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 *abstain_votes,
                 cli.identity_keypair,
                 cli.rpc_url,
+                snapshot_slot.clone(),
+                network.clone(),
             )
             .await?;
         }
@@ -465,6 +536,8 @@ async fn handle_command(cli: Cli) -> Result<()> {
             abstain_votes,
             operator_api,
             stake_account,
+            snapshot_slot,
+            network,
         } => {
             instructions::cast_vote_override(
                 proposal_id.to_string(),
@@ -475,6 +548,8 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 cli.rpc_url,
                 operator_api.clone(),
                 stake_account.clone(),
+                snapshot_slot.clone(),
+                network.clone(),
             )
             .await?;
         }
@@ -485,6 +560,8 @@ async fn handle_command(cli: Cli) -> Result<()> {
             abstain_votes,
             operator_api,
             stake_account,
+            snapshot_slot,
+            network,
         } => {
             instructions::modify_vote_override(
                 proposal_id.to_string(),
@@ -495,6 +572,8 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 cli.rpc_url,
                 operator_api.clone(),
                 stake_account.clone(),
+                snapshot_slot.clone(),
+                network.clone(),
             )
             .await?;
         }
@@ -520,6 +599,7 @@ fn main() -> Result<()> {
     env_logger::builder()
         .filter_level(log::LevelFilter::Info)
         .init();
+    dotenv::dotenv().ok();
     let cli = Cli::parse();
 
     tokio::runtime::Runtime::new()?.block_on(handle_command(cli))?;

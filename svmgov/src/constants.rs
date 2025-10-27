@@ -6,7 +6,7 @@ pub const DEFAULT_WSS_URL: &str = "wss://api.mainnet-beta.solana.com";
 pub const BASIS_POINTS_TOTAL: u64 = 10_000;
 
 // Default operator API
-pub const DEFAULT_OPERATOR_API_URL: &str = "https://api.operator.com";
+pub const DEFAULT_OPERATOR_API_URL: &str = "http://84.32.100.123:8000";
 
 // UI constants
 pub const SPINNER_TICK_DURATION_MS: u64 = 100;
