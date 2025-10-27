@@ -52,8 +52,8 @@ export function GovernanceDashboardLayout({ userPubKey }: Props) {
                 </h2>
 
                 <p className="text-(--color-dao-color-gray) text-sm flex items-center">
-                  You are viewing as a{" "}
-                  {true ? (
+                  You are viewing as a &nbsp;
+                  {isLoadingView ? (
                     <span className="flex h-3 w-20 bg-white/10 animate-pulse rounded-full ml-2" />
                   ) : (
                     <span className="font-semibold gradient-text-primary-secondary">

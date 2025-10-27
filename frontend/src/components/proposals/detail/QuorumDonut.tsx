@@ -10,8 +10,8 @@ import {
 } from "@/components/ui/tooltip";
 
 const defaultColors = {
-  for: { start: "#004CC7", end: "#11C67D" },
-  against: { start: "#a855f7", end: "#F43F5F" },
+  for: { start: "#c8e6da", end: "#11C67D" },
+  against: { start: "#fcb3c1", end: "#F43F5F" },
   abstain: { start: "#000000", end: "#9ca3af" },
 };
 
@@ -20,6 +20,28 @@ interface QuorumDonutProps {
   againstLamports: number;
   abstainLamports: number;
   quorumPercentage?: number;
+}
+
+export function QuorumDonutSkeleton() {
+  return (
+    <div className="relative w-full max-w-[220px] sm:max-w-[240px]">
+      <svg viewBox="0 0 120 120" className="w-full h-full">
+        <circle
+          cx="60"
+          cy="60"
+          r="50"
+          fill="none"
+          stroke="#374151"
+          strokeWidth="7"
+          className="animate-pulse"
+        />
+      </svg>
+      <div className="absolute inset-0 mt-3 sm:mt-2 flex flex-col items-center justify-center text-center">
+        <div className="h-7 w-20 bg-white/10 animate-pulse rounded" />
+        <div className="h-5 w-16 bg-white/10 animate-pulse rounded mt-1" />
+      </div>
+    </div>
+  );
 }
 
 export default function QuorumDonut({
@@ -82,7 +104,7 @@ export default function QuorumDonut({
   const againstOffset = to([forP], (fp) => -fp * circumference);
   const abstainOffset = to(
     [forP, againstP],
-    (fp, ap) => -(fp + ap) * circumference,
+    (fp, ap) => -(fp + ap) * circumference
   );
 
   // Static angles for gradients
@@ -165,7 +187,7 @@ export default function QuorumDonut({
             strokeLinecap="round"
             strokeDasharray={to(
               [abstainLength],
-              (l) => `${l} ${circumference}`,
+              (l) => `${l} ${circumference}`
             )}
             style={{ strokeDashoffset: abstainOffset }}
           />
@@ -180,7 +202,7 @@ export default function QuorumDonut({
             strokeLinecap="round"
             strokeDasharray={to(
               [againstLength],
-              (l) => `${l} ${circumference}`,
+              (l) => `${l} ${circumference}`
             )}
             style={{ strokeDashoffset: againstOffset }}
           />

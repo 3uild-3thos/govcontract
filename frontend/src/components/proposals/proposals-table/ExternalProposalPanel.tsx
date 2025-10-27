@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/tooltip";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { ProposalDescription } from "../ProposalDescription";
-import { ProposalStatus } from "@/types";
+import { ProposalStatus, WalletRole } from "@/types";
+import { useWalletRole } from "@/hooks";
 
 const VOTE_STATE_LABEL: Record<ProposalRow["status"], string> = {
   support: "Not started",
@@ -83,6 +84,12 @@ function VoteActions({
   disabled?: boolean;
 }) {
   const { openModal } = useModal();
+  const { publicKey } = useWallet();
+  const { walletRole } = useWalletRole(publicKey?.toBase58());
+
+  const isValidator = walletRole === WalletRole.VALIDATOR;
+  const isVoting = state === "voting";
+  const isSupporting = state === "support";
 
   return (
     <div className="flex flex-col gap-3">
@@ -97,25 +104,38 @@ function VoteActions({
           }}
         />
       )}
-      <AppButton
-        variant="gradient"
-        text={state === "voting" ? "Cast Vote" : "Support"}
-        className="w-full justify-center text-sm font-semibold text-foreground"
-        disabled={disabled}
-        onClick={() => {
-          if (state === "voting") {
+      {isVoting && (
+        <AppButton
+          variant="gradient"
+          text="Cast Vote"
+          className="w-full justify-center text-sm font-semibold text-foreground"
+          disabled={disabled}
+          onClick={() => {
             openModal("cast-vote", { proposalId });
-          } else {
+          }}
+        />
+      )}
+      {isSupporting && isValidator && (
+        <AppButton
+          variant="gradient"
+          text="Support"
+          className="w-full justify-center text-sm font-semibold text-foreground"
+          disabled={disabled}
+          onClick={() => {
             openModal("support-proposal", { proposalId });
-          }
-        }}
-      />
+          }}
+        />
+      )}
     </div>
   );
 }
 
 function VotingPanel({ proposal }: { proposal: ProposalRow }) {
   const { connected } = useWallet();
+
+  const isVoting = proposal.status === "voting";
+  const isSupporting = proposal.status === "support";
+
   return (
     <aside className="w-full glass-card p-6 lg:w-80 xl:w-80">
       <header className="mb-6">
@@ -133,7 +153,7 @@ function VotingPanel({ proposal }: { proposal: ProposalRow }) {
       </header>
 
       {connected ? (
-        (proposal.status === "support" || proposal.status === "voting") && (
+        (isSupporting || isVoting) && (
           <VoteActions
             state={proposal.status}
             proposalId={proposal.publicKey.toBase58()}
@@ -143,10 +163,14 @@ function VotingPanel({ proposal }: { proposal: ProposalRow }) {
         <Tooltip>
           <TooltipTrigger asChild>
             <span>
-              {(proposal.status === "support" ||
-                proposal.status === "voting") && (
-                <VoteActions state={proposal.status} proposalId={""} disabled />
-              )}
+              {isSupporting ||
+                (isVoting && (
+                  <VoteActions
+                    state={proposal.status}
+                    proposalId={""}
+                    disabled
+                  />
+                ))}
             </span>
           </TooltipTrigger>
           <TooltipContent side="bottom">

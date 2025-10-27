@@ -10,15 +10,20 @@ interface ParsedStakeAccount {
   state: string;
 }
 
+// TODO: PEDRO remove this after proper testing
 // this vote acc: A7MXYCmYhjMfn4D6tsPn6aA3eqR9Gg5k7Bi8PpTooHoY
 // belongs to this validator identity: ftvo8MRM5AtDtLJRKbGYveyYTGL84zraqe4E3qGD2aF
 // which has 2 of my stake accounts delegated to it: 95FVVbEVScVhvP16F9K6AkoUecU43AJCqDDRPv9H2oFi and CBzw3NaL4PxiX3yyyf1YFw6bAYBpcAa9itG9SNvvqxAo
 // this function correctly returns the delegated stake accs
 export const getDelegatedStakeAccounts = async (
   { endpoint }: BlockchainParams,
-  validatorIdentityPubKey: string
+  validatorIdentityPubKey: string | undefined
 ): Promise<ParsedStakeAccount[]> => {
   const connection = new Connection(endpoint, "confirmed");
+
+  if (!validatorIdentityPubKey) {
+    throw new Error("Validator identity public key is required");
+  }
 
   const { current, delinquent } = await connection.getVoteAccounts();
   const allVotes = [...current, ...delinquent];

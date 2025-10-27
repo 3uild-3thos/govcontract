@@ -14,7 +14,9 @@ interface UseWalletRoleReturn {
   isLoading: boolean;
 }
 
-export function useWalletRole(userPubKey: string): UseWalletRoleReturn {
+export function useWalletRole(
+  userPubKey: string | undefined
+): UseWalletRoleReturn {
   const [walletRole, setWalletRole] = useState<WalletRole>(WalletRole.STAKER);
   const [selectedView, setSelectedView] = useState<ViewType | undefined>(
     "staker"

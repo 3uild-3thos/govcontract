@@ -36,8 +36,7 @@ export default function ProposalDetailHeader({
 }: ProposalDetailHeaderProps) {
   const { copied, copyToClipboard } = useCopyToClipboard();
 
-  // TODO: PEDRO check proper loading skeletongs
-  if (isLoading) return <div>Loading</div>;
+  if (isLoading) return <ProposalDetailSkeleton />;
   if (!proposal) return <div>No proposal data...</div>;
 
   const createdAgo = calculateTimeAgo(proposal.creationTimestamp);
@@ -100,6 +99,53 @@ export default function ProposalDetailHeader({
 
         <div className="hidden lg:block lg:ml-auto lg:mr-4">
           <LifecycleIndicator stage={proposal.status || "voting"} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProposalDetailSkeleton() {
+  return (
+    <div className="glass-card space-y-6 p-6">
+      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+        <div className="flex-1 space-y-3">
+          {/* title */}
+          <div className="h-8 w-1/2 bg-white/10 animate-pulse rounded" />
+          <div className="lg:hidden">
+            <div className="h-6 w-20 bg-white/10 animate-pulse rounded-full" />
+          </div>
+          {/* description */}
+          <div className="h-9 w-full bg-white/10 animate-pulse rounded" />
+        </div>
+        <div className="hidden lg:block">
+          <div className="h-6 w-20 bg-white/10 animate-pulse rounded-full" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-wrap items-center gap-2 sm:gap-3 lg:gap-6 border-t border-white/10 pt-3 sm:pt-4 text-sm leading-none lg:leading-normal">
+        <InfoItem label="ID:" isLoading>
+          <div className="h-4 w-24 bg-white/10 animate-pulse rounded" />
+        </InfoItem>
+
+        <InfoItem label="Author:" isLoading>
+          <div className="h-4 w-32 bg-white/10 animate-pulse rounded" />
+        </InfoItem>
+
+        <InfoItem label="Created:" isLoading>
+          <div className="h-4 w-20 bg-white/10 animate-pulse rounded" />
+        </InfoItem>
+
+        <InfoItem label="Ends:" isLoading>
+          <div className="h-4 w-20 bg-white/10 animate-pulse rounded" />
+        </InfoItem>
+
+        <InfoItem label="Link to proposal:" isLoading>
+          <div className="h-5 w-5 bg-white/10 animate-pulse rounded-full" />
+        </InfoItem>
+
+        <div className="hidden lg:block lg:ml-auto lg:mr-4">
+          <div className="h-5 w-32 bg-white/10 animate-pulse rounded" />
         </div>
       </div>
     </div>
