@@ -121,10 +121,10 @@ export function createProgramWitDummyWallet(endpoint?: string) {
 // Helper function to build the API URL (use proxy in browser, direct URL on server)
 function buildSolgovUrl(endpoint: string): string {
   // Use Next.js API proxy when running in browser to avoid CORS
-  if (typeof window !== "undefined") {
-    // Browser: use proxy with path parameter
-    return `/api/solgov?path=${endpoint}`;
-  }
+  // if (typeof window !== "undefined") {
+  //   // Browser: use proxy with path parameter
+  //   return `/api/solgov?path=${endpoint}`;
+  // }
   // Server-side: use direct URL
   return `https://api.solgov.online/${endpoint}`;
 }
