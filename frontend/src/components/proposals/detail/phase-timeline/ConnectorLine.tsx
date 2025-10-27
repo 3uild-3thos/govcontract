@@ -9,9 +9,14 @@ import type { ConnectorVariant } from "./types";
 interface ConnectorLineProps {
   variant: ConnectorVariant;
   animate: boolean;
+  isLoading?: boolean;
 }
 
-export function ConnectorLine({ variant, animate }: ConnectorLineProps) {
+export function ConnectorLine({
+  variant,
+  animate,
+  isLoading,
+}: ConnectorLineProps) {
   return (
     <span
       className={cn(
@@ -19,6 +24,7 @@ export function ConnectorLine({ variant, animate }: ConnectorLineProps) {
         CONNECTOR_OPACITY[variant],
         animate && "connector-line--animated",
         animate && CONNECTOR_CLASSES[variant],
+        { "animate-pulse": isLoading }
       )}
       style={CONNECTOR_MASK_STYLE}
     />

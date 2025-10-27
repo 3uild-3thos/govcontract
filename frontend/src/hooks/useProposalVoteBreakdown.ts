@@ -29,13 +29,21 @@ interface LatestProposal {
   currentQuorumPct: number;
 }
 
-export const useProposalVoteBreakdown = (proposalPubKey: PublicKey) => {
-  const { data: proposals } = useProposals();
-  const { data: validators } = useGetValidators();
-  const { data: votesHashMap } = useVoteAccountsWithValidators();
+export const useProposalVoteBreakdown = (
+  proposalPubKey: PublicKey | undefined
+) => {
+  const { data: proposals, isLoading: isLoadingProposals } = useProposals();
+  const { data: validators, isLoading: isLoadingValidators } =
+    useGetValidators();
+  const { data: votesHashMap, isLoading: isLoadingVotesHashMap } =
+    useVoteAccountsWithValidators();
 
-  return useQuery({
+  const isLoading =
+    isLoadingProposals || isLoadingValidators || isLoadingVotesHashMap;
+
+  const query = useQuery({
     staleTime: 1000 * 120, // 2 minutes
+    enabled: !!proposalPubKey && !!validators && !!proposals && !!votesHashMap,
     queryKey: [
       "latestProposalData",
       proposalPubKey,
@@ -45,15 +53,21 @@ export const useProposalVoteBreakdown = (proposalPubKey: PublicKey) => {
     ],
     queryFn: () => getData(proposalPubKey, validators, proposals, votesHashMap),
   });
+
+  return { ...query, isLoading };
 };
 
 const getData = async (
-  proposalPubKey: PublicKey,
+  proposalPubKey: PublicKey | undefined,
   validators: Validators | undefined,
   proposals: ProposalRecord[] | undefined,
   votesHashMap: VoteAccountsWithValidators | undefined
 ) => {
-  if (validators === undefined || proposals === undefined)
+  if (
+    validators === undefined ||
+    proposals === undefined ||
+    proposalPubKey === undefined
+  )
     throw new Error("Unable to get validators info");
   // if (votes === undefined) throw new Error("Unable to get votes info");
 

@@ -13,9 +13,21 @@ import { cn } from "@/lib/utils";
 import { AppButton } from "@/components/ui/AppButton";
 import ErrorMessage from "./shared/ErrorMessage";
 import { VoteDistributionControls } from "./shared/VoteDistributionControls";
-import { useCastVote, useVoteDistribution, VoteDistribution } from "@/hooks";
+import {
+  useCastVote,
+  useCastVoteOverride,
+  useStakerVotingPower,
+  useVoteDistribution,
+  useWalletRole,
+  VoteDistribution,
+} from "@/hooks";
 import { toast } from "sonner";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
+import { WalletRole } from "@/types";
+import {
+  formatAddress,
+  formatLamportsDisplay,
+} from "@/lib/governance/formatters";
 
 export interface CastVoteModalDataProps {
   proposalId?: string;
@@ -35,10 +47,6 @@ export function CastVoteModal({
 }: CastVoteModalProps) {
   const [proposalId, setProposalId] = React.useState(initialProposalId);
 
-  // TODO: CAST VOTE
-  const [voterAccount] = React.useState("4aD...bC2"); // TODO: This would come from wallet
-  const [votingPower] = React.useState(20000); // TODO: This would come from API
-
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | undefined>();
   const {
@@ -52,7 +60,15 @@ export function CastVoteModal({
 
   const wallet = useAnchorWallet();
 
+  const { walletRole } = useWalletRole(wallet?.publicKey?.toBase58());
+
+  const { votingPower, isLoading: isLoadingVotingPower } = useStakerVotingPower(
+    wallet?.publicKey?.toBase58(),
+    walletRole === WalletRole.STAKER
+  );
+
   const { mutate: castVote } = useCastVote();
+  const { mutate: castVoteOverride } = useCastVoteOverride();
 
   React.useEffect(() => {
     if (isOpen) {
@@ -76,20 +92,43 @@ export function CastVoteModal({
   };
 
   const handleVote = (voteDistribution: VoteDistribution) => {
-    castVote(
-      {
-        wallet,
-        proposalId,
-        // convert basis points to BN, not %
-        forVotesBp: voteDistribution.for * 100,
-        againstVotesBp: voteDistribution.against * 100,
-        abstainVotesBp: voteDistribution.abstain * 100,
-      },
-      {
-        onSuccess: handleSuccess,
-        onError: handleError,
+    if (walletRole === WalletRole.NONE) {
+      toast.error("You are not authorized to vote");
+    } else if (walletRole === WalletRole.VALIDATOR) {
+      castVote(
+        {
+          wallet,
+          proposalId,
+          // convert basis points to BN, not %
+          forVotesBp: voteDistribution.for * 100,
+          againstVotesBp: voteDistribution.against * 100,
+          abstainVotesBp: voteDistribution.abstain * 100,
+        },
+        {
+          onSuccess: handleSuccess,
+          onError: handleError,
+        }
+      );
+    } else if (walletRole === WalletRole.STAKER) {
+      if (!wallet) {
+        toast.error("Wallet not connected");
+        return;
       }
-    );
+      castVoteOverride(
+        {
+          wallet,
+          proposalId,
+          forVotesBp: voteDistribution.for * 100,
+          againstVotesBp: voteDistribution.against * 100,
+          abstainVotesBp: voteDistribution.abstain * 100,
+          stakeAccount: wallet.publicKey.toBase58(),
+        },
+        {
+          onSuccess: handleSuccess,
+          onError: handleError,
+        }
+      );
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -154,6 +193,7 @@ export function CastVoteModal({
                     "mt-1 w-full rounded-md border border-white/10 bg-white/5 px-3 py-1.5",
                     "placeholder:text-sm placeholder:text-white/40"
                   )}
+                  disabled={!!initialProposalId}
                 />
               </div>
 
@@ -161,13 +201,20 @@ export function CastVoteModal({
               <div className="rounded-lg bg-white/5 p-4">
                 <div className="flex items-center justify-between">
                   <span className="font-mono text-xs text-foreground sm:text-sm">
-                    {voterAccount}
+                    {formatAddress(wallet?.publicKey?.toBase58() || "", 6)}
                   </span>
                   <div className="text-right">
                     <p className="text-xs text-white/60">Voting Power</p>
-                    <p className="text-sm font-semibold text-foreground sm:text-base">
-                      {votingPower.toLocaleString()}
-                    </p>
+                    {isLoadingVotingPower && (
+                      <div className="flex justify-center">
+                        <div className="h-5 w-14 mt-1 animate-pulse rounded bg-white/10" />
+                      </div>
+                    )}
+                    {!isLoadingVotingPower && votingPower && (
+                      <p className="text-sm font-semibold text-foreground sm:text-base">
+                        {formatLamportsDisplay(votingPower).value}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

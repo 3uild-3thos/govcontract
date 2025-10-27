@@ -9,13 +9,20 @@ export * from "./useVoteDistribution";
 export * from "./useProposals";
 export * from "./useProposalDetails";
 export * from "./useVoteAccounts";
+export * from "./useVoteOverrideAccounts";
 export * from "./useCastVote";
+export * from "./useCastVoteOverride";
 export * from "./useModifyVote";
 export * from "./useCreateProposal";
+export * from "./useSupportProposal";
 
 export * from "./useGetValidators";
 export * from "./useVoteAccountsWithValidators";
 export * from "./useProposalVotes";
+
+export * from "./useHasUserVoted";
+
+export * from "./useStakerVotingPower";
 
 export * from "./useProposalVoteBreakdown";
 

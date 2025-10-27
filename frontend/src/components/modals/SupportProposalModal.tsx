@@ -14,6 +14,9 @@ import { AppButton } from "@/components/ui/AppButton";
 import ErrorMessage from "./shared/ErrorMessage";
 import RequirementItem from "./shared/RequirementItem";
 import { toast } from "sonner";
+import { formatAddress } from "@/lib/governance/formatters";
+import { useAnchorWallet } from "@solana/wallet-adapter-react";
+import { useSupportProposal } from "@/hooks";
 
 interface SupportProposalModalProps {
   proposalId?: string;
@@ -27,9 +30,13 @@ export function SupportProposalModal({
   onClose,
 }: SupportProposalModalProps) {
   const [proposalId, setProposalId] = React.useState(initialProposalId);
-  const [supportor] = React.useState("2ryu...JP9sv");
+
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | undefined>();
+
+  const wallet = useAnchorWallet();
+
+  const { mutate: supportProposal } = useSupportProposal();
 
   React.useEffect(() => {
     if (isOpen) {
@@ -38,7 +45,7 @@ export function SupportProposalModal({
     }
   }, [isOpen, initialProposalId]);
 
-  // TODO:Requirements state -these would be computed from actual data
+  // TODO: PEDRO Requirements state - these would be computed from actual data
   const [requirements] = React.useState({
     hasActiveVoteAccount: true,
     hasIdentityKeypair: true,
@@ -47,6 +54,19 @@ export function SupportProposalModal({
 
   const allRequirementsMet = Object.values(requirements).every(Boolean);
 
+  const handleSuccess = () => {
+    toast.success("Proposal supported successfully");
+    onClose();
+    setIsLoading(false);
+  };
+
+  const handleError = (err: Error) => {
+    console.log("error mutating support proposal:", err);
+    toast.error(`Error supporting proposalId ${proposalId}`);
+    setError(err instanceof Error ? err.message : "Failed to support proposal");
+    setIsLoading(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!proposalId || !allRequirementsMet || isLoading) return;
@@ -54,24 +74,17 @@ export function SupportProposalModal({
     setIsLoading(true);
     setError(undefined);
 
-    try {
-      const result = await Promise.resolve({ success: true });
-
-      console.log("Supporting proposal:", { proposalId });
-
-      if (result.success) {
-        toast.success("Proposal supported successfully");
-        onClose();
-      } else {
-        setError("Failed to support proposal");
+    console.log("Supporting proposal:", { proposalId });
+    supportProposal(
+      {
+        proposalId,
+        wallet,
+      },
+      {
+        onSuccess: handleSuccess,
+        onError: handleError,
       }
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to support proposal",
-      );
-    } finally {
-      setIsLoading(false);
-    }
+    );
   };
 
   const handleClose = () => {
@@ -124,8 +137,9 @@ export function SupportProposalModal({
                   className={cn(
                     "input",
                     "w-full rounded-md border border-white/10 bg-white/5 px-3 py-1.5 mt-2",
-                    "placeholder:text-sm placeholder:text-white/40",
+                    "placeholder:text-sm placeholder:text-white/40"
                   )}
+                  disabled={isLoading || !!initialProposalId}
                 />
                 <p className="text-xs text-white/50">
                   The public key of the proposal you want to support
@@ -138,7 +152,7 @@ export function SupportProposalModal({
                   <span className="text-sm text-white/60">Supporting as:</span>
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-xs sm:text-sm text-foreground">
-                      {supportor}
+                      {formatAddress(wallet?.publicKey?.toBase58() || "", 6)}
                     </span>
                     <button
                       type="button"

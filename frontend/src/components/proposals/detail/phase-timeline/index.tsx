@@ -20,7 +20,7 @@ export default function PhaseTimeline({
   isLoading,
 }: PhaseTimelineProps) {
   // TODO: PEDRO check proper loading skeletongs
-  if (isLoading) return <div>Loading</div>;
+  if (isLoading) return <PhaseTimelineSkeleton />;
   if (!proposal) return <div>No proposal data...</div>;
 
   const currentPhase = proposal.status;
@@ -77,3 +77,33 @@ export default function PhaseTimeline({
     </div>
   );
 }
+
+const PhaseTimelineSkeleton = () => {
+  return (
+    <div className="glass-card space-y-6 p-6">
+      <h4 className="h4 font-semibold">Phase Timeline</h4>
+
+      <div className="relative flex w-full justify-center px-2 sm:px-4 md:px-6 lg:px-8 pb-8">
+        <div className="flex w-fit max-w-4xl items-center justify-center gap-0 mx-auto">
+          {PHASES.map((phase, index) => {
+            return (
+              <Fragment key={phase.key}>
+                <PhaseNode phase={phase} state="upcoming" isLoading={true} />
+
+                {index !== PHASES.length - 1 && (
+                  <ConnectorLine
+                    variant="upcoming"
+                    animate={false}
+                    isLoading={true}
+                  />
+                )}
+              </Fragment>
+            );
+          })}
+        </div>
+      </div>
+
+      <PhaseDetail currentPhase="support" isLoading={true} />
+    </div>
+  );
+};

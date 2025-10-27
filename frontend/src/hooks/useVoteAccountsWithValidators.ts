@@ -76,7 +76,7 @@ export const useVoteAccountsWithValidators = () => {
           }
           validatorMap[valId].push(entry);
         } else {
-          console.warn("no validator found");
+          // console.warn("no validator found");
           const entry: VoteValidatorEntry = {
             votePDA: vote.voteAccount.toBase58(),
             voteAccount: {

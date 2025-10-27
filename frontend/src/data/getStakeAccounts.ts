@@ -11,9 +11,13 @@ import {
 
 export const getStakeAccounts = async (
   { endpoint }: BlockchainParams,
-  userPubkey: string
+  userPubkey: string | undefined
 ): Promise<StakeAccountData[]> => {
   const connection = new Connection(endpoint, "confirmed");
+  
+  if (!userPubkey) {
+    throw new Error("User public key is required");
+  }
 
   // Fetch all stake accounts owned by this wallet
   const stakeAccounts = await connection.getParsedProgramAccounts(
