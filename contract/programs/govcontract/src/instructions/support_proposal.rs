@@ -125,6 +125,12 @@ impl<'info> SupportProposal<'info> {
             GovernanceError::InvalidVoteAccount
         );
 
+        require_gt!(
+            meta_merkle_leaf.active_stake,
+            0u64,
+            GovernanceError::NotEnoughStake
+        );
+
         verify_merkle_proof_cpi(
             &self.meta_merkle_proof.to_account_info(),
             &self.consensus_result.to_account_info(),
