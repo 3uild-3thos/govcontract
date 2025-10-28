@@ -111,6 +111,13 @@ impl<'info> SupportProposal<'info> {
             GovernanceError::InvalidConsensusResultPDA
         );
 
+        // Verify that the merkle leaf's vote_account matches the supplied spl_vote_account
+        require_eq!(
+            meta_merkle_leaf.vote_account,
+            self.spl_vote_account.key(),
+            GovernanceError::InvalidVoteAccount
+        );
+
         // Ensure leaf matches signer and has sufficient stake
         require_eq!(
             meta_merkle_leaf.voting_wallet,
