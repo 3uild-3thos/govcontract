@@ -282,8 +282,8 @@ pub fn convert_stake_merkle_leaf_data_to_idl_type(
 }
 
 /// Generate ConsensusResult PDA for a given snapshot slot
-pub fn generate_consensus_result_pda(snapshot_slot: u64) -> Result<Pubkey> {
-    let (pda, _bump) = ConsensusResult::pda(snapshot_slot);
+pub fn generate_consensus_result_pda(ballot_id: u64) -> Result<Pubkey> {
+    let (pda, _bump) = ConsensusResult::pda(ballot_id);
     Ok(pda)
 }
 
@@ -298,9 +298,10 @@ pub fn generate_meta_merkle_proof_pda(
 
 /// Generate both ConsensusResult and MetaMerkleProof PDAs from VoteAccountProofResponse
 pub fn generate_pdas_from_vote_proof_response(
+    ballot_id: u64,
     response: &VoteAccountProofResponse,
 ) -> Result<(Pubkey, Pubkey)> {
-    let consensus_pda = generate_consensus_result_pda(response.snapshot_slot)?;
+    let consensus_pda = generate_consensus_result_pda(ballot_id)?;
     let vote_account = Pubkey::from_str(&response.meta_merkle_leaf.vote_account)
         .map_err(|e| anyhow!("Invalid vote_account pubkey in response: {}", e))?;
     let meta_proof = generate_meta_merkle_proof_pda(&consensus_pda, &vote_account)?;

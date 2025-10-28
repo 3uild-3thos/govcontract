@@ -23,6 +23,7 @@ use crate::{
 
 pub async fn cast_vote_override(
     proposal_id: String,
+    ballot_id: u64,
     for_votes: u64,
     against_votes: u64,
     abstain_votes: u64,
@@ -63,7 +64,7 @@ pub async fn cast_vote_override(
         get_stake_account_proof(&stake_account_str, Some(snapshot_slot)).await?;
 
     let (consensus_result_pda, meta_merkle_proof_pda) =
-        generate_pdas_from_vote_proof_response(&meta_merkle_proof)?;
+        generate_pdas_from_vote_proof_response(ballot_id, &meta_merkle_proof)?;
 
     let validator_vote_pda = derive_vote_pda(&proposal_pubkey, &vote_account, &program.id());
     let vote_override_pda = derive_vote_override_pda(

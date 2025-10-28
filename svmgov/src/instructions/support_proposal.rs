@@ -17,6 +17,7 @@ pub async fn support_proposal(
     proposal_id: String,
     identity_keypair: Option<String>,
     rpc_url: Option<String>,
+    ballot_id: u64,
     snapshot_slot: u64,
     network: String,
 ) -> Result<()> {
@@ -29,7 +30,7 @@ pub async fn support_proposal(
         get_vote_account_proof(&vote_account.to_string(), snapshot_slot, &network).await?;
 
     let (consensus_result_pda, meta_merkle_proof_pda) =
-        generate_pdas_from_vote_proof_response(&proof_response)?;
+        generate_pdas_from_vote_proof_response(ballot_id, &proof_response)?;
 
     let support_pda = derive_support_pda(&proposal_pubkey, &vote_account, &program.id());
 

@@ -84,6 +84,10 @@ enum Commands {
         /// Network for fetching merkle proofs
         #[arg(long, help = "Network for fetching merkle proofs")]
         network: String,
+
+        /// Ballot ID for consensus result PDA derivation
+        #[arg(long, help = "Ballot ID")]
+        ballot_id: u64,
     },
 
     #[command(
@@ -97,6 +101,10 @@ enum Commands {
     SupportProposal {
         #[arg(long, help = "Proposal ID")]
         proposal_id: String,
+
+        /// Ballot ID for consensus result PDA derivation
+        #[arg(long, help = "Ballot ID")]
+        ballot_id: u64,
 
         /// Snapshot slot for fetching merkle proofs
         #[arg(long, help = "Snapshot slot for fetching merkle proofs")]
@@ -124,6 +132,10 @@ enum Commands {
         /// Proposal ID for which the vote is being cast (proposal Pubkey).
         #[arg(long, help = "Proposal ID")]
         proposal_id: String,
+
+        /// Ballot ID for consensus result PDA derivation
+        #[arg(long, help = "Ballot ID")]
+        ballot_id: u64,
 
         /// Basis points for 'For' vote.
         #[arg(long, help = "Basis points for 'For'")]
@@ -158,6 +170,10 @@ enum Commands {
         /// Proposal ID for which the vote is being modified (proposal Pubkey).
         #[arg(long, help = "Proposal ID")]
         proposal_id: String,
+
+        /// Ballot ID for consensus result PDA derivation
+        #[arg(long, help = "Ballot ID")]
+        ballot_id: u64,
 
         /// Basis points for 'For' vote.
         #[arg(long, help = "Basis points for 'For'")]
@@ -292,6 +308,10 @@ enum Commands {
         #[arg(long, help = "Proposal ID")]
         proposal_id: String,
 
+        /// Ballot ID for consensus result PDA derivation
+        #[arg(long, help = "Ballot ID")]
+        ballot_id: u64,
+
         /// Basis points for 'For' vote
         #[arg(
             long,
@@ -350,6 +370,10 @@ enum Commands {
         /// Proposal ID for which to modify the vote override
         #[arg(long, help = "Proposal ID")]
         proposal_id: String,
+
+        /// Ballot ID for consensus result PDA derivation
+        #[arg(long, help = "Ballot ID")]
+        ballot_id: u64,
 
         /// Basis points for 'For' vote
         #[arg(
@@ -426,6 +450,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
             description,
             snapshot_slot,
             network,
+            ballot_id,
         } => {
             instructions::create_proposal(
                 title.to_string(),
@@ -435,11 +460,13 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 cli.rpc_url,
                 snapshot_slot.clone(),
                 network.clone(),
+                ballot_id.clone(),
             )
             .await?;
         }
         Commands::SupportProposal {
             proposal_id,
+            ballot_id,
             snapshot_slot,
             network,
         } => {
@@ -447,6 +474,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 proposal_id.to_string(),
                 cli.identity_keypair,
                 cli.rpc_url,
+                ballot_id.clone(),
                 snapshot_slot.clone(),
                 network.clone(),
             )
@@ -454,6 +482,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
         }
         Commands::CastVote {
             proposal_id,
+            ballot_id,
             for_votes,
             against_votes,
             abstain_votes,
@@ -462,6 +491,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
         } => {
             instructions::cast_vote(
                 proposal_id.to_string(),
+                ballot_id.clone(),
                 *for_votes,
                 *against_votes,
                 *abstain_votes,
@@ -474,6 +504,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
         }
         Commands::ModifyVote {
             proposal_id,
+            ballot_id,
             for_votes,
             against_votes,
             abstain_votes,
@@ -482,6 +513,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
         } => {
             instructions::modify_vote(
                 proposal_id.to_string(),
+                ballot_id.clone(),
                 *for_votes,
                 *against_votes,
                 *abstain_votes,
@@ -531,6 +563,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
         }
         Commands::CastVoteOverride {
             proposal_id,
+            ballot_id,
             for_votes,
             against_votes,
             abstain_votes,
@@ -541,6 +574,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
         } => {
             instructions::cast_vote_override(
                 proposal_id.to_string(),
+                ballot_id.clone(),
                 *for_votes,
                 *against_votes,
                 *abstain_votes,
@@ -555,6 +589,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
         }
         Commands::ModifyVoteOverride {
             proposal_id,
+            ballot_id,
             for_votes,
             against_votes,
             abstain_votes,
@@ -574,6 +609,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 stake_account.clone(),
                 snapshot_slot.clone(),
                 network.clone(),
+                ballot_id.clone(),
             )
             .await?;
         }

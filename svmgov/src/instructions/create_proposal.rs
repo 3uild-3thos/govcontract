@@ -3,7 +3,8 @@ use std::str::FromStr;
 use anchor_client::solana_sdk::{pubkey::Pubkey, signer::Signer};
 use anchor_lang::system_program;
 use anyhow::Result;
-use gov_v1::ID as SNAPSHOT_PROGRAM_ID;
+use gov_v1::{ConsensusResult, ID as SNAPSHOT_PROGRAM_ID};
+use log::info;
 
 use crate::{
     govcontract::client::{accounts, args},
@@ -21,6 +22,7 @@ pub async fn create_proposal(
     rpc_url: Option<String>,
     snapshot_slot: u64,
     network: String,
+    ballot_id: u64,
 ) -> Result<()> {
     log::debug!(
         "create_proposal: title={}, description={}, seed={:?}, identity_keypair={:?}, rpc_url={:?}",
@@ -43,7 +45,7 @@ pub async fn create_proposal(
         get_vote_account_proof(&vote_account.to_string(), snapshot_slot, &network).await?;
 
     let (consensus_result_pda, meta_merkle_proof_pda) =
-        generate_pdas_from_vote_proof_response(&proof_response)?;
+        generate_pdas_from_vote_proof_response(ballot_id, &proof_response)?;
     let voting_wallet = Pubkey::from_str(&proof_response.meta_merkle_leaf.voting_wallet)
         .map_err(|e| anyhow::anyhow!("Invalid voting wallet in proof: {}", e))?;
     if voting_wallet != payer.pubkey() {
@@ -55,6 +57,16 @@ pub async fn create_proposal(
     }
 
     let spinner = create_spinner("Creating proposal...");
+
+    let consensus_result = program
+        .account::<ConsensusResult>(consensus_result_pda)
+        .await?;
+    info!(
+        "snapshot_program: {:?} consensus_result: {:?}, meta_merkle_proof: {:?}",
+        SNAPSHOT_PROGRAM_ID.to_string(),
+        consensus_result_pda.to_string(),
+        meta_merkle_proof_pda.to_string(),
+    );
 
     let sig = program
         .request()

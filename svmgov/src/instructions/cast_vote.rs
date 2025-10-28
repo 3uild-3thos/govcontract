@@ -16,6 +16,7 @@ use crate::{
 
 pub async fn cast_vote(
     proposal_id: String,
+    ballot_id: u64,
     votes_for: u64,
     votes_against: u64,
     abstain: u64,
@@ -36,10 +37,11 @@ pub async fn cast_vote(
 
     let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
 
-    let proof_response = get_vote_account_proof(&vote_account.to_string(), snapshot_slot, &network).await?;
+    let proof_response =
+        get_vote_account_proof(&vote_account.to_string(), snapshot_slot, &network).await?;
 
     let (consensus_result_pda, meta_merkle_proof_pda) =
-        generate_pdas_from_vote_proof_response(&proof_response)?;
+        generate_pdas_from_vote_proof_response(ballot_id, &proof_response)?;
 
     let vote_pda = derive_vote_pda(&proposal_pubkey, &vote_account, &program.id());
     let vote_override_cache_pda =
