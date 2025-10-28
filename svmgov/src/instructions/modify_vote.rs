@@ -35,7 +35,8 @@ pub async fn modify_vote(
     let proposal_pubkey = Pubkey::from_str(&proposal_id)
         .map_err(|_| anyhow!("Invalid proposal ID: {}", proposal_id))?;
 
-    let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
+    let (payer, vote_account, program, _merkle_proof_program) =
+        setup_all(identity_keypair, rpc_url).await?;
 
     let proof_response =
         get_vote_account_proof(&vote_account.to_string(), snapshot_slot, &network).await?;

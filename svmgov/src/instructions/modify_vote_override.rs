@@ -44,7 +44,8 @@ pub async fn modify_vote_override(
     let proposal_pubkey = Pubkey::from_str(&proposal_id)
         .map_err(|_| anyhow!("Invalid proposal ID: {}", proposal_id))?;
 
-    let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
+    let (payer, vote_account, program, _merkle_proof_program) =
+        setup_all(identity_keypair, rpc_url).await?;
 
     let stake_account_str = if let Some(sa) = stake_account_override.as_ref() {
         sa.clone()

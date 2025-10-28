@@ -1,9 +1,11 @@
 use std::str::FromStr;
 
-use anchor_client::solana_sdk::{pubkey::Pubkey, signer::Signer};
+use anchor_client::solana_sdk::{
+    instruction::Instruction, pubkey::Pubkey, signer::Signer, transaction::Transaction,
+};
 use anchor_lang::system_program;
 use anyhow::Result;
-use gov_v1::{ConsensusResult, ID as SNAPSHOT_PROGRAM_ID};
+use gov_v1::{ID as SNAPSHOT_PROGRAM_ID, MetaMerkleLeaf, MetaMerkleProof};
 use log::info;
 
 use crate::{
@@ -33,7 +35,8 @@ pub async fn create_proposal(
         rpc_url
     );
 
-    let (payer, vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
+    let (payer, vote_account, program, merkle_proof_program) =
+        setup_all(identity_keypair, rpc_url).await?;
 
     let seed_value = seed.unwrap_or_else(rand::random::<u64>);
 
@@ -58,9 +61,6 @@ pub async fn create_proposal(
 
     let spinner = create_spinner("Creating proposal...");
 
-    let consensus_result = program
-        .account::<ConsensusResult>(consensus_result_pda)
-        .await?;
     info!(
         "snapshot_program: {:?} consensus_result: {:?}, meta_merkle_proof: {:?}",
         SNAPSHOT_PROGRAM_ID.to_string(),
@@ -68,7 +68,53 @@ pub async fn create_proposal(
         meta_merkle_proof_pda.to_string(),
     );
 
-    let sig = program
+    let mut ixs: Vec<Instruction> = vec![];
+
+    let meta_merkle_proof_account = match program
+        .account::<MetaMerkleProof>(meta_merkle_proof_pda)
+        .await
+    {
+        Ok(account) => Some(account),
+        Err(_e) => {
+            info!("Unable to get meta merkle proof account");
+            None
+        }
+    };
+
+    if meta_merkle_proof_account.is_none() {
+        info!("Creating meta merkle proof account");
+
+        let init_meta_merkle_proof_ix = merkle_proof_program
+            .request()
+            .args(gov_v1::instruction::InitMetaMerkleProof {
+                close_timestamp: 1,
+                meta_merkle_leaf: MetaMerkleLeaf {
+                    voting_wallet,
+                    vote_account,
+                    stake_merkle_root: Pubkey::from_str_const(
+                        proof_response.meta_merkle_leaf.stake_merkle_root.as_str(),
+                    )
+                    .to_bytes(),
+                    active_stake: proof_response.meta_merkle_leaf.active_stake,
+                },
+                meta_merkle_proof: proof_response
+                    .meta_merkle_proof
+                    .iter()
+                    .map(|s| Pubkey::from_str_const(s).to_bytes())
+                    .collect(),
+            })
+            .accounts(gov_v1::accounts::InitMetaMerkleProof {
+                consensus_result: consensus_result_pda,
+                merkle_proof: meta_merkle_proof_pda,
+                payer: payer.pubkey(),
+                system_program: system_program::ID,
+            })
+            .instructions()?;
+
+        ixs.extend(init_meta_merkle_proof_ix);
+    }
+
+    let create_proposal_ixs = program
         .request()
         .args(args::CreateProposal {
             title: proposal_title,
@@ -85,7 +131,17 @@ pub async fn create_proposal(
             meta_merkle_proof: meta_merkle_proof_pda,
             system_program: system_program::ID,
         })
-        .send()
+        .instructions()?;
+
+    ixs.extend(create_proposal_ixs);
+
+    let blockhash = program.rpc().get_latest_blockhash().await?;
+    let transaction =
+        Transaction::new_signed_with_payer(&ixs, Some(&payer.pubkey()), &[&payer], blockhash);
+
+    let sig = program
+        .rpc()
+        .send_and_confirm_transaction(&transaction)
         .await?;
     log::debug!("Transaction sent successfully: signature={}", sig);
 
