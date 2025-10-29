@@ -7,6 +7,7 @@ use anchor_client::{
 
 use anchor_lang::prelude::Pubkey;
 use anyhow::{Result, anyhow};
+use log::info;
 use serde_json::{Value, json};
 
 use crate::{
