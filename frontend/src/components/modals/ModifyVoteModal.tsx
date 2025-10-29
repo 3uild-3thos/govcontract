@@ -19,7 +19,7 @@ import { toast } from "sonner";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 
 export interface ModifyVoteModalDataProps {
-  proposalId: string;
+  proposalId?: string;
   initialVoteDist?: VoteDistribution;
 }
 
@@ -77,20 +77,22 @@ export function ModifyVoteModal({
   };
 
   const handleModifyVote = (voteDistribution: VoteDistribution) => {
-    modifyVote(
-      {
-        wallet,
-        proposalId,
-        // convert basis points to BN, not %
-        forVotesBp: voteDistribution.for * 100,
-        againstVotesBp: voteDistribution.against * 100,
-        abstainVotesBp: voteDistribution.abstain * 100,
-      },
-      {
-        onSuccess: handleSuccess,
-        onError: handleError,
-      }
-    );
+    if (proposalId) {
+      modifyVote(
+        {
+          wallet,
+          proposalId,
+          // convert basis points to BN, not %
+          forVotesBp: voteDistribution.for * 100,
+          againstVotesBp: voteDistribution.against * 100,
+          abstainVotesBp: voteDistribution.abstain * 100,
+        },
+        {
+          onSuccess: handleSuccess,
+          onError: handleError,
+        }
+      );
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -90,6 +90,10 @@ export function CastVoteModal({
       toast.error("Wallet not connected");
       return;
     }
+    if (!proposalId) {
+      toast.error("No proposal ID provided");
+      return;
+    }
 
     if (walletRole === WalletRole.NONE) {
       toast.error("You are not authorized to vote");
