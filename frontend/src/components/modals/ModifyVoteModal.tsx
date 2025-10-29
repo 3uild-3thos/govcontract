@@ -29,7 +29,7 @@ interface ModifyVoteModalProps extends ModifyVoteModalDataProps {
 }
 
 export function ModifyVoteModal({
-  proposalId: initialProposalId = "",
+  proposalId: initialProposalId,
   initialVoteDist,
   isOpen,
   onClose,
@@ -77,20 +77,22 @@ export function ModifyVoteModal({
   };
 
   const handleModifyVote = (voteDistribution: VoteDistribution) => {
-    modifyVote(
-      {
-        wallet,
-        proposalId,
-        // convert basis points to BN, not %
-        forVotesBp: voteDistribution.for * 100,
-        againstVotesBp: voteDistribution.against * 100,
-        abstainVotesBp: voteDistribution.abstain * 100,
-      },
-      {
-        onSuccess: handleSuccess,
-        onError: handleError,
-      }
-    );
+    if (proposalId) {
+      modifyVote(
+        {
+          wallet,
+          proposalId,
+          // convert basis points to BN, not %
+          forVotesBp: voteDistribution.for * 100,
+          againstVotesBp: voteDistribution.against * 100,
+          abstainVotesBp: voteDistribution.abstain * 100,
+        },
+        {
+          onSuccess: handleSuccess,
+          onError: handleError,
+        }
+      );
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -155,6 +157,7 @@ export function ModifyVoteModal({
                     "mt-1 w-full rounded-md border border-white/10 bg-white/5 px-3 py-1.5",
                     "placeholder:text-sm placeholder:text-white/40"
                   )}
+                  disabled={initialProposalId !== undefined}
                 />
                 <p className="text-xs text-white/60">
                   Enter the ID of the proposal you previously voted on

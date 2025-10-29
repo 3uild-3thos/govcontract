@@ -14,6 +14,7 @@ interface FilterPanelProps {
   onQuorumFilterChange: (quorum: number) => void;
   filterState: FilterState;
   onFilterStateChange: (filters: FilterState) => void;
+  disabled?: boolean;
 }
 
 function countActiveFilters(filterState: FilterState) {
@@ -35,6 +36,7 @@ export default function FilterPanel({
   onQuorumFilterChange,
   filterState,
   onFilterStateChange,
+  disabled,
 }: FilterPanelProps) {
   const [isFilterModalOpen, setIsFilterModalOpen] = React.useState(false);
 
@@ -52,6 +54,7 @@ export default function FilterPanel({
               value={searchQuery}
               onChange={(e) => onSearchQueryChange(e.target.value)}
               className="w-full pl-10 pr-4 py-3 input"
+              disabled={disabled}
             />
           </div>
           <div className="relative">
@@ -62,6 +65,7 @@ export default function FilterPanel({
               className="flex size-11 items-center justify-center"
               icon={<ListFilter className="size-4" />}
               onClick={() => setIsFilterModalOpen(true)}
+              disabled={disabled}
             />
             {activeFilterCount > 0 && (
               <span className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-gradient-to-r from-primary to-secondary text-[10px] font-bold text-foreground">
@@ -78,11 +82,16 @@ export default function FilterPanel({
             <span>{quorumFilter}%</span>
           </div>
           <div className="relative group">
-            <Progress value={quorumFilter} className="h-2" />
+            <Progress
+              value={quorumFilter}
+              className="h-2"
+              disabled={disabled}
+            />
             {/* Thumb indicator */}
             <div
-              className="absolute top-1/2 -translate-y-1/2 size-6 bg-foreground border-3 border-primary rounded-full shadow-lg transition-transform group-hover:scale-110 pointer-events-none"
+              className="absolute top-1/2 -translate-y-1/2 size-6 bg-foreground border-3 border-primary rounded-full shadow-lg transition-transform group-hover:scale-110 pointer-events-none aria-disabled:cursor-not-allowed aria-disabled:bg-muted aria-disabled:border-border"
               style={{ left: `calc(${quorumFilter}% - 10px)` }}
+              aria-disabled={disabled}
             />
             <input
               type="range"
@@ -91,7 +100,8 @@ export default function FilterPanel({
               step={5}
               value={quorumFilter}
               onChange={(e) => onQuorumFilterChange(Number(e.target.value))}
-              className="absolute inset-0 w-full h-2 opacity-0 cursor-pointer"
+              className="absolute inset-0 w-full h-2 opacity-0 cursor-pointer disabled:cursor-not-allowed"
+              disabled={disabled}
             />
           </div>
           <div className="flex justify-between text-[10px] text-white/40">

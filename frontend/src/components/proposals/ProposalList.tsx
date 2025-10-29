@@ -1,19 +1,17 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import * as React from "react";
-import { AppButton } from "@/components/ui/AppButton";
 import FilterPanel from "./FilterPanel";
 import ProposalCard, { ProposalCardSkeleton } from "./ProposalCard";
 import { useProposals } from "@/hooks";
 import { FilterState } from "./ProposalFilterModal";
+import { useMemo, useState } from "react";
 
 export default function ProposalList() {
-  const [showEligibleOnly, setShowEligibleOnly] = React.useState(false);
-  const [statusFilter, setStatusFilter] = React.useState("all");
-  const [searchQuery, setSearchQuery] = React.useState("");
-  const [quorumFilter, setQuorumFilter] = React.useState(80);
-  const [filterState, setFilterState] = React.useState<FilterState>({
+  // const [showEligibleOnly, setShowEligibleOnly] = useState(false);
+  // const [statusFilter, setStatusFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [quorumFilter, setQuorumFilter] = useState(80);
+  const [filterState, setFilterState] = useState<FilterState>({
     onlyEligible: false,
     status: "all",
     lifecycle: "all",
@@ -21,11 +19,9 @@ export default function ProposalList() {
     minimumSOL: 0,
   });
 
-  const { data: proposalsData, isLoading: isLoadingProposals } = useProposals();
+  const { data: proposals = [], isLoading } = useProposals();
 
-  const proposals = React.useMemo(() => proposalsData || [], [proposalsData]);
-
-  const filteredProposals = React.useMemo(() => {
+  const filteredProposals = useMemo(() => {
     return proposals.filter((proposal) => {
       if (
         filterState.status !== "all" &&
@@ -55,31 +51,41 @@ export default function ProposalList() {
         onQuorumFilterChange={setQuorumFilter}
         filterState={filterState}
         onFilterStateChange={setFilterState}
+        disabled={isLoading}
       />
 
-      <div className="space-y-4">
-        {filteredProposals.map((proposal) => (
-          <ProposalCard key={proposal.id} proposal={proposal} />
-        ))}
-      </div>
+      {isLoading ? (
+        <>
+          <ProposalCardSkeleton />
+          <ProposalCardSkeleton />
+          <ProposalCardSkeleton />
+        </>
+      ) : (
+        <div className="space-y-4">
+          {filteredProposals.map((proposal) => (
+            <ProposalCard key={proposal.id} proposal={proposal} />
+          ))}
+        </div>
+      )}
 
-      {filteredProposals.length === 0 && (
+      {!isLoading && filteredProposals.length === 0 && (
         <div className="text-center py-12 text-dao-color-gray text-default">
           No proposals available.
         </div>
       )}
 
       {/* Load More Button */}
-      {filteredProposals.length > 5 && (
+      {/* {filteredProposals.length > 5 && (
         <div className="flex justify-center pt-4">
           <AppButton
             text="Load More"
             variant="outline"
             size="default"
             onClick={() => console.log("load more")}
+            disabled={isLoading}
           />
         </div>
-      )}
+      )} */}
     </div>
   );
 }

@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { SupportProposalModal } from "@/components/modals/SupportProposalModal";
 import { CreateProposalModal } from "@/components/modals/CreateProposalModal";
 import {
@@ -10,6 +9,14 @@ import {
 import { ModifyVoteModal } from "@/components/modals/ModifyVoteModal";
 import { OverrideVoteModal } from "@/components/modals/OverrideVoteModal";
 import { SettingsModal } from "@/components/modals/SettingsModal";
+import {
+  ComponentType,
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useState,
+} from "react";
 
 export type ModalType =
   | "support-proposal"
@@ -26,12 +33,12 @@ interface ModalDataMap {
   };
   "create-proposal": Record<string, never>;
   "cast-vote": CastVoteModalDataProps;
-  "modify-vote": {
-    proposalId?: string;
-  };
   "override-vote": {
     proposalId?: string;
     stakeAccount?: string;
+  };
+  "modify-vote": {
+    proposalId?: string;
   };
   settings: Record<string, never>;
 }
@@ -47,14 +54,12 @@ interface ModalContextValue {
   isOpen: (type?: ModalType) => boolean;
 }
 
-const ModalContext = React.createContext<ModalContextValue | undefined>(
-  undefined
-);
+const ModalContext = createContext<ModalContextValue | undefined>(undefined);
 
 // Modal component map for dynamic rendering
 const MODAL_COMPONENTS: Record<
   ModalType,
-  React.ComponentType<{
+  ComponentType<{
     isOpen: boolean;
     onClose: () => void;
     [key: string]: unknown;
@@ -63,32 +68,32 @@ const MODAL_COMPONENTS: Record<
   "support-proposal": SupportProposalModal,
   "create-proposal": CreateProposalModal,
   "cast-vote": CastVoteModal,
-  "modify-vote": ModifyVoteModal,
   "override-vote": OverrideVoteModal,
+  "modify-vote": ModifyVoteModal,
   settings: SettingsModal,
 };
 
-export function ModalProvider({ children }: { children: React.ReactNode }) {
-  const [modalState, setModalState] = React.useState<ModalState>({
+export function ModalProvider({ children }: { children: ReactNode }) {
+  const [modalState, setModalState] = useState<ModalState>({
     type: null,
     data: undefined,
   });
 
-  const openModal = React.useCallback(
+  const openModal = useCallback(
     <T extends ModalType>(type: T, data?: ModalDataMap[T]) => {
       setModalState({ type, data });
     },
     []
   );
 
-  const closeModal = React.useCallback(() => {
+  const closeModal = useCallback(() => {
     setModalState({
       type: null,
       data: undefined,
     });
   }, []);
 
-  const isOpen = React.useCallback(
+  const isOpen = useCallback(
     (type?: ModalType) => {
       if (type) {
         return modalState.type === type;
@@ -118,7 +123,7 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useModal() {
-  const context = React.useContext(ModalContext);
+  const context = useContext(ModalContext);
   if (context === undefined) {
     throw new Error("useModal must be used within a ModalProvider");
   }

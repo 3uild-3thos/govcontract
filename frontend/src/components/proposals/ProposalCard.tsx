@@ -1,6 +1,6 @@
 "use client";
 
-import type { ProposalRecord } from "@/types";
+import { WalletRole, type ProposalRecord } from "@/types";
 import { Fragment, type MouseEventHandler } from "react";
 import { AppButton } from "@/components/ui/AppButton";
 import { formatNumber } from "@/helpers";
@@ -8,8 +8,10 @@ import { formatNumber } from "@/helpers";
 import LifecycleIndicator from "@/components/ui/LifecycleIndicator";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { useRouter } from "next/navigation";
-import { useModal } from "@/contexts/ModalContext";
+import { ModalType, useModal } from "@/contexts/ModalContext";
 import { motion } from "framer-motion";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useWalletRole } from "@/hooks";
 
 type ProposalStatus = ProposalRecord["status"];
 interface VotingDetailItem {
@@ -129,6 +131,10 @@ const ActionButtons = ({
 export default function ProposalCard({ proposal }: ProposalCardProps) {
   const router = useRouter();
   const { openModal } = useModal();
+
+  const { publicKey: walletPubKey } = useWallet();
+  const { walletRole } = useWalletRole(walletPubKey?.toBase58());
+
   const {
     status,
     quorumPercent,
@@ -149,6 +155,13 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
     { label: "Voting End", value: `${endEpoch}` },
   ];
 
+  const isStaker = walletRole === WalletRole.STAKER;
+
+  let modalName: ModalType = "cast-vote";
+  if (isStaker) {
+    modalName = "override-vote";
+  }
+
   const handleCardClick = () => {
     router.push(`/proposals/${publicKey.toBase58()}`);
   };
@@ -159,13 +172,13 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
 
     if (buttonText === "Modify Vote") {
       // TODO: Pass the actual proposal public key when available
-      openModal("modify-vote", { proposalId: "" });
+      openModal("modify-vote", { proposalId: publicKey.toBase58() });
     } else if (buttonText === "Cast Vote") {
       // TODO: Pass the actual proposal public key when available
-      openModal("cast-vote", { proposalId: "" });
+      openModal(modalName, { proposalId: publicKey.toBase58() });
     } else if (buttonText === "Support") {
       // TODO: Pass the actual proposal public key when available
-      openModal("support-proposal", { proposalId: "" });
+      openModal("support-proposal", { proposalId: publicKey.toBase58() });
     }
   };
 
