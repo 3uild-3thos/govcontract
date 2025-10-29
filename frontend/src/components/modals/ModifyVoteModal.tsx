@@ -19,7 +19,7 @@ import { toast } from "sonner";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 
 export interface ModifyVoteModalDataProps {
-  proposalId?: string;
+  proposalId: string;
   initialVoteDist?: VoteDistribution;
 }
 
@@ -29,7 +29,7 @@ interface ModifyVoteModalProps extends ModifyVoteModalDataProps {
 }
 
 export function ModifyVoteModal({
-  proposalId: initialProposalId = "",
+  proposalId: initialProposalId,
   initialVoteDist,
   isOpen,
   onClose,
@@ -155,6 +155,7 @@ export function ModifyVoteModal({
                     "mt-1 w-full rounded-md border border-white/10 bg-white/5 px-3 py-1.5",
                     "placeholder:text-sm placeholder:text-white/40"
                   )}
+                  disabled={initialProposalId !== undefined}
                 />
                 <p className="text-xs text-white/60">
                   Enter the ID of the proposal you previously voted on

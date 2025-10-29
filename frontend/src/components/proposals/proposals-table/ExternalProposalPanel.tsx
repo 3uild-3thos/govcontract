@@ -88,6 +88,7 @@ function VoteActions({
   const { walletRole } = useWalletRole(publicKey?.toBase58());
 
   const isValidator = walletRole === WalletRole.VALIDATOR;
+  const isStaker = walletRole === WalletRole.STAKER;
   const isVoting = state === "voting";
   const isSupporting = state === "support";
 
@@ -111,7 +112,11 @@ function VoteActions({
           className="w-full justify-center text-sm font-semibold text-foreground"
           disabled={disabled}
           onClick={() => {
-            openModal("cast-vote", { proposalId });
+            if (isValidator) {
+              openModal("cast-vote", { proposalId });
+            } else if (isStaker) {
+              openModal("override-vote", { proposalId });
+            }
           }}
         />
       )}

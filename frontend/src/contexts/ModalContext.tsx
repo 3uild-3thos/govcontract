@@ -26,12 +26,12 @@ interface ModalDataMap {
   };
   "create-proposal": Record<string, never>;
   "cast-vote": CastVoteModalDataProps;
-  "modify-vote": {
-    proposalId?: string;
-  };
   "override-vote": {
     proposalId?: string;
     stakeAccount?: string;
+  };
+  "modify-vote": {
+    proposalId: string;
   };
   settings: Record<string, never>;
 }

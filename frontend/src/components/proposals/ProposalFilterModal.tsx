@@ -83,6 +83,7 @@ export function ProposalFilterModal({
 
   const handleReset = () => {
     setFilters(defaultFilters);
+    onClose();
   };
 
   return (
@@ -141,7 +142,7 @@ export function ProposalFilterModal({
                         "px-3 py-3 rounded-full text-xs font-medium transition-colors whitespace-nowrap min-w-0",
                         filters.status === option.value
                           ? "bg-gradient-to-r from-primary to-secondary text-foreground"
-                          : "bg-white/10 text-white/70 hover:bg-white/20",
+                          : "bg-white/10 text-white/70 hover:bg-white/20"
                       )}
                     >
                       {option.label}
@@ -169,7 +170,7 @@ export function ProposalFilterModal({
                         "px-3 py-3 rounded-full text-xs font-medium transition-colors whitespace-nowrap min-w-0",
                         filters.lifecycle === option.value
                           ? "bg-gradient-to-r from-primary to-secondary text-foreground"
-                          : "bg-white/10 text-white/70 hover:bg-white/20",
+                          : "bg-white/10 text-white/70 hover:bg-white/20"
                       )}
                     >
                       {option.label}
@@ -197,7 +198,7 @@ export function ProposalFilterModal({
                         "px-3 py-3 rounded-full text-xs font-medium transition-colors whitespace-nowrap min-w-0",
                         filters.timeWindow === option.value
                           ? "bg-gradient-to-r from-primary to-secondary text-foreground"
-                          : "bg-white/10 text-white/70 hover:bg-white/20",
+                          : "bg-white/10 text-white/70 hover:bg-white/20"
                       )}
                     >
                       {option.label}
@@ -230,7 +231,7 @@ export function ProposalFilterModal({
                   className={cn(
                     "input",
                     "w-full rounded-md border border-white/10 bg-white/5 px-3 py-1.5 mt-2",
-                    "placeholder:text-sm placeholder:text-white/80",
+                    "placeholder:text-sm placeholder:text-white/80"
                   )}
                   placeholder="0.0"
                 />

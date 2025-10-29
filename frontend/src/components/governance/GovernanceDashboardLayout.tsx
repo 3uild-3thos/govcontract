@@ -38,7 +38,7 @@ export function GovernanceDashboardLayout({ userPubKey }: Props) {
     (walletRole === WalletRole.BOTH && selectedView === "staker");
 
   const canSwitchView = walletRole == WalletRole.BOTH;
-  console.log("showStakerView_", showStakerView, walletRole, selectedView);
+
   return (
     <>
       {/* Desktop Layout - hidden on mobile/tablet */}
@@ -189,22 +189,25 @@ export function GovernanceDashboardLayout({ userPubKey }: Props) {
       </div>
     </>
   );
-  // return (
-  //   <div>
-  //     implementing stuff
-  //     <div>
-  //       <Button onClick={createAndDelegateStakeAccount}>
-  //         create stake account
-  //       </Button>
-  //     </div>
-  //   </div>
-  // );
 }
 
 // local vote account
 // const YOUR_VOTE_ACCOUNT_PUBKEY = new PublicKey(
 //   "GMJdVGehfUr327xwwCspjZ5aAL1vZ3KS3FV6ZasK38vQ"
 // );
+
+// const YOUR_VOTE_ACCOUNT_PUBKEY = new PublicKey(
+//   "CsE3MdkQXYwEFuNsEkLajgqSEiLqN6aH7eBzhCdJecar"
+// );
+
+//  <div>
+//    implementing stuff
+//    <div>
+//      <button onClick={createAndDelegateStakeAccount}>
+//        create stake account
+//      </button>
+//    </div>
+//  </div>;
 
 // async function createAndDelegateStakeAccount() {
 //   const connection = new Connection(endpoint, "confirmed");
@@ -215,7 +218,7 @@ export function GovernanceDashboardLayout({ userPubKey }: Props) {
 //   );
 
 //   // Amount to stake (1 SOL)
-//   const amount = 1 * LAMPORTS_PER_SOL;
+//   const amount = 10 * LAMPORTS_PER_SOL;
 
 //   const lamportsToFund = Math.ceil(rentExemption + amount);
 

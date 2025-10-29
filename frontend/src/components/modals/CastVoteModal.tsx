@@ -15,8 +15,6 @@ import ErrorMessage from "./shared/ErrorMessage";
 import { VoteDistributionControls } from "./shared/VoteDistributionControls";
 import {
   useCastVote,
-  useCastVoteOverride,
-  useStakerVotingPower,
   useVoteDistribution,
   useWalletRole,
   VoteDistribution,
@@ -40,7 +38,7 @@ interface CastVoteModalProps extends CastVoteModalDataProps {
 }
 
 export function CastVoteModal({
-  proposalId: initialProposalId = "",
+  proposalId: initialProposalId,
   initialVoteDist,
   isOpen,
   onClose,
@@ -61,14 +59,10 @@ export function CastVoteModal({
   const wallet = useAnchorWallet();
 
   const { walletRole } = useWalletRole(wallet?.publicKey?.toBase58());
-
-  const { votingPower, isLoading: isLoadingVotingPower } = useStakerVotingPower(
-    wallet?.publicKey?.toBase58(),
-    walletRole === WalletRole.STAKER
-  );
+  const votingPower = 1000;
+  const isLoadingVotingPower = false;
 
   const { mutate: castVote } = useCastVote();
-  const { mutate: castVoteOverride } = useCastVoteOverride();
 
   React.useEffect(() => {
     if (isOpen) {
@@ -92,6 +86,11 @@ export function CastVoteModal({
   };
 
   const handleVote = (voteDistribution: VoteDistribution) => {
+    if (!wallet) {
+      toast.error("Wallet not connected");
+      return;
+    }
+
     if (walletRole === WalletRole.NONE) {
       toast.error("You are not authorized to vote");
     } else if (walletRole === WalletRole.VALIDATOR) {
@@ -99,7 +98,6 @@ export function CastVoteModal({
         {
           wallet,
           proposalId,
-          // convert basis points to BN, not %
           forVotesBp: voteDistribution.for * 100,
           againstVotesBp: voteDistribution.against * 100,
           abstainVotesBp: voteDistribution.abstain * 100,
@@ -110,24 +108,8 @@ export function CastVoteModal({
         }
       );
     } else if (walletRole === WalletRole.STAKER) {
-      if (!wallet) {
-        toast.error("Wallet not connected");
-        return;
-      }
-      castVoteOverride(
-        {
-          wallet,
-          proposalId,
-          forVotesBp: voteDistribution.for * 100,
-          againstVotesBp: voteDistribution.against * 100,
-          abstainVotesBp: voteDistribution.abstain * 100,
-          stakeAccount: wallet.publicKey.toBase58(),
-        },
-        {
-          onSuccess: handleSuccess,
-          onError: handleError,
-        }
-      );
+      toast.error("Staker can only cast an override vote");
+      return;
     }
   };
 
