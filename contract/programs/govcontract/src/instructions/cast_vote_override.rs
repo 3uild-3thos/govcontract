@@ -386,6 +386,23 @@ impl<'info> CastVoteOverride<'info> {
             }
         }
 
+          // Initialize the VoteOverride account with delegator's vote data
+          self.vote_override.set_inner(VoteOverride {
+            stake_account: stake_merkle_leaf.stake_account,
+            validator: meta_merkle_leaf.vote_account,
+            proposal: self.proposal.key(),
+            vote_account_validator: self.validator_vote.key(),
+            for_votes_bp,
+            against_votes_bp,
+            abstain_votes_bp,
+            stake_amount: delegator_stake,
+            vote_override_timestamp: clock.unix_timestamp,
+            bump: bumps.vote_override,
+            for_votes_lamports,
+            against_votes_lamports,
+            abstain_votes_lamports,
+        });
+
         // Emit vote override cast event
         emit!(VoteOverrideCast {
             proposal_id: self.proposal.key(),
