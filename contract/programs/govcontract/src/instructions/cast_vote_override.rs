@@ -138,10 +138,11 @@ impl<'info> CastVoteOverride<'info> {
         // Deserialize MetaMerkleProof for crosschecking
         let meta_account_data = self.meta_merkle_proof.try_borrow_data()?;
         let meta_merkle_proof =
-            try_from_slice_unchecked::<MetaMerkleProof>(&meta_account_data[ANCHOR_DISCRIMINATOR..]).map_err(|e| {
-                msg!("Error deserializing MetaMerkleProof: {}", e);
-                GovernanceError::CantDeserializeMMPPDA
-            })?;
+            try_from_slice_unchecked::<MetaMerkleProof>(&meta_account_data[ANCHOR_DISCRIMINATOR..])
+                .map_err(|e| {
+                    msg!("Error deserializing MetaMerkleProof: {}", e);
+                    GovernanceError::CantDeserializeMMPPDA
+                })?;
         let meta_merkle_leaf = meta_merkle_proof.meta_merkle_leaf;
 
         require_eq!(
@@ -218,6 +219,7 @@ impl<'info> CastVoteOverride<'info> {
 
             let new_validator_stake = validator_stake
                 .checked_sub(delegator_stake)
+                .and_then(|stake| stake.checked_sub(validator_vote.override_lamports))
                 .ok_or(GovernanceError::ArithmeticOverflow)?;
 
             // Calculate new validator votes for each category based on actual lamports
@@ -276,7 +278,8 @@ impl<'info> CastVoteOverride<'info> {
             });
         } else {
             // Store delegator's vote in a the cache PDA
-            if self.vote_override_cache.data_len() == (ANCHOR_DISCRIMINATOR + VoteOverrideCache::INIT_SPACE)
+            if self.vote_override_cache.data_len()
+                == (ANCHOR_DISCRIMINATOR + VoteOverrideCache::INIT_SPACE)
                 && self.vote_override_cache.owner == &crate::ID
                 && VoteOverrideCache::deserialize(
                     &mut self.vote_override_cache.data.borrow().as_ref(),
@@ -346,7 +349,8 @@ impl<'info> CastVoteOverride<'info> {
                 let ix = create_account(
                     &self.signer.key(),
                     &self.vote_override_cache.key(),
-                    Rent::get()?.minimum_balance(ANCHOR_DISCRIMINATOR + VoteOverrideCache::INIT_SPACE),
+                    Rent::get()?
+                        .minimum_balance(ANCHOR_DISCRIMINATOR + VoteOverrideCache::INIT_SPACE),
                     (ANCHOR_DISCRIMINATOR + VoteOverrideCache::INIT_SPACE) as u64,
                     &crate::ID,
                 );
@@ -386,8 +390,8 @@ impl<'info> CastVoteOverride<'info> {
             }
         }
 
-          // Initialize the VoteOverride account with delegator's vote data
-          self.vote_override.set_inner(VoteOverride {
+        // Initialize the VoteOverride account with delegator's vote data
+        self.vote_override.set_inner(VoteOverride {
             stake_account: stake_merkle_leaf.stake_account,
             validator: meta_merkle_leaf.vote_account,
             proposal: self.proposal.key(),
