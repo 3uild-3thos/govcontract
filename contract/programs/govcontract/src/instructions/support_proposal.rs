@@ -41,6 +41,7 @@ pub struct SupportProposal<'info> {
     )]
     pub spl_vote_account: UncheckedAccount<'info>,
     /// CHECK: The snapshot program (gov-v1 or mock)
+    // #[account(constraint = snapshot_program.key() == gov_v1::ID @ GovernanceError::InvalidSnapshotProgram)]
     pub snapshot_program: UncheckedAccount<'info>,
     /// CHECK: Consensus result account owned by snapshot program
     pub consensus_result: UncheckedAccount<'info>,
@@ -55,7 +56,7 @@ impl<'info> SupportProposal<'info> {
 
         // Ensure proposal is eligible for support
         require!(
-            clock.epoch <= self.proposal.start_epoch,
+            self.proposal.voting == false && self.proposal.finalized == false,
             GovernanceError::ProposalClosed
         );
         require!(!self.proposal.finalized, GovernanceError::ProposalFinalized);
@@ -110,11 +111,24 @@ impl<'info> SupportProposal<'info> {
             GovernanceError::InvalidConsensusResultPDA
         );
 
+        // Verify that the merkle leaf's vote_account matches the supplied spl_vote_account
+        require_eq!(
+            meta_merkle_leaf.vote_account,
+            self.spl_vote_account.key(),
+            GovernanceError::InvalidVoteAccount
+        );
+
         // Ensure leaf matches signer and has sufficient stake
         require_eq!(
             meta_merkle_leaf.voting_wallet,
             self.signer.key(),
             GovernanceError::InvalidVoteAccount
+        );
+
+        require_gt!(
+            meta_merkle_leaf.active_stake,
+            0u64,
+            GovernanceError::NotEnoughStake
         );
 
         verify_merkle_proof_cpi(
@@ -140,7 +154,7 @@ impl<'info> SupportProposal<'info> {
         let support_scaled =
             (self.proposal.cluster_support_lamports as u128) * CLUSTER_SUPPORT_MULTIPLIER;
         let cluster_scaled = (cluster_stake as u128) * CLUSTER_STAKE_MULTIPLIER;
-        let voting_activated = if support_scaled >= cluster_scaled {
+        self.proposal.voting = if support_scaled >= cluster_scaled {
             // Activate voting if threshold met
             self.proposal.start_epoch = clock.epoch + 4;
             self.proposal.end_epoch = self.proposal.start_epoch + 3;
@@ -153,7 +167,7 @@ impl<'info> SupportProposal<'info> {
             proposal_id: self.proposal.key(),
             supporter: self.signer.key(),
             cluster_support_lamports: self.proposal.cluster_support_lamports,
-            voting_activated,
+            voting_activated: self.proposal.voting,
         });
 
         Ok(())

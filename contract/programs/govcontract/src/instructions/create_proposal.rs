@@ -50,6 +50,7 @@ pub struct CreateProposal<'info> {
     )]
     pub spl_vote_account: UncheckedAccount<'info>,
     /// CHECK: The snapshot program (gov-v1 or mock)
+    // #[account(constraint = snapshot_program.key() == gov_v1::ID @ GovernanceError::InvalidSnapshotProgram)]
     pub snapshot_program: UncheckedAccount<'info>,
     /// CHECK: Consensus result account owned by snapshot program
     pub consensus_result: UncheckedAccount<'info>,
@@ -106,6 +107,13 @@ impl<'info> CreateProposal<'info> {
             meta_merkle_proof.consensus_result,
             self.consensus_result.key(),
             GovernanceError::InvalidConsensusResultPDA
+        );
+
+        // Verify that the merkle leaf's vote_account matches the supplied spl_vote_account
+        require_eq!(
+            meta_merkle_leaf.vote_account,
+            self.spl_vote_account.key(),
+            GovernanceError::InvalidVoteAccount
         );
 
         // Ensure leaf matches signer and has sufficient stake
