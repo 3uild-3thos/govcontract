@@ -4,7 +4,6 @@ use crate::{error::GovernanceError, events::ProposalFinalized, state::Proposal};
 
 #[derive(Accounts)]
 pub struct FinalizeProposal<'info> {
-    #[account(mut)]
     pub signer: Signer<'info>, // Anyone can finalize after voting period ends
     #[account(
         mut,

@@ -21,7 +21,6 @@ use mock_gov_v1::{ConsensusResult, MetaMerkleProof};
 
 #[derive(Accounts)]
 pub struct ModifyVote<'info> {
-    #[account(mut)]
     pub signer: Signer<'info>, // Voter (validator)
     #[account(mut)]
     pub proposal: Account<'info, Proposal>, // Proposal being modified

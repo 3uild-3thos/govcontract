@@ -4,7 +4,6 @@ use crate::{error::GovernanceError, events::MerkleRootAdded, state::Proposal};
 
 #[derive(Accounts)]
 pub struct AddMerkleRoot<'info> {
-    #[account(mut)]
     pub signer: Signer<'info>, // Must be the original proposal author
 
     #[account(

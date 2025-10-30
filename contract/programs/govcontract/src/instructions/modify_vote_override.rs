@@ -22,7 +22,6 @@ use mock_gov_v1::{ConsensusResult, MetaMerkleProof, StakeMerkleLeaf};
 
 #[derive(Accounts)]
 pub struct ModifyVoteOverride<'info> {
-    #[account(mut)]
     pub signer: Signer<'info>, // Voter (staker/delegator)
     #[account(mut)]
     pub proposal: Account<'info, Proposal>, // Proposal being voted on
