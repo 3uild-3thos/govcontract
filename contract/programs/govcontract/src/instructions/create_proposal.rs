@@ -68,6 +68,7 @@ impl<'info> CreateProposal<'info> {
     ) -> Result<()> {
         // Validate proposal inputs
         require!(!title.is_empty(), GovernanceError::TitleEmpty);
+        
         require!(
             title.len() <= MAX_TITLE_LENGTH,
             GovernanceError::TitleTooLong
@@ -91,7 +92,7 @@ impl<'info> CreateProposal<'info> {
             self.meta_merkle_proof.owner == self.snapshot_program.key,
             GovernanceError::MustBeOwnedBySnapshotProgram
         );
-
+        
         // Deserialize MetaMerkleProof for crosschecking
         let account_data = self.meta_merkle_proof.try_borrow_data()?;
 
@@ -101,6 +102,16 @@ impl<'info> CreateProposal<'info> {
                 GovernanceError::CantDeserializeMMPPDA
             })?;
         let meta_merkle_leaf = meta_merkle_proof.meta_merkle_leaf;
+
+
+        let verified_vote_account = meta_merkle_leaf.vote_account;
+
+        // Ensure passed vote account matches verified one
+        require_eq!(
+            self.spl_vote_account.key(),
+            verified_vote_account,
+            GovernanceError::InvalidVoteAccount
+        );
 
         // Crosscheck consensus result
         require_eq!(
