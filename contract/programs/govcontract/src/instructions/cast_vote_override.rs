@@ -372,12 +372,16 @@ impl<'info> CastVoteOverride<'info> {
                 };
 
                 // Serialize the initialized cache to the account data
-                let mut account_data = self.vote_override_cache.data.borrow_mut();
-                let serialized = borsh::to_vec(&vote_override_cache).map_err(|e| {
+                let mut cache_data = self.vote_override_cache.data.borrow_mut();
+                anchor_lang::AccountSerialize::try_serialize(
+                    &vote_override_cache,
+                    &mut cache_data.as_mut(),
+                )
+                .map_err(|e| {
                     msg!("Error serializing VoteOverrideCache: {}", e);
                     GovernanceError::ArithmeticOverflow
                 })?;
-                account_data[0..serialized.len()].copy_from_slice(&serialized);
+
             }
          // Initialize the VoteOverride account with delegator's vote data
          self.vote_override.set_inner(VoteOverride {
