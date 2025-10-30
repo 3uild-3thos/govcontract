@@ -163,9 +163,11 @@ impl<'info> CastVote<'info> {
             && VoteOverrideCache::deserialize(&mut self.vote_override_cache.data.borrow().as_ref())
                 .is_ok()
         {
-            let override_cache = VoteOverrideCache::deserialize(
-                &mut self.vote_override_cache.data.borrow().as_ref(),
+            let override_cache: VoteOverrideCache = 
+            anchor_lang::AccountDeserialize::try_deserialize(
+                &mut self.vote_override_cache.data.borrow().as_ref()
             )?;
+                
 
             // Add cached votes
             self.proposal.add_vote_lamports(

@@ -190,9 +190,11 @@ impl<'info> CastVoteOverride<'info> {
             && self.validator_vote.owner == &crate::ID
             && Vote::deserialize(&mut self.validator_vote.data.borrow().as_ref()).is_ok()
         {
-            let mut validator_vote =
-                Vote::deserialize(&mut &self.validator_vote.data.borrow()[ANCHOR_DISCRIMINATOR..])?;
-
+            let mut validator_vote: Vote = 
+            anchor_lang::AccountDeserialize::try_deserialize(
+                &mut self.validator_vote.data.borrow().as_ref()
+            )?;
+        
             // Subtract validator's vote
             self.proposal.sub_vote_lamports(
                 validator_vote.for_votes_lamports,
@@ -243,12 +245,11 @@ impl<'info> CastVoteOverride<'info> {
                 .ok_or(GovernanceError::ArithmeticOverflow)?;
 
             // Serialize the updated validator vote back to the account
-            let mut validator_vote_data = self.validator_vote.data.borrow_mut();
-            let mut vote_bytes = &mut validator_vote_data[ANCHOR_DISCRIMINATOR..]; // Skip discriminator
-            validator_vote.serialize(&mut vote_bytes).map_err(|e| {
-                msg!("Error serializing Vote: {}", e);
-                GovernanceError::ArithmeticOverflow
-            })?;
+            anchor_lang::AccountSerialize::try_serialize(
+                &validator_vote,
+                &mut self.validator_vote.data.borrow_mut().as_mut(),
+            )?;
+            
 
             // Store override
             self.vote_override.set_inner(VoteOverride {
