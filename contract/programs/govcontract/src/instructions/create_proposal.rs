@@ -94,13 +94,8 @@ impl<'info> CreateProposal<'info> {
         );
         
         // Deserialize MetaMerkleProof for crosschecking
-        let account_data = self.meta_merkle_proof.try_borrow_data()?;
-
-        let meta_merkle_proof = try_from_slice_unchecked::<MetaMerkleProof>(&account_data[ANCHOR_DISCRIMINATOR..])
-            .map_err(|e| {
-                msg!("Error deserializing MetaMerkleProof: {}", e);
-                GovernanceError::CantDeserializeMMPPDA
-            })?;
+        let meta_account_data = self.meta_merkle_proof.try_borrow_data()?;
+        let meta_merkle_proof = MetaMerkleProof::try_deserialize(&mut &meta_account_data[..])?;
         let meta_merkle_leaf = meta_merkle_proof.meta_merkle_leaf;
 
 
