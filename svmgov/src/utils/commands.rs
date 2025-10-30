@@ -39,6 +39,7 @@ pub async fn list_proposals(
         return Ok(());
     }
 
+    info!("Proposals: {:?}", proposals);
     if let Some(filter) = proposal_filter {
         if filter == "active" {
             proposals.retain(|p| p.1.voting);
