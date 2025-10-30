@@ -379,10 +379,8 @@ impl<'info> CastVoteOverride<'info> {
                 })?;
                 account_data[0..serialized.len()].copy_from_slice(&serialized);
             }
-        }
-
-        // Initialize the VoteOverride account with delegator's vote data
-        self.vote_override.set_inner(VoteOverride {
+         // Initialize the VoteOverride account with delegator's vote data
+         self.vote_override.set_inner(VoteOverride {
             stake_account: stake_merkle_leaf.stake_account,
             validator: meta_merkle_leaf.vote_account,
             proposal: self.proposal.key(),
@@ -397,6 +395,7 @@ impl<'info> CastVoteOverride<'info> {
             against_votes_lamports,
             abstain_votes_lamports,
         });
+        }
 
         // Emit vote override cast event
         emit!(VoteOverrideCast {
