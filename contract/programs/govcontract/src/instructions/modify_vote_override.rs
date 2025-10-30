@@ -13,7 +13,7 @@ use crate::{
     error::GovernanceError,
     events::VoteOverrideModified,
     merkle_helpers::verify_merkle_proof_cpi,
-    state::{Proposal, VoteOverride, VoteOverrideCache},
+    state::{Proposal, Vote, VoteOverride, VoteOverrideCache},
 };
 #[cfg(feature = "production")]
 use gov_v1::{ConsensusResult, MetaMerkleProof, StakeMerkleLeaf};
@@ -224,6 +224,13 @@ impl<'info> ModifyVoteOverride<'info> {
         self.vote_override.against_votes_lamports = against_votes_lamports;
         self.vote_override.abstain_votes_lamports = abstain_votes_lamports;
         self.vote_override.vote_override_timestamp = clock.unix_timestamp;
+
+        require!(
+            self.validator_vote.owner == &crate::ID
+                && self.validator_vote.data_len() == (8 + Vote::INIT_SPACE),
+            GovernanceError::InvalidVoteAccount
+        );
+        
 
         // Update vote override cache if it exists
         if self.vote_override_cache.data_len() == (ANCHOR_DISCRIMINATOR + VoteOverrideCache::INIT_SPACE)
