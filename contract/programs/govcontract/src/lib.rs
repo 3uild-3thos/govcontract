@@ -111,4 +111,14 @@ pub mod govcontract {
 
         Ok(())
     }
+
+    // Temporary function to adjust proposal epochs - for testing/admin purposes
+    pub fn adjust_proposal_epochs(
+        ctx: Context<AdjustProposalEpochs>,
+        start_epoch: u64,
+        end_epoch: u64,
+    ) -> Result<()> {
+        ctx.accounts.adjust_proposal_epochs(start_epoch, end_epoch)?;
+        Ok(())
+    }
 }

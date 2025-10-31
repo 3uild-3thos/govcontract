@@ -80,4 +80,6 @@ pub enum GovernanceError {
     MerkleRootNotSet,
     #[msg("Support period has expired for this proposal")]
     SupportPeriodExpired,
+    #[msg("Invalid epoch range: end_epoch must be greater than start_epoch")]
+    InvalidEpochRange,
 }
