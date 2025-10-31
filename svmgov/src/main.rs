@@ -342,7 +342,7 @@ enum Commands {
             long,
             help = "Stake account to use for override (base58 pubkey). If omitted, the first stake account from the voter summary will be used."
         )]
-        stake_account: Option<String>,
+        stake_account: String,
 
         /// Snapshot slot for fetching merkle proofs
         #[arg(long, help = "Snapshot slot for fetching merkle proofs")]
@@ -351,6 +351,14 @@ enum Commands {
         /// Network for fetching merkle proofs
         #[arg(long, help = "Network for fetching merkle proofs")]
         network: String,
+
+        /// Staker keypair for signing the transaction
+        #[arg(long, help = "Staker keypair for signing the transaction")]
+        staker_keypair: String,
+
+        /// Vote account pubkey for the validator
+        #[arg(long, help = "Vote account pubkey (base58) for the validator")]
+        vote_account: String,
     },
 
     #[command(
@@ -400,12 +408,12 @@ enum Commands {
         #[arg(long, help = "Operator API endpoint for snapshot data")]
         operator_api: Option<String>,
 
-        /// Optional specific stake account to use for override modification
+        /// Stake account to use for override modification
         #[arg(
             long,
-            help = "Stake account to use for override modification (base58 pubkey). If omitted, the first stake account from the voter summary will be used."
+            help = "Stake account to use for override modification (base58 pubkey)"
         )]
-        stake_account: Option<String>,
+        stake_account: String,
 
         /// Snapshot slot for fetching merkle proofs
         #[arg(long, help = "Snapshot slot for fetching merkle proofs")]
@@ -414,6 +422,14 @@ enum Commands {
         /// Network for fetching merkle proofs
         #[arg(long, help = "Network for fetching merkle proofs")]
         network: String,
+
+        /// Staker keypair for signing the transaction
+        #[arg(long, help = "Staker keypair for signing the transaction")]
+        staker_keypair: String,
+
+        /// Vote account pubkey for the validator
+        #[arg(long, help = "Vote account pubkey (base58) for the validator")]
+        vote_account: String,
     },
 
     #[command(
@@ -432,6 +448,28 @@ enum Commands {
         /// Merkle root hash as a hex string
         #[arg(long, help = "Merkle root hash (hex string)")]
         merkle_root: String,
+    },
+
+    #[command(
+        about = "Adjust proposal start and end epochs (temporary/admin function)",
+        long_about = "This command allows adjusting the start_epoch and end_epoch of a proposal. \
+                      This is a temporary function for testing/admin purposes. \
+                      Requires the proposal ID, start epoch, and end epoch.\n\n\
+                      Example:\n\
+                      $ svmgov --identity-keypair /path/to/key.json adjust-proposal-epochs --proposal-id \"123\" --start-epoch 100 --end-epoch 103"
+    )]
+    AdjustProposalEpochs {
+        /// Proposal ID to adjust epochs for
+        #[arg(long, help = "Proposal ID")]
+        proposal_id: String,
+
+        /// Start epoch for the proposal
+        #[arg(long, help = "Start epoch (u64)")]
+        start_epoch: u64,
+
+        /// End epoch for the proposal
+        #[arg(long, help = "End epoch (u64, must be greater than start_epoch)")]
+        end_epoch: u64,
     },
 }
 
@@ -571,6 +609,8 @@ async fn handle_command(cli: Cli) -> Result<()> {
             stake_account,
             snapshot_slot,
             network,
+            staker_keypair,
+            vote_account,
         } => {
             instructions::cast_vote_override(
                 proposal_id.to_string(),
@@ -578,10 +618,11 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 *for_votes,
                 *against_votes,
                 *abstain_votes,
-                cli.identity_keypair,
+                staker_keypair.clone(),
                 cli.rpc_url,
                 operator_api.clone(),
                 stake_account.clone(),
+                vote_account.clone(),
                 snapshot_slot.clone(),
                 network.clone(),
             )
@@ -597,19 +638,22 @@ async fn handle_command(cli: Cli) -> Result<()> {
             stake_account,
             snapshot_slot,
             network,
+            staker_keypair,
+            vote_account,
         } => {
             instructions::modify_vote_override(
                 proposal_id.to_string(),
+                ballot_id.clone(),
                 *for_votes,
                 *against_votes,
                 *abstain_votes,
-                cli.identity_keypair,
+                staker_keypair.clone(),
                 cli.rpc_url,
                 operator_api.clone(),
                 stake_account.clone(),
+                vote_account.clone(),
                 snapshot_slot.clone(),
                 network.clone(),
-                ballot_id.clone(),
             )
             .await?;
         }
@@ -620,6 +664,20 @@ async fn handle_command(cli: Cli) -> Result<()> {
             instructions::add_merkle_root(
                 proposal_id.to_string(),
                 merkle_root.to_string(),
+                cli.identity_keypair,
+                cli.rpc_url,
+            )
+            .await?;
+        }
+        Commands::AdjustProposalEpochs {
+            proposal_id,
+            start_epoch,
+            end_epoch,
+        } => {
+            instructions::adjust_proposal_epochs(
+                proposal_id.to_string(),
+                *start_epoch,
+                *end_epoch,
                 cli.identity_keypair,
                 cli.rpc_url,
             )

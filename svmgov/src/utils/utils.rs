@@ -86,6 +86,63 @@ pub async fn setup_all(
     ))
 }
 
+pub fn setup_all_with_staker(
+    staker_keypair_path: String,
+    rpc_url: Option<String>,
+) -> Result<(Arc<Keypair>, Program<Arc<Keypair>>, Program<Arc<Keypair>>)> {
+    // Step 1: Load the staker keypair
+    let staker_keypair = load_staker_keypair(staker_keypair_path)?;
+    let staker_keypair_arc = Arc::new(staker_keypair);
+
+    // Step 2: Set the cluster
+    let cluster = set_cluster(rpc_url);
+
+    // Step 3: Create the Anchor client and program
+    let client = Client::new(cluster.clone(), staker_keypair_arc.clone());
+    let program = client.program(Govcontract::id())?;
+
+    let merkle_proof_program = client.program(gov_v1::id())?;
+
+    // Step 4: Log the setup completion
+    log::debug!(
+        "setup_all_with_staker completed successfully: staker_pubkey={}",
+        staker_keypair_arc.pubkey()
+    );
+
+    // Return all variables
+    Ok((staker_keypair_arc, program, merkle_proof_program))
+}
+
+fn load_staker_keypair(keypair_path: String) -> Result<Keypair> {
+    let file_content = fs::read_to_string(&keypair_path).map_err(|e| match e.kind() {
+        std::io::ErrorKind::NotFound => {
+            anyhow!(
+                "The specified staker keypair file does not exist: {}",
+                keypair_path
+            )
+        }
+        _ => anyhow!("Failed to read staker keypair file {}: {}", keypair_path, e),
+    })?;
+
+    let keypair_bytes: Vec<u8> = serde_json::from_str(&file_content).map_err(|e| {
+        anyhow!(
+            "The staker keypair file is not a valid JSON array of bytes: {}. Error: {}",
+            keypair_path,
+            e
+        )
+    })?;
+
+    // Create the Keypair from the bytes
+    let staker_keypair = Keypair::from_bytes(&keypair_bytes).map_err(|e| {
+        anyhow!(
+            "The provided bytes do not form a valid Solana keypair: {}. This might be due to invalid key data.",
+            e
+        )
+    })?;
+
+    Ok(staker_keypair)
+}
+
 fn load_identity_keypair(keypair_path: Option<String>) -> Result<Keypair> {
     // Check if the keypair path is provided
     let identity_keypair_path = if let Some(path) = keypair_path {

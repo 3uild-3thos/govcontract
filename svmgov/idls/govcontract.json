@@ -43,6 +43,40 @@
       ]
     },
     {
+      "name": "adjust_proposal_epochs",
+      "discriminator": [
+        180,
+        136,
+        13,
+        187,
+        151,
+        188,
+        135,
+        242
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "proposal",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "start_epoch",
+          "type": "u64"
+        },
+        {
+          "name": "end_epoch",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "cast_vote",
       "discriminator": [
         20,
@@ -1201,6 +1235,11 @@
       "code": 6038,
       "name": "SupportPeriodExpired",
       "msg": "Support period has expired for this proposal"
+    },
+    {
+      "code": 6039,
+      "name": "InvalidEpochRange",
+      "msg": "Invalid epoch range: end_epoch must be greater than start_epoch"
     }
   ],
   "types": [

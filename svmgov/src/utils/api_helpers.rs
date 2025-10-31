@@ -129,14 +129,14 @@ pub async fn get_vote_account_proof(
 /// Endpoint: GET /proof/stake_account/:stake_account?snapshot_slot=...
 pub async fn get_stake_account_proof(
     stake_account: &str,
-    snapshot_slot: Option<u64>,
+    snapshot_slot: u64,
+    network: &str,
 ) -> Result<StakeAccountProofResponse> {
     let base_url = get_api_base_url();
-    let mut url = format!("{}/proof/stake_account/{}", base_url, stake_account);
-
-    if let Some(slot) = snapshot_slot {
-        url.push_str(&format!("?snapshot_slot={}", slot));
-    }
+    let url = format!(
+        "{}/proof/stake_account/{}?network={}&slot={}",
+        base_url, stake_account, network, snapshot_slot
+    );
 
     log::debug!("Fetching stake account proof from: {}", url);
 
