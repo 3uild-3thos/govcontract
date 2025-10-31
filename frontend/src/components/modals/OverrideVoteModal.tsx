@@ -106,10 +106,12 @@ export function OverrideVoteModal({
   const handleVote = (voteDistribution: VoteDistribution) => {
     if (!wallet) {
       toast.error("Wallet not connected");
+      setIsLoading(false);
       return;
     }
     if (!proposalId) {
       toast.error("No proposal ID provided");
+      setIsLoading(false);
       return;
     }
 
@@ -118,6 +120,7 @@ export function OverrideVoteModal({
     } else if (walletRole === WalletRole.STAKER) {
       if (stakeAccounts === undefined) {
         toast.error("No stake accounts found");
+        setIsLoading(false);
         return;
       }
 
@@ -128,6 +131,7 @@ export function OverrideVoteModal({
 
       if (stakeAccount === undefined) {
         toast.error("Not able to determine stake account");
+        setIsLoading(false);
         return;
       }
 
