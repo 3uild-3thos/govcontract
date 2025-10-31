@@ -7,6 +7,7 @@ use anchor_client::{
 
 use anchor_lang::prelude::Pubkey;
 use anyhow::{Result, anyhow};
+use log::info;
 use serde_json::{Value, json};
 
 use crate::{
@@ -38,6 +39,7 @@ pub async fn list_proposals(
         return Ok(());
     }
 
+    info!("Proposals: {:?}", proposals);
     if let Some(filter) = proposal_filter {
         if filter == "active" {
             proposals.retain(|p| p.1.voting);

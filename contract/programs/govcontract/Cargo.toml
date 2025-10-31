@@ -14,12 +14,12 @@ no-entrypoint = []
 no-idl = []
 no-log-ix-name = []
 idl-build = ["anchor-lang/idl-build"]
-default = ["testing"]  # Default to testing (mock program) if no features specified
+default = ["production"]  # Default to testing (mock program) if no features specified
 production = ["gov-v1"]
 testing = ["mock_gov_v1"]
 
 [dependencies]
 anchor-lang = { version = "0.31.1" }
-gov-v1 = { git = "https://github.com/exo-tech-xyz/gov-v1", features = ["cpi"], optional = true }
+gov-v1 = { git = "https://github.com/dhruvsol/gov-v1-testnet", features = ["cpi"], optional = true }
 mock_gov_v1 = { path = "../mock-gov-v1", features = ["cpi"], optional = true }
 

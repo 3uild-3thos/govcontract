@@ -47,6 +47,7 @@ pub struct CastVote<'info> {
     )]
     pub vote_override_cache: UncheckedAccount<'info>,
     /// CHECK: The snapshot program (gov-v1 or mock)
+    // #[account(constraint = snapshot_program.key() == gov_v1::ID @ GovernanceError::InvalidSnapshotProgram)]
     pub snapshot_program: UncheckedAccount<'info>,
     /// CHECK: Consensus result account owned by snapshot program
     pub consensus_result: UncheckedAccount<'info>,

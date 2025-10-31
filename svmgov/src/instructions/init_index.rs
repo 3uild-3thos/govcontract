@@ -10,7 +10,8 @@ pub async fn initialize_index(
     identity_keypair: Option<String>,
     rpc_url: Option<String>,
 ) -> Result<()> {
-    let (payer, _vote_account, program) = setup_all(identity_keypair, rpc_url).await?;
+    let (payer, _vote_account, program, _merkle_proof_program) =
+        setup_all(identity_keypair, rpc_url).await?;
 
     let proposal_index = derive_proposal_index_pda(&program.id());
 

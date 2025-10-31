@@ -77,6 +77,17 @@ enum Commands {
         #[arg(long, help = "GitHub link for the proposal description")]
         description: String,
 
+        /// Snapshot slot for fetching merkle proofs
+        #[arg(long, help = "Snapshot slot for fetching merkle proofs")]
+        snapshot_slot: u64,
+
+        /// Network for fetching merkle proofs
+        #[arg(long, help = "Network for fetching merkle proofs")]
+        network: String,
+
+        /// Ballot ID for consensus result PDA derivation
+        #[arg(long, help = "Ballot ID")]
+        ballot_id: u64,
     },
 
     #[command(
@@ -90,6 +101,18 @@ enum Commands {
     SupportProposal {
         #[arg(long, help = "Proposal ID")]
         proposal_id: String,
+
+        /// Ballot ID for consensus result PDA derivation
+        #[arg(long, help = "Ballot ID")]
+        ballot_id: u64,
+
+        /// Snapshot slot for fetching merkle proofs
+        #[arg(long, help = "Snapshot slot for fetching merkle proofs")]
+        snapshot_slot: u64,
+
+        /// Network for fetching merkle proofs
+        #[arg(long, help = "Network for fetching merkle proofs")]
+        network: String,
     },
 
     #[command(
@@ -110,6 +133,10 @@ enum Commands {
         #[arg(long, help = "Proposal ID")]
         proposal_id: String,
 
+        /// Ballot ID for consensus result PDA derivation
+        #[arg(long, help = "Ballot ID")]
+        ballot_id: u64,
+
         /// Basis points for 'For' vote.
         #[arg(long, help = "Basis points for 'For'")]
         for_votes: u64,
@@ -121,6 +148,14 @@ enum Commands {
         /// Basis points for 'Abstain' vote.
         #[arg(long, help = "Basis points for 'Abstain'")]
         abstain_votes: u64,
+
+        /// Snapshot slot for fetching merkle proofs
+        #[arg(long, help = "Snapshot slot for fetching merkle proofs")]
+        snapshot_slot: u64,
+
+        /// Network for fetching merkle proofs
+        #[arg(long, help = "Network for fetching merkle proofs")]
+        network: String,
     },
 
     #[command(
@@ -136,6 +171,10 @@ enum Commands {
         #[arg(long, help = "Proposal ID")]
         proposal_id: String,
 
+        /// Ballot ID for consensus result PDA derivation
+        #[arg(long, help = "Ballot ID")]
+        ballot_id: u64,
+
         /// Basis points for 'For' vote.
         #[arg(long, help = "Basis points for 'For'")]
         for_votes: u64,
@@ -147,6 +186,14 @@ enum Commands {
         /// Basis points for 'Abstain' vote.
         #[arg(long, help = "Basis points for 'Abstain'")]
         abstain_votes: u64,
+
+        /// Snapshot slot for fetching merkle proofs
+        #[arg(long, help = "Snapshot slot for fetching merkle proofs")]
+        snapshot_slot: u64,
+
+        /// Network for fetching merkle proofs
+        #[arg(long, help = "Network for fetching merkle proofs")]
+        network: String,
     },
 
     #[command(
@@ -261,6 +308,10 @@ enum Commands {
         #[arg(long, help = "Proposal ID")]
         proposal_id: String,
 
+        /// Ballot ID for consensus result PDA derivation
+        #[arg(long, help = "Ballot ID")]
+        ballot_id: u64,
+
         /// Basis points for 'For' vote
         #[arg(
             long,
@@ -287,8 +338,27 @@ enum Commands {
         operator_api: Option<String>,
 
         /// Optional specific stake account to use for override
-        #[arg(long, help = "Stake account to use for override (base58 pubkey). If omitted, the first stake account from the voter summary will be used.")]
-        stake_account: Option<String>,
+        #[arg(
+            long,
+            help = "Stake account to use for override (base58 pubkey). If omitted, the first stake account from the voter summary will be used."
+        )]
+        stake_account: String,
+
+        /// Snapshot slot for fetching merkle proofs
+        #[arg(long, help = "Snapshot slot for fetching merkle proofs")]
+        snapshot_slot: u64,
+
+        /// Network for fetching merkle proofs
+        #[arg(long, help = "Network for fetching merkle proofs")]
+        network: String,
+
+        /// Staker keypair for signing the transaction
+        #[arg(long, help = "Staker keypair for signing the transaction")]
+        staker_keypair: String,
+
+        /// Vote account pubkey for the validator
+        #[arg(long, help = "Vote account pubkey (base58) for the validator")]
+        vote_account: String,
     },
 
     #[command(
@@ -308,6 +378,10 @@ enum Commands {
         /// Proposal ID for which to modify the vote override
         #[arg(long, help = "Proposal ID")]
         proposal_id: String,
+
+        /// Ballot ID for consensus result PDA derivation
+        #[arg(long, help = "Ballot ID")]
+        ballot_id: u64,
 
         /// Basis points for 'For' vote
         #[arg(
@@ -334,9 +408,28 @@ enum Commands {
         #[arg(long, help = "Operator API endpoint for snapshot data")]
         operator_api: Option<String>,
 
-        /// Optional specific stake account to use for override modification
-        #[arg(long, help = "Stake account to use for override modification (base58 pubkey). If omitted, the first stake account from the voter summary will be used.")]
-        stake_account: Option<String>,
+        /// Stake account to use for override modification
+        #[arg(
+            long,
+            help = "Stake account to use for override modification (base58 pubkey)"
+        )]
+        stake_account: String,
+
+        /// Snapshot slot for fetching merkle proofs
+        #[arg(long, help = "Snapshot slot for fetching merkle proofs")]
+        snapshot_slot: u64,
+
+        /// Network for fetching merkle proofs
+        #[arg(long, help = "Network for fetching merkle proofs")]
+        network: String,
+
+        /// Staker keypair for signing the transaction
+        #[arg(long, help = "Staker keypair for signing the transaction")]
+        staker_keypair: String,
+
+        /// Vote account pubkey for the validator
+        #[arg(long, help = "Vote account pubkey (base58) for the validator")]
+        vote_account: String,
     },
 
     #[command(
@@ -356,6 +449,28 @@ enum Commands {
         #[arg(long, help = "Merkle root hash (hex string)")]
         merkle_root: String,
     },
+
+    #[command(
+        about = "Adjust proposal start and end epochs (temporary/admin function)",
+        long_about = "This command allows adjusting the start_epoch and end_epoch of a proposal. \
+                      This is a temporary function for testing/admin purposes. \
+                      Requires the proposal ID, start epoch, and end epoch.\n\n\
+                      Example:\n\
+                      $ svmgov --identity-keypair /path/to/key.json adjust-proposal-epochs --proposal-id \"123\" --start-epoch 100 --end-epoch 103"
+    )]
+    AdjustProposalEpochs {
+        /// Proposal ID to adjust epochs for
+        #[arg(long, help = "Proposal ID")]
+        proposal_id: String,
+
+        /// Start epoch for the proposal
+        #[arg(long, help = "Start epoch (u64)")]
+        start_epoch: u64,
+
+        /// End epoch for the proposal
+        #[arg(long, help = "End epoch (u64, must be greater than start_epoch)")]
+        end_epoch: u64,
+    },
 }
 
 async fn handle_command(cli: Cli) -> Result<()> {
@@ -371,6 +486,9 @@ async fn handle_command(cli: Cli) -> Result<()> {
             seed,
             title,
             description,
+            snapshot_slot,
+            network,
+            ballot_id,
         } => {
             instructions::create_proposal(
                 title.to_string(),
@@ -378,46 +496,69 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 *seed,
                 cli.identity_keypair,
                 cli.rpc_url,
+                snapshot_slot.clone(),
+                network.clone(),
+                ballot_id.clone(),
             )
             .await?;
         }
-        Commands::SupportProposal { proposal_id } => {
+        Commands::SupportProposal {
+            proposal_id,
+            ballot_id,
+            snapshot_slot,
+            network,
+        } => {
             instructions::support_proposal(
                 proposal_id.to_string(),
                 cli.identity_keypair,
                 cli.rpc_url,
+                ballot_id.clone(),
+                snapshot_slot.clone(),
+                network.clone(),
             )
             .await?;
         }
         Commands::CastVote {
             proposal_id,
+            ballot_id,
             for_votes,
             against_votes,
             abstain_votes,
+            snapshot_slot,
+            network,
         } => {
             instructions::cast_vote(
                 proposal_id.to_string(),
+                ballot_id.clone(),
                 *for_votes,
                 *against_votes,
                 *abstain_votes,
                 cli.identity_keypair,
                 cli.rpc_url,
+                snapshot_slot.clone(),
+                network.clone(),
             )
             .await?;
         }
         Commands::ModifyVote {
             proposal_id,
+            ballot_id,
             for_votes,
             against_votes,
             abstain_votes,
+            snapshot_slot,
+            network,
         } => {
             instructions::modify_vote(
                 proposal_id.to_string(),
+                ballot_id.clone(),
                 *for_votes,
                 *against_votes,
                 *abstain_votes,
                 cli.identity_keypair,
                 cli.rpc_url,
+                snapshot_slot.clone(),
+                network.clone(),
             )
             .await?;
         }
@@ -460,41 +601,59 @@ async fn handle_command(cli: Cli) -> Result<()> {
         }
         Commands::CastVoteOverride {
             proposal_id,
+            ballot_id,
             for_votes,
             against_votes,
             abstain_votes,
             operator_api,
             stake_account,
+            snapshot_slot,
+            network,
+            staker_keypair,
+            vote_account,
         } => {
             instructions::cast_vote_override(
                 proposal_id.to_string(),
+                ballot_id.clone(),
                 *for_votes,
                 *against_votes,
                 *abstain_votes,
-                cli.identity_keypair,
+                staker_keypair.clone(),
                 cli.rpc_url,
                 operator_api.clone(),
                 stake_account.clone(),
+                vote_account.clone(),
+                snapshot_slot.clone(),
+                network.clone(),
             )
             .await?;
         }
         Commands::ModifyVoteOverride {
             proposal_id,
+            ballot_id,
             for_votes,
             against_votes,
             abstain_votes,
             operator_api,
             stake_account,
+            snapshot_slot,
+            network,
+            staker_keypair,
+            vote_account,
         } => {
             instructions::modify_vote_override(
                 proposal_id.to_string(),
+                ballot_id.clone(),
                 *for_votes,
                 *against_votes,
                 *abstain_votes,
-                cli.identity_keypair,
+                staker_keypair.clone(),
                 cli.rpc_url,
                 operator_api.clone(),
                 stake_account.clone(),
+                vote_account.clone(),
+                snapshot_slot.clone(),
+                network.clone(),
             )
             .await?;
         }
@@ -510,6 +669,20 @@ async fn handle_command(cli: Cli) -> Result<()> {
             )
             .await?;
         }
+        Commands::AdjustProposalEpochs {
+            proposal_id,
+            start_epoch,
+            end_epoch,
+        } => {
+            instructions::adjust_proposal_epochs(
+                proposal_id.to_string(),
+                *start_epoch,
+                *end_epoch,
+                cli.identity_keypair,
+                cli.rpc_url,
+            )
+            .await?;
+        }
     }
 
     Ok(())
@@ -520,6 +693,7 @@ fn main() -> Result<()> {
     env_logger::builder()
         .filter_level(log::LevelFilter::Info)
         .init();
+    dotenv::dotenv().ok();
     let cli = Cli::parse();
 
     tokio::runtime::Runtime::new()?.block_on(handle_command(cli))?;

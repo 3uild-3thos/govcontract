@@ -1,4 +1,5 @@
 pub mod add_merkle_root;
+pub mod adjust_proposal_epochs;
 pub mod cast_vote;
 pub mod cast_vote_override;
 pub mod create_proposal;
@@ -9,6 +10,7 @@ pub mod modify_vote_override;
 pub mod support_proposal;
 
 pub use add_merkle_root::add_merkle_root;
+pub use adjust_proposal_epochs::adjust_proposal_epochs;
 pub use cast_vote::cast_vote;
 pub use cast_vote_override::cast_vote_override;
 pub use create_proposal::create_proposal;
