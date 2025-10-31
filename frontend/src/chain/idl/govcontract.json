@@ -1,5 +1,5 @@
 {
-  "address": "GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc",
+  "address": "DUWGu3sMy4ymJWwUs53eaCyNzZRFoxhmi3Ggf1kh8Q61",
   "metadata": {
     "name": "govcontract",
     "version": "0.1.0",
@@ -9,7 +9,16 @@
   "instructions": [
     {
       "name": "add_merkle_root",
-      "discriminator": [235, 31, 120, 49, 53, 9, 197, 147],
+      "discriminator": [
+        235,
+        31,
+        120,
+        49,
+        53,
+        9,
+        197,
+        147
+      ],
       "accounts": [
         {
           "name": "signer",
@@ -25,14 +34,60 @@
         {
           "name": "merkle_root_hash",
           "type": {
-            "array": ["u8", 32]
+            "array": [
+              "u8",
+              32
+            ]
           }
         }
       ]
     },
     {
+      "name": "adjust_proposal_epochs",
+      "discriminator": [
+        180,
+        136,
+        13,
+        187,
+        151,
+        188,
+        135,
+        242
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "proposal",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "start_epoch",
+          "type": "u64"
+        },
+        {
+          "name": "end_epoch",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "cast_vote",
-      "discriminator": [20, 212, 15, 189, 69, 180, 69, 151],
+      "discriminator": [
+        20,
+        212,
+        15,
+        189,
+        69,
+        180,
+        69,
+        151
+      ],
       "accounts": [
         {
           "name": "signer",
@@ -50,7 +105,12 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [118, 111, 116, 101]
+                "value": [
+                  118,
+                  111,
+                  116,
+                  101
+                ]
               },
               {
                 "kind": "account",
@@ -74,8 +134,25 @@
               {
                 "kind": "const",
                 "value": [
-                  118, 111, 116, 101, 95, 111, 118, 101, 114, 114, 105, 100,
-                  101, 95, 99, 97, 99, 104, 101
+                  118,
+                  111,
+                  116,
+                  101,
+                  95,
+                  111,
+                  118,
+                  101,
+                  114,
+                  114,
+                  105,
+                  100,
+                  101,
+                  95,
+                  99,
+                  97,
+                  99,
+                  104,
+                  101
                 ]
               },
               {
@@ -120,7 +197,16 @@
     },
     {
       "name": "cast_vote_override",
-      "discriminator": [225, 8, 137, 98, 214, 156, 183, 62],
+      "discriminator": [
+        225,
+        8,
+        137,
+        98,
+        214,
+        156,
+        183,
+        62
+      ],
       "accounts": [
         {
           "name": "signer",
@@ -138,7 +224,12 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [118, 111, 116, 101]
+                "value": [
+                  118,
+                  111,
+                  116,
+                  101
+                ]
               },
               {
                 "kind": "account",
@@ -162,7 +253,19 @@
               {
                 "kind": "const",
                 "value": [
-                  118, 111, 116, 101, 95, 111, 118, 101, 114, 114, 105, 100, 101
+                  118,
+                  111,
+                  116,
+                  101,
+                  95,
+                  111,
+                  118,
+                  101,
+                  114,
+                  114,
+                  105,
+                  100,
+                  101
                 ]
               },
               {
@@ -188,8 +291,25 @@
               {
                 "kind": "const",
                 "value": [
-                  118, 111, 116, 101, 95, 111, 118, 101, 114, 114, 105, 100,
-                  101, 95, 99, 97, 99, 104, 101
+                  118,
+                  111,
+                  116,
+                  101,
+                  95,
+                  111,
+                  118,
+                  101,
+                  114,
+                  114,
+                  105,
+                  100,
+                  101,
+                  95,
+                  99,
+                  97,
+                  99,
+                  104,
+                  101
                 ]
               },
               {
@@ -237,7 +357,10 @@
           "name": "stake_merkle_proof",
           "type": {
             "vec": {
-              "array": ["u8", 32]
+              "array": [
+                "u8",
+                32
+              ]
             }
           }
         },
@@ -253,7 +376,16 @@
     },
     {
       "name": "create_proposal",
-      "discriminator": [132, 116, 68, 174, 216, 160, 198, 22],
+      "discriminator": [
+        132,
+        116,
+        68,
+        174,
+        216,
+        160,
+        198,
+        22
+      ],
       "accounts": [
         {
           "name": "signer",
@@ -267,7 +399,16 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [112, 114, 111, 112, 111, 115, 97, 108]
+                "value": [
+                  112,
+                  114,
+                  111,
+                  112,
+                  111,
+                  115,
+                  97,
+                  108
+                ]
               },
               {
                 "kind": "arg",
@@ -287,7 +428,13 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [105, 110, 100, 101, 120]
+                "value": [
+                  105,
+                  110,
+                  100,
+                  101,
+                  120
+                ]
               }
             ]
           }
@@ -326,7 +473,16 @@
     },
     {
       "name": "finalize_proposal",
-      "discriminator": [23, 68, 51, 167, 109, 173, 187, 164],
+      "discriminator": [
+        23,
+        68,
+        51,
+        167,
+        109,
+        173,
+        187,
+        164
+      ],
       "accounts": [
         {
           "name": "signer",
@@ -342,7 +498,16 @@
     },
     {
       "name": "initialize_index",
-      "discriminator": [204, 67, 3, 74, 139, 139, 233, 10],
+      "discriminator": [
+        204,
+        67,
+        3,
+        74,
+        139,
+        139,
+        233,
+        10
+      ],
       "accounts": [
         {
           "name": "signer",
@@ -356,7 +521,13 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [105, 110, 100, 101, 120]
+                "value": [
+                  105,
+                  110,
+                  100,
+                  101,
+                  120
+                ]
               }
             ]
           }
@@ -370,7 +541,16 @@
     },
     {
       "name": "modify_vote",
-      "discriminator": [116, 52, 102, 0, 121, 145, 27, 139],
+      "discriminator": [
+        116,
+        52,
+        102,
+        0,
+        121,
+        145,
+        27,
+        139
+      ],
       "accounts": [
         {
           "name": "signer",
@@ -388,7 +568,12 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [118, 111, 116, 101]
+                "value": [
+                  118,
+                  111,
+                  116,
+                  101
+                ]
               },
               {
                 "kind": "account",
@@ -435,7 +620,16 @@
     },
     {
       "name": "modify_vote_override",
-      "discriminator": [42, 54, 123, 87, 239, 152, 22, 186],
+      "discriminator": [
+        42,
+        54,
+        123,
+        87,
+        239,
+        152,
+        22,
+        186
+      ],
       "accounts": [
         {
           "name": "signer",
@@ -453,7 +647,12 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [118, 111, 116, 101]
+                "value": [
+                  118,
+                  111,
+                  116,
+                  101
+                ]
               },
               {
                 "kind": "account",
@@ -477,7 +676,19 @@
               {
                 "kind": "const",
                 "value": [
-                  118, 111, 116, 101, 95, 111, 118, 101, 114, 114, 105, 100, 101
+                  118,
+                  111,
+                  116,
+                  101,
+                  95,
+                  111,
+                  118,
+                  101,
+                  114,
+                  114,
+                  105,
+                  100,
+                  101
                 ]
               },
               {
@@ -503,8 +714,25 @@
               {
                 "kind": "const",
                 "value": [
-                  118, 111, 116, 101, 95, 111, 118, 101, 114, 114, 105, 100,
-                  101, 95, 99, 97, 99, 104, 101
+                  118,
+                  111,
+                  116,
+                  101,
+                  95,
+                  111,
+                  118,
+                  101,
+                  114,
+                  114,
+                  105,
+                  100,
+                  101,
+                  95,
+                  99,
+                  97,
+                  99,
+                  104,
+                  101
                 ]
               },
               {
@@ -552,7 +780,10 @@
           "name": "stake_merkle_proof",
           "type": {
             "vec": {
-              "array": ["u8", 32]
+              "array": [
+                "u8",
+                32
+              ]
             }
           }
         },
@@ -568,7 +799,16 @@
     },
     {
       "name": "support_proposal",
-      "discriminator": [95, 239, 233, 199, 201, 62, 90, 27],
+      "discriminator": [
+        95,
+        239,
+        233,
+        199,
+        201,
+        62,
+        90,
+        27
+      ],
       "accounts": [
         {
           "name": "signer",
@@ -586,7 +826,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [115, 117, 112, 112, 111, 114, 116]
+                "value": [
+                  115,
+                  117,
+                  112,
+                  112,
+                  111,
+                  114,
+                  116
+                ]
               },
               {
                 "kind": "account",
@@ -622,57 +870,174 @@
   "accounts": [
     {
       "name": "Proposal",
-      "discriminator": [26, 94, 189, 187, 116, 136, 53, 33]
+      "discriminator": [
+        26,
+        94,
+        189,
+        187,
+        116,
+        136,
+        53,
+        33
+      ]
     },
     {
       "name": "ProposalIndex",
-      "discriminator": [83, 97, 143, 58, 176, 46, 177, 195]
+      "discriminator": [
+        83,
+        97,
+        143,
+        58,
+        176,
+        46,
+        177,
+        195
+      ]
     },
     {
       "name": "Support",
-      "discriminator": [247, 108, 3, 111, 84, 51, 217, 107]
+      "discriminator": [
+        247,
+        108,
+        3,
+        111,
+        84,
+        51,
+        217,
+        107
+      ]
     },
     {
       "name": "Vote",
-      "discriminator": [96, 91, 104, 57, 145, 35, 172, 155]
+      "discriminator": [
+        96,
+        91,
+        104,
+        57,
+        145,
+        35,
+        172,
+        155
+      ]
     },
     {
       "name": "VoteOverride",
-      "discriminator": [130, 93, 172, 50, 168, 151, 176, 188]
+      "discriminator": [
+        130,
+        93,
+        172,
+        50,
+        168,
+        151,
+        176,
+        188
+      ]
     }
   ],
   "events": [
     {
       "name": "MerkleRootAdded",
-      "discriminator": [171, 59, 45, 200, 89, 55, 150, 244]
+      "discriminator": [
+        171,
+        59,
+        45,
+        200,
+        89,
+        55,
+        150,
+        244
+      ]
     },
     {
       "name": "ProposalCreated",
-      "discriminator": [186, 8, 160, 108, 81, 13, 51, 206]
+      "discriminator": [
+        186,
+        8,
+        160,
+        108,
+        81,
+        13,
+        51,
+        206
+      ]
     },
     {
       "name": "ProposalFinalized",
-      "discriminator": [159, 104, 210, 220, 86, 209, 61, 51]
+      "discriminator": [
+        159,
+        104,
+        210,
+        220,
+        86,
+        209,
+        61,
+        51
+      ]
     },
     {
       "name": "ProposalSupported",
-      "discriminator": [248, 220, 71, 30, 127, 209, 67, 231]
+      "discriminator": [
+        248,
+        220,
+        71,
+        30,
+        127,
+        209,
+        67,
+        231
+      ]
     },
     {
       "name": "VoteCast",
-      "discriminator": [39, 53, 195, 104, 188, 17, 225, 213]
+      "discriminator": [
+        39,
+        53,
+        195,
+        104,
+        188,
+        17,
+        225,
+        213
+      ]
     },
     {
       "name": "VoteModified",
-      "discriminator": [192, 64, 130, 9, 210, 47, 57, 175]
+      "discriminator": [
+        192,
+        64,
+        130,
+        9,
+        210,
+        47,
+        57,
+        175
+      ]
     },
     {
       "name": "VoteOverrideCast",
-      "discriminator": [111, 204, 225, 252, 254, 218, 120, 236]
+      "discriminator": [
+        111,
+        204,
+        225,
+        252,
+        254,
+        218,
+        120,
+        236
+      ]
     },
     {
       "name": "VoteOverrideModified",
-      "discriminator": [235, 74, 153, 225, 242, 72, 228, 9]
+      "discriminator": [
+        235,
+        74,
+        153,
+        225,
+        242,
+        72,
+        228,
+        9
+      ]
     }
   ],
   "errors": [
@@ -870,6 +1235,11 @@
       "code": 6038,
       "name": "SupportPeriodExpired",
       "msg": "Support period has expired for this proposal"
+    },
+    {
+      "code": 6039,
+      "name": "InvalidEpochRange",
+      "msg": "Invalid epoch range: end_epoch must be greater than start_epoch"
     }
   ],
   "types": [
@@ -889,7 +1259,10 @@
           {
             "name": "merkle_root_hash",
             "type": {
-              "array": ["u8", 32]
+              "array": [
+                "u8",
+                32
+              ]
             }
           }
         ]
@@ -937,12 +1310,16 @@
           },
           {
             "name": "for_votes_lamports",
-            "docs": ["Total lamports voted in favor of this proposal"],
+            "docs": [
+              "Total lamports voted in favor of this proposal"
+            ],
             "type": "u64"
           },
           {
             "name": "against_votes_lamports",
-            "docs": ["Total lamports voted against this proposal"],
+            "docs": [
+              "Total lamports voted against this proposal"
+            ],
             "type": "u64"
           },
           {
@@ -983,13 +1360,18 @@
             ],
             "type": {
               "option": {
-                "array": ["u8", 32]
+                "array": [
+                  "u8",
+                  32
+                ]
               }
             }
           },
           {
             "name": "snapshot_slot",
-            "docs": ["Slot number when the validator stake snapshot was taken"],
+            "docs": [
+              "Slot number when the validator stake snapshot was taken"
+            ],
             "type": "u64"
           }
         ]
@@ -1125,12 +1507,16 @@
           },
           {
             "name": "stake_account",
-            "docs": ["The stake account address."],
+            "docs": [
+              "The stake account address."
+            ],
             "type": "pubkey"
           },
           {
             "name": "active_stake",
-            "docs": ["Active delegated stake amount."],
+            "docs": [
+              "Active delegated stake amount."
+            ],
             "type": "u64"
           }
         ]
@@ -1179,6 +1565,26 @@
           },
           {
             "name": "abstain_votes_bp",
+            "type": "u64"
+          },
+          {
+            "name": "for_votes_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "against_votes_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "abstain_votes_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "stake",
+            "type": "u64"
+          },
+          {
+            "name": "override_lamports",
             "type": "u64"
           },
           {

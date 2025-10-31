@@ -20,7 +20,7 @@ export type ProposalRecord = {
   creationTimestamp: number; // Unix timestamp
 
   // Vote Data (in lamports)
-  clusterSupportLamports: number;
+  clusterSupportLamports: bigint;
   forVotesLamports: number;
   againstVotesLamports: number;
   abstainVotesLamports: number;

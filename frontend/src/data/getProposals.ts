@@ -41,7 +41,8 @@ export function mapProposalDto(
     endEpoch: raw.endEpoch.toNumber(),
     creationTimestamp: raw.creationTimestamp?.toNumber() || 0,
 
-    clusterSupportLamports: raw.clusterSupportLamports?.toNumber() || 0,
+
+    clusterSupportLamports: BigInt(raw.clusterSupportLamports?.toString() || 0),
     forVotesLamports: raw.forVotesLamports?.toNumber() || 0,
     againstVotesLamports: raw.againstVotesLamports?.toNumber() || 0,
     abstainVotesLamports: raw.abstainVotesLamports?.toNumber() || 0,
