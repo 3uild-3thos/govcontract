@@ -1,10 +1,10 @@
 import { REQUIRED_QUORUM_PCT } from "@/chain";
 import { VotingRateChart } from "./ui";
-import { useLatestProposalData } from "@/hooks";
 import { QuorumLoadingSkeleton } from "./QuorumLoadingSkeleton";
 
 export const Quorum = () => {
-  const { data, isLoading } = useLatestProposalData();
+  const data = undefined;
+  const isLoading = false;
 
   if (data === undefined || isLoading) {
     return <QuorumLoadingSkeleton />;
@@ -29,9 +29,7 @@ export const Quorum = () => {
           <div className="text-xl font-bold text-dao-text-primary">
             {REQUIRED_QUORUM_PCT * 100}%
           </div>
-          <div className="text-dao-text-secondary text-sm">
-            {data.requiredQuorum.toLocaleString()} SOL
-          </div>
+          <div className="text-dao-text-secondary text-sm">{data} SOL</div>
         </div>
 
         <p className="text-sm text-dao-text-muted leading-relaxed md:max-w-80">

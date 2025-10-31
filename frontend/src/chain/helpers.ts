@@ -1,4 +1,4 @@
-import { Govcontract } from "@/chain";
+import { GovcontractOLD } from "@/chain";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { Connection, Keypair } from "@solana/web3.js";
 
@@ -25,4 +25,7 @@ const provider = new AnchorProvider(connection, dummyWallet, {
   commitment: "confirmed",
 });
 
-export const program = new Program(idl, provider) as Program<Govcontract>;
+/**
+ * @deprecated old program
+ */
+export const program = new Program(idl, provider) as Program<GovcontractOLD>;

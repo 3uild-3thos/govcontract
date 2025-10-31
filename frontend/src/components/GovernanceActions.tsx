@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useAnchorWallet, useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { clusterApiUrl } from "@solana/web3.js";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
@@ -15,22 +15,31 @@ import {
   TransactionResult,
 } from "@/chain/instructions";
 
+/**
+ * @deprecated was created by Juan but is not used anywhere, prob just created for example use
+ */
 export default function GovernanceActions() {
   const wallet = useWallet();
-  const { endpoint, setEndpoint, resetToDefault } = useEndpoint();
-  const { programId, programIdString, setProgramId, resetToDefault: resetProgramId } = useProgramId();
+  const anchorWallet = useAnchorWallet();
+  const { endpointUrl, setEndpoint, resetToDefault } = useEndpoint();
+  const {
+    // programId,
+    programIdString,
+    setProgramId,
+    resetToDefault: resetProgramId,
+  } = useProgramId();
   const [loading, setLoading] = useState<string | null>(null);
   const [result, setResult] = useState<TransactionResult | null>(null);
-  const [endpointInput, setEndpointInput] = useState(endpoint);
+  const [endpointInput, setEndpointInput] = useState(endpointUrl);
   const [showEndpointConfig, setShowEndpointConfig] = useState(false);
   const [programIdInput, setProgramIdInput] = useState(programIdString);
   const [showProgramIdConfig, setShowProgramIdConfig] = useState(false);
-  const [network, setNetwork] = useState('mainnet');
+  const [network, setNetwork] = useState("mainnet");
 
   // Update input when endpoint changes
   useEffect(() => {
-    setEndpointInput(endpoint);
-  }, [endpoint]);
+    setEndpointInput(endpointUrl);
+  }, [endpointUrl]);
 
   // Update input when program ID changes
   useEffect(() => {
@@ -39,7 +48,7 @@ export default function GovernanceActions() {
 
   const handleEndpointSave = () => {
     if (endpointInput.trim()) {
-      setEndpoint(endpointInput.trim());
+      setEndpoint("custom", endpointInput.trim());
       setShowEndpointConfig(false);
       setResult({
         signature: "",
@@ -100,7 +109,7 @@ export default function GovernanceActions() {
   ) => {
     setLoading(actionName);
     setResult(null);
-    
+
     try {
       const result = await action();
       setResult(result);
@@ -115,19 +124,23 @@ export default function GovernanceActions() {
     }
   };
 
-
   const handleCreateProposal = () => {
     handleAction(
-      () => createProposal({
-        title: "Test Proposal",
-        description: "A test proposal for demonstration purposes. See: https://github.com/example/proposal",
-        startEpoch: 600,
-        votingLengthEpochs: 5,
-        wallet,
-        programId,
-        network,
-        endpoint,
-      }),
+      () =>
+        createProposal(
+          {
+            title: "Test Proposal",
+            description:
+              "A test proposal for demonstration purposes. See: https://github.com/example/proposal",
+            startEpoch: 600,
+            votingLengthEpochs: 5,
+            wallet: anchorWallet,
+          },
+          {
+            endpoint: endpointUrl,
+            network: network,
+          }
+        ),
       "Creating Proposal"
     );
   };
@@ -137,16 +150,20 @@ export default function GovernanceActions() {
     if (!proposalId) return;
 
     handleAction(
-      () => castVote({
-        proposalId,
-        forVotesBp: 5000,
-        againstVotesBp: 5000,
-        abstainVotesBp: 0,
-        wallet,
-        programId,
-        network,
-        endpoint,
-      }),
+      () =>
+        castVote(
+          {
+            proposalId,
+            forVotesBp: 5000,
+            againstVotesBp: 5000,
+            abstainVotesBp: 0,
+            wallet: anchorWallet,
+          },
+          {
+            endpoint: endpointUrl,
+            network: network,
+          }
+        ),
       "Casting Vote"
     );
   };
@@ -156,13 +173,17 @@ export default function GovernanceActions() {
     if (!proposalId) return;
 
     handleAction(
-      () => supportProposal({
-        proposalId,
-        wallet,
-        programId,
-        network,
-        endpoint,
-      }),
+      () =>
+        supportProposal(
+          {
+            proposalId,
+            wallet: anchorWallet,
+          },
+          {
+            endpoint: endpointUrl,
+            network: network,
+          }
+        ),
       "Supporting Proposal"
     );
   };
@@ -172,15 +193,20 @@ export default function GovernanceActions() {
     if (!proposalId) return;
 
     handleAction(
-      () => modifyVote({
-        proposalId,
-        forVotesBp: 3000,
-        againstVotesBp: 3000,
-        abstainVotesBp: 4000,
-        wallet,
-        programId,
-        network,
-      }),
+      () =>
+        modifyVote(
+          {
+            proposalId,
+            forVotesBp: 3000,
+            againstVotesBp: 3000,
+            abstainVotesBp: 4000,
+            wallet: anchorWallet,
+          },
+          {
+            endpoint: endpointUrl,
+            network: network,
+          }
+        ),
       "Modifying Vote"
     );
   };
@@ -188,10 +214,10 @@ export default function GovernanceActions() {
   return (
     <div className="p-6 max-w-2xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Governance Actions</h1>
-      
+
       <div className="mb-6 space-y-4">
         <WalletMultiButton />
-        
+
         {/* Endpoint Configuration */}
         <div className="border rounded-lg p-4 bg-gray-50">
           <div className="flex items-center justify-between mb-2">
@@ -203,15 +229,17 @@ export default function GovernanceActions() {
               {showEndpointConfig ? "Hide" : "Configure"}
             </button>
           </div>
-          
+
           <div className="text-xs text-gray-600 break-all">
-            Current: {endpoint}
+            Current: {endpointUrl}
           </div>
-          
+
           {showEndpointConfig && (
             <div className="mt-4 space-y-3">
               <div>
-                <label className="block text-xs font-medium mb-1">Custom Endpoint URL</label>
+                <label className="block text-xs font-medium mb-1">
+                  Custom Endpoint URL
+                </label>
                 <input
                   type="text"
                   value={endpointInput}
@@ -220,9 +248,11 @@ export default function GovernanceActions() {
                   className="w-full px-3 py-2 border rounded text-sm"
                 />
               </div>
-              
+
               <div>
-                <label className="block text-xs font-medium mb-2">Quick Presets</label>
+                <label className="block text-xs font-medium mb-2">
+                  Quick Presets
+                </label>
                 <div className="flex flex-wrap gap-2">
                   {getPresetEndpoints().map((preset) => (
                     <button
@@ -235,7 +265,7 @@ export default function GovernanceActions() {
                   ))}
                 </div>
               </div>
-              
+
               <div className="flex gap-2">
                 <button
                   onClick={handleEndpointSave}
@@ -259,7 +289,7 @@ export default function GovernanceActions() {
             </div>
           )}
         </div>
-        
+
         {/* Program ID Configuration */}
         <div className="border rounded-lg p-4 bg-gray-50">
           <div className="flex items-center justify-between mb-2">
@@ -271,15 +301,17 @@ export default function GovernanceActions() {
               {showProgramIdConfig ? "Hide" : "Configure"}
             </button>
           </div>
-          
+
           <div className="text-xs text-gray-600 break-all">
             Current: {programIdString}
           </div>
-          
+
           {showProgramIdConfig && (
             <div className="mt-4 space-y-3">
               <div>
-                <label className="block text-xs font-medium mb-1">Program ID</label>
+                <label className="block text-xs font-medium mb-1">
+                  Program ID
+                </label>
                 <input
                   type="text"
                   value={programIdInput}
@@ -291,7 +323,7 @@ export default function GovernanceActions() {
                   Enter the deployed program ID for your governance contract
                 </p>
               </div>
-              
+
               <div className="flex gap-2">
                 <button
                   onClick={handleProgramIdSave}
@@ -315,33 +347,31 @@ export default function GovernanceActions() {
             </div>
           )}
         </div>
-        
+
         {/* Network Configuration */}
         <div className="border rounded-lg p-4 bg-gray-50">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium">Governance Network</h3>
           </div>
-          
-          <div className="text-xs text-gray-600 mb-3">
-            Current: {network}
-          </div>
-          
+
+          <div className="text-xs text-gray-600 mb-3">Current: {network}</div>
+
           <div className="flex gap-2">
-            {['mainnet', 'testnet', 'devnet'].map((net) => (
+            {["mainnet", "testnet", "devnet"].map((net) => (
               <button
                 key={net}
                 onClick={() => setNetwork(net)}
                 className={`px-3 py-1 text-xs rounded ${
                   network === net
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-blue-100 hover:bg-blue-200 text-blue-800'
+                    ? "bg-blue-500 text-white"
+                    : "bg-blue-100 hover:bg-blue-200 text-blue-800"
                 }`}
               >
                 {net.charAt(0).toUpperCase() + net.slice(1)}
               </button>
             ))}
           </div>
-          
+
           <p className="text-xs text-gray-500 mt-2">
             Select the network for governance API calls and merkle proofs
           </p>
@@ -356,7 +386,9 @@ export default function GovernanceActions() {
               disabled={loading === "Creating Proposal"}
               className="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white px-4 py-2 rounded"
             >
-              {loading === "Creating Proposal" ? "Loading..." : "Create Proposal"}
+              {loading === "Creating Proposal"
+                ? "Loading..."
+                : "Create Proposal"}
             </button>
 
             <button
@@ -380,14 +412,20 @@ export default function GovernanceActions() {
               disabled={loading === "Supporting Proposal"}
               className="bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 text-white px-4 py-2 rounded"
             >
-              {loading === "Supporting Proposal" ? "Loading..." : "Support Proposal"}
+              {loading === "Supporting Proposal"
+                ? "Loading..."
+                : "Support Proposal"}
             </button>
           </div>
 
           {result && (
-            <div className={`p-4 rounded ${result.success ? 'bg-green-100' : 'bg-red-100'}`}>
+            <div
+              className={`p-4 rounded ${
+                result.success ? "bg-green-100" : "bg-red-100"
+              }`}
+            >
               <h3 className="font-semibold mb-2">
-                {result.success ? '✅ Success' : '❌ Error'}
+                {result.success ? "✅ Success" : "❌ Error"}
               </h3>
               {result.success ? (
                 <div>
@@ -416,7 +454,9 @@ export default function GovernanceActions() {
       )}
 
       {!wallet.connected && (
-        <p className="text-gray-600">Please connect your wallet to use governance actions.</p>
+        <p className="text-gray-600">
+          Please connect your wallet to use governance actions.
+        </p>
       )}
     </div>
   );

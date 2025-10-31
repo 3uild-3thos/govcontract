@@ -1,42 +1,9 @@
-import type { BN, Program, ProgramAccount } from "@coral-xyz/anchor";
-import type { Govcontract } from "./govcontract";
+import type { IdlAccounts, Program } from "@coral-xyz/anchor";
 
-import { PublicKey } from "@solana/web3.js";
+import { Govcontract } from "./govcontractV2";
 
-export type GovContract = Program<Govcontract>;
+export type GovContractProgram = Program<Govcontract>;
 
-export interface Proposal {
-  author: PublicKey;
-  title: string;
-  description: string;
-  creation_epoch: BN;
-  startEpoch: BN;
-  endEpoch: BN;
-  proposerStakeWeightBp: BN;
-  clusterSupportBp: BN;
-  forVotesBp: BN;
-  againstVotesBp: BN;
-  abstainVotesBp: BN;
-  voting: boolean;
-  finalized: boolean;
-  proposalBump: number;
-}
-
-export interface Support {
-  proposal: PublicKey;
-  validator: PublicKey;
-  bump: number;
-}
-
-interface RawVote {
-  proposal: PublicKey;
-  forVotesBp: BN;
-  againstVotesBp: BN;
-  abstainVotesBp: BN;
-  voteTimestamp: BN;
-  bump: number;
-}
-
-export type Vote = ProgramAccount<RawVote>;
-
-export type Votes = Vote[];
+export type ProposalAccount = IdlAccounts<Govcontract>["proposal"];
+export type VoteAccount = IdlAccounts<Govcontract>["vote"];
+export type VoteOverrideAccount = IdlAccounts<Govcontract>["voteOverride"];
