@@ -18,7 +18,8 @@ export function determineWalletRole(
   else if (hasStake) return WalletRole.STAKER;
   else if (hasDelegated) return WalletRole.VALIDATOR;
 
-  return WalletRole.NONE;
+  // default to staker even if there are no stake accounts
+  return WalletRole.STAKER;
 }
 
 export function getDefaultView(role: WalletRole): ViewType | undefined {
