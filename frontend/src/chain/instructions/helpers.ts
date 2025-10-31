@@ -5,6 +5,7 @@ import {
   VoteAccountProofResponse,
   StakeAccountProofResponse,
   VoterSummaryResponse,
+  SNAPSHOT_PROGRAM_ID,
 } from "./types";
 import { AnchorWallet } from "@solana/wallet-adapter-react";
 import { Govcontract } from "../types";
@@ -83,7 +84,7 @@ export function createProgramWithWallet(
   endpoint?: string
 ) {
   // Use provided endpoint or default to devnet
-  const rpcEndpoint = endpoint || RPC_URLS.devnet;
+  const rpcEndpoint = endpoint || RPC_URLS.testnet;
   const connection = new Connection(rpcEndpoint, "confirmed");
 
   const provider = new AnchorProvider(connection, wallet, {
@@ -98,7 +99,7 @@ export function createProgramWithWallet(
 // Create program instance with dummy wallet (just for data fetching)
 export function createProgramWitDummyWallet(endpoint?: string) {
   // Use provided endpoint or default to devnet
-  const rpcEndpoint = endpoint || RPC_URLS.devnet;
+  const rpcEndpoint = endpoint || RPC_URLS.testnet;
   const connection = new Connection(rpcEndpoint, "confirmed");
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -123,16 +124,18 @@ function buildSolgovUrl(endpoint: string): string {
   // Use Next.js API proxy when running in browser to avoid CORS
   // if (typeof window !== "undefined") {
   //   // Browser: use proxy with path parameter
-  //   return `/api/solgov?path=${endpoint}`;
+  //   return `/api/solgov?path=${encodeURIComponent(endpoint)}`;
   // }
   // Server-side: use direct URL
-  return `https://api.solgov.online/${endpoint}`;
+  // return `https://api.solgov.online/${endpoint}`;\
+  // return `http://84.32.100.123:8000/${endpoint}`;
+  return `/api/solgov?path=${encodeURIComponent(endpoint)}`;
 }
 
 // API helpers using the solgov.online service
 export async function getVoteAccountProof(
   voteAccount: string,
-  network: string = "mainnet",
+  network: string = "testnet",
   slot?: number
 ): Promise<VoteAccountProofResponse> {
   // Get current slot if not provided
@@ -152,6 +155,7 @@ export async function getVoteAccountProof(
   const url = buildSolgovUrl(
     `proof/vote_account/${voteAccount}?network=${network}&slot=${currentSlot}`
   );
+  console.log("vote account url", url);
   const response = await fetch(url);
 
   if (!response.ok) {
@@ -183,6 +187,7 @@ export async function getStakeAccountProof(
   const url = buildSolgovUrl(
     `proof/stake_account/${stakeAccount}?network=${network}&slot=${currentSlot}`
   );
+  console.log("stake account url", url);
   const response = await fetch(url);
 
   if (!response.ok) {
@@ -267,9 +272,7 @@ export function deriveMetaMerkleProofPda(
 // Generate PDAs from vote proof response
 export function generatePdasFromVoteProofResponse(
   proofResponse: VoteAccountProofResponse,
-  snapshotProgramId: PublicKey = new PublicKey(
-    "gov4qDhw2rBudqwqhyTHXgJEPSaRdNnAZP3vT7BLwgL"
-  )
+  snapshotProgramId: PublicKey = SNAPSHOT_PROGRAM_ID
 ): [PublicKey, PublicKey] {
   // Derive consensus result PDA (this is typically derived from the snapshot slot)
   const [consensusResultPda] = PublicKey.findProgramAddressSync(

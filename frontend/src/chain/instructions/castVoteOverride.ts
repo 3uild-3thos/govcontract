@@ -44,7 +44,7 @@ export async function castVoteOverride(
   validateVoteBasisPoints(forVotesBp, againstVotesBp, abstainVotesBp);
 
   const proposalPubkey = new PublicKey(proposalId);
-  const splVoteAccount = voteAccount || wallet.publicKey;
+  const splVoteAccount = voteAccount;
   const program = createProgramWithWallet(wallet);
 
   // Determine stake account to use
@@ -73,7 +73,7 @@ export async function castVoteOverride(
   // Get proofs
   const network = blockchainParams.network || "mainnet";
   const [metaMerkleProof, stakeMerkleProof] = await Promise.all([
-    getVoteAccountProof(splVoteAccount.toString(), network),
+    getVoteAccountProof(splVoteAccount, network),
     getStakeAccountProof(stakeAccountStr, network),
   ]);
 
@@ -114,7 +114,7 @@ export async function castVoteOverride(
       againstVotesBn,
       abstainVotesBn,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      stakeMerkleProofVec as any, // TODO: JUAN fix this please, not sure whats going on
+      stakeMerkleProofVec.map((proof) => proof.toBytes() as any), // TODO: JUAN fix this please, not sure whats going on
       stakeMerkleLeaf
     )
     .accounts({

@@ -50,7 +50,7 @@ export interface CastVoteOverrideParams {
   abstainVotesBp: number;
   stakeAccount: string;
   wallet: AnchorWallet | undefined;
-  voteAccount?: PublicKey;
+  voteAccount: string;
 }
 
 export interface SupportProposalParams {
@@ -116,5 +116,5 @@ export interface NetworkMetaResponse {
 // Constants
 export const BASIS_POINTS_TOTAL = 10000;
 export const SNAPSHOT_PROGRAM_ID = new PublicKey(
-  "gov4qDhw2rBudqwqhyTHXgJEPSaRdNnAZP3vT7BLwgL"
+  "GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc"
 );

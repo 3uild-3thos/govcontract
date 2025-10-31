@@ -122,7 +122,8 @@ export async function exampleModifyVote(
 export async function exampleCastVoteOverride(
   wallet: AnchorWallet,
   proposalId: string,
-  stakeAccount: string
+  stakeAccount: string,
+  voteAccount: string
 ): Promise<void> {
   console.log("Casting vote override...");
 
@@ -134,6 +135,7 @@ export async function exampleCastVoteOverride(
       abstainVotesBp: 0, // 0% abstain
       stakeAccount,
       wallet,
+      voteAccount,
     },
     { endpoint: RPC_URLS.devnet }
   );

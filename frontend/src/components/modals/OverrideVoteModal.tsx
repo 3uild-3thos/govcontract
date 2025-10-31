@@ -126,8 +126,16 @@ export function OverrideVoteModal({
           ? stakeAccounts[0]?.stakeAccount
           : customStakeAccount;
 
+      const voteAccount = stakeAccounts.find(
+        (sa) => sa.stakeAccount === stakeAccount
+      )?.voteAccount;
+
       if (stakeAccount === undefined) {
         toast.error("Not able to determine stake account");
+        return;
+      }
+      if (voteAccount === undefined) {
+        toast.error("Not able to determine vote account");
         return;
       }
 
@@ -139,6 +147,7 @@ export function OverrideVoteModal({
           againstVotesBp: voteDistribution.against * 100,
           abstainVotesBp: voteDistribution.abstain * 100,
           stakeAccount,
+          voteAccount,
         },
         {
           onSuccess: handleSuccess,
