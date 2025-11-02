@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
+  PublicKey,
   SystemProgram,
   TransactionInstruction,
   Transaction,
@@ -53,10 +54,21 @@ export async function createProposal(
     seed ?? Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
   );
 
-  // Use provided vote account or wallet's public key as fallback
-  const splVoteAccount = voteAccount || wallet.publicKey;
-
   const program = createProgramWithWallet(wallet, blockchainParams.endpoint);
+
+    const voteAccounts = await program.provider.connection.getVoteAccounts();
+    const validatorVoteAccount = voteAccounts.current.find(
+      (acc) => acc.nodePubkey === wallet.publicKey.toBase58()
+    );
+    
+    if (!validatorVoteAccount) {
+      throw new Error(
+        `No SPL vote account found for validator identity ${wallet.publicKey.toBase58()}`
+      );
+    }
+    
+    const splVoteAccount = new PublicKey(validatorVoteAccount.votePubkey);
+
 
   // Derive proposal PDA using the test pattern
   const proposalPda = deriveProposalAccount(program, seedValue, splVoteAccount);
