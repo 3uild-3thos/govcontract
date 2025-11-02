@@ -4,14 +4,14 @@ import {
   SystemProgram,
   TransactionInstruction,
   Transaction,
-} from "@solana/web3.js";
-import { BN } from "@coral-xyz/anchor";
+} from '@solana/web3.js';
+import { BN } from '@coral-xyz/anchor';
 import {
   BlockchainParams,
   CreateProposalParams,
   GOV_V1_PROGRAM_ID,
   TransactionResult,
-} from "./types";
+} from './types';
 import {
   createProgramWithWallet,
   deriveConsensusResultPda,
@@ -20,8 +20,9 @@ import {
   createGovV1ProgramWithWallet,
   getVoteAccountProof,
   generatePdasFromVoteProofResponse,
-} from "./helpers";
-import { deriveProposalAccount } from "../helpers";
+  deriveProposalIndexPda,
+} from './helpers';
+import { deriveProposalAccount } from '../helpers';
 
 /**
  * Creates a new governance proposal
@@ -40,12 +41,12 @@ export async function createProposal(
     voteAccount,
   } = params;
   if (!wallet || !wallet.publicKey) {
-    throw new Error("Wallet not connected");
+    throw new Error('Wallet not connected');
   }
 
   const voterSummary = await getVoterSummary(
     wallet.publicKey.toString(),
-    blockchainParams.network || "mainnet"
+    blockchainParams.network || 'mainnet'
   );
   const slot = voterSummary.snapshot_slot;
 
@@ -56,99 +57,92 @@ export async function createProposal(
 
   const program = createProgramWithWallet(wallet, blockchainParams.endpoint);
 
-    const voteAccounts = await program.provider.connection.getVoteAccounts();
-    const validatorVoteAccount = voteAccounts.current.find(
-      (acc) => acc.nodePubkey === wallet.publicKey.toBase58()
+  const voteAccounts = await program.provider.connection.getVoteAccounts();
+  const validatorVoteAccount = voteAccounts.current.find(
+    (acc) => acc.nodePubkey === wallet.publicKey.toBase58()
+  );
+
+  if (!validatorVoteAccount) {
+    throw new Error(
+      `No SPL vote account found for validator identity ${wallet.publicKey.toBase58()}`
     );
-    
-    if (!validatorVoteAccount) {
-      throw new Error(
-        `No SPL vote account found for validator identity ${wallet.publicKey.toBase58()}`
-      );
-    }
-    
+  }
 
   // Create dummy snapshot accounts for testing (matching test pattern)
   const SNAPSHOT_PROGRAM_ID = GOV_V1_PROGRAM_ID;
-  const snapshotSlot = new BN(slot);
 
-  const consensusResult = deriveConsensusResultPda(
-    snapshotSlot,
-    SNAPSHOT_PROGRAM_ID
-  );
-  const metaMerkleProof = deriveMetaMerkleProofPda(
-    consensusResult,
-    wallet.publicKey,
-    SNAPSHOT_PROGRAM_ID
+  const splVoteAccount = new PublicKey(validatorVoteAccount.votePubkey);
+  const proposalPda = deriveProposalAccount(program, seedValue, splVoteAccount);
+
+  const govV1Program = createGovV1ProgramWithWallet(
+    wallet,
+    blockchainParams.endpoint
   );
 
-  const merkleAccountInfo = program.provider.connection.getAccountInfo(
-    metaMerkleProof,
-    "confirmed"
+  const voteAccountProof = await getVoteAccountProof(
+    validatorVoteAccount.votePubkey,
+    blockchainParams.network,
+    slot
+  );
+  console.log('fetched voteAccountProof', voteAccountProof);
+
+  const [consensusResultPda, metaMerkleProofPda] =
+    generatePdasFromVoteProofResponse(voteAccountProof, SNAPSHOT_PROGRAM_ID, 4);
+  const merkleAccountInfo = await program.provider.connection.getAccountInfo(
+    metaMerkleProofPda,
+    'confirmed'
   );
 
   const instructions: TransactionInstruction[] = [];
-console.log("merkleAccountInfo", merkleAccountInfo)
-let splVoteAccount;
-  if (merkleAccountInfo === null) {
-console.log("merkleAccountInfo is null")
-    const govV1Program = createGovV1ProgramWithWallet(
-      wallet,
-      blockchainParams.endpoint
-    );
+  if (!merkleAccountInfo) {
+    console.log('merkleAccountInfo is null');
 
-    const voteAccountProof = await getVoteAccountProof(
-      voteAccount?.toBase58() ?? "",
-      blockchainParams.network,
-      slot
-    );
-    console.log("fetched voteAccountProof", voteAccountProof);
-
-    const [consensusResultPda, metaMerkleProofPda] =
-      generatePdasFromVoteProofResponse(voteAccountProof);
-
+    console.log('consensusResultPda', consensusResultPda.toBase58());
+    console.log('metaMerkleProofPda', metaMerkleProofPda.toBase58());
     const a = await govV1Program.methods
       .initMetaMerkleProof(
         {
-          activeStake: voteAccountProof.meta_merkle_leaf.active_stake,
-          votingWallet: voteAccountProof.meta_merkle_leaf.voting_wallet,
-          stakeMerkleRoot: voteAccountProof.meta_merkle_leaf.stake_merkle_root,
-          voteAccount: voteAccountProof.meta_merkle_leaf.vote_account,
-        } as any,
-        voteAccountProof.meta_merkle_proof as any,
+          votingWallet: new PublicKey(
+            voteAccountProof.meta_merkle_leaf.voting_wallet
+          ),
+          voteAccount: new PublicKey(
+            voteAccountProof.meta_merkle_leaf.vote_account
+          ),
+          stakeMerkleRoot: Array.from(
+            new PublicKey(
+              voteAccountProof.meta_merkle_leaf.stake_merkle_root
+            ).toBytes()
+          ),
+          activeStake: new BN(voteAccountProof.meta_merkle_leaf.active_stake),
+        },
+        voteAccountProof.meta_merkle_proof.map((proof) =>
+          Array.from(new PublicKey(proof).toBytes())
+        ),
         new BN(1)
       )
       .accountsStrict({
         consensusResult: consensusResultPda,
         merkleProof: metaMerkleProofPda,
         payer: wallet.publicKey,
-        systemProgram: SNAPSHOT_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
       })
       .instruction();
 
     instructions.push(a);
-    splVoteAccount = new PublicKey(validatorVoteAccount.votePubkey);
   }
-  if (!splVoteAccount) {
-    splVoteAccount = new PublicKey(validatorVoteAccount.votePubkey);
-  }
-  const proposalPda = deriveProposalAccount(program, seedValue, splVoteAccount);
 
   // Build and send transaction using accountsPartial like in tests
   const proposalInstruction = await program.methods
-    .createProposal(
-      seedValue,
-      title,
-      description
-    )
-    .accountsPartial({
+    .createProposal(seedValue, title, description)
+    .accountsStrict({
       signer: wallet.publicKey,
       proposal: proposalPda,
       splVoteAccount,
       snapshotProgram: SNAPSHOT_PROGRAM_ID,
-      consensusResult,
-      metaMerkleProof,
+      consensusResult: consensusResultPda,
+      metaMerkleProof: metaMerkleProofPda,
       systemProgram: SystemProgram.programId,
+      proposalIndex: deriveProposalIndexPda(program.programId),
     })
     .instruction();
 
@@ -158,7 +152,7 @@ console.log("merkleAccountInfo is null")
   transaction.add(...instructions);
   transaction.feePayer = wallet.publicKey;
   transaction.recentBlockhash = (
-    await program.provider.connection.getLatestBlockhash("confirmed")
+    await program.provider.connection.getLatestBlockhash('confirmed')
   ).blockhash;
 
   const tx = await wallet.signTransaction(transaction);
@@ -172,4 +166,3 @@ console.log("merkleAccountInfo is null")
     success: true,
   };
 }
-
