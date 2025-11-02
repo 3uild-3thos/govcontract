@@ -38,7 +38,7 @@ export async function createProposal(
     wallet,
     voteAccount,
   } = params;
-
+console.log(seed)
   if (!wallet || !wallet.publicKey) {
     throw new Error("Wallet not connected");
   }
@@ -131,9 +131,6 @@ export async function createProposal(
       seedValue,
       title,
       description
-      // TODO: Juan, types complain about these 2 arguments
-      // new BN(startEpoch),
-      // new BN(votingLengthEpochs)
     )
     .accountsPartial({
       signer: wallet.publicKey,
