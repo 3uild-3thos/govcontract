@@ -1,14 +1,19 @@
-import { PublicKey } from "@solana/web3.js";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import {
+  PublicKey,
+  TransactionInstruction,
+  Transaction,
+} from "@solana/web3.js";
 import {
   CastVoteOverrideParams,
   TransactionResult,
   SNAPSHOT_PROGRAM_ID,
   BlockchainParams,
+  GOV_V1_PROGRAM_ID,
 } from "./types";
 import {
   createProgramWithWallet,
-  // deriveVotePda,
-  // deriveVoteOverridePda,
+  createGovV1ProgramWithWallet,
   getVoteAccountProof,
   getStakeAccountProof,
   getVoterSummary,
@@ -45,27 +50,26 @@ export async function castVoteOverride(
 
   const proposalPubkey = new PublicKey(proposalId);
   const splVoteAccount = voteAccount;
-  const program = createProgramWithWallet(wallet);
+  const program = createProgramWithWallet(wallet, blockchainParams.endpoint);
+
+  // Get voter summary to get slot and stake accounts
+  const voterSummary = await getVoterSummary(
+    wallet.publicKey.toString(),
+    blockchainParams.network || "mainnet"
+  );
+  const slot = voterSummary.snapshot_slot;
 
   // Determine stake account to use
   let stakeAccountStr = stakeAccount;
   if (!stakeAccountStr) {
-    try {
-      const voterSummary = await getVoterSummary(
-        wallet.publicKey.toString(),
-        blockchainParams.network || "mainnet"
-      );
-      if (
-        !voterSummary.stake_accounts ||
-        voterSummary.stake_accounts.length === 0
-      ) {
-        throw new Error("No stake account found for voter");
-      }
-      // TODO: JUAN fix this type casting
-      stakeAccountStr = voterSummary.stake_accounts[0].stake_account as string;
-    } catch (error) {
-      throw new Error(`Failed to get stake account: ${error}`);
+    if (
+      !voterSummary.stake_accounts ||
+      voterSummary.stake_accounts.length === 0
+    ) {
+      throw new Error("No stake account found for voter");
     }
+    // TODO: JUAN fix this type casting
+    stakeAccountStr = voterSummary.stake_accounts[0].stake_account as string;
   }
 
   const stakeAccountPubkey = new PublicKey(stakeAccountStr);
@@ -73,27 +77,50 @@ export async function castVoteOverride(
   // Get proofs
   const network = blockchainParams.network || "mainnet";
   const [metaMerkleProof, stakeMerkleProof] = await Promise.all([
-    getVoteAccountProof(splVoteAccount, network),
-    getStakeAccountProof(stakeAccountStr, network),
+    getVoteAccountProof(splVoteAccount, network, slot),
+    getStakeAccountProof(stakeAccountStr, network, slot),
   ]);
 
   const [consensusResultPda, metaMerkleProofPda] =
     generatePdasFromVoteProofResponse(metaMerkleProof);
 
-  // Derive PDAs
+  // Check if merkle account exists
+  const merkleAccountInfo = await program.provider.connection.getAccountInfo(
+    metaMerkleProofPda,
+    "confirmed"
+  );
 
-  // TODO: JUAN check if these are really necessary, typescript is complaining about not needing them in the code below
-  // const validatorVotePda = deriveVotePda(
-  //   proposalPubkey,
-  //   splVoteAccount,
-  //   program.programId
-  // );
-  // const voteOverridePda = deriveVoteOverridePda(
-  //   proposalPubkey,
-  //   stakeAccountPubkey,
-  //   validatorVotePda,
-  //   program.programId
-  // );
+  const instructions: TransactionInstruction[] = [];
+
+  if (merkleAccountInfo === null) {
+    const govV1Program = createGovV1ProgramWithWallet(
+      wallet,
+      blockchainParams.endpoint
+    );
+
+    console.log("fetched voteAccountProof", metaMerkleProof);
+
+    const initMerkleInstruction = await govV1Program.methods
+      .initMetaMerkleProof(
+        {
+          activeStake: metaMerkleProof.meta_merkle_leaf.active_stake,
+          votingWallet: metaMerkleProof.meta_merkle_leaf.voting_wallet,
+          stakeMerkleRoot: metaMerkleProof.meta_merkle_leaf.stake_merkle_root,
+          voteAccount: metaMerkleProof.meta_merkle_leaf.vote_account,
+        } as any,
+        metaMerkleProof.meta_merkle_proof as any,
+        new BN(1)
+      )
+      .accountsStrict({
+        consensusResult: consensusResultPda,
+        merkleProof: metaMerkleProofPda,
+        payer: wallet.publicKey,
+        systemProgram: GOV_V1_PROGRAM_ID,
+      })
+      .instruction();
+
+    instructions.push(initMerkleInstruction);
+  }
 
   // Convert merkle proof data
   const stakeMerkleProofVec = convertMerkleProofStrings(
@@ -107,14 +134,13 @@ export async function castVoteOverride(
   const againstVotesBn = new BN(againstVotesBp);
   const abstainVotesBn = new BN(abstainVotesBp);
 
-  // Build and send transaction
-  const tx = await program.methods
+  // Build cast vote override instruction
+  const castVoteOverrideInstruction = await program.methods
     .castVoteOverride(
       forVotesBn,
       againstVotesBn,
       abstainVotesBn,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      stakeMerkleProofVec.map((proof) => proof.toBytes() as any), // TODO: JUAN fix this please, not sure whats going on
+      stakeMerkleProofVec.map((proof) => proof.toBytes() as any),
       stakeMerkleLeaf
     )
     .accounts({
@@ -122,18 +148,29 @@ export async function castVoteOverride(
       splVoteAccount: splVoteAccount,
       splStakeAccount: stakeAccountPubkey,
       proposal: proposalPubkey,
-      // TODO: JUAN check if these are really necessary, typescript is complaining about not needing them
-      // validatorVote: validatorVotePda,
-      // voteOverride: voteOverridePda,
       consensusResult: consensusResultPda,
       metaMerkleProof: metaMerkleProofPda,
       snapshotProgram: SNAPSHOT_PROGRAM_ID,
-      // systemProgram: SystemProgram.programId,
     })
-    .rpc();
+    .instruction();
+
+  instructions.push(castVoteOverrideInstruction);
+
+  const transaction = new Transaction();
+  transaction.add(...instructions);
+  transaction.feePayer = wallet.publicKey;
+  transaction.recentBlockhash = (
+    await program.provider.connection.getLatestBlockhash("confirmed")
+  ).blockhash;
+
+  const tx = await wallet.signTransaction(transaction);
+
+  const signature = await program.provider.connection.sendRawTransaction(
+    tx.serialize()
+  );
 
   return {
-    signature: tx,
+    signature,
     success: true,
   };
 }

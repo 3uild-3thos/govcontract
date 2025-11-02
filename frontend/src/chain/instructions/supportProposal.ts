@@ -1,8 +1,15 @@
-import { PublicKey, SystemProgram } from "@solana/web3.js";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import {
+  PublicKey,
+  SystemProgram,
+  TransactionInstruction,
+  Transaction,
+} from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
 import {
   BlockchainParams,
   SupportProposalParams,
+  GOV_V1_PROGRAM_ID,
   TransactionResult,
 } from "./types";
 import {
@@ -10,6 +17,10 @@ import {
   deriveSupportPda,
   deriveConsensusResultPda,
   deriveMetaMerkleProofPda,
+  getVoterSummary,
+  createGovV1ProgramWithWallet,
+  getVoteAccountProof,
+  generatePdasFromVoteProofResponse,
 } from "./helpers";
 
 /**
@@ -19,18 +30,20 @@ export async function supportProposal(
   params: SupportProposalParams,
   blockchainParams: BlockchainParams
 ): Promise<TransactionResult> {
-  const {
-    proposalId,
-    wallet,
-    //voteAccount
-  } = params;
+  const { proposalId, wallet, voteAccount } = params;
 
   if (!wallet || !wallet.publicKey) {
     throw new Error("Wallet not connected");
   }
 
+  const voterSummary = await getVoterSummary(
+    wallet.publicKey.toString(),
+    blockchainParams.network || "mainnet"
+  );
+  const slot = voterSummary.snapshot_slot;
+
   const proposalPubkey = new PublicKey(proposalId);
-  // const splVoteAccount = voteAccount || wallet.publicKey;
+  const splVoteAccount = voteAccount || wallet.publicKey;
   const program = createProgramWithWallet(wallet, blockchainParams.endpoint);
 
   // Derive support PDA - based on IDL, it uses proposal and signer
@@ -40,9 +53,10 @@ export async function supportProposal(
     program.programId
   );
 
-  // Create dummy snapshot accounts for testing (matching test pattern)
-  const SNAPSHOT_PROGRAM_ID = new PublicKey("11111111111111111111111111111111");
-  const snapshotSlot = new BN(1000000); // Dummy snapshot slot
+  // Create snapshot accounts using GOV_V1_PROGRAM_ID
+  const SNAPSHOT_PROGRAM_ID = GOV_V1_PROGRAM_ID;
+  const snapshotSlot = new BN(slot);
+
   const consensusResult = deriveConsensusResultPda(
     snapshotSlot,
     SNAPSHOT_PROGRAM_ID
@@ -53,8 +67,53 @@ export async function supportProposal(
     SNAPSHOT_PROGRAM_ID
   );
 
-  // Build and send transaction using accountsPartial like in tests
-  const tx = await program.methods
+  const merkleAccountInfo = await program.provider.connection.getAccountInfo(
+    metaMerkleProof,
+    "confirmed"
+  );
+
+  const instructions: TransactionInstruction[] = [];
+
+  if (merkleAccountInfo === null) {
+    const govV1Program = createGovV1ProgramWithWallet(
+      wallet,
+      blockchainParams.endpoint
+    );
+
+    const voteAccountProof = await getVoteAccountProof(
+      splVoteAccount.toBase58(),
+      blockchainParams.network,
+      slot
+    );
+    console.log("fetched voteAccountProof", voteAccountProof);
+
+    const [consensusResultPda, metaMerkleProofPda] =
+      generatePdasFromVoteProofResponse(voteAccountProof);
+
+    const initMerkleInstruction = await govV1Program.methods
+      .initMetaMerkleProof(
+        {
+          activeStake: voteAccountProof.meta_merkle_leaf.active_stake,
+          votingWallet: voteAccountProof.meta_merkle_leaf.voting_wallet,
+          stakeMerkleRoot: voteAccountProof.meta_merkle_leaf.stake_merkle_root,
+          voteAccount: voteAccountProof.meta_merkle_leaf.vote_account,
+        } as any,
+        voteAccountProof.meta_merkle_proof as any,
+        new BN(1)
+      )
+      .accountsStrict({
+        consensusResult: consensusResultPda,
+        merkleProof: metaMerkleProofPda,
+        payer: wallet.publicKey,
+        systemProgram: SNAPSHOT_PROGRAM_ID,
+      })
+      .instruction();
+
+    instructions.push(initMerkleInstruction);
+  }
+
+  // Build support proposal instruction
+  const supportProposalInstruction = await program.methods
     .supportProposal()
     .accountsPartial({
       signer: wallet.publicKey,
@@ -65,10 +124,25 @@ export async function supportProposal(
       metaMerkleProof,
       systemProgram: SystemProgram.programId,
     })
-    .rpc();
+    .instruction();
+
+  instructions.push(supportProposalInstruction);
+
+  const transaction = new Transaction();
+  transaction.add(...instructions);
+  transaction.feePayer = wallet.publicKey;
+  transaction.recentBlockhash = (
+    await program.provider.connection.getLatestBlockhash("confirmed")
+  ).blockhash;
+
+  const tx = await wallet.signTransaction(transaction);
+
+  const signature = await program.provider.connection.sendRawTransaction(
+    tx.serialize()
+  );
 
   return {
-    signature: tx,
+    signature,
     success: true,
   };
 }
