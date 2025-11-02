@@ -68,7 +68,7 @@ export async function castVoteOverride(
     ) {
       throw new Error("No stake account found for voter");
     }
-    // TODO: JUAN fix this type casting
+    // TODO: fix this type casting
     stakeAccountStr = voterSummary.stake_accounts[0].stake_account as string;
   }
 
