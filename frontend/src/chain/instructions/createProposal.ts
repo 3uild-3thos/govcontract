@@ -13,7 +13,6 @@ import {
 } from "./types";
 import {
   createProgramWithWallet,
-  deriveProposalPda,
   deriveConsensusResultPda,
   deriveMetaMerkleProofPda,
   getVoterSummary,
@@ -21,6 +20,7 @@ import {
   getVoteAccountProof,
   generatePdasFromVoteProofResponse,
 } from "./helpers";
+import { deriveProposalAccount } from "../helpers";
 
 /**
  * Creates a new governance proposal
@@ -38,7 +38,6 @@ export async function createProposal(
     wallet,
     voteAccount,
   } = params;
-console.log(seed)
   if (!wallet || !wallet.publicKey) {
     throw new Error("Wallet not connected");
   }
@@ -60,11 +59,7 @@ console.log(seed)
   const program = createProgramWithWallet(wallet, blockchainParams.endpoint);
 
   // Derive proposal PDA using the test pattern
-  const proposalPda = deriveProposalPda(
-    seedValue,
-    wallet.publicKey,
-    program.programId
-  );
+  const proposalPda = deriveProposalAccount(program, seedValue, splVoteAccount);
 
   // Create dummy snapshot accounts for testing (matching test pattern)
   const SNAPSHOT_PROGRAM_ID = GOV_V1_PROGRAM_ID;
@@ -163,3 +158,4 @@ console.log(seed)
     success: true,
   };
 }
+

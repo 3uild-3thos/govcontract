@@ -29,3 +29,22 @@ const provider = new AnchorProvider(connection, dummyWallet, {
  * @deprecated old program
  */
 export const program = new Program(idl, provider) as Program<GovcontractOLD>;
+import { BN, Program as AnchorProgram } from "@coral-xyz/anchor";
+import { PublicKey } from "@solana/web3.js";
+import type { Govcontract } from "@/chain";
+
+// Corrected version: removed broken imports, replaced anchor.Program and anchor.BN with correct imports
+export function deriveProposalAccount(
+  program: AnchorProgram<Govcontract>,
+  seed: BN,
+  splVoteAccount: PublicKey
+): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("proposal"),
+      seed.toArrayLike(Buffer, "le", 8),
+      splVoteAccount.toBuffer(),
+    ],
+    program.programId
+  )[0];
+}
