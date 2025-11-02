@@ -93,8 +93,9 @@ export async function createProposal(
   );
 
   const instructions: TransactionInstruction[] = [];
-
+console.log("merkleAccountInfo", merkleAccountInfo)
   if (merkleAccountInfo === null) {
+console.log("merkleAccountInfo is null")
     const govV1Program = createGovV1ProgramWithWallet(
       wallet,
       blockchainParams.endpoint
