@@ -25,7 +25,7 @@ export interface CreateProposalParams {
   votingLengthEpochs: number;
   seed?: number;
   wallet: AnchorWallet | undefined;
-  voteAccount: PublicKey;
+  voteAccount?: PublicKey;
 }
 
 export interface CastVoteParams {

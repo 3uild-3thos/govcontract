@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   SystemProgram,
-  PublicKey,
   TransactionInstruction,
   Transaction,
 } from "@solana/web3.js";
@@ -95,7 +94,7 @@ export async function createProposal(
     );
 
     const voteAccountProof = await getVoteAccountProof(
-      voteAccount.toBase58(),
+      voteAccount?.toBase58() ?? "",
       blockchainParams.network,
       slot
     );
