@@ -1,7 +1,6 @@
 import { AnchorWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
 
-import idl from '@/chain/idl/govcontract.json';
 import govV1idl from '@/chain/idl/gov-v1.json';
 
 // Common types

@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   PublicKey,
+  SystemProgram,
   TransactionInstruction,
   Transaction,
 } from "@solana/web3.js";
 import {
   CastVoteOverrideParams,
   TransactionResult,
-  SNAPSHOT_PROGRAM_ID,
   BlockchainParams,
   GOV_V1_PROGRAM_ID,
 } from "./types";
@@ -22,7 +22,7 @@ import {
   convertStakeMerkleLeafDataToIdlType,
   validateVoteBasisPoints,
 } from "./helpers";
-import { BN } from "bn.js";
+import { BN } from "@coral-xyz/anchor";
 
 /**
  * Casts a vote override using a stake account
@@ -81,8 +81,10 @@ export async function castVoteOverride(
     getStakeAccountProof(stakeAccountStr, network, slot),
   ]);
 
+  const SNAPSHOT_PROGRAM_ID = GOV_V1_PROGRAM_ID;
+
   const [consensusResultPda, metaMerkleProofPda] =
-    generatePdasFromVoteProofResponse(metaMerkleProof);
+    generatePdasFromVoteProofResponse(metaMerkleProof, SNAPSHOT_PROGRAM_ID, 4);
 
   // Check if merkle account exists
   const merkleAccountInfo = await program.provider.connection.getAccountInfo(
@@ -92,7 +94,11 @@ export async function castVoteOverride(
 
   const instructions: TransactionInstruction[] = [];
 
-  if (merkleAccountInfo === null) {
+  if (!merkleAccountInfo) {
+    console.log("merkleAccountInfo is null");
+    console.log("consensusResultPda", consensusResultPda.toBase58());
+    console.log("metaMerkleProofPda", metaMerkleProofPda.toBase58());
+
     const govV1Program = createGovV1ProgramWithWallet(
       wallet,
       blockchainParams.endpoint
@@ -103,19 +109,29 @@ export async function castVoteOverride(
     const initMerkleInstruction = await govV1Program.methods
       .initMetaMerkleProof(
         {
-          activeStake: metaMerkleProof.meta_merkle_leaf.active_stake,
-          votingWallet: metaMerkleProof.meta_merkle_leaf.voting_wallet,
-          stakeMerkleRoot: metaMerkleProof.meta_merkle_leaf.stake_merkle_root,
-          voteAccount: metaMerkleProof.meta_merkle_leaf.vote_account,
-        } as any,
-        metaMerkleProof.meta_merkle_proof as any,
+          votingWallet: new PublicKey(
+            metaMerkleProof.meta_merkle_leaf.voting_wallet
+          ),
+          voteAccount: new PublicKey(
+            metaMerkleProof.meta_merkle_leaf.vote_account
+          ),
+          stakeMerkleRoot: Array.from(
+            new PublicKey(
+              metaMerkleProof.meta_merkle_leaf.stake_merkle_root
+            ).toBytes()
+          ),
+          activeStake: new BN(metaMerkleProof.meta_merkle_leaf.active_stake),
+        },
+        metaMerkleProof.meta_merkle_proof.map((proof) =>
+          Array.from(new PublicKey(proof).toBytes())
+        ),
         new BN(1)
       )
       .accountsStrict({
         consensusResult: consensusResultPda,
         merkleProof: metaMerkleProofPda,
         payer: wallet.publicKey,
-        systemProgram: GOV_V1_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
       })
       .instruction();
 
@@ -168,6 +184,8 @@ export async function castVoteOverride(
   const signature = await program.provider.connection.sendRawTransaction(
     tx.serialize()
   );
+
+  console.log("signature cast vote override", signature);
 
   return {
     signature,

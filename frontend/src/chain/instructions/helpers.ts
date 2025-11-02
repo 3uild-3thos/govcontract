@@ -7,7 +7,6 @@ import {
   StakeAccountProofResponse,
   VoterSummaryResponse,
   SNAPSHOT_PROGRAM_ID,
-  GOV_V1_PROGRAM_ID,
 } from './types';
 import { AnchorWallet } from '@solana/wallet-adapter-react';
 import { Govcontract, GovV1 } from '../types';
@@ -74,6 +73,22 @@ export function deriveVoteOverridePda(
       proposal.toBuffer(),
       stakeAccount.toBuffer(),
       validatorVote.toBuffer(),
+    ],
+    programId
+  );
+  return pda;
+}
+
+export function deriveVoteOverrideCachePda(
+  proposal: PublicKey,
+  vote: PublicKey,
+  programId: PublicKey
+): PublicKey {
+  const [pda] = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from('vote_override_cache'),
+      proposal.toBuffer(),
+      vote.toBuffer(),
     ],
     programId
   );
@@ -252,37 +267,6 @@ export async function getVoterSummary(
   } catch (error) {
     throw new Error(`Failed to get voter summary: ${error}`);
   }
-}
-
-// Snapshot-related PDA derivation (based on test implementation)
-export function deriveConsensusResultPda(
-  snapshotSlot: BN,
-  snapshotProgramId: PublicKey = new PublicKey(GOV_V1_PROGRAM_ID)
-): PublicKey {
-  const [pda] = PublicKey.findProgramAddressSync(
-    [
-      Buffer.from('consensus_result'),
-      snapshotSlot.toArrayLike(Buffer, 'le', 8),
-    ],
-    snapshotProgramId
-  );
-  return pda;
-}
-
-export function deriveMetaMerkleProofPda(
-  consensusResult: PublicKey,
-  signer: PublicKey,
-  snapshotProgramId: PublicKey = new PublicKey(GOV_V1_PROGRAM_ID)
-): PublicKey {
-  const [pda] = PublicKey.findProgramAddressSync(
-    [
-      Buffer.from('meta_merkle_proof'),
-      consensusResult.toBuffer(),
-      signer.toBuffer(),
-    ],
-    snapshotProgramId
-  );
-  return pda;
 }
 
 // Generate PDAs from vote proof response

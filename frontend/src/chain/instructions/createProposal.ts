@@ -14,8 +14,6 @@ import {
 } from './types';
 import {
   createProgramWithWallet,
-  deriveConsensusResultPda,
-  deriveMetaMerkleProofPda,
   getVoterSummary,
   createGovV1ProgramWithWallet,
   getVoteAccountProof,
@@ -38,7 +36,6 @@ export async function createProposal(
     // votingLengthEpochs,
     seed,
     wallet,
-    voteAccount,
   } = params;
   if (!wallet || !wallet.publicKey) {
     throw new Error('Wallet not connected');
