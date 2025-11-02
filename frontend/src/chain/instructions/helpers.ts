@@ -39,11 +39,11 @@ export function deriveProposalIndexPda(programId: PublicKey): PublicKey {
 
 export function deriveVotePda(
   proposal: PublicKey,
-  signer: PublicKey,
+  voteAccount: PublicKey,
   programId: PublicKey
 ): PublicKey {
   const [pda] = PublicKey.findProgramAddressSync(
-    [Buffer.from('vote'), proposal.toBuffer(), signer.toBuffer()],
+    [Buffer.from('vote'), proposal.toBuffer(), voteAccount.toBuffer()],
     programId
   );
   return pda;
@@ -51,11 +51,11 @@ export function deriveVotePda(
 
 export function deriveSupportPda(
   proposal: PublicKey,
-  signer: PublicKey,
+  voteAccount: PublicKey,
   programId: PublicKey
 ): PublicKey {
   const [pda] = PublicKey.findProgramAddressSync(
-    [Buffer.from('support'), proposal.toBuffer(), signer.toBuffer()],
+    [Buffer.from('support'), proposal.toBuffer(), voteAccount.toBuffer()],
     programId
   );
   return pda;

@@ -38,16 +38,25 @@ export async function supportProposal(
     wallet.publicKey.toString(),
     blockchainParams.network || 'mainnet'
   );
+  const program = createProgramWithWallet(wallet, blockchainParams.endpoint);
+
+  const voteAccounts = await program.provider.connection.getVoteAccounts();
+  const validatorVoteAccount = voteAccounts.current.find(
+    (acc) => acc.nodePubkey === wallet.publicKey.toBase58()
+  );
   const slot = voterSummary.snapshot_slot;
 
   const proposalPubkey = new PublicKey(proposalId);
-  const splVoteAccount = voteAccount || wallet.publicKey;
-  const program = createProgramWithWallet(wallet, blockchainParams.endpoint);
 
+  if (!validatorVoteAccount) {
+    throw new Error(
+      `No SPL vote account found for validator identity ${wallet.publicKey.toBase58()}`
+    );
+  }
   // Derive support PDA - based on IDL, it uses proposal and signer
   const supportPda = deriveSupportPda(
     proposalPubkey,
-    wallet.publicKey,
+    new PublicKey(validatorVoteAccount.votePubkey),
     program.programId
   );
 
@@ -60,7 +69,7 @@ export async function supportProposal(
   );
 
   const voteAccountProof = await getVoteAccountProof(
-    splVoteAccount.toBase58(),
+    validatorVoteAccount.votePubkey,
     blockchainParams.network,
     slot
   );
@@ -120,7 +129,7 @@ export async function supportProposal(
       signer: wallet.publicKey,
       proposal: proposalPubkey,
       support: supportPda,
-      splVoteAccount: splVoteAccount,
+      splVoteAccount: new PublicKey(validatorVoteAccount.votePubkey),
       snapshotProgram: SNAPSHOT_PROGRAM_ID,
       consensusResult: consensusResultPda,
       metaMerkleProof: metaMerkleProofPda,

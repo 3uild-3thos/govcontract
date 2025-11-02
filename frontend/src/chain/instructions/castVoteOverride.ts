@@ -49,7 +49,7 @@ export async function castVoteOverride(
   validateVoteBasisPoints(forVotesBp, againstVotesBp, abstainVotesBp);
 
   const proposalPubkey = new PublicKey(proposalId);
-  const splVoteAccount = voteAccount;
+  const splVoteAccount = new PublicKey(voteAccount);
   const program = createProgramWithWallet(wallet, blockchainParams.endpoint);
 
   // Get voter summary to get slot and stake accounts
@@ -77,7 +77,7 @@ export async function castVoteOverride(
   // Get proofs
   const network = blockchainParams.network || "mainnet";
   const [metaMerkleProof, stakeMerkleProof] = await Promise.all([
-    getVoteAccountProof(splVoteAccount, network, slot),
+    getVoteAccountProof(splVoteAccount.toBase58(), network, slot),
     getStakeAccountProof(stakeAccountStr, network, slot),
   ]);
 

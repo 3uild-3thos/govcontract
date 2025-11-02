@@ -53,13 +53,25 @@ export async function castVote(
   const slot = voterSummary.snapshot_slot;
 
   const proposalPubkey = new PublicKey(proposalId);
-  const splVoteAccount = voteAccount || wallet.publicKey;
   const program = createProgramWithWallet(wallet, blockchainParams.endpoint);
 
-  // Derive vote PDA - based on IDL, it uses proposal and signer
+  const voteAccounts = await program.provider.connection.getVoteAccounts();
+  const validatorVoteAccount = voteAccounts.current.find(
+    (acc) => acc.nodePubkey === wallet.publicKey.toBase58()
+  );
+
+  if (!validatorVoteAccount) {
+    throw new Error(
+      `No SPL vote account found for validator identity ${wallet.publicKey.toBase58()}`
+    );
+  }
+
+  const splVoteAccount = new PublicKey(validatorVoteAccount.votePubkey);
+
+  // Derive vote PDA - based on IDL, it uses proposal and vote account
   const votePda = deriveVotePda(
     proposalPubkey,
-    wallet.publicKey,
+    splVoteAccount,
     program.programId
   );
   const voteOverrideCachePda = deriveVoteOverrideCachePda(
@@ -77,7 +89,7 @@ export async function castVote(
   );
 
   const voteAccountProof = await getVoteAccountProof(
-    splVoteAccount.toBase58(),
+    validatorVoteAccount.votePubkey,
     blockchainParams.network,
     slot
   );
