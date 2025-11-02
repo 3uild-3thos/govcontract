@@ -19,7 +19,6 @@ export default function PhaseTimeline({
   proposal,
   isLoading,
 }: PhaseTimelineProps) {
-  // TODO: PEDRO check proper loading skeletongs
   if (isLoading) return <PhaseTimelineSkeleton />;
   if (!proposal) return <div>No proposal data...</div>;
 

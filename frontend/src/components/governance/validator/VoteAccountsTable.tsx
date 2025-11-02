@@ -65,7 +65,6 @@ export function VoteAccountsTable() {
   const {
     data: votingAccountsValidators,
     isLoading,
-    // TODO: PEDRO we need some UI to show errors
     // error,
   } = useVoteAccountsWithValidators();
 

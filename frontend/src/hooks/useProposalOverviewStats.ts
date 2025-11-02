@@ -50,7 +50,6 @@ export const useProposalOverviewStats = (): Stats => {
         label: "Number of Validators",
         value: numOfValidators,
       },
-      // TODO: PEDRO get this stat
       {
         id: "number-of-stakers",
         label: "Number of Stakers",

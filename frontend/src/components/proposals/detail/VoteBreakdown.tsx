@@ -23,7 +23,6 @@ export default function VoteBreakdownWrapper({
   proposal,
   isLoading,
 }: VoteBreakdownWrapperProps) {
-  // TODO: PEDRO check proper loading skeletongs
   if (!proposal && !isLoading) return <div>No proposal data...</div>;
 
   return <VoteBreakdown proposal={proposal} isLoading={isLoading} />;
@@ -42,7 +41,6 @@ const VoteBreakdown = ({
   const isLoading =
     isLoadingParent || isLoadingProposalVotes || isLoadingHasUserVoted;
 
-  // TODO: PEDRO show data with "0" values here? empty donut?
   if (!votes && !isLoadingProposalVotes) return <div>No vote breakdown</div>;
   if (!proposal && !isLoadingParent) return <div>No proposal info</div>;
 

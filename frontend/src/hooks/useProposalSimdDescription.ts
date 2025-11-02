@@ -28,7 +28,6 @@ function saveCache(cache: Record<string, SimdData>) {
 }
 
 function getFileNameFromGithubUrl(url: string) {
-  // TODO: PEDRO check if we want to strictly check if it comes from this repo
   // const regex =
   //   /^https:\/\/github\.com\/solana-foundation\/solana-improvement-documents\/blob\/main\/proposals\/([^/]+)$/;
   // if (!match) throw new Error("Invalid GitHub proposal URL. Must match: https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/<filename>");

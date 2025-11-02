@@ -45,7 +45,6 @@ export function SupportProposalModal({
     }
   }, [isOpen, initialProposalId]);
 
-  // TODO: PEDRO Requirements state - these would be computed from actual data
   const [requirements] = React.useState({
     hasActiveVoteAccount: true,
     hasIdentityKeypair: true,

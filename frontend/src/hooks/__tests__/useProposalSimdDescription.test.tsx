@@ -95,7 +95,6 @@ This is the summary text
     expect(fetch).not.toHaveBeenCalled();
   });
 
-  // TODO: PEDRO depends if we want to enforce solana-foundation repo for the proposals' description github url
   it.skip("throws error for invalid GitHub URL", async () => {
     const githubUrl = "https://github.com/invalid-url.md";
 

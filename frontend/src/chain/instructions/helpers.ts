@@ -149,7 +149,7 @@ export function createProgramWitDummyWallet(endpoint?: string) {
   return program;
 }
 
-// TODO: PEDRO temporary, until CORS issue with api.solgov.online is fixed
+// TODO: temporary, until CORS issue with api.solgov.online is fixed
 // Helper function to build the API URL (use proxy in browser, direct URL on server)
 function buildSolgovUrl(endpoint: string): string {
   // Use Next.js API proxy when running in browser to avoid CORS

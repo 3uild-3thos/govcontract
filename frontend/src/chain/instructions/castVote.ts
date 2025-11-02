@@ -36,7 +36,6 @@ export async function castVote(
     againstVotesBp,
     abstainVotesBp,
     wallet,
-    voteAccount,
   } = params;
 
   if (!wallet || !wallet.publicKey) {
