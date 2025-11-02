@@ -67,11 +67,6 @@ export async function createProposal(
       );
     }
     
-    const splVoteAccount = new PublicKey(validatorVoteAccount.votePubkey);
-
-
-  // Derive proposal PDA using the test pattern
-  const proposalPda = deriveProposalAccount(program, seedValue, splVoteAccount);
 
   // Create dummy snapshot accounts for testing (matching test pattern)
   const SNAPSHOT_PROGRAM_ID = GOV_V1_PROGRAM_ID;
@@ -94,6 +89,7 @@ export async function createProposal(
 
   const instructions: TransactionInstruction[] = [];
 console.log("merkleAccountInfo", merkleAccountInfo)
+let splVoteAccount;
   if (merkleAccountInfo === null) {
 console.log("merkleAccountInfo is null")
     const govV1Program = createGovV1ProgramWithWallet(
@@ -131,7 +127,12 @@ console.log("merkleAccountInfo is null")
       .instruction();
 
     instructions.push(a);
+    splVoteAccount = new PublicKey(validatorVoteAccount.votePubkey);
   }
+  if (!splVoteAccount) {
+    splVoteAccount = new PublicKey(validatorVoteAccount.votePubkey);
+  }
+  const proposalPda = deriveProposalAccount(program, seedValue, splVoteAccount);
 
   // Build and send transaction using accountsPartial like in tests
   const proposalInstruction = await program.methods
@@ -143,7 +144,7 @@ console.log("merkleAccountInfo is null")
     .accountsPartial({
       signer: wallet.publicKey,
       proposal: proposalPda,
-      splVoteAccount: splVoteAccount,
+      splVoteAccount: voteAccountProof.meta_merkle_leaf.vote_account,
       snapshotProgram: SNAPSHOT_PROGRAM_ID,
       consensusResult,
       metaMerkleProof,
