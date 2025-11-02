@@ -1,6 +1,9 @@
 import { AnchorWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 
+import idl from "@/chain/idl/govcontract.json";
+import govV1idl from "@/chain/idl/gov-v1.json";
+
 // Common types
 export interface TransactionResult {
   signature: string;
@@ -22,7 +25,7 @@ export interface CreateProposalParams {
   votingLengthEpochs: number;
   seed?: number;
   wallet: AnchorWallet | undefined;
-  voteAccount?: PublicKey;
+  voteAccount: PublicKey;
 }
 
 export interface CastVoteParams {
@@ -115,6 +118,5 @@ export interface NetworkMetaResponse {
 
 // Constants
 export const BASIS_POINTS_TOTAL = 10000;
-export const SNAPSHOT_PROGRAM_ID = new PublicKey(
-  "GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc"
-);
+export const SNAPSHOT_PROGRAM_ID = new PublicKey(idl.address);
+export const GOV_V1_PROGRAM_ID = new PublicKey(govV1idl.address);
