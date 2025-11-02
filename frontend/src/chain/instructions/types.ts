@@ -55,6 +55,16 @@ export interface CastVoteOverrideParams {
   voteAccount: string;
 }
 
+export interface ModifyVoteOverrideParams {
+  proposalId: string;
+  forVotesBp: number;
+  againstVotesBp: number;
+  abstainVotesBp: number;
+  stakeAccount: string;
+  wallet: AnchorWallet | undefined;
+  voteAccount: string;
+}
+
 export interface SupportProposalParams {
   proposalId: string;
   wallet: AnchorWallet | undefined;

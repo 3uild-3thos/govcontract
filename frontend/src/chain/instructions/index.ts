@@ -3,6 +3,7 @@ export { createProposal } from "./createProposal";
 export { castVote } from "./castVote";
 export { modifyVote } from "./modifyVote";
 export { castVoteOverride } from "./castVoteOverride";
+export { modifyVoteOverride } from "./modifyVoteOverride";
 export { supportProposal } from "./supportProposal";
 export { addMerkleRoot } from "./addMerkleRoot";
 export { finalizeProposal } from "./finalizeProposal";
