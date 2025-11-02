@@ -1,8 +1,7 @@
-import { AnchorWallet } from "@solana/wallet-adapter-react";
-import { PublicKey } from "@solana/web3.js";
+import { AnchorWallet } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
 
-import idl from "@/chain/idl/govcontract.json";
-import govV1idl from "@/chain/idl/gov-v1.json";
+import govV1idl from '@/chain/idl/gov-v1.json';
 
 // Common types
 export interface TransactionResult {
@@ -47,6 +46,16 @@ export interface ModifyVoteParams {
 }
 
 export interface CastVoteOverrideParams {
+  proposalId: string;
+  forVotesBp: number;
+  againstVotesBp: number;
+  abstainVotesBp: number;
+  stakeAccount: string;
+  wallet: AnchorWallet | undefined;
+  voteAccount: string;
+}
+
+export interface ModifyVoteOverrideParams {
   proposalId: string;
   forVotesBp: number;
   againstVotesBp: number;
@@ -118,5 +127,5 @@ export interface NetworkMetaResponse {
 
 // Constants
 export const BASIS_POINTS_TOTAL = 10000;
-export const SNAPSHOT_PROGRAM_ID = new PublicKey(idl.address);
+export const SNAPSHOT_PROGRAM_ID = new PublicKey(govV1idl.address);
 export const GOV_V1_PROGRAM_ID = new PublicKey(govV1idl.address);

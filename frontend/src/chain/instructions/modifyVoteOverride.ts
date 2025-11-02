@@ -4,13 +4,13 @@ import {
   SystemProgram,
   TransactionInstruction,
   Transaction,
-} from "@solana/web3.js";
+} from '@solana/web3.js';
 import {
-  CastVoteOverrideParams,
+  ModifyVoteOverrideParams,
   TransactionResult,
   BlockchainParams,
   GOV_V1_PROGRAM_ID,
-} from "./types";
+} from './types';
 import {
   createProgramWithWallet,
   createGovV1ProgramWithWallet,
@@ -21,14 +21,14 @@ import {
   convertMerkleProofStrings,
   convertStakeMerkleLeafDataToIdlType,
   validateVoteBasisPoints,
-} from "./helpers";
-import { BN } from "@coral-xyz/anchor";
+} from './helpers';
+import { BN } from '@coral-xyz/anchor';
 
 /**
- * Casts a vote override using a stake account
+ * Modifies an existing vote override using a stake account
  */
-export async function castVoteOverride(
-  params: CastVoteOverrideParams,
+export async function modifyVoteOverride(
+  params: ModifyVoteOverrideParams,
   blockchainParams: BlockchainParams
 ): Promise<TransactionResult> {
   const {
@@ -42,7 +42,7 @@ export async function castVoteOverride(
   } = params;
 
   if (!wallet || !wallet.publicKey) {
-    throw new Error("Wallet not connected");
+    throw new Error('Wallet not connected');
   }
 
   // Validate vote distribution
@@ -55,7 +55,7 @@ export async function castVoteOverride(
   // Get voter summary to get slot and stake accounts
   const voterSummary = await getVoterSummary(
     wallet.publicKey.toString(),
-    blockchainParams.network || "mainnet"
+    blockchainParams.network || 'mainnet'
   );
   const slot = voterSummary.snapshot_slot;
 
@@ -66,7 +66,7 @@ export async function castVoteOverride(
       !voterSummary.stake_accounts ||
       voterSummary.stake_accounts.length === 0
     ) {
-      throw new Error("No stake account found for voter");
+      throw new Error('No stake account found for voter');
     }
     // TODO: fix this type casting
     stakeAccountStr = voterSummary.stake_accounts[0].stake_account as string;
@@ -75,7 +75,7 @@ export async function castVoteOverride(
   const stakeAccountPubkey = new PublicKey(stakeAccountStr);
 
   // Get proofs
-  const network = blockchainParams.network || "mainnet";
+  const network = blockchainParams.network || 'mainnet';
   const [metaMerkleProof, stakeMerkleProof] = await Promise.all([
     getVoteAccountProof(splVoteAccount.toBase58(), network, slot),
     getStakeAccountProof(stakeAccountStr, network, slot),
@@ -89,22 +89,22 @@ export async function castVoteOverride(
   // Check if merkle account exists
   const merkleAccountInfo = await program.provider.connection.getAccountInfo(
     metaMerkleProofPda,
-    "confirmed"
+    'confirmed'
   );
 
   const instructions: TransactionInstruction[] = [];
 
   if (!merkleAccountInfo) {
-    console.log("merkleAccountInfo is null");
-    console.log("consensusResultPda", consensusResultPda.toBase58());
-    console.log("metaMerkleProofPda", metaMerkleProofPda.toBase58());
+    console.log('merkleAccountInfo is null');
+    console.log('consensusResultPda', consensusResultPda.toBase58());
+    console.log('metaMerkleProofPda', metaMerkleProofPda.toBase58());
 
     const govV1Program = createGovV1ProgramWithWallet(
       wallet,
       blockchainParams.endpoint
     );
 
-    console.log("fetched voteAccountProof", metaMerkleProof);
+    console.log('fetched voteAccountProof', metaMerkleProof);
 
     const initMerkleInstruction = await govV1Program.methods
       .initMetaMerkleProof(
@@ -150,9 +150,9 @@ export async function castVoteOverride(
   const againstVotesBn = new BN(againstVotesBp);
   const abstainVotesBn = new BN(abstainVotesBp);
 
-  // Build cast vote override instruction
-  const castVoteOverrideInstruction = await program.methods
-    .castVoteOverride(
+  // Build modify vote override instruction
+  const modifyVoteOverrideInstruction = await program.methods
+    .modifyVoteOverride(
       forVotesBn,
       againstVotesBn,
       abstainVotesBn,
@@ -170,13 +170,13 @@ export async function castVoteOverride(
     })
     .instruction();
 
-  instructions.push(castVoteOverrideInstruction);
+  instructions.push(modifyVoteOverrideInstruction);
 
   const transaction = new Transaction();
   transaction.add(...instructions);
   transaction.feePayer = wallet.publicKey;
   transaction.recentBlockhash = (
-    await program.provider.connection.getLatestBlockhash("confirmed")
+    await program.provider.connection.getLatestBlockhash('confirmed')
   ).blockhash;
 
   const tx = await wallet.signTransaction(transaction);
@@ -185,7 +185,7 @@ export async function castVoteOverride(
     tx.serialize()
   );
 
-  console.log("signature cast vote override", signature);
+  console.log('signature modify vote override', signature);
 
   return {
     signature,
