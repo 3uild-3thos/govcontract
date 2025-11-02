@@ -85,11 +85,7 @@ export function deriveVoteOverrideCachePda(
   programId: PublicKey
 ): PublicKey {
   const [pda] = PublicKey.findProgramAddressSync(
-    [
-      Buffer.from('vote_override_cache'),
-      proposal.toBuffer(),
-      vote.toBuffer(),
-    ],
+    [Buffer.from('vote_override_cache'), proposal.toBuffer(), vote.toBuffer()],
     programId
   );
   return pda;
