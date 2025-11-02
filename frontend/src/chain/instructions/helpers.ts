@@ -1,14 +1,16 @@
 import { PublicKey, Connection, Keypair } from "@solana/web3.js";
 import { AnchorProvider, Program, BN } from "@coral-xyz/anchor";
 import idl from "@/chain/idl/govcontract.json";
+import govV1Idl from "@/chain/idl/gov-v1.json";
 import {
   VoteAccountProofResponse,
   StakeAccountProofResponse,
   VoterSummaryResponse,
   SNAPSHOT_PROGRAM_ID,
+  GOV_V1_PROGRAM_ID,
 } from "./types";
 import { AnchorWallet } from "@solana/wallet-adapter-react";
-import { Govcontract } from "../types";
+import { Govcontract, GovV1 } from "../types";
 import { RPC_URLS } from "@/contexts/EndpointContext";
 
 // PDA derivation functions (based on test implementation)
@@ -92,6 +94,24 @@ export function createProgramWithWallet(
   });
 
   const program = new Program(idl, provider) as Program<Govcontract>;
+
+  return program;
+}
+
+// Create program instance with wallet
+export function createGovV1ProgramWithWallet(
+  wallet: AnchorWallet,
+  endpoint?: string
+) {
+  // Use provided endpoint or default to devnet
+  const rpcEndpoint = endpoint || RPC_URLS.testnet;
+  const connection = new Connection(rpcEndpoint, "confirmed");
+
+  const provider = new AnchorProvider(connection, wallet, {
+    commitment: "confirmed",
+  });
+
+  const program = new Program(govV1Idl, provider) as Program<GovV1>;
 
   return program;
 }
@@ -237,9 +257,7 @@ export async function getVoterSummary(
 // Snapshot-related PDA derivation (based on test implementation)
 export function deriveConsensusResultPda(
   snapshotSlot: BN,
-  snapshotProgramId: PublicKey = new PublicKey(
-    "11111111111111111111111111111111"
-  )
+  snapshotProgramId: PublicKey = new PublicKey(GOV_V1_PROGRAM_ID)
 ): PublicKey {
   const [pda] = PublicKey.findProgramAddressSync(
     [
@@ -254,9 +272,7 @@ export function deriveConsensusResultPda(
 export function deriveMetaMerkleProofPda(
   consensusResult: PublicKey,
   signer: PublicKey,
-  snapshotProgramId: PublicKey = new PublicKey(
-    "11111111111111111111111111111111"
-  )
+  snapshotProgramId: PublicKey = new PublicKey(GOV_V1_PROGRAM_ID)
 ): PublicKey {
   const [pda] = PublicKey.findProgramAddressSync(
     [
