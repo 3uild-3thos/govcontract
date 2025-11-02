@@ -1,13 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { useGetValidators } from "./useGetValidators"; // your existing hook
-import { PublicKey } from "@solana/web3.js";
-import { useVotes } from "./useVotes";
-import { Vote } from "@/chain";
-import { Validator } from "@/types";
+import { useGetValidators } from "./useGetValidators";
+import { Validator, VoteAccountData } from "@/types";
+import { useVoteAccounts } from "./useVoteAccounts";
 
-type VoteValidatorEntry = {
-  votePDA: PublicKey;
-  voteAccount: Vote;
+export type VoteValidatorEntry = {
+  votePDA: string;
+  voteAccount: VoteAccountData;
   validator: Validator | undefined;
 };
 
@@ -19,7 +17,6 @@ type ValidatorMap = Record<ValidatorIdentity, VoteValidatorEntry[]>; // key = va
 
 /**
  * Hashmap by validator.identity key
- *  * @property {string} key - The unique identifier for the user.
  */
 export interface VoteAccountsWithValidators {
   voteMap: VoteMap;
@@ -30,12 +27,14 @@ export const useVoteAccountsWithValidators = () => {
   const { data: validators, isLoading: isLoadingValidators } =
     useGetValidators();
 
-  const { data: votes, isLoading: isLoadingVotes } = useVotes();
+  const { data: votes, isLoading: isLoadingVotes } = useVoteAccounts();
 
   const enabled =
     !!validators && !isLoadingValidators && !!votes && !isLoadingVotes;
 
-  return useQuery({
+  const isLoadingSubqueries = isLoadingVotes || isLoadingValidators;
+
+  const query = useQuery({
     queryKey: ["vote-accounts-with-validators"],
     queryFn: async (): Promise<VoteAccountsWithValidators> => {
       if (validators === undefined)
@@ -50,14 +49,22 @@ export const useVoteAccountsWithValidators = () => {
 
       for (const vote of votes) {
         const validator = validators.find(
-          (v) => vote.account.validator.toBase58() === v.vote_identity
+          (v) => vote.identity?.toBase58() === v.vote_identity
         );
+        const votePk = vote.voteAccount.toBase58();
         if (validator) {
-          const votePk = vote.publicKey.toBase58();
-
           const entry: VoteValidatorEntry = {
-            votePDA: vote.publicKey,
-            voteAccount: vote,
+            votePDA: vote.voteAccount.toBase58(),
+            // enrich vote account info with matched validator data
+            voteAccount: {
+              ...vote,
+              identity: undefined,
+              name: validator.name,
+              credits: validator.credits,
+              lastVote: validator.last_vote,
+              activeStake: validator.activated_stake,
+              epochCredits: validator.epoch_credits,
+            },
             validator,
           };
 
@@ -69,7 +76,16 @@ export const useVoteAccountsWithValidators = () => {
           }
           validatorMap[valId].push(entry);
         } else {
-          console.warn("no validator found");
+          // console.warn("no validator found");
+          const entry: VoteValidatorEntry = {
+            votePDA: vote.voteAccount.toBase58(),
+            voteAccount: {
+              ...vote,
+              identity: vote.identity,
+            },
+            validator: undefined,
+          };
+          voteMap[votePk] = entry;
         }
       }
 
@@ -81,4 +97,6 @@ export const useVoteAccountsWithValidators = () => {
     staleTime: 1000 * 60 * 10, // 10 minutes
     enabled,
   });
+
+  return { ...query, isLoading: isLoadingSubqueries };
 };

@@ -1,10 +1,19 @@
-import { PublicKey } from "@solana/web3.js";
+import { AnchorWallet } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
+
+import govV1idl from '@/chain/idl/gov-v1.json';
 
 // Common types
 export interface TransactionResult {
   signature: string;
   success: boolean;
   error?: string;
+}
+
+export interface BlockchainParams {
+  // programId?: PublicKey;
+  network?: string;
+  endpoint: string;
 }
 
 // Instruction parameter types
@@ -14,11 +23,8 @@ export interface CreateProposalParams {
   startEpoch: number;
   votingLengthEpochs: number;
   seed?: number;
-  wallet: any; // Wallet adapter
+  wallet: AnchorWallet | undefined;
   voteAccount?: PublicKey;
-  programId?: PublicKey;
-  network?: string;
-  endpoint?: string;
 }
 
 export interface CastVoteParams {
@@ -26,11 +32,8 @@ export interface CastVoteParams {
   forVotesBp: number;
   againstVotesBp: number;
   abstainVotesBp: number;
-  wallet: any;
+  wallet: AnchorWallet | undefined;
   voteAccount?: PublicKey;
-  programId?: PublicKey;
-  network?: string;
-  endpoint?: string;
 }
 
 export interface ModifyVoteParams {
@@ -38,10 +41,8 @@ export interface ModifyVoteParams {
   forVotesBp: number;
   againstVotesBp: number;
   abstainVotesBp: number;
-  wallet: any;
+  wallet: AnchorWallet | undefined;
   voteAccount?: PublicKey;
-  programId?: PublicKey;
-  network?: string;
 }
 
 export interface CastVoteOverrideParams {
@@ -50,36 +51,36 @@ export interface CastVoteOverrideParams {
   againstVotesBp: number;
   abstainVotesBp: number;
   stakeAccount: string;
-  wallet: any;
-  voteAccount?: PublicKey;
-  programId?: PublicKey;
-  network?: string;
+  wallet: AnchorWallet | undefined;
+  voteAccount: string;
+}
+
+export interface ModifyVoteOverrideParams {
+  proposalId: string;
+  forVotesBp: number;
+  againstVotesBp: number;
+  abstainVotesBp: number;
+  stakeAccount: string;
+  wallet: AnchorWallet | undefined;
+  voteAccount: string;
 }
 
 export interface SupportProposalParams {
   proposalId: string;
-  wallet: any;
+  wallet: AnchorWallet | undefined;
   voteAccount?: PublicKey;
-  programId?: PublicKey;
-  network?: string;
-  endpoint?: string;
 }
 
 export interface AddMerkleRootParams {
   proposalId: string;
   merkleRootHash: string;
-  wallet: any;
-  programId?: PublicKey;
-  network?: string;
+  wallet: AnchorWallet | undefined;
 }
 
 export interface FinalizeProposalParams {
   proposalId: string;
-  wallet: any;
-  programId?: PublicKey;
-  network?: string;
+  wallet: AnchorWallet | undefined;
 }
-
 
 // API response types (based on solgov.online API)
 export interface VoteAccountProofResponse {
@@ -96,7 +97,7 @@ export interface VoteAccountProofResponse {
 
 export interface StakeAccountProofResponse {
   stake_merkle_leaf: {
-    [key: string]: any;
+    [key: string]: unknown;
   };
   stake_merkle_proof: string[];
   network: string;
@@ -107,7 +108,7 @@ export interface VoterSummaryResponse {
   network: string;
   snapshot_slot: number;
   stake_accounts: Array<{
-    [key: string]: any;
+    [key: string]: unknown;
   }>;
   vote_accounts: Array<{
     active_stake: number;
@@ -126,4 +127,5 @@ export interface NetworkMetaResponse {
 
 // Constants
 export const BASIS_POINTS_TOTAL = 10000;
-export const SNAPSHOT_PROGRAM_ID = new PublicKey("gov4qDhw2rBudqwqhyTHXgJEPSaRdNnAZP3vT7BLwgL");
+export const SNAPSHOT_PROGRAM_ID = new PublicKey(govV1idl.address);
+export const GOV_V1_PROGRAM_ID = new PublicKey(govV1idl.address);

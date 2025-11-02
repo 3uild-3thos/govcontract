@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import { PublicKey } from "@solana/web3.js";
 
 interface ProgramIdContextType {
@@ -10,14 +16,19 @@ interface ProgramIdContextType {
   resetToDefault: () => void;
 }
 
-const ProgramIdContext = createContext<ProgramIdContextType | undefined>(undefined);
+const ProgramIdContext = createContext<ProgramIdContextType | undefined>(
+  undefined
+);
 
 const DEFAULT_PROGRAM_ID = "GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc";
 const STORAGE_KEY = "solana-program-id";
 
 export function ProgramIdProvider({ children }: { children: ReactNode }) {
-  const [programIdString, setProgramIdString] = useState<string>(DEFAULT_PROGRAM_ID);
-  const [programId, setProgramIdState] = useState<PublicKey>(new PublicKey(DEFAULT_PROGRAM_ID));
+  const [programIdString, setProgramIdString] =
+    useState<string>(DEFAULT_PROGRAM_ID);
+  const [programId, setProgramIdState] = useState<PublicKey>(
+    new PublicKey(DEFAULT_PROGRAM_ID)
+  );
 
   // Load program ID from localStorage on mount
   useEffect(() => {
@@ -41,7 +52,7 @@ export function ProgramIdProvider({ children }: { children: ReactNode }) {
       const pubkey = new PublicKey(newProgramId);
       setProgramIdString(newProgramId);
       setProgramIdState(pubkey);
-      
+
       if (typeof window !== "undefined") {
         localStorage.setItem(STORAGE_KEY, newProgramId);
       }
@@ -53,19 +64,21 @@ export function ProgramIdProvider({ children }: { children: ReactNode }) {
   const resetToDefault = () => {
     setProgramIdString(DEFAULT_PROGRAM_ID);
     setProgramIdState(new PublicKey(DEFAULT_PROGRAM_ID));
-    
+
     if (typeof window !== "undefined") {
       localStorage.removeItem(STORAGE_KEY);
     }
   };
 
   return (
-    <ProgramIdContext.Provider value={{ 
-      programId, 
-      programIdString, 
-      setProgramId, 
-      resetToDefault 
-    }}>
+    <ProgramIdContext.Provider
+      value={{
+        programId,
+        programIdString,
+        setProgramId,
+        resetToDefault,
+      }}
+    >
       {children}
     </ProgramIdContext.Provider>
   );

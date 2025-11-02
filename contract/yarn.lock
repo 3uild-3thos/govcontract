@@ -104,10 +104,10 @@
     rpc-websockets "^9.0.2"
     superstruct "^2.0.2"
 
-"@solana/web3.js@^1.98.2":
-  version "1.98.2"
-  resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-1.98.2.tgz#45167a5cfb64436944bf4dc1e8be8482bd6d4c14"
-  integrity sha512-BqVwEG+TaG2yCkBMbD3C4hdpustR4FpuUFRPUmqRZYYlPI9Hg4XMWxHWOWRzHE9Lkc9NDjzXFX7lDXSgzC7R1A==
+"@solana/web3.js@^1.95.8":
+  version "1.98.4"
+  resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-1.98.4.tgz#df51d78be9d865181ec5138b4e699d48e6895bbe"
+  integrity sha512-vv9lfnvjUsRiq//+j5pBdXig0IQdtzA0BRZ3bXEP4KaIyF1CcaydWqgyzQgfZMNIsWNWmG+AUHwPy4AHOD6gpw==
   dependencies:
     "@babel/runtime" "^7.25.0"
     "@noble/curves" "^1.4.2"

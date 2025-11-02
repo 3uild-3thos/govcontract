@@ -1,20 +1,27 @@
 import { PublicKey } from "@solana/web3.js";
-import { FinalizeProposalParams, TransactionResult } from "./types";
+import {
+  BlockchainParams,
+  FinalizeProposalParams,
+  TransactionResult,
+} from "./types";
 import { createProgramWithWallet } from "./helpers";
 
 /**
  * Finalizes a governance proposal
  */
-export async function finalizeProposal(params: FinalizeProposalParams): Promise<TransactionResult> {
+export async function finalizeProposal(
+  params: FinalizeProposalParams,
+  blockchainParams: BlockchainParams
+): Promise<TransactionResult> {
   try {
     const { proposalId, wallet } = params;
 
-    if (!wallet.connected || !wallet.publicKey) {
+    if (!wallet || !wallet.publicKey) {
       throw new Error("Wallet not connected");
     }
 
     const proposalPubkey = new PublicKey(proposalId);
-    const program = createProgramWithWallet(wallet, params.programId);
+    const program = createProgramWithWallet(wallet, blockchainParams.endpoint);
 
     // Build and send transaction
     const tx = await program.methods

@@ -49,13 +49,15 @@ pub struct CastVoteOverride<'info> {
         bump
     )]
     pub vote_override: Account<'info, VoteOverride>, // New override account
-    /// CHECK: Vote override cache account. Might not yet exist
+    /// CHECK: Vote override cache account - using init_if_needed to prevent prefunding DoS
     #[account(
-        mut,
+        init_if_needed,
+        payer = signer,
+        space = 8 + VoteOverrideCache::INIT_SPACE,
         seeds = [b"vote_override_cache", proposal.key().as_ref(), validator_vote.key().as_ref()],
         bump
     )]
-    pub vote_override_cache: UncheckedAccount<'info>,
+    pub vote_override_cache: Account<'info, VoteOverrideCache>,
     /// CHECK: stake account for override
     #[account(
         constraint = spl_stake_account.owner == &stake_program::ID @ ProgramError::InvalidAccountOwner,
@@ -118,13 +120,7 @@ impl<'info> CastVoteOverride<'info> {
         );
 
         let consensus_result_data = self.consensus_result.try_borrow_data()?;
-        let consensus_result = try_from_slice_unchecked::<ConsensusResult>(
-            &consensus_result_data[ANCHOR_DISCRIMINATOR..],
-        )
-        .map_err(|e| {
-            msg!("Error deserializing ConsensusResult: {}", e);
-            GovernanceError::CantDeserializeConsensusResult
-        })?;
+        let consensus_result = ConsensusResult::try_deserialize(&mut &consensus_result_data[..])?;
 
         let merkle_root = self
             .proposal
@@ -137,11 +133,8 @@ impl<'info> CastVoteOverride<'info> {
 
         // Deserialize MetaMerkleProof for crosschecking
         let meta_account_data = self.meta_merkle_proof.try_borrow_data()?;
-        let meta_merkle_proof =
-            try_from_slice_unchecked::<MetaMerkleProof>(&meta_account_data[ANCHOR_DISCRIMINATOR..]).map_err(|e| {
-                msg!("Error deserializing MetaMerkleProof: {}", e);
-                GovernanceError::CantDeserializeMMPPDA
-            })?;
+        let meta_merkle_proof = MetaMerkleProof::try_deserialize(&mut &meta_account_data[..])?;
+
         let meta_merkle_leaf = meta_merkle_proof.meta_merkle_leaf;
 
         require_eq!(
@@ -199,8 +192,9 @@ impl<'info> CastVoteOverride<'info> {
             && self.validator_vote.owner == &crate::ID
             && Vote::deserialize(&mut self.validator_vote.data.borrow().as_ref()).is_ok()
         {
-            let mut validator_vote =
-                Vote::deserialize(&mut &self.validator_vote.data.borrow()[ANCHOR_DISCRIMINATOR..])?;
+            let mut validator_vote: Vote = anchor_lang::AccountDeserialize::try_deserialize(
+                &mut self.validator_vote.data.borrow().as_ref(),
+            )?;
 
             // Subtract validator's vote
             self.proposal.sub_vote_lamports(
@@ -218,6 +212,7 @@ impl<'info> CastVoteOverride<'info> {
 
             let new_validator_stake = validator_stake
                 .checked_sub(delegator_stake)
+                .and_then(|stake| stake.checked_sub(validator_vote.override_lamports))
                 .ok_or(GovernanceError::ArithmeticOverflow)?;
 
             // Calculate new validator votes for each category based on actual lamports
@@ -251,12 +246,10 @@ impl<'info> CastVoteOverride<'info> {
                 .ok_or(GovernanceError::ArithmeticOverflow)?;
 
             // Serialize the updated validator vote back to the account
-            let mut validator_vote_data = self.validator_vote.data.borrow_mut();
-            let mut vote_bytes = &mut validator_vote_data[ANCHOR_DISCRIMINATOR..]; // Skip discriminator
-            validator_vote.serialize(&mut vote_bytes).map_err(|e| {
-                msg!("Error serializing Vote: {}", e);
-                GovernanceError::ArithmeticOverflow
-            })?;
+            anchor_lang::AccountSerialize::try_serialize(
+                &validator_vote,
+                &mut self.validator_vote.data.borrow_mut().as_mut(),
+            )?;
 
             // Store override
             self.vote_override.set_inner(VoteOverride {
@@ -274,95 +267,31 @@ impl<'info> CastVoteOverride<'info> {
                 against_votes_lamports,
                 abstain_votes_lamports,
             });
+            self.vote_override_cache.set_inner(VoteOverrideCache {
+                validator: meta_merkle_leaf.vote_account,
+                proposal: self.proposal.key(),
+                vote_account_validator: self.validator_vote.key(),
+                for_votes_bp,
+                against_votes_bp,
+                abstain_votes_bp,
+                for_votes_lamports,
+                against_votes_lamports,
+                abstain_votes_lamports,
+                total_stake: delegator_stake,
+                bump: bumps.vote_override_cache,
+            });
         } else {
-            // Store delegator's vote in a the cache PDA
-            if self.vote_override_cache.data_len() == (ANCHOR_DISCRIMINATOR + VoteOverrideCache::INIT_SPACE)
-                && self.vote_override_cache.owner == &crate::ID
-                && VoteOverrideCache::deserialize(
-                    &mut self.vote_override_cache.data.borrow().as_ref(),
-                )
-                .is_ok()
-            {
-                let mut vote_override_cache = VoteOverrideCache::deserialize(
-                    &mut self.vote_override_cache.data.borrow().as_ref(),
-                )?;
+            // validator has no vote yet, so just store delegator's vote in override PDA
+            // Path 2a: nobody -> delegator (first delegator to override)
+            // Path 2b: delegator -> delegator (multiple delegators override same validator)
 
-                // Check if cache is for the same validator and proposal
-                if vote_override_cache.proposal != self.proposal.key()
-                    || vote_override_cache.vote_account_validator != self.validator_vote.key()
-                {
-                    return Err(GovernanceError::InvalidVoteAccount.into());
-                }
+            // With Anchor's init_if_needed, the account is automatically created if it doesn't exist
+            // or reused if it already exists. We just need to check if we're updating an existing cache.
 
-                // Add delegator's vote to cache
-                vote_override_cache.for_votes_bp = vote_override_cache
-                    .for_votes_bp
-                    .checked_add(for_votes_bp)
-                    .ok_or(GovernanceError::ArithmeticOverflow)?;
-                vote_override_cache.against_votes_bp = vote_override_cache
-                    .against_votes_bp
-                    .checked_add(against_votes_bp)
-                    .ok_or(GovernanceError::ArithmeticOverflow)?;
-                vote_override_cache.abstain_votes_bp = vote_override_cache
-                    .abstain_votes_bp
-                    .checked_add(abstain_votes_bp)
-                    .ok_or(GovernanceError::ArithmeticOverflow)?;
-
-                vote_override_cache.for_votes_lamports = vote_override_cache
-                    .for_votes_lamports
-                    .checked_add(for_votes_lamports)
-                    .ok_or(GovernanceError::ArithmeticOverflow)?;
-                vote_override_cache.against_votes_lamports = vote_override_cache
-                    .against_votes_lamports
-                    .checked_add(against_votes_lamports)
-                    .ok_or(GovernanceError::ArithmeticOverflow)?;
-                vote_override_cache.abstain_votes_lamports = vote_override_cache
-                    .abstain_votes_lamports
-                    .checked_add(abstain_votes_lamports)
-                    .ok_or(GovernanceError::ArithmeticOverflow)?;
-
-                vote_override_cache.total_stake = vote_override_cache
-                    .total_stake
-                    .checked_add(delegator_stake)
-                    .ok_or(GovernanceError::ArithmeticOverflow)?;
-
-                // Serialize the updated cache back to the account data
-                let mut account_data = self.vote_override_cache.data.borrow_mut();
-                let serialized = borsh::to_vec(&vote_override_cache).map_err(|e| {
-                    msg!("Error serializing VoteOverrideCache: {}", e);
-                    GovernanceError::ArithmeticOverflow
-                })?;
-                account_data[0..serialized.len()].copy_from_slice(&serialized);
-            } else {
-                // Initialize account thourgh CPI to system program
-                let proposal_key = self.proposal.key();
-                let validator_vote_key = self.validator_vote.key();
-                let seeds = &[
-                    b"vote_override_cache",
-                    proposal_key.as_ref(),
-                    validator_vote_key.as_ref(),
-                    &[bumps.vote_override_cache],
-                ];
-                let ix = create_account(
-                    &self.signer.key(),
-                    &self.vote_override_cache.key(),
-                    Rent::get()?.minimum_balance(ANCHOR_DISCRIMINATOR + VoteOverrideCache::INIT_SPACE),
-                    (ANCHOR_DISCRIMINATOR + VoteOverrideCache::INIT_SPACE) as u64,
-                    &crate::ID,
-                );
-
-                invoke_signed(
-                    &ix,
-                    &[
-                        self.signer.to_account_info(),
-                        self.vote_override_cache.to_account_info(),
-                        self.system_program.to_account_info(),
-                    ],
-                    &[seeds],
-                )?;
-
-                // Initialize the cache with proper values
-                let vote_override_cache = VoteOverrideCache {
+            // Check if this is the first delegator (cache is empty) or subsequent delegator
+            if self.vote_override_cache.total_stake == 0 {
+                // Path 2a: First delegator - initialize cache
+                self.vote_override_cache.set_inner(VoteOverrideCache {
                     validator: meta_merkle_leaf.vote_account,
                     proposal: self.proposal.key(),
                     vote_account_validator: self.validator_vote.key(),
@@ -374,16 +303,78 @@ impl<'info> CastVoteOverride<'info> {
                     abstain_votes_lamports,
                     total_stake: delegator_stake,
                     bump: bumps.vote_override_cache,
-                };
+                });
+            } else {
+                // Path 2b: Subsequent delegator - update cache
+                // Validate cache is for the same validator and proposal
+                require_eq!(
+                    self.vote_override_cache.proposal,
+                    self.proposal.key(),
+                    GovernanceError::InvalidVoteAccount
+                );
+                require_eq!(
+                    self.vote_override_cache.vote_account_validator,
+                    self.validator_vote.key(),
+                    GovernanceError::InvalidVoteAccount
+                );
 
-                // Serialize the initialized cache to the account data
-                let mut account_data = self.vote_override_cache.data.borrow_mut();
-                let serialized = borsh::to_vec(&vote_override_cache).map_err(|e| {
-                    msg!("Error serializing VoteOverrideCache: {}", e);
-                    GovernanceError::ArithmeticOverflow
-                })?;
-                account_data[0..serialized.len()].copy_from_slice(&serialized);
+                // Update cache by adding delegator's vote
+                self.vote_override_cache.for_votes_bp = self
+                    .vote_override_cache
+                    .for_votes_bp
+                    .checked_add(for_votes_bp)
+                    .ok_or(GovernanceError::ArithmeticOverflow)?;
+                self.vote_override_cache.against_votes_bp = self
+                    .vote_override_cache
+                    .against_votes_bp
+                    .checked_add(against_votes_bp)
+                    .ok_or(GovernanceError::ArithmeticOverflow)?;
+                self.vote_override_cache.abstain_votes_bp = self
+                    .vote_override_cache
+                    .abstain_votes_bp
+                    .checked_add(abstain_votes_bp)
+                    .ok_or(GovernanceError::ArithmeticOverflow)?;
+
+                self.vote_override_cache.for_votes_lamports = self
+                    .vote_override_cache
+                    .for_votes_lamports
+                    .checked_add(for_votes_lamports)
+                    .ok_or(GovernanceError::ArithmeticOverflow)?;
+                self.vote_override_cache.against_votes_lamports = self
+                    .vote_override_cache
+                    .against_votes_lamports
+                    .checked_add(against_votes_lamports)
+                    .ok_or(GovernanceError::ArithmeticOverflow)?;
+                self.vote_override_cache.abstain_votes_lamports = self
+                    .vote_override_cache
+                    .abstain_votes_lamports
+                    .checked_add(abstain_votes_lamports)
+                    .ok_or(GovernanceError::ArithmeticOverflow)?;
+
+                self.vote_override_cache.total_stake = self
+                    .vote_override_cache
+                    .total_stake
+                    .checked_add(delegator_stake)
+                    .ok_or(GovernanceError::ArithmeticOverflow)?;
             }
+
+            // Initialize the VoteOverride account with delegator's vote data
+            // This covers both cases: delegator -> delegator and nobody -> delegator
+            self.vote_override.set_inner(VoteOverride {
+                stake_account: stake_merkle_leaf.stake_account,
+                validator: meta_merkle_leaf.vote_account,
+                proposal: self.proposal.key(),
+                vote_account_validator: self.validator_vote.key(),
+                for_votes_bp,
+                against_votes_bp,
+                abstain_votes_bp,
+                stake_amount: delegator_stake,
+                vote_override_timestamp: clock.unix_timestamp,
+                bump: bumps.vote_override,
+                for_votes_lamports,
+                against_votes_lamports,
+                abstain_votes_lamports,
+            });
         }
 
         // Emit vote override cast event

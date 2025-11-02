@@ -21,7 +21,6 @@ use mock_gov_v1::{ConsensusResult, MetaMerkleProof};
 
 #[derive(Accounts)]
 pub struct ModifyVote<'info> {
-    #[account(mut)]
     pub signer: Signer<'info>, // Voter (validator)
     #[account(mut)]
     pub proposal: Account<'info, Proposal>, // Proposal being modified
@@ -90,13 +89,7 @@ impl<'info> ModifyVote<'info> {
         );
 
         let consensus_result_data = self.consensus_result.try_borrow_data()?;
-        let consensus_result = try_from_slice_unchecked::<ConsensusResult>(
-            &consensus_result_data[ANCHOR_DISCRIMINATOR..],
-        )
-        .map_err(|e| {
-            msg!("Error deserializing ConsensusResult: {}", e);
-            GovernanceError::CantDeserializeConsensusResult
-        })?;
+        let consensus_result = ConsensusResult::try_deserialize(&mut &consensus_result_data[..])?;
 
         let merkle_root = self
             .proposal
@@ -108,12 +101,8 @@ impl<'info> ModifyVote<'info> {
         );
 
         // Deserialize MetaMerkleProof for crosschecking
-        let account_data = self.meta_merkle_proof.try_borrow_data()?;
-        let meta_merkle_proof = try_from_slice_unchecked::<MetaMerkleProof>(&account_data[ANCHOR_DISCRIMINATOR..])
-            .map_err(|e| {
-                msg!("Error deserializing MetaMerkleProof: {}", e);
-                GovernanceError::CantDeserializeMMPPDA
-            })?;
+        let meta_account_data = self.meta_merkle_proof.try_borrow_data()?;
+        let meta_merkle_proof = MetaMerkleProof::try_deserialize(&mut &meta_account_data[..])?;
         let meta_merkle_leaf = meta_merkle_proof.meta_merkle_leaf;
 
         // Crosscheck consensus result
@@ -157,7 +146,11 @@ impl<'info> ModifyVote<'info> {
         )?;
 
         // Calculate new effective votes for each category based on actual lamports
-        let voter_stake = meta_merkle_leaf.active_stake;
+        let full_validator_stake = meta_merkle_leaf.active_stake;
+        let voter_stake = full_validator_stake
+            .checked_sub(self.vote.override_lamports)
+            .ok_or(GovernanceError::ArithmeticOverflow)?;
+        
         let for_votes_lamports = calculate_vote_lamports!(voter_stake, for_votes_bp)?;
         let against_votes_lamports = calculate_vote_lamports!(voter_stake, against_votes_bp)?;
         let abstain_votes_lamports = calculate_vote_lamports!(voter_stake, abstain_votes_bp)?;

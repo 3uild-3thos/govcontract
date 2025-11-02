@@ -1,9 +1,19 @@
-import { PublicKey, SystemProgram } from "@solana/web3.js";
-import { CastVoteOverrideParams, TransactionResult, SNAPSHOT_PROGRAM_ID } from "./types";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import {
+  PublicKey,
+  SystemProgram,
+  TransactionInstruction,
+  Transaction,
+} from "@solana/web3.js";
+import {
+  CastVoteOverrideParams,
+  TransactionResult,
+  BlockchainParams,
+  GOV_V1_PROGRAM_ID,
+} from "./types";
 import {
   createProgramWithWallet,
-  deriveVotePda,
-  deriveVoteOverridePda,
+  createGovV1ProgramWithWallet,
   getVoteAccountProof,
   getStakeAccountProof,
   getVoterSummary,
@@ -12,107 +22,173 @@ import {
   convertStakeMerkleLeafDataToIdlType,
   validateVoteBasisPoints,
 } from "./helpers";
+import { BN } from "@coral-xyz/anchor";
 
 /**
  * Casts a vote override using a stake account
  */
-export async function castVoteOverride(params: CastVoteOverrideParams): Promise<TransactionResult> {
-  try {
-    const {
-      proposalId,
-      forVotesBp,
-      againstVotesBp,
-      abstainVotesBp,
-      stakeAccount,
+export async function castVoteOverride(
+  params: CastVoteOverrideParams,
+  blockchainParams: BlockchainParams
+): Promise<TransactionResult> {
+  const {
+    proposalId,
+    forVotesBp,
+    againstVotesBp,
+    abstainVotesBp,
+    stakeAccount,
+    wallet,
+    voteAccount,
+  } = params;
+
+  if (!wallet || !wallet.publicKey) {
+    throw new Error("Wallet not connected");
+  }
+
+  // Validate vote distribution
+  validateVoteBasisPoints(forVotesBp, againstVotesBp, abstainVotesBp);
+
+  const proposalPubkey = new PublicKey(proposalId);
+  const splVoteAccount = new PublicKey(voteAccount);
+  const program = createProgramWithWallet(wallet, blockchainParams.endpoint);
+
+  // Get voter summary to get slot and stake accounts
+  const voterSummary = await getVoterSummary(
+    wallet.publicKey.toString(),
+    blockchainParams.network || "mainnet"
+  );
+  const slot = voterSummary.snapshot_slot;
+
+  // Determine stake account to use
+  let stakeAccountStr = stakeAccount;
+  if (!stakeAccountStr) {
+    if (
+      !voterSummary.stake_accounts ||
+      voterSummary.stake_accounts.length === 0
+    ) {
+      throw new Error("No stake account found for voter");
+    }
+    // TODO: fix this type casting
+    stakeAccountStr = voterSummary.stake_accounts[0].stake_account as string;
+  }
+
+  const stakeAccountPubkey = new PublicKey(stakeAccountStr);
+
+  // Get proofs
+  const network = blockchainParams.network || "mainnet";
+  const [metaMerkleProof, stakeMerkleProof] = await Promise.all([
+    getVoteAccountProof(splVoteAccount.toBase58(), network, slot),
+    getStakeAccountProof(stakeAccountStr, network, slot),
+  ]);
+
+  const SNAPSHOT_PROGRAM_ID = GOV_V1_PROGRAM_ID;
+
+  const [consensusResultPda, metaMerkleProofPda] =
+    generatePdasFromVoteProofResponse(metaMerkleProof, SNAPSHOT_PROGRAM_ID, 4);
+
+  // Check if merkle account exists
+  const merkleAccountInfo = await program.provider.connection.getAccountInfo(
+    metaMerkleProofPda,
+    "confirmed"
+  );
+
+  const instructions: TransactionInstruction[] = [];
+
+  if (!merkleAccountInfo) {
+    console.log("merkleAccountInfo is null");
+    console.log("consensusResultPda", consensusResultPda.toBase58());
+    console.log("metaMerkleProofPda", metaMerkleProofPda.toBase58());
+
+    const govV1Program = createGovV1ProgramWithWallet(
       wallet,
-      voteAccount,
-    } = params;
-
-    if (!wallet.connected || !wallet.publicKey) {
-      throw new Error("Wallet not connected");
-    }
-
-    // Validate vote distribution
-    validateVoteBasisPoints(forVotesBp, againstVotesBp, abstainVotesBp);
-
-    const proposalPubkey = new PublicKey(proposalId);
-    const splVoteAccount = voteAccount || wallet.publicKey;
-    const program = createProgramWithWallet(wallet, params.programId);
-
-    // Determine stake account to use
-    let stakeAccountStr = stakeAccount;
-    if (!stakeAccountStr) {
-      try {
-        const voterSummary = await getVoterSummary(
-          wallet.publicKey.toString(), 
-          params.network || 'mainnet'
-        );
-        if (!voterSummary.stake_accounts || voterSummary.stake_accounts.length === 0) {
-          throw new Error("No stake account found for voter");
-        }
-        stakeAccountStr = voterSummary.stake_accounts[0].stake_account;
-      } catch (error) {
-        throw new Error(`Failed to get stake account: ${error}`);
-      }
-    }
-
-    const stakeAccountPubkey = new PublicKey(stakeAccountStr);
-
-    // Get proofs
-    const network = params.network || 'mainnet';
-    const [metaMerkleProof, stakeMerkleProof] = await Promise.all([
-      getVoteAccountProof(splVoteAccount.toString(), network),
-      getStakeAccountProof(stakeAccountStr, network),
-    ]);
-
-    const [consensusResultPda, metaMerkleProofPda] = generatePdasFromVoteProofResponse(metaMerkleProof);
-
-    // Derive PDAs
-    const validatorVotePda = deriveVotePda(proposalPubkey, splVoteAccount, program.programId);
-    const voteOverridePda = deriveVoteOverridePda(
-      proposalPubkey,
-      stakeAccountPubkey,
-      validatorVotePda,
-      program.programId
+      blockchainParams.endpoint
     );
 
-    // Convert merkle proof data
-    const stakeMerkleProofVec = convertMerkleProofStrings(stakeMerkleProof.stake_merkle_proof);
-    const stakeMerkleLeaf = convertStakeMerkleLeafDataToIdlType(stakeMerkleProof.stake_merkle_leaf);
+    console.log("fetched voteAccountProof", metaMerkleProof);
 
-    // Build and send transaction
-    const tx = await program.methods
-      .castVoteOverride(
-        forVotesBp,
-        againstVotesBp,
-        abstainVotesBp,
-        stakeMerkleProofVec,
-        stakeMerkleLeaf
+    const initMerkleInstruction = await govV1Program.methods
+      .initMetaMerkleProof(
+        {
+          votingWallet: new PublicKey(
+            metaMerkleProof.meta_merkle_leaf.voting_wallet
+          ),
+          voteAccount: new PublicKey(
+            metaMerkleProof.meta_merkle_leaf.vote_account
+          ),
+          stakeMerkleRoot: Array.from(
+            new PublicKey(
+              metaMerkleProof.meta_merkle_leaf.stake_merkle_root
+            ).toBytes()
+          ),
+          activeStake: new BN(metaMerkleProof.meta_merkle_leaf.active_stake),
+        },
+        metaMerkleProof.meta_merkle_proof.map((proof) =>
+          Array.from(new PublicKey(proof).toBytes())
+        ),
+        new BN(1)
       )
-      .accounts({
-        signer: wallet.publicKey,
-        splVoteAccount: splVoteAccount,
-        splStakeAccount: stakeAccountPubkey,
-        proposal: proposalPubkey,
-        validatorVote: validatorVotePda,
-        voteOverride: voteOverridePda,
+      .accountsStrict({
         consensusResult: consensusResultPda,
-        metaMerkleProof: metaMerkleProofPda,
-        snapshotProgram: SNAPSHOT_PROGRAM_ID,
+        merkleProof: metaMerkleProofPda,
+        payer: wallet.publicKey,
         systemProgram: SystemProgram.programId,
       })
-      .rpc();
+      .instruction();
 
-    return {
-      signature: tx,
-      success: true,
-    };
-  } catch (error) {
-    console.error("Error casting vote override:", error);
-    return {
-      signature: "",
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error occurred",
-    };
+    instructions.push(initMerkleInstruction);
   }
+
+  // Convert merkle proof data
+  const stakeMerkleProofVec = convertMerkleProofStrings(
+    stakeMerkleProof.stake_merkle_proof
+  );
+  const stakeMerkleLeaf = convertStakeMerkleLeafDataToIdlType(
+    stakeMerkleProof.stake_merkle_leaf
+  );
+
+  const forVotesBn = new BN(forVotesBp);
+  const againstVotesBn = new BN(againstVotesBp);
+  const abstainVotesBn = new BN(abstainVotesBp);
+
+  // Build cast vote override instruction
+  const castVoteOverrideInstruction = await program.methods
+    .castVoteOverride(
+      forVotesBn,
+      againstVotesBn,
+      abstainVotesBn,
+      stakeMerkleProofVec.map((proof) => proof.toBytes() as any),
+      stakeMerkleLeaf
+    )
+    .accounts({
+      signer: wallet.publicKey,
+      splVoteAccount: splVoteAccount,
+      splStakeAccount: stakeAccountPubkey,
+      proposal: proposalPubkey,
+      consensusResult: consensusResultPda,
+      metaMerkleProof: metaMerkleProofPda,
+      snapshotProgram: SNAPSHOT_PROGRAM_ID,
+    })
+    .instruction();
+
+  instructions.push(castVoteOverrideInstruction);
+
+  const transaction = new Transaction();
+  transaction.add(...instructions);
+  transaction.feePayer = wallet.publicKey;
+  transaction.recentBlockhash = (
+    await program.provider.connection.getLatestBlockhash("confirmed")
+  ).blockhash;
+
+  const tx = await wallet.signTransaction(transaction);
+
+  const signature = await program.provider.connection.sendRawTransaction(
+    tx.serialize()
+  );
+
+  console.log("signature cast vote override", signature);
+
+  return {
+    signature,
+    success: true,
+  };
 }

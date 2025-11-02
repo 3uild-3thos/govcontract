@@ -13,7 +13,7 @@ use crate::{
     error::GovernanceError,
     events::VoteOverrideModified,
     merkle_helpers::verify_merkle_proof_cpi,
-    state::{Proposal, VoteOverride, VoteOverrideCache},
+    state::{Proposal, Vote, VoteOverride, VoteOverrideCache},
 };
 #[cfg(feature = "production")]
 use gov_v1::{ConsensusResult, MetaMerkleProof, StakeMerkleLeaf};
@@ -22,7 +22,6 @@ use mock_gov_v1::{ConsensusResult, MetaMerkleProof, StakeMerkleLeaf};
 
 #[derive(Accounts)]
 pub struct ModifyVoteOverride<'info> {
-    #[account(mut)]
     pub signer: Signer<'info>, // Voter (staker/delegator)
     #[account(mut)]
     pub proposal: Account<'info, Proposal>, // Proposal being voted on
@@ -112,15 +111,8 @@ impl<'info> ModifyVoteOverride<'info> {
             self.meta_merkle_proof.owner == self.snapshot_program.key,
             GovernanceError::MustBeOwnedBySnapshotProgram
         );
-
         let consensus_result_data = self.consensus_result.try_borrow_data()?;
-        let consensus_result = try_from_slice_unchecked::<ConsensusResult>(
-            &consensus_result_data[ANCHOR_DISCRIMINATOR..],
-        )
-        .map_err(|e| {
-            msg!("Error deserializing ConsensusResult: {}", e);
-            GovernanceError::CantDeserializeConsensusResult
-        })?;
+        let consensus_result = ConsensusResult::try_deserialize(&mut &consensus_result_data[..])?;
 
         let merkle_root = self
             .proposal
@@ -133,11 +125,8 @@ impl<'info> ModifyVoteOverride<'info> {
 
         // Deserialize MetaMerkleProof for crosschecking
         let meta_account_data = self.meta_merkle_proof.try_borrow_data()?;
-        let meta_merkle_proof =
-            try_from_slice_unchecked::<MetaMerkleProof>(&meta_account_data[ANCHOR_DISCRIMINATOR..]).map_err(|e| {
-                msg!("Error deserializing MetaMerkleProof: {}", e);
-                GovernanceError::CantDeserializeMMPPDA
-            })?;
+        let meta_merkle_proof = MetaMerkleProof::try_deserialize(&mut &meta_account_data[..])?;
+
         let meta_merkle_leaf = meta_merkle_proof.meta_merkle_leaf;
 
         require_eq!(
@@ -226,43 +215,51 @@ impl<'info> ModifyVoteOverride<'info> {
         self.vote_override.abstain_votes_lamports = abstain_votes_lamports;
         self.vote_override.vote_override_timestamp = clock.unix_timestamp;
 
+        require!(
+            self.validator_vote.owner == &crate::ID
+                && self.validator_vote.data_len() == (8 + Vote::INIT_SPACE),
+            GovernanceError::InvalidVoteAccount
+        );
+
         // Update vote override cache if it exists
-        if self.vote_override_cache.data_len() == (ANCHOR_DISCRIMINATOR + VoteOverrideCache::INIT_SPACE)
-            && self.vote_override_cache.owner == &crate::ID
-            && VoteOverrideCache::deserialize(&mut &self.vote_override_cache.data.borrow()[ANCHOR_DISCRIMINATOR..])
-                .is_ok()
-        {
-            let mut vote_override_cache =
-                VoteOverrideCache::deserialize(&mut &self.vote_override_cache.data.borrow()[ANCHOR_DISCRIMINATOR..])?;
+        if self.vote_override_cache.owner == &crate::ID {
+            // Use try_deserialize to properly handle discriminator
+            let vote_override_cache_result: Result<VoteOverrideCache> =
+                anchor_lang::AccountDeserialize::try_deserialize(
+                    &mut self.vote_override_cache.data.borrow_mut().as_ref(),
+                );
+            if let Ok(mut vote_override_cache) = vote_override_cache_result {
+                // Update cache by subtracting old values and adding new ones
+                vote_override_cache.for_votes_lamports = vote_override_cache
+                    .for_votes_lamports
+                    .checked_sub(old_for_votes_lamports)
+                    .and_then(|val| val.checked_add(for_votes_lamports))
+                    .ok_or(GovernanceError::ArithmeticOverflow)?;
 
-            // Update cache by subtracting old values and adding new ones
-            vote_override_cache.for_votes_lamports = vote_override_cache
-                .for_votes_lamports
-                .checked_sub(old_for_votes_lamports)
-                .and_then(|val| val.checked_add(for_votes_lamports))
-                .ok_or(GovernanceError::ArithmeticOverflow)?;
+                vote_override_cache.against_votes_lamports = vote_override_cache
+                    .against_votes_lamports
+                    .checked_sub(old_against_votes_lamports)
+                    .and_then(|val| val.checked_add(against_votes_lamports))
+                    .ok_or(GovernanceError::ArithmeticOverflow)?;
 
-            vote_override_cache.against_votes_lamports = vote_override_cache
-                .against_votes_lamports
-                .checked_sub(old_against_votes_lamports)
-                .and_then(|val| val.checked_add(against_votes_lamports))
-                .ok_or(GovernanceError::ArithmeticOverflow)?;
+                vote_override_cache.abstain_votes_lamports = vote_override_cache
+                    .abstain_votes_lamports
+                    .checked_sub(old_abstain_votes_lamports)
+                    .and_then(|val| val.checked_add(abstain_votes_lamports))
+                    .ok_or(GovernanceError::ArithmeticOverflow)?;
 
-            vote_override_cache.abstain_votes_lamports = vote_override_cache
-                .abstain_votes_lamports
-                .checked_sub(old_abstain_votes_lamports)
-                .and_then(|val| val.checked_add(abstain_votes_lamports))
-                .ok_or(GovernanceError::ArithmeticOverflow)?;
-
-            // Serialize the updated cache back to the account data
-            let mut account_data = self.vote_override_cache.data.borrow_mut();
-            let serialized = borsh::to_vec(&vote_override_cache).map_err(|e| {
-                msg!("Error serializing VoteOverrideCache: {}", e);
-                GovernanceError::ArithmeticOverflow
-            })?;
-            account_data[0..serialized.len()].copy_from_slice(&serialized);
+                // Serialize the updated cache back to the account data
+                let mut cache_data = self.vote_override_cache.data.borrow_mut();
+                anchor_lang::AccountSerialize::try_serialize(
+                    &vote_override_cache,
+                    &mut cache_data.as_mut(),
+                )
+                .map_err(|e| {
+                    msg!("Error serializing VoteOverrideCache: {}", e);
+                    GovernanceError::ArithmeticOverflow
+                })?;
+            }
         }
-
         // Emit vote override modified event
         emit!(VoteOverrideModified {
             proposal_id: self.proposal.key(),
