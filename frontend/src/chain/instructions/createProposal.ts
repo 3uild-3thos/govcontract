@@ -144,7 +144,7 @@ console.log("merkleAccountInfo is null")
     .accountsPartial({
       signer: wallet.publicKey,
       proposal: proposalPda,
-      splVoteAccount: voteAccountProof.meta_merkle_leaf.vote_account,
+      splVoteAccount,
       snapshotProgram: SNAPSHOT_PROGRAM_ID,
       consensusResult,
       metaMerkleProof,
