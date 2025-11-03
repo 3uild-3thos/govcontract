@@ -4,7 +4,7 @@ import {
   CastVoteOverrideParams,
   TransactionResult,
   BlockchainParams,
-  GOV_V1_PROGRAM_ID,
+  SNAPSHOT_PROGRAM_ID,
 } from "./types";
 import {
   createProgramWithWallet,
@@ -76,8 +76,6 @@ export async function castVoteOverride(
     getStakeAccountProof(stakeAccountStr, network, slot),
   ]);
 
-  const SNAPSHOT_PROGRAM_ID = GOV_V1_PROGRAM_ID;
-
   const [consensusResultPda, metaMerkleProofPda] =
     generatePdasFromVoteProofResponse(metaMerkleProof, SNAPSHOT_PROGRAM_ID, 4);
 
@@ -97,20 +95,15 @@ export async function castVoteOverride(
       blockchainParams.endpoint
     );
 
-    console.log("fetched voteAccountProof", metaMerkleProof);
-
     const stakeMerkleRootData = Array.from(
       new PublicKey(
         metaMerkleProof.meta_merkle_leaf.stake_merkle_root
       ).toBytes()
     );
 
-    console.log("stakeMerkleRootData:", stakeMerkleRootData);
     const metaMerkleProofData = metaMerkleProof.meta_merkle_proof.map((proof) =>
       Array.from(new PublicKey(proof).toBytes())
     );
-
-    console.log("metaMerkleProofData:", metaMerkleProofData);
 
     const initMerkleInstruction = await govV1Program.methods
       .initMetaMerkleProof(
@@ -147,20 +140,6 @@ export async function castVoteOverride(
 
     const tx = await wallet.signTransaction(transaction);
 
-    //     SendTransactionError: Simulation failed.
-    // Message: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x1779.
-    // Logs:
-    // [
-    //   "Program 12ZGhCoEAGdStDJCzxZT9Vbn3qTW6VprH4GkvXcErZmT invoke [1]",
-    //   "Program log: Instruction: InitMetaMerkleProof",
-    //   "Program 11111111111111111111111111111111 invoke [2]",
-    //   "Program 11111111111111111111111111111111 success",
-    //   "Program log: Root 8MD8yiAAi2KLeJQhes3pe8HZUbs4fZ7XF2fm3X1fhzXb != Node 5JXfj9RSzqXXDMaLSuSRZcsV9hoZNxeDexWkrX61dd6C",
-    //   "Program log: AnchorError thrown in programs/gov-v1/src/merkle_helper.rs:48. Error Code: InvalidMerkleProof. Error Number: 6009. Error Message: Invalid merkle proof.",
-    //   "Program 12ZGhCoEAGdStDJCzxZT9Vbn3qTW6VprH4GkvXcErZmT consumed 18695 of 200000 compute units",
-    //   "Program 12ZGhCoEAGdStDJCzxZT9Vbn3qTW6VprH4GkvXcErZmT failed: custom program error: 0x1779"
-    // ].
-
     const signature = await program.provider.connection.sendRawTransaction(
       tx.serialize(),
       { preflightCommitment: "confirmed" }
@@ -186,7 +165,7 @@ export async function castVoteOverride(
       forVotesBn,
       againstVotesBn,
       abstainVotesBn,
-      stakeMerkleProofVec.map((proof) => proof.toBytes() as any),
+      stakeMerkleProofVec,
       stakeMerkleLeaf
     )
     .accounts({

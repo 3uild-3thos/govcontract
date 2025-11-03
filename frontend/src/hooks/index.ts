@@ -9,7 +9,7 @@ export * from "./useVoteDistribution";
 export * from "./useProposals";
 export * from "./useProposalDetails";
 export * from "./useVoteAccounts";
-export * from "./useVoteOverrideAccounts";
+export * from "./useWalletVoteOverrideAccounts";
 export * from "./useCastVote";
 export * from "./useCastVoteOverride";
 export * from "./useModifyVote";

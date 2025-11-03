@@ -1,16 +1,15 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   PublicKey,
   SystemProgram,
   TransactionInstruction,
   Transaction,
-} from '@solana/web3.js';
+} from "@solana/web3.js";
 import {
   ModifyVoteOverrideParams,
   TransactionResult,
   BlockchainParams,
-  GOV_V1_PROGRAM_ID,
-} from './types';
+  SNAPSHOT_PROGRAM_ID,
+} from "./types";
 import {
   createProgramWithWallet,
   createGovV1ProgramWithWallet,
@@ -21,8 +20,8 @@ import {
   convertMerkleProofStrings,
   convertStakeMerkleLeafDataToIdlType,
   validateVoteBasisPoints,
-} from './helpers';
-import { BN } from '@coral-xyz/anchor';
+} from "./helpers";
+import { BN } from "@coral-xyz/anchor";
 
 /**
  * Modifies an existing vote override using a stake account
@@ -42,7 +41,7 @@ export async function modifyVoteOverride(
   } = params;
 
   if (!wallet || !wallet.publicKey) {
-    throw new Error('Wallet not connected');
+    throw new Error("Wallet not connected");
   }
 
   // Validate vote distribution
@@ -55,7 +54,7 @@ export async function modifyVoteOverride(
   // Get voter summary to get slot and stake accounts
   const voterSummary = await getVoterSummary(
     wallet.publicKey.toString(),
-    blockchainParams.network || 'mainnet'
+    blockchainParams.network || "mainnet"
   );
   const slot = voterSummary.snapshot_slot;
 
@@ -66,7 +65,7 @@ export async function modifyVoteOverride(
       !voterSummary.stake_accounts ||
       voterSummary.stake_accounts.length === 0
     ) {
-      throw new Error('No stake account found for voter');
+      throw new Error("No stake account found for voter");
     }
     // TODO: fix this type casting
     stakeAccountStr = voterSummary.stake_accounts[0].stake_account as string;
@@ -75,13 +74,11 @@ export async function modifyVoteOverride(
   const stakeAccountPubkey = new PublicKey(stakeAccountStr);
 
   // Get proofs
-  const network = blockchainParams.network || 'mainnet';
+  const network = blockchainParams.network || "mainnet";
   const [metaMerkleProof, stakeMerkleProof] = await Promise.all([
     getVoteAccountProof(splVoteAccount.toBase58(), network, slot),
     getStakeAccountProof(stakeAccountStr, network, slot),
   ]);
-
-  const SNAPSHOT_PROGRAM_ID = GOV_V1_PROGRAM_ID;
 
   const [consensusResultPda, metaMerkleProofPda] =
     generatePdasFromVoteProofResponse(metaMerkleProof, SNAPSHOT_PROGRAM_ID, 4);
@@ -89,22 +86,30 @@ export async function modifyVoteOverride(
   // Check if merkle account exists
   const merkleAccountInfo = await program.provider.connection.getAccountInfo(
     metaMerkleProofPda,
-    'confirmed'
+    "confirmed"
   );
 
   const instructions: TransactionInstruction[] = [];
 
   if (!merkleAccountInfo) {
-    console.log('merkleAccountInfo is null');
-    console.log('consensusResultPda', consensusResultPda.toBase58());
-    console.log('metaMerkleProofPda', metaMerkleProofPda.toBase58());
+    console.log("merkleAccountInfo is null");
+    console.log("consensusResultPda", consensusResultPda.toBase58());
+    console.log("metaMerkleProofPda", metaMerkleProofPda.toBase58());
 
     const govV1Program = createGovV1ProgramWithWallet(
       wallet,
       blockchainParams.endpoint
     );
 
-    console.log('fetched voteAccountProof', metaMerkleProof);
+    const stakeMerkleRootData = Array.from(
+      new PublicKey(
+        metaMerkleProof.meta_merkle_leaf.stake_merkle_root
+      ).toBytes()
+    );
+
+    const metaMerkleProofData = metaMerkleProof.meta_merkle_proof.map((proof) =>
+      Array.from(new PublicKey(proof).toBytes())
+    );
 
     const initMerkleInstruction = await govV1Program.methods
       .initMetaMerkleProof(
@@ -115,16 +120,12 @@ export async function modifyVoteOverride(
           voteAccount: new PublicKey(
             metaMerkleProof.meta_merkle_leaf.vote_account
           ),
-          stakeMerkleRoot: Array.from(
-            new PublicKey(
-              metaMerkleProof.meta_merkle_leaf.stake_merkle_root
-            ).toBytes()
+          stakeMerkleRoot: stakeMerkleRootData,
+          activeStake: new BN(
+            `${metaMerkleProof.meta_merkle_leaf.active_stake}`
           ),
-          activeStake: new BN(metaMerkleProof.meta_merkle_leaf.active_stake),
         },
-        metaMerkleProof.meta_merkle_proof.map((proof) =>
-          Array.from(new PublicKey(proof).toBytes())
-        ),
+        metaMerkleProofData,
         new BN(1)
       )
       .accountsStrict({
@@ -156,7 +157,7 @@ export async function modifyVoteOverride(
       forVotesBn,
       againstVotesBn,
       abstainVotesBn,
-      stakeMerkleProofVec.map((proof) => proof.toBytes() as any),
+      stakeMerkleProofVec,
       stakeMerkleLeaf
     )
     .accounts({
@@ -176,16 +177,17 @@ export async function modifyVoteOverride(
   transaction.add(...instructions);
   transaction.feePayer = wallet.publicKey;
   transaction.recentBlockhash = (
-    await program.provider.connection.getLatestBlockhash('confirmed')
+    await program.provider.connection.getLatestBlockhash("confirmed")
   ).blockhash;
 
   const tx = await wallet.signTransaction(transaction);
 
   const signature = await program.provider.connection.sendRawTransaction(
-    tx.serialize()
+    tx.serialize(),
+    { preflightCommitment: "confirmed" }
   );
 
-  console.log('signature modify vote override', signature);
+  console.log("signature modify vote override", signature);
 
   return {
     signature,

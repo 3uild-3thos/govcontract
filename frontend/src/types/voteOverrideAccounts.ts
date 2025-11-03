@@ -3,23 +3,18 @@ import { PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 
 export interface VoteOverrideAccountData {
-  voteAccount: PublicKey;
+  stakeAccount: PublicKey;
+  validator: PublicKey;
   proposal: PublicKey;
-  activeStake: number;
-  identity?: PublicKey;
-  name?: string;
-  commission?: number;
-  lastVote?: number;
-  credits?: number;
-  epochCredits?: number;
-  activatedStake?: number;
+  voteAccountValidator: PublicKey;
   forVotesBp: BN;
   againstVotesBp: BN;
   abstainVotesBp: BN;
   forVotesLamports: BN;
   againstVotesLamports: BN;
   abstainVotesLamports: BN;
-  voteTimestamp: BN;
+  stakeAmount: BN;
+  voteOverrideTimestamp: BN;
   bump: number;
 }
 
