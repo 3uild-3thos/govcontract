@@ -14,7 +14,7 @@ use gov_v1::StakeMerkleLeaf;
 #[cfg(feature = "testing")]
 use mock_gov_v1::StakeMerkleLeaf;
 
-declare_id!("DUWGu3sMy4ymJWwUs53eaCyNzZRFoxhmi3Ggf1kh8Q61");
+declare_id!("GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc");
 
 #[program]
 pub mod govcontract {
@@ -109,16 +109,6 @@ pub mod govcontract {
     pub fn finalize_proposal(ctx: Context<FinalizeProposal>) -> Result<()> {
         ctx.accounts.finalize_proposal()?;
 
-        Ok(())
-    }
-
-    // Temporary function to adjust proposal epochs - for testing/admin purposes
-    pub fn adjust_proposal_epochs(
-        ctx: Context<AdjustProposalEpochs>,
-        start_epoch: u64,
-        end_epoch: u64,
-    ) -> Result<()> {
-        ctx.accounts.adjust_proposal_epochs(start_epoch, end_epoch)?;
         Ok(())
     }
 }
