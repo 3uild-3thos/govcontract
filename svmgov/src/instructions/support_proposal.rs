@@ -1,8 +1,6 @@
 use std::str::FromStr;
 
-use anchor_client::solana_sdk::{
-    instruction::Instruction, pubkey::Pubkey, signer::Signer, transaction::Transaction,
-};
+use anchor_client::solana_sdk::{pubkey::Pubkey, signer::Signer, transaction::Transaction};
 use anchor_lang::system_program;
 use anyhow::{Result, anyhow};
 use gov_v1::{ID as SNAPSHOT_PROGRAM_ID, MetaMerkleLeaf, MetaMerkleProof};
@@ -38,8 +36,6 @@ pub async fn support_proposal(
 
     let support_pda = derive_support_pda(&proposal_pubkey, &vote_account, &program.id());
 
-    let spinner = create_spinner("Supporting proposal...");
-
     let meta_merkle_proof_account = match program
         .account::<MetaMerkleProof>(meta_merkle_proof_pda)
         .await
@@ -51,11 +47,14 @@ pub async fn support_proposal(
         }
     };
 
-    let voting_wallet = Pubkey::from_str(&proof_response.meta_merkle_leaf.voting_wallet)?;
-    let mut ixs: Vec<Instruction> = vec![];
-
+    // First transaction: Initialize meta merkle proof if needed
     if meta_merkle_proof_account.is_none() {
         info!("Creating meta merkle proof account");
+
+        let init_spinner = create_spinner("Initializing meta merkle proof...");
+
+        let voting_wallet = Pubkey::from_str(&proof_response.meta_merkle_leaf.voting_wallet)?;
+
         let init_meta_merkle_proof_ix = merkle_proof_program
             .request()
             .args(gov_v1::instruction::InitMetaMerkleProof {
@@ -83,8 +82,31 @@ pub async fn support_proposal(
             })
             .instructions()?;
 
-        ixs.extend(init_meta_merkle_proof_ix);
+        let blockhash = merkle_proof_program.rpc().get_latest_blockhash().await?;
+        let transaction = Transaction::new_signed_with_payer(
+            &init_meta_merkle_proof_ix,
+            Some(&payer.pubkey()),
+            &[&payer],
+            blockhash,
+        );
+
+        let sig = merkle_proof_program
+            .rpc()
+            .send_and_confirm_transaction(&transaction)
+            .await?;
+        log::debug!(
+            "Meta merkle proof initialization transaction sent successfully: signature={}",
+            sig
+        );
+
+        init_spinner.finish_with_message(format!(
+            "Meta merkle proof initialized. https://explorer.solana.com/tx/{}",
+            sig
+        ));
     }
+
+    // Second transaction: Support proposal
+    let spinner = create_spinner("Supporting proposal...");
 
     let support_proposal_ixs = program
         .request()
@@ -101,16 +123,22 @@ pub async fn support_proposal(
         })
         .instructions()?;
 
-    ixs.extend(support_proposal_ixs);
-
     let blockhash = program.rpc().get_latest_blockhash().await?;
-    let transaction =
-        Transaction::new_signed_with_payer(&ixs, Some(&payer.pubkey()), &[&payer], blockhash);
+    let transaction = Transaction::new_signed_with_payer(
+        &support_proposal_ixs,
+        Some(&payer.pubkey()),
+        &[&payer],
+        blockhash,
+    );
 
     let sig = program
         .rpc()
         .send_and_confirm_transaction(&transaction)
         .await?;
+    log::debug!(
+        "Support proposal transaction sent successfully: signature={}",
+        sig
+    );
 
     spinner.finish_with_message(format!(
         "Proposal supported. https://explorer.solana.com/tx/{}",
