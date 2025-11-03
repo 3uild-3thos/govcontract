@@ -49,40 +49,6 @@ export type Govcontract = {
       ]
     },
     {
-      "name": "adjustProposalEpochs",
-      "discriminator": [
-        180,
-        136,
-        13,
-        187,
-        151,
-        188,
-        135,
-        242
-      ],
-      "accounts": [
-        {
-          "name": "signer",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "proposal",
-          "writable": true
-        }
-      ],
-      "args": [
-        {
-          "name": "startEpoch",
-          "type": "u64"
-        },
-        {
-          "name": "endEpoch",
-          "type": "u64"
-        }
-      ]
-    },
-    {
       "name": "castVote",
       "discriminator": [
         20,

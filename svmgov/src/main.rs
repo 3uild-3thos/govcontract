@@ -449,28 +449,6 @@ enum Commands {
         #[arg(long, help = "Merkle root hash (hex string)")]
         merkle_root: String,
     },
-
-    #[command(
-        about = "Adjust proposal start and end epochs (temporary/admin function)",
-        long_about = "This command allows adjusting the start_epoch and end_epoch of a proposal. \
-                      This is a temporary function for testing/admin purposes. \
-                      Requires the proposal ID, start epoch, and end epoch.\n\n\
-                      Example:\n\
-                      $ svmgov --identity-keypair /path/to/key.json adjust-proposal-epochs --proposal-id \"123\" --start-epoch 100 --end-epoch 103"
-    )]
-    AdjustProposalEpochs {
-        /// Proposal ID to adjust epochs for
-        #[arg(long, help = "Proposal ID")]
-        proposal_id: String,
-
-        /// Start epoch for the proposal
-        #[arg(long, help = "Start epoch (u64)")]
-        start_epoch: u64,
-
-        /// End epoch for the proposal
-        #[arg(long, help = "End epoch (u64, must be greater than start_epoch)")]
-        end_epoch: u64,
-    },
 }
 
 async fn handle_command(cli: Cli) -> Result<()> {
@@ -664,20 +642,6 @@ async fn handle_command(cli: Cli) -> Result<()> {
             instructions::add_merkle_root(
                 proposal_id.to_string(),
                 merkle_root.to_string(),
-                cli.identity_keypair,
-                cli.rpc_url,
-            )
-            .await?;
-        }
-        Commands::AdjustProposalEpochs {
-            proposal_id,
-            start_epoch,
-            end_epoch,
-        } => {
-            instructions::adjust_proposal_epochs(
-                proposal_id.to_string(),
-                *start_epoch,
-                *end_epoch,
                 cli.identity_keypair,
                 cli.rpc_url,
             )
