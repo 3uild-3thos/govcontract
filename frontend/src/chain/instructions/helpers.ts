@@ -151,7 +151,7 @@ export function createProgramWitDummyWallet(endpoint?: string) {
   return program;
 }
 
-// TODO: temporary, until CORS issue with api.solgov.online is fixed
+// TODO: temporary, until CORS issue with api.solgov.online is fixed, and until it has HTTPS
 // Helper function to build the API URL (use proxy in browser, direct URL on server)
 function buildSolgovUrl(endpoint: string): string {
   // Use Next.js API proxy when running in browser to avoid CORS
@@ -160,9 +160,9 @@ function buildSolgovUrl(endpoint: string): string {
   //   return `/api/solgov?path=${encodeURIComponent(endpoint)}`;
   // }
   // Server-side: use direct URL
-  // return `https://api.solgov.online/${endpoint}`;\
-  return `http://84.32.100.123:8000/${endpoint}`;
-  // return `/api/solgov?path=${encodeURIComponent(endpoint)}`;
+  // return `https://api.solgov.online/${endpoint}`;
+  // return `http://84.32.100.123:8000/${endpoint}`;
+  return `/api/solgov?path=${encodeURIComponent(endpoint)}`;
 }
 
 // API helpers using the solgov.online service
