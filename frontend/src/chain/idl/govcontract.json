@@ -43,40 +43,6 @@
       ]
     },
     {
-      "name": "adjust_proposal_epochs",
-      "discriminator": [
-        180,
-        136,
-        13,
-        187,
-        151,
-        188,
-        135,
-        242
-      ],
-      "accounts": [
-        {
-          "name": "signer",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "proposal",
-          "writable": true
-        }
-      ],
-      "args": [
-        {
-          "name": "start_epoch",
-          "type": "u64"
-        },
-        {
-          "name": "end_epoch",
-          "type": "u64"
-        }
-      ]
-    },
-    {
       "name": "cast_vote",
       "discriminator": [
         20,

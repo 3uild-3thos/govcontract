@@ -1,5 +1,5 @@
 {
-  "address": "GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc",
+  "address": "DUWGu3sMy4ymJWwUs53eaCyNzZRFoxhmi3Ggf1kh8Q61",
   "metadata": {
     "name": "govcontract",
     "version": "0.1.0",
@@ -1201,6 +1201,11 @@
       "code": 6038,
       "name": "SupportPeriodExpired",
       "msg": "Support period has expired for this proposal"
+    },
+    {
+      "code": 6039,
+      "name": "InvalidEpochRange",
+      "msg": "Invalid epoch range: end_epoch must be greater than start_epoch"
     }
   ],
   "types": [

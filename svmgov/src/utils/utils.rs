@@ -1,16 +1,7 @@
-use std::{
-    collections::HashMap,
-    fmt,
-    fs,
-    str::FromStr,
-    sync::Arc,
-    time::Duration,
-};
+use std::{collections::HashMap, fmt, fs, str::FromStr, sync::Arc, time::Duration};
 
 use anchor_client::{
-    Client,
-    Cluster,
-    Program,
+    Client, Cluster, Program,
     solana_account_decoder::UiAccountEncoding,
     solana_client::{
         nonblocking::rpc_client::RpcClient,
@@ -26,7 +17,7 @@ use anchor_client::{
     },
 };
 use anchor_lang::{AnchorDeserialize, Id, prelude::Pubkey};
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use chrono::prelude::*;
 use indicatif::{ProgressBar, ProgressStyle};
 use textwrap::wrap;
@@ -56,7 +47,12 @@ pub fn create_spinner(message: &str) -> ProgressBar {
 pub async fn setup_all(
     keypair_path: Option<String>,
     rpc_url: Option<String>,
-) -> Result<(Arc<Keypair>, Pubkey, Program<Arc<Keypair>>)> {
+) -> Result<(
+    Arc<Keypair>,
+    Pubkey,
+    Program<Arc<Keypair>>,
+    Program<Arc<Keypair>>,
+)> {
     // Step 1: Load the identity keypair
     let identity_keypair = load_identity_keypair(keypair_path)?;
     let identity_keypair_arc = Arc::new(identity_keypair);
@@ -68,6 +64,7 @@ pub async fn setup_all(
     let client = Client::new(cluster.clone(), identity_keypair_arc.clone());
     let program = client.program(Govcontract::id())?;
 
+    let merkle_proof_program = client.program(gov_v1::id())?;
     // Step 4: Find the vote account using the program's RpcClient
     let rpc_client = program.rpc();
     let validator_identity = identity_keypair_arc.pubkey();
@@ -81,7 +78,69 @@ pub async fn setup_all(
     );
 
     // Return all variables
-    Ok((identity_keypair_arc, vote_account, program))
+    Ok((
+        identity_keypair_arc,
+        vote_account,
+        program,
+        merkle_proof_program,
+    ))
+}
+
+pub fn setup_all_with_staker(
+    staker_keypair_path: String,
+    rpc_url: Option<String>,
+) -> Result<(Arc<Keypair>, Program<Arc<Keypair>>, Program<Arc<Keypair>>)> {
+    // Step 1: Load the staker keypair
+    let staker_keypair = load_staker_keypair(staker_keypair_path)?;
+    let staker_keypair_arc = Arc::new(staker_keypair);
+
+    // Step 2: Set the cluster
+    let cluster = set_cluster(rpc_url);
+
+    // Step 3: Create the Anchor client and program
+    let client = Client::new(cluster.clone(), staker_keypair_arc.clone());
+    let program = client.program(Govcontract::id())?;
+
+    let merkle_proof_program = client.program(gov_v1::id())?;
+
+    // Step 4: Log the setup completion
+    log::debug!(
+        "setup_all_with_staker completed successfully: staker_pubkey={}",
+        staker_keypair_arc.pubkey()
+    );
+
+    // Return all variables
+    Ok((staker_keypair_arc, program, merkle_proof_program))
+}
+
+fn load_staker_keypair(keypair_path: String) -> Result<Keypair> {
+    let file_content = fs::read_to_string(&keypair_path).map_err(|e| match e.kind() {
+        std::io::ErrorKind::NotFound => {
+            anyhow!(
+                "The specified staker keypair file does not exist: {}",
+                keypair_path
+            )
+        }
+        _ => anyhow!("Failed to read staker keypair file {}: {}", keypair_path, e),
+    })?;
+
+    let keypair_bytes: Vec<u8> = serde_json::from_str(&file_content).map_err(|e| {
+        anyhow!(
+            "The staker keypair file is not a valid JSON array of bytes: {}. Error: {}",
+            keypair_path,
+            e
+        )
+    })?;
+
+    // Create the Keypair from the bytes
+    let staker_keypair = Keypair::from_bytes(&keypair_bytes).map_err(|e| {
+        anyhow!(
+            "The provided bytes do not form a valid Solana keypair: {}. This might be due to invalid key data.",
+            e
+        )
+    })?;
+
+    Ok(staker_keypair)
 }
 
 fn load_identity_keypair(keypair_path: Option<String>) -> Result<Keypair> {
@@ -345,7 +404,12 @@ impl fmt::Display for Proposal {
             if self.finalized { "Yes" } else { "No" }
         )?;
         if let Some(merkle_root) = self.merkle_root_hash {
-            writeln!(f, "{:<25} 0x{}", "Merkle Root Hash:", hex::encode(merkle_root))?;
+            writeln!(
+                f,
+                "{:<25} 0x{}",
+                "Merkle Root Hash:",
+                hex::encode(merkle_root)
+            )?;
         } else {
             writeln!(f, "{:<25} Not set", "Merkle Root Hash:")?;
         }
@@ -435,11 +499,7 @@ pub fn derive_support_pda(
     vote_account: &Pubkey,
     program_id: &Pubkey,
 ) -> Pubkey {
-    let seeds = &[
-        b"support",
-        proposal_pubkey.as_ref(),
-        vote_account.as_ref(),
-    ];
+    let seeds = &[b"support", proposal_pubkey.as_ref(), vote_account.as_ref()];
     let (pda, _) = Pubkey::find_program_address(seeds, program_id);
     pda
 }

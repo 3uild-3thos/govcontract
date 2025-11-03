@@ -1,8 +1,9 @@
 use std::str::FromStr;
 
 use anchor_lang::prelude::Pubkey;
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use gov_v1::{ConsensusResult, MetaMerkleLeaf, MetaMerkleProof, StakeMerkleLeaf};
+use log::info;
 use serde::{Deserialize, Serialize};
 
 use crate::constants::*;
@@ -100,18 +101,19 @@ pub async fn get_voter_summary(
 /// Endpoint: GET /proof/vote_account/:vote_account?snapshot_slot=...
 pub async fn get_vote_account_proof(
     vote_account: &str,
-    snapshot_slot: Option<u64>,
+    snapshot_slot: u64,
+    network: &str,
 ) -> Result<VoteAccountProofResponse> {
     let base_url = get_api_base_url();
-    let mut url = format!("{}/proof/vote_account/{}", base_url, vote_account);
-
-    if let Some(slot) = snapshot_slot {
-        url.push_str(&format!("?snapshot_slot={}", slot));
-    }
+    let mut url = format!(
+        "{}/proof/vote_account/{}?slot={}&network={}",
+        base_url, vote_account, snapshot_slot, network
+    );
 
     log::debug!("Fetching vote account proof from: {}", url);
 
     let response = reqwest::get(&url).await?;
+    info!("Response: {:?}", url);
     let proof: VoteAccountProofResponse = response.json().await?;
 
     log::debug!(
@@ -127,14 +129,14 @@ pub async fn get_vote_account_proof(
 /// Endpoint: GET /proof/stake_account/:stake_account?snapshot_slot=...
 pub async fn get_stake_account_proof(
     stake_account: &str,
-    snapshot_slot: Option<u64>,
+    snapshot_slot: u64,
+    network: &str,
 ) -> Result<StakeAccountProofResponse> {
     let base_url = get_api_base_url();
-    let mut url = format!("{}/proof/stake_account/{}", base_url, stake_account);
-
-    if let Some(slot) = snapshot_slot {
-        url.push_str(&format!("?snapshot_slot={}", slot));
-    }
+    let url = format!(
+        "{}/proof/stake_account/{}?network={}&slot={}",
+        base_url, stake_account, network, snapshot_slot
+    );
 
     log::debug!("Fetching stake account proof from: {}", url);
 
@@ -152,7 +154,12 @@ pub async fn get_stake_account_proof(
 
 /// Get the base API URL from environment or default
 fn get_api_base_url() -> String {
-    std::env::var(SVMGOV_OPERATOR_URL_ENV).unwrap_or_else(|_| DEFAULT_OPERATOR_API_URL.to_string())
+    dotenv::dotenv().ok();
+
+    let url = std::env::var(SVMGOV_OPERATOR_URL_ENV)
+        .unwrap_or_else(|_| DEFAULT_OPERATOR_API_URL.to_string());
+    info!("API base URL: {}", url);
+    url
 }
 
 /// Convert API MetaMerkleLeafData to gov_v1 MetaMerkleLeaf
@@ -275,8 +282,8 @@ pub fn convert_stake_merkle_leaf_data_to_idl_type(
 }
 
 /// Generate ConsensusResult PDA for a given snapshot slot
-pub fn generate_consensus_result_pda(snapshot_slot: u64) -> Result<Pubkey> {
-    let (pda, _bump) = ConsensusResult::pda(snapshot_slot);
+pub fn generate_consensus_result_pda(ballot_id: u64) -> Result<Pubkey> {
+    let (pda, _bump) = ConsensusResult::pda(ballot_id);
     Ok(pda)
 }
 
@@ -291,9 +298,10 @@ pub fn generate_meta_merkle_proof_pda(
 
 /// Generate both ConsensusResult and MetaMerkleProof PDAs from VoteAccountProofResponse
 pub fn generate_pdas_from_vote_proof_response(
+    ballot_id: u64,
     response: &VoteAccountProofResponse,
 ) -> Result<(Pubkey, Pubkey)> {
-    let consensus_pda = generate_consensus_result_pda(response.snapshot_slot)?;
+    let consensus_pda = generate_consensus_result_pda(ballot_id)?;
     let vote_account = Pubkey::from_str(&response.meta_merkle_leaf.vote_account)
         .map_err(|e| anyhow!("Invalid vote_account pubkey in response: {}", e))?;
     let meta_proof = generate_meta_merkle_proof_pda(&consensus_pda, &vote_account)?;
