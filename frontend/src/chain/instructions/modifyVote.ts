@@ -34,7 +34,6 @@ export async function modifyVote(
     againstVotesBp,
     abstainVotesBp,
     wallet,
-    voteAccount,
   } = params;
 
   if (!wallet || !wallet.publicKey) {

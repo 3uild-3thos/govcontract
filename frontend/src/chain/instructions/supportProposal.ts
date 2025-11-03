@@ -28,7 +28,7 @@ export async function supportProposal(
   params: SupportProposalParams,
   blockchainParams: BlockchainParams
 ): Promise<TransactionResult> {
-  const { proposalId, wallet, voteAccount } = params;
+  const { proposalId, wallet } = params;
 
   if (!wallet || !wallet.publicKey) {
     throw new Error('Wallet not connected');
