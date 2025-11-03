@@ -1,16 +1,18 @@
-import { PublicKey, Connection, Keypair } from '@solana/web3.js';
-import { AnchorProvider, Program, BN } from '@coral-xyz/anchor';
-import idl from '@/chain/idl/govcontract.json';
-import govV1Idl from '@/chain/idl/gov-v1.json';
+import { PublicKey, Connection, Keypair } from "@solana/web3.js";
+import { AnchorProvider, Program, BN } from "@coral-xyz/anchor";
+import idl from "@/chain/idl/govcontract.json";
+import govV1Idl from "@/chain/idl/gov-v1.json";
 import {
   VoteAccountProofResponse,
   StakeAccountProofResponse,
   VoterSummaryResponse,
   SNAPSHOT_PROGRAM_ID,
-} from './types';
-import { AnchorWallet } from '@solana/wallet-adapter-react';
-import { Govcontract, GovV1 } from '../types';
-import { RPC_URLS } from '@/contexts/EndpointContext';
+  StakeMerkleLeafRaw,
+  StakeMerkleLeafConverted,
+} from "./types";
+import { AnchorWallet } from "@solana/wallet-adapter-react";
+import { Govcontract, GovV1 } from "../types";
+import { RPC_URLS } from "@/contexts/EndpointContext";
 
 // PDA derivation functions (based on test implementation)
 export function deriveProposalPda(
@@ -20,8 +22,8 @@ export function deriveProposalPda(
 ): PublicKey {
   const [pda] = PublicKey.findProgramAddressSync(
     [
-      Buffer.from('proposal'),
-      seed.toArrayLike(Buffer, 'le', 8),
+      Buffer.from("proposal"),
+      seed.toArrayLike(Buffer, "le", 8),
       signer.toBuffer(),
     ],
     programId
@@ -31,7 +33,7 @@ export function deriveProposalPda(
 
 export function deriveProposalIndexPda(programId: PublicKey): PublicKey {
   const [pda] = PublicKey.findProgramAddressSync(
-    [Buffer.from('index')],
+    [Buffer.from("index")],
     programId
   );
   return pda;
@@ -43,7 +45,7 @@ export function deriveVotePda(
   programId: PublicKey
 ): PublicKey {
   const [pda] = PublicKey.findProgramAddressSync(
-    [Buffer.from('vote'), proposal.toBuffer(), voteAccount.toBuffer()],
+    [Buffer.from("vote"), proposal.toBuffer(), voteAccount.toBuffer()],
     programId
   );
   return pda;
@@ -55,7 +57,7 @@ export function deriveSupportPda(
   programId: PublicKey
 ): PublicKey {
   const [pda] = PublicKey.findProgramAddressSync(
-    [Buffer.from('support'), proposal.toBuffer(), voteAccount.toBuffer()],
+    [Buffer.from("support"), proposal.toBuffer(), voteAccount.toBuffer()],
     programId
   );
   return pda;
@@ -69,7 +71,7 @@ export function deriveVoteOverridePda(
 ): PublicKey {
   const [pda] = PublicKey.findProgramAddressSync(
     [
-      Buffer.from('vote_override'),
+      Buffer.from("vote_override"),
       proposal.toBuffer(),
       stakeAccount.toBuffer(),
       validatorVote.toBuffer(),
@@ -85,7 +87,7 @@ export function deriveVoteOverrideCachePda(
   programId: PublicKey
 ): PublicKey {
   const [pda] = PublicKey.findProgramAddressSync(
-    [Buffer.from('vote_override_cache'), proposal.toBuffer(), vote.toBuffer()],
+    [Buffer.from("vote_override_cache"), proposal.toBuffer(), vote.toBuffer()],
     programId
   );
   return pda;
@@ -98,10 +100,10 @@ export function createProgramWithWallet(
 ) {
   // Use provided endpoint or default to devnet
   const rpcEndpoint = endpoint || RPC_URLS.testnet;
-  const connection = new Connection(rpcEndpoint, 'confirmed');
+  const connection = new Connection(rpcEndpoint, "confirmed");
 
   const provider = new AnchorProvider(connection, wallet, {
-    commitment: 'confirmed',
+    commitment: "confirmed",
   });
 
   const program = new Program(idl, provider) as Program<Govcontract>;
@@ -116,10 +118,10 @@ export function createGovV1ProgramWithWallet(
 ) {
   // Use provided endpoint or default to devnet
   const rpcEndpoint = endpoint || RPC_URLS.testnet;
-  const connection = new Connection(rpcEndpoint, 'confirmed');
+  const connection = new Connection(rpcEndpoint, "confirmed");
 
   const provider = new AnchorProvider(connection, wallet, {
-    commitment: 'confirmed',
+    commitment: "confirmed",
   });
 
   const program = new Program(govV1Idl, provider) as Program<GovV1>;
@@ -131,7 +133,7 @@ export function createGovV1ProgramWithWallet(
 export function createProgramWitDummyWallet(endpoint?: string) {
   // Use provided endpoint or default to devnet
   const rpcEndpoint = endpoint || RPC_URLS.testnet;
-  const connection = new Connection(rpcEndpoint, 'confirmed');
+  const connection = new Connection(rpcEndpoint, "confirmed");
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const dummyWallet: any = {
@@ -141,7 +143,7 @@ export function createProgramWitDummyWallet(endpoint?: string) {
   };
 
   const provider = new AnchorProvider(connection, dummyWallet, {
-    commitment: 'confirmed',
+    commitment: "confirmed",
   });
 
   const program = new Program(idl, provider) as Program<Govcontract>;
@@ -166,7 +168,7 @@ function buildSolgovUrl(endpoint: string): string {
 // API helpers using the solgov.online service
 export async function getVoteAccountProof(
   voteAccount: string,
-  network: string = 'testnet',
+  network: string = "testnet",
   slot?: number
 ): Promise<VoteAccountProofResponse> {
   // Get current slot if not provided
@@ -186,7 +188,7 @@ export async function getVoteAccountProof(
   const url = buildSolgovUrl(
     `proof/vote_account/${voteAccount}?network=${network}&slot=${currentSlot}`
   );
-  console.log('vote account url', url);
+  console.log("vote account url", url);
   const response = await fetch(url);
 
   if (!response.ok) {
@@ -198,7 +200,7 @@ export async function getVoteAccountProof(
 
 export async function getStakeAccountProof(
   stakeAccount: string,
-  network: string = 'mainnet',
+  network: string = "testnet",
   slot?: number
 ): Promise<StakeAccountProofResponse> {
   // Get current slot if not provided
@@ -218,7 +220,7 @@ export async function getStakeAccountProof(
   const url = buildSolgovUrl(
     `proof/stake_account/${stakeAccount}?network=${network}&slot=${currentSlot}`
   );
-  console.log('stake account url', url);
+  console.log("stake account url", url);
   const response = await fetch(url);
 
   if (!response.ok) {
@@ -232,7 +234,7 @@ export async function getStakeAccountProof(
 
 export async function getVoterSummary(
   walletAddress: string,
-  network: string = 'mainnet',
+  network: string = "testnet",
   slot?: number
 ): Promise<VoterSummaryResponse> {
   try {
@@ -274,8 +276,8 @@ export function generatePdasFromVoteProofResponse(
   // Derive consensus result PDA (this is typically derived from the snapshot slot)
   const [consensusResultPda] = PublicKey.findProgramAddressSync(
     [
-      Buffer.from('ConsensusResult'),
-      new BN(ballot_id).toArrayLike(Buffer, 'le', 8),
+      Buffer.from("ConsensusResult"),
+      new BN(ballot_id).toArrayLike(Buffer, "le", 8),
     ],
     snapshotProgramId
   );
@@ -283,7 +285,7 @@ export function generatePdasFromVoteProofResponse(
   // Derive meta merkle proof PDA (this is typically derived from the vote account)
   const [metaMerkleProofPda] = PublicKey.findProgramAddressSync(
     [
-      Buffer.from('MetaMerkleProof'),
+      Buffer.from("MetaMerkleProof"),
       consensusResultPda.toBuffer(),
       new PublicKey(proofResponse.meta_merkle_leaf.vote_account).toBuffer(),
     ],
@@ -294,16 +296,23 @@ export function generatePdasFromVoteProofResponse(
 }
 
 // Convert merkle proof strings to the format expected by the program
-export function convertMerkleProofStrings(proofStrings: string[]): PublicKey[] {
-  return proofStrings.map((proof) => new PublicKey(proof));
+export function convertMerkleProofStrings(proofStrings: string[]): number[][] {
+  return proofStrings.map((proof) =>
+    Array.from(new PublicKey(proof).toBytes())
+  );
 }
 
 // Convert stake merkle leaf data to IDL type
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function convertStakeMerkleLeafDataToIdlType(leafData: any): any {
+export function convertStakeMerkleLeafDataToIdlType(
+  leafData: StakeMerkleLeafRaw
+): StakeMerkleLeafConverted {
   // This is a placeholder - you'll need to implement the actual conversion
   // based on your IDL structure
-  return leafData;
+  return {
+    activeStake: new BN(`${leafData.active_stake}`),
+    stakeAccount: new PublicKey(leafData.stake_account),
+    votingWallet: new PublicKey(leafData.voting_wallet),
+  };
 }
 
 // Validate vote basis points
@@ -320,12 +329,12 @@ export function validateVoteBasisPoints(
 
 // Convert hex string to byte array
 export function hexToBytes(hex: string): Uint8Array {
-  const cleanHex = hex.startsWith('0x') ? hex.slice(2) : hex;
+  const cleanHex = hex.startsWith("0x") ? hex.slice(2) : hex;
   if (cleanHex.length !== 64) {
     // 32 bytes * 2 hex chars per byte
     throw new Error(
-      'Merkle root hash must be exactly 32 bytes (64 hex characters)'
+      "Merkle root hash must be exactly 32 bytes (64 hex characters)"
     );
   }
-  return new Uint8Array(Buffer.from(cleanHex, 'hex'));
+  return new Uint8Array(Buffer.from(cleanHex, "hex"));
 }

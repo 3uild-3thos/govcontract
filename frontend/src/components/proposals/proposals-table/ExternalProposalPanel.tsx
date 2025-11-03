@@ -94,32 +94,37 @@ function VoteActions({
 
   return (
     <div className="flex flex-col gap-3">
-      {state === "voting" && (
-        <AppButton
-          variant="outline"
-          text="Modify Vote"
-          className="w-full justify-center border-white/15 bg-white/10 text-sm font-medium text-white/75 hover:text-white"
-          disabled={disabled}
-          onClick={() => {
-            openModal("modify-vote", { proposalId });
-          }}
-        />
-      )}
       {isVoting && (
-        <AppButton
-          variant="gradient"
-          text="Cast Vote"
-          className="w-full justify-center text-sm font-semibold text-foreground"
-          disabled={disabled}
-          onClick={() => {
-            if (isValidator) {
-              openModal("cast-vote", { proposalId });
-            } else if (isStaker) {
-              openModal("override-vote", { proposalId });
-            }
-          }}
-        />
+        <>
+          <AppButton
+            variant="outline"
+            text="Modify Vote"
+            className="w-full justify-center border-white/15 bg-white/10 text-sm font-medium text-white/75 hover:text-white"
+            disabled={disabled}
+            onClick={() => {
+              if (isValidator) {
+                openModal("modify-vote", { proposalId });
+              } else if (isStaker) {
+                openModal("modify-override-vote", { proposalId });
+              }
+            }}
+          />
+          <AppButton
+            variant="gradient"
+            text="Cast Vote"
+            className="w-full justify-center text-sm font-semibold text-foreground"
+            disabled={disabled}
+            onClick={() => {
+              if (isValidator) {
+                openModal("cast-vote", { proposalId });
+              } else if (isStaker) {
+                openModal("override-vote", { proposalId });
+              }
+            }}
+          />
+        </>
       )}
+
       {isSupporting && isValidator && (
         <AppButton
           variant="gradient"

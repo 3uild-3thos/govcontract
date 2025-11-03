@@ -1,15 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import {
-  PublicKey,
-  SystemProgram,
-  TransactionInstruction,
-  Transaction,
-} from "@solana/web3.js";
+import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import {
   CastVoteOverrideParams,
   TransactionResult,
   BlockchainParams,
-  GOV_V1_PROGRAM_ID,
+  SNAPSHOT_PROGRAM_ID,
 } from "./types";
 import {
   createProgramWithWallet,
@@ -81,8 +75,6 @@ export async function castVoteOverride(
     getStakeAccountProof(stakeAccountStr, network, slot),
   ]);
 
-  const SNAPSHOT_PROGRAM_ID = GOV_V1_PROGRAM_ID;
-
   const [consensusResultPda, metaMerkleProofPda] =
     generatePdasFromVoteProofResponse(metaMerkleProof, SNAPSHOT_PROGRAM_ID, 4);
 
@@ -91,8 +83,6 @@ export async function castVoteOverride(
     metaMerkleProofPda,
     "confirmed"
   );
-
-  const instructions: TransactionInstruction[] = [];
 
   if (!merkleAccountInfo) {
     console.log("merkleAccountInfo is null");
@@ -104,7 +94,15 @@ export async function castVoteOverride(
       blockchainParams.endpoint
     );
 
-    console.log("fetched voteAccountProof", metaMerkleProof);
+    const stakeMerkleRootData = Array.from(
+      new PublicKey(
+        metaMerkleProof.meta_merkle_leaf.stake_merkle_root
+      ).toBytes()
+    );
+
+    const metaMerkleProofData = metaMerkleProof.meta_merkle_proof.map((proof) =>
+      Array.from(new PublicKey(proof).toBytes())
+    );
 
     const initMerkleInstruction = await govV1Program.methods
       .initMetaMerkleProof(
@@ -115,16 +113,12 @@ export async function castVoteOverride(
           voteAccount: new PublicKey(
             metaMerkleProof.meta_merkle_leaf.vote_account
           ),
-          stakeMerkleRoot: Array.from(
-            new PublicKey(
-              metaMerkleProof.meta_merkle_leaf.stake_merkle_root
-            ).toBytes()
+          stakeMerkleRoot: stakeMerkleRootData,
+          activeStake: new BN(
+            `${metaMerkleProof.meta_merkle_leaf.active_stake}`
           ),
-          activeStake: new BN(metaMerkleProof.meta_merkle_leaf.active_stake),
         },
-        metaMerkleProof.meta_merkle_proof.map((proof) =>
-          Array.from(new PublicKey(proof).toBytes())
-        ),
+        metaMerkleProofData,
         new BN(1)
       )
       .accountsStrict({
@@ -135,7 +129,21 @@ export async function castVoteOverride(
       })
       .instruction();
 
-    instructions.push(initMerkleInstruction);
+    const recentBlockhash =
+      await program.provider.connection.getLatestBlockhash("confirmed");
+
+    const transaction = new Transaction();
+    transaction.add(initMerkleInstruction);
+    transaction.feePayer = wallet.publicKey;
+    transaction.recentBlockhash = recentBlockhash.blockhash;
+
+    const tx = await wallet.signTransaction(transaction);
+
+    const signature = await program.provider.connection.sendRawTransaction(
+      tx.serialize(),
+      { preflightCommitment: "confirmed" }
+    );
+    console.log("signature initMerkleInstruction", signature);
   }
 
   // Convert merkle proof data
@@ -156,7 +164,7 @@ export async function castVoteOverride(
       forVotesBn,
       againstVotesBn,
       abstainVotesBn,
-      stakeMerkleProofVec.map((proof) => proof.toBytes() as any),
+      stakeMerkleProofVec,
       stakeMerkleLeaf
     )
     .accounts({
@@ -170,10 +178,8 @@ export async function castVoteOverride(
     })
     .instruction();
 
-  instructions.push(castVoteOverrideInstruction);
-
   const transaction = new Transaction();
-  transaction.add(...instructions);
+  transaction.add(castVoteOverrideInstruction);
   transaction.feePayer = wallet.publicKey;
   transaction.recentBlockhash = (
     await program.provider.connection.getLatestBlockhash("confirmed")
@@ -182,11 +188,10 @@ export async function castVoteOverride(
   const tx = await wallet.signTransaction(transaction);
 
   const signature = await program.provider.connection.sendRawTransaction(
-    tx.serialize()
+    tx.serialize(),
+    { preflightCommitment: "confirmed" }
   );
-
   console.log("signature cast vote override", signature);
-
   return {
     signature,
     success: true,

@@ -1,31 +1,35 @@
-import { VoteAccountData, VoteOverrideAccountData } from "@/types";
+import { VoteOverrideAccountData } from "@/types";
+
+/**
+ * Checks if a given stake account has created a vote override account for a specific proposal
+ * @param stakeAccounts - Array of wallet stake accounts and its delegated addresses
+ * @param stakeAccount - The stake account public key (as string)
+ * @param proposalPublicKey - The proposal public key (as string, optional - if not provided, checks across all proposals)
+ * @returns The vote override account if found, undefined otherwise
+ */
+export const getVoteOverrideByStakeAccount = (
+  voteOverrideAccounts: VoteOverrideAccountData[],
+  stakeAccount: string,
+  proposalPublicKey: string
+): VoteOverrideAccountData | undefined => {
+  return voteOverrideAccounts.find(
+    (voteOverrideAccount) =>
+      voteOverrideAccount.stakeAccount.toString() === stakeAccount &&
+      voteOverrideAccount.proposal.toString() === proposalPublicKey
+  );
+};
 
 export const getUserHasVoted = async (
-  voteOverrideAccounts: VoteOverrideAccountData[],
-  voteAccounts: VoteAccountData[],
-  userPublicKey: string | undefined,
-  proposalPublicKey: string | undefined
+  voteOverrideAccounts: VoteOverrideAccountData[]
+  // voteAccounts: VoteAccountData[],
 ): Promise<boolean> => {
-  if (voteOverrideAccounts === undefined)
-    throw new Error("Vote override accounts are not loaded");
+  // console.log("voteOverrideAccount:", voteOverrideAccount);
 
-  if (userPublicKey === undefined)
-    throw new Error("User public key is not loaded");
+  // const voteAccount = voteAccounts.find(
+  //   (voteAccount) =>
+  //     voteAccount.proposal.toString() === proposalPublicKey &&
+  //     voteAccount.voteAccount.toString() === userPublicKey
+  // );
 
-  if (proposalPublicKey === undefined)
-    throw new Error("Proposal public key is not loaded");
-
-  const voteOverrideAccount = voteOverrideAccounts.find(
-    (voteOverrideAccount) =>
-      voteOverrideAccount.proposal.toString() === proposalPublicKey &&
-      voteOverrideAccount.voteAccount.toString() === userPublicKey
-  );
-
-  const voteAccount = voteAccounts.find(
-    (voteAccount) =>
-      voteAccount.proposal.toString() === proposalPublicKey &&
-      voteAccount.voteAccount.toString() === userPublicKey
-  );
-
-  return voteOverrideAccount !== undefined || voteAccount !== undefined;
+  return voteOverrideAccounts.length > 0;
 };

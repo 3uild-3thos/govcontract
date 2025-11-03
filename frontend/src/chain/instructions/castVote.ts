@@ -1,17 +1,16 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   PublicKey,
   SystemProgram,
   TransactionInstruction,
   Transaction,
-} from '@solana/web3.js';
-import { BN } from '@coral-xyz/anchor';
+} from "@solana/web3.js";
+import { BN } from "@coral-xyz/anchor";
 import {
   BlockchainParams,
   CastVoteParams,
-  GOV_V1_PROGRAM_ID,
+  SNAPSHOT_PROGRAM_ID,
   TransactionResult,
-} from './types';
+} from "./types";
 import {
   createProgramWithWallet,
   deriveVotePda,
@@ -21,7 +20,7 @@ import {
   createGovV1ProgramWithWallet,
   getVoteAccountProof,
   generatePdasFromVoteProofResponse,
-} from './helpers';
+} from "./helpers";
 
 /**
  * Casts a vote on a governance proposal
@@ -30,16 +29,11 @@ export async function castVote(
   params: CastVoteParams,
   blockchainParams: BlockchainParams
 ): Promise<TransactionResult> {
-  const {
-    proposalId,
-    forVotesBp,
-    againstVotesBp,
-    abstainVotesBp,
-    wallet,
-  } = params;
+  const { proposalId, forVotesBp, againstVotesBp, abstainVotesBp, wallet } =
+    params;
 
   if (!wallet || !wallet.publicKey) {
-    throw new Error('Wallet not connected');
+    throw new Error("Wallet not connected");
   }
 
   // Validate vote distribution
@@ -47,7 +41,7 @@ export async function castVote(
 
   const voterSummary = await getVoterSummary(
     wallet.publicKey.toString(),
-    blockchainParams.network || 'mainnet'
+    blockchainParams.network || "mainnet"
   );
   const slot = voterSummary.snapshot_slot;
 
@@ -79,9 +73,6 @@ export async function castVote(
     program.programId
   );
 
-  // Create snapshot accounts using GOV_V1_PROGRAM_ID
-  const SNAPSHOT_PROGRAM_ID = GOV_V1_PROGRAM_ID;
-
   const govV1Program = createGovV1ProgramWithWallet(
     wallet,
     blockchainParams.endpoint
@@ -92,22 +83,22 @@ export async function castVote(
     blockchainParams.network,
     slot
   );
-  console.log('fetched voteAccountProof', voteAccountProof);
+  console.log("fetched voteAccountProof", voteAccountProof);
 
   const [consensusResultPda, metaMerkleProofPda] =
     generatePdasFromVoteProofResponse(voteAccountProof, SNAPSHOT_PROGRAM_ID, 4);
 
   const merkleAccountInfo = await program.provider.connection.getAccountInfo(
     metaMerkleProofPda,
-    'confirmed'
+    "confirmed"
   );
 
   const instructions: TransactionInstruction[] = [];
 
   if (!merkleAccountInfo) {
-    console.log('merkleAccountInfo is null');
-    console.log('consensusResultPda', consensusResultPda.toBase58());
-    console.log('metaMerkleProofPda', metaMerkleProofPda.toBase58());
+    console.log("merkleAccountInfo is null");
+    console.log("consensusResultPda", consensusResultPda.toBase58());
+    console.log("metaMerkleProofPda", metaMerkleProofPda.toBase58());
 
     const initMerkleInstruction = await govV1Program.methods
       .initMetaMerkleProof(
@@ -167,7 +158,7 @@ export async function castVote(
   transaction.add(...instructions);
   transaction.feePayer = wallet.publicKey;
   transaction.recentBlockhash = (
-    await program.provider.connection.getLatestBlockhash('confirmed')
+    await program.provider.connection.getLatestBlockhash("confirmed")
   ).blockhash;
 
   const tx = await wallet.signTransaction(transaction);
@@ -176,7 +167,7 @@ export async function castVote(
     tx.serialize()
   );
 
-  console.log('signature cast vote', signature);
+  console.log("signature cast vote", signature);
 
   return {
     signature,

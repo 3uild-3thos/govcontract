@@ -1,7 +1,9 @@
-import { AnchorWallet } from '@solana/wallet-adapter-react';
-import { PublicKey } from '@solana/web3.js';
+import { AnchorWallet } from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
+import { BN } from "@coral-xyz/anchor";
 
-import govV1idl from '@/chain/idl/gov-v1.json';
+import govContractIdl from "@/chain/idl/govcontract.json";
+import govV1idl from "@/chain/idl/gov-v1.json";
 
 // Common types
 export interface TransactionResult {
@@ -95,10 +97,20 @@ export interface VoteAccountProofResponse {
   snapshot_slot: number;
 }
 
+export interface StakeMerkleLeafRaw {
+  active_stake: number;
+  stake_account: string;
+  voting_wallet: string;
+}
+
+export interface StakeMerkleLeafConverted {
+  activeStake: BN;
+  stakeAccount: PublicKey;
+  votingWallet: PublicKey;
+}
+
 export interface StakeAccountProofResponse {
-  stake_merkle_leaf: {
-    [key: string]: unknown;
-  };
+  stake_merkle_leaf: StakeMerkleLeafRaw;
   stake_merkle_proof: string[];
   network: string;
   snapshot_slot: number;
@@ -127,5 +139,5 @@ export interface NetworkMetaResponse {
 
 // Constants
 export const BASIS_POINTS_TOTAL = 10000;
+export const GOVCONTRACT_PROGRAM_ID = new PublicKey(govContractIdl.address);
 export const SNAPSHOT_PROGRAM_ID = new PublicKey(govV1idl.address);
-export const GOV_V1_PROGRAM_ID = new PublicKey(govV1idl.address);

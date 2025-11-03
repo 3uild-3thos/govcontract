@@ -17,6 +17,7 @@ import {
   useContext,
   useState,
 } from "react";
+import { ModifyOverrideVoteModal } from "@/components/modals/ModifyOverrideVoteModal";
 
 export type ModalType =
   | "support-proposal"
@@ -24,6 +25,7 @@ export type ModalType =
   | "cast-vote"
   | "modify-vote"
   | "override-vote"
+  | "modify-override-vote"
   | "settings";
 
 // NOTE: proposalId is the proposal's public key
@@ -35,9 +37,11 @@ interface ModalDataMap {
   "cast-vote": CastVoteModalDataProps;
   "override-vote": {
     proposalId?: string;
-    stakeAccount?: string;
   };
   "modify-vote": {
+    proposalId?: string;
+  };
+  "modify-override-vote": {
     proposalId?: string;
   };
   settings: Record<string, never>;
@@ -70,6 +74,7 @@ const MODAL_COMPONENTS: Record<
   "cast-vote": CastVoteModal,
   "override-vote": OverrideVoteModal,
   "modify-vote": ModifyVoteModal,
+  "modify-override-vote": ModifyOverrideVoteModal,
   settings: SettingsModal,
 };
 
