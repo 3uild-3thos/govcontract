@@ -18,6 +18,7 @@ pub struct ProposalSupported {
     pub supporter: Pubkey,
     pub cluster_support_lamports: u64,
     pub voting_activated: bool,
+    pub snapshot_slot: u64,
 }
 
 #[event]
@@ -70,7 +71,6 @@ pub struct VoteModified {
 #[event]
 pub struct MerkleRootAdded {
     pub proposal_id: Pubkey,
-    pub author: Pubkey,
     pub merkle_root_hash: [u8; 32],
 }
 

@@ -2,7 +2,7 @@ use anchor_lang::{
     prelude::*,
     solana_program::{
         borsh0_10::try_from_slice_unchecked,
-        epoch_stake::get_epoch_total_stake,
+        epoch_stake::{get_epoch_stake_for_vote_account, get_epoch_total_stake},
         vote::{program as vote_program, state::VoteState},
     },
 };
@@ -18,6 +18,7 @@ use crate::{
     events::ProposalSupported,
     merkle_helpers::verify_merkle_proof_cpi,
     state::{Proposal, Support},
+    utils::get_epoch_slot_range,
 };
 
 #[derive(Accounts)]
@@ -40,13 +41,7 @@ pub struct SupportProposal<'info> {
         constraint = spl_vote_account.data_len() == VoteState::size_of() @ GovernanceError::InvalidVoteAccountSize
     )]
     pub spl_vote_account: UncheckedAccount<'info>,
-    /// CHECK: The snapshot program (gov-v1 or mock)
-    // #[account(constraint = snapshot_program.key() == gov_v1::ID @ GovernanceError::InvalidSnapshotProgram)]
-    pub snapshot_program: UncheckedAccount<'info>,
-    /// CHECK: Consensus result account owned by snapshot program
-    pub consensus_result: UncheckedAccount<'info>,
-    /// CHECK: Meta merkle proof account owned by snapshot program
-    pub meta_merkle_proof: UncheckedAccount<'info>,
+
     pub system_program: Program<'info, System>,
 }
 
@@ -61,77 +56,16 @@ impl<'info> SupportProposal<'info> {
         );
         require!(!self.proposal.finalized, GovernanceError::ProposalFinalized);
 
-        // Check if support period has expired
         require!(
-            clock.epoch <= self.proposal.creation_epoch + MAX_SUPPORT_EPOCHS,
+            clock.epoch == self.proposal.creation_epoch + MAX_SUPPORT_EPOCHS,
             GovernanceError::SupportPeriodExpired
         );
 
-        // Validate snapshot program ownership
-        require!(
-            self.consensus_result.owner == self.snapshot_program.key,
-            GovernanceError::MustBeOwnedBySnapshotProgram
-        );
-        require!(
-            self.meta_merkle_proof.owner == self.snapshot_program.key,
-            GovernanceError::MustBeOwnedBySnapshotProgram
-        );
-
-        let consensus_result_data = self.consensus_result.try_borrow_data()?;
-        let consensus_result = ConsensusResult::try_deserialize(&mut &consensus_result_data[..])?;
-
-        let merkle_root = self
-            .proposal
-            .merkle_root_hash
-            .ok_or(GovernanceError::MerkleRootNotSet)?;
-        require!(
-            consensus_result.ballot.meta_merkle_root == merkle_root,
-            GovernanceError::InvalidMerkleRoot
-        );
-
-        // Deserialize MetaMerkleProof for crosschecking
-        let meta_account_data = self.meta_merkle_proof.try_borrow_data()?;
-        let meta_merkle_proof = MetaMerkleProof::try_deserialize(&mut &meta_account_data[..])?;
-        let meta_merkle_leaf = meta_merkle_proof.meta_merkle_leaf;
-
-        // Crosscheck consensus result
-        require_eq!(
-            meta_merkle_proof.consensus_result,
-            self.consensus_result.key(),
-            GovernanceError::InvalidConsensusResultPDA
-        );
-
-        // Verify that the merkle leaf's vote_account matches the supplied spl_vote_account
-        require_eq!(
-            meta_merkle_leaf.vote_account,
-            self.spl_vote_account.key(),
-            GovernanceError::InvalidVoteAccount
-        );
-
-        // Ensure leaf matches signer and has sufficient stake
-        require_eq!(
-            meta_merkle_leaf.voting_wallet,
-            self.signer.key(),
-            GovernanceError::InvalidVoteAccount
-        );
-
-        require_gt!(
-            meta_merkle_leaf.active_stake,
-            0u64,
-            GovernanceError::NotEnoughStake
-        );
-
-        verify_merkle_proof_cpi(
-            &self.meta_merkle_proof.to_account_info(),
-            &self.consensus_result.to_account_info(),
-            &self.snapshot_program.to_account_info(),
-            None,
-            None,
-        )?;
+        // assuming this returns in lamports
+        let supporter_stake = get_epoch_stake_for_vote_account(self.spl_vote_account.key);
 
         // Add the supporter's stake (from verified leaf) to the proposal's cluster support
-        self.proposal
-            .add_cluster_support(meta_merkle_leaf.active_stake)?;
+        self.proposal.add_cluster_support(supporter_stake)?;
 
         // Initialize the support account
         self.support.set_inner(Support {
@@ -145,9 +79,11 @@ impl<'info> SupportProposal<'info> {
             (self.proposal.cluster_support_lamports as u128) * CLUSTER_SUPPORT_MULTIPLIER;
         let cluster_scaled = (cluster_stake as u128) * CLUSTER_STAKE_MULTIPLIER;
         self.proposal.voting = if support_scaled >= cluster_scaled {
-            // Activate voting if threshold met
-            self.proposal.start_epoch = clock.epoch + 4;
-            self.proposal.end_epoch = self.proposal.start_epoch + 3;
+            let (start_slot, _) =
+                get_epoch_slot_range(clock.epoch + DISCUSSION_EPOCHS + SNAPSHOT_SLOT);
+            self.proposal.start_epoch = clock.epoch + DISCUSSION_EPOCHS + SNAPSHOT_SLOT;
+            self.proposal.end_epoch = self.proposal.start_epoch + VOTING_EPOCHS;
+            self.proposal.snapshot_slot = start_slot + 1000; // 1000 slots into snapshot
             true
         } else {
             false
@@ -158,6 +94,7 @@ impl<'info> SupportProposal<'info> {
             supporter: self.signer.key(),
             cluster_support_lamports: self.proposal.cluster_support_lamports,
             voting_activated: self.proposal.voting,
+            snapshot_slot: self.proposal.snapshot_slot,
         });
 
         Ok(())
