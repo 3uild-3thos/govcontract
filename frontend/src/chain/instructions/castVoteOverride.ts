@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import {
   CastVoteOverrideParams,

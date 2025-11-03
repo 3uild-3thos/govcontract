@@ -1,7 +1,4 @@
-import { deriveVoteOverridePda, GOVCONTRACT_PROGRAM_ID } from "@/chain";
-import { VoteAccountData, VoteOverrideAccountData } from "@/types";
-import { StakeAccountData } from "@/types/stakeAccounts";
-import { PublicKey } from "@solana/web3.js";
+import { VoteOverrideAccountData } from "@/types";
 
 /**
  * Checks if a given stake account has created a vote override account for a specific proposal

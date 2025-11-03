@@ -157,9 +157,11 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
 
   const isStaker = walletRole === WalletRole.STAKER;
 
-  let modalName: ModalType = "cast-vote";
+  let castModalName: ModalType = "cast-vote";
+  let modifyModalName: ModalType = "modify-vote";
   if (isStaker) {
-    modalName = "override-vote";
+    castModalName = "override-vote";
+    modifyModalName = "modify-override-vote";
   }
 
   const handleCardClick = () => {
@@ -171,13 +173,10 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
     const buttonText = (event.target as HTMLButtonElement).innerText;
 
     if (buttonText === "Modify Vote") {
-      // TODO: Pass the actual proposal public key when available
-      openModal("modify-vote", { proposalId: publicKey.toBase58() });
+      openModal(modifyModalName, { proposalId: publicKey.toBase58() });
     } else if (buttonText === "Cast Vote") {
-      // TODO: Pass the actual proposal public key when available
-      openModal(modalName, { proposalId: publicKey.toBase58() });
+      openModal(castModalName, { proposalId: publicKey.toBase58() });
     } else if (buttonText === "Support") {
-      // TODO: Pass the actual proposal public key when available
       openModal("support-proposal", { proposalId: publicKey.toBase58() });
     }
   };

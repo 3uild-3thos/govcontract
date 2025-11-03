@@ -13,6 +13,7 @@ export * from "./useWalletVoteOverrideAccounts";
 export * from "./useCastVote";
 export * from "./useCastVoteOverride";
 export * from "./useModifyVote";
+export * from "./useModifyVoteOverride";
 export * from "./useCreateProposal";
 export * from "./useSupportProposal";
 
