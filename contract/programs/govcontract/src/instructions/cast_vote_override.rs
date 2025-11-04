@@ -186,15 +186,20 @@ impl<'info> CastVoteOverride<'info> {
         let abstain_votes_lamports = calculate_vote_lamports!(delegator_stake, abstain_votes_bp)?;
 
         // Check that validator vote exists
-        // If account does not exist, call cache_votes_override to store staker's vote in override PDA
+        // If account does not exist, cache the delegator's vote in override PDA
 
-        if self.validator_vote.data_len() == (ANCHOR_DISCRIMINATOR + Vote::INIT_SPACE)
-            && self.validator_vote.owner == &crate::ID
-            && Vote::deserialize(&mut self.validator_vote.data.borrow().as_ref()).is_ok()
-        {
-            let mut validator_vote: Vote = anchor_lang::AccountDeserialize::try_deserialize(
+        if self.validator_vote.data_len() > 0 && self.validator_vote.owner == &crate::ID {
+            // Attempt to deserialize the validator vote account
+            let mut validator_vote: Vote = match anchor_lang::AccountDeserialize::try_deserialize(
                 &mut self.validator_vote.data.borrow().as_ref(),
-            )?;
+            ) {
+                Ok(vote) => vote,
+                Err(_) => {
+                    // Account exists but is not a valid Vote - treat as non-existent
+                    // Fall through to cache path below
+                    return Err(GovernanceError::InvalidVoteAccount.into());
+                }
+            };
 
             // Subtract validator's vote
             self.proposal.sub_vote_lamports(
