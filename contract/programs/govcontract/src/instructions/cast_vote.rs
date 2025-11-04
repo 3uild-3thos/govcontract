@@ -156,17 +156,18 @@ impl<'info> CastVote<'info> {
         let against_votes_lamports = calculate_vote_lamports!(voter_stake, against_votes_bp)?;
         let abstain_votes_lamports = calculate_vote_lamports!(voter_stake, abstain_votes_bp)?;
 
-        // Check if ovveride PDA exists
-        // If it does, update lamports with the override amount
-        if self.vote_override_cache.data_len() == (ANCHOR_DISCRIMINATOR + VoteOverrideCache::INIT_SPACE)
-            && self.vote_override_cache.owner == &crate::ID
-            && VoteOverrideCache::deserialize(&mut self.vote_override_cache.data.borrow().as_ref())
-                .is_ok()
-        {
-            let override_cache: VoteOverrideCache = 
-            anchor_lang::AccountDeserialize::try_deserialize(
+        // Check if override cache PDA exists and has been initialized
+        // If it does, apply cached delegator votes
+        if self.vote_override_cache.data_len() > 0 && self.vote_override_cache.owner == &crate::ID {
+            let override_cache: VoteOverrideCache = match anchor_lang::AccountDeserialize::try_deserialize(
                 &mut self.vote_override_cache.data.borrow().as_ref()
-            )?;
+            ) {
+                Ok(cache) => cache,
+                Err(_) => {
+                    // Account exists but is not a valid VoteOverrideCache - treat as non-existent
+                    return Err(GovernanceError::InvalidVoteAccount.into());
+                }
+            };
                 
 
             // Add cached votes
