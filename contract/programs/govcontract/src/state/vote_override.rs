@@ -3,6 +3,7 @@ use anchor_lang::prelude::*;
 #[account]
 #[derive(InitSpace)]
 pub struct VoteOverride {
+    pub delegator: Pubkey,
     pub stake_account: Pubkey,
     pub validator: Pubkey,
     pub proposal: Pubkey,

@@ -253,6 +253,7 @@ impl<'info> CastVoteOverride<'info> {
 
             // Store override
             self.vote_override.set_inner(VoteOverride {
+                delegator: self.signer.key(),
                 stake_account: stake_merkle_leaf.stake_account,
                 validator: meta_merkle_leaf.vote_account,
                 proposal: self.proposal.key(),
@@ -361,6 +362,7 @@ impl<'info> CastVoteOverride<'info> {
             // Initialize the VoteOverride account with delegator's vote data
             // This covers both cases: delegator -> delegator and nobody -> delegator
             self.vote_override.set_inner(VoteOverride {
+                delegator: self.signer.key(),
                 stake_account: stake_merkle_leaf.stake_account,
                 validator: meta_merkle_leaf.vote_account,
                 proposal: self.proposal.key(),
