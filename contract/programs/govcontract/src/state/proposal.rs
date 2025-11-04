@@ -31,6 +31,7 @@ pub struct Proposal {
     pub merkle_root_hash: Option<[u8; 32]>,
     /// Slot number when the validator stake snapshot was taken
     pub snapshot_slot: u64,
+    pub ballot_id: Option<u64>,
 }
 
 impl Default for Proposal {
@@ -55,6 +56,7 @@ impl Default for Proposal {
             index: 0,
             merkle_root_hash: None,
             snapshot_slot: 0,
+            ballot_id: None,
         }
     }
 }
