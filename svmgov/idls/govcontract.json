@@ -1,5 +1,5 @@
 {
-  "address": "DUWGu3sMy4ymJWwUs53eaCyNzZRFoxhmi3Ggf1kh8Q61",
+  "address": "GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc",
   "metadata": {
     "name": "govcontract",
     "version": "0.1.0",
@@ -21,8 +21,7 @@
       ],
       "accounts": [
         {
-          "name": "signer",
-          "writable": true,
+          "name": "consensus_result",
           "signer": true
         },
         {
@@ -30,17 +29,7 @@
           "writable": true
         }
       ],
-      "args": [
-        {
-          "name": "merkle_root_hash",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        }
-      ]
+      "args": []
     },
     {
       "name": "cast_vote",
@@ -409,15 +398,6 @@
           "name": "spl_vote_account"
         },
         {
-          "name": "snapshot_program"
-        },
-        {
-          "name": "consensus_result"
-        },
-        {
-          "name": "meta_merkle_proof"
-        },
-        {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
@@ -452,7 +432,6 @@
       "accounts": [
         {
           "name": "signer",
-          "writable": true,
           "signer": true
         },
         {
@@ -520,7 +499,6 @@
       "accounts": [
         {
           "name": "signer",
-          "writable": true,
           "signer": true
         },
         {
@@ -599,7 +577,6 @@
       "accounts": [
         {
           "name": "signer",
-          "writable": true,
           "signer": true
         },
         {
@@ -817,15 +794,6 @@
           "name": "spl_vote_account"
         },
         {
-          "name": "snapshot_program"
-        },
-        {
-          "name": "consensus_result"
-        },
-        {
-          "name": "meta_merkle_proof"
-        },
-        {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
@@ -897,6 +865,19 @@
         151,
         176,
         188
+      ]
+    },
+    {
+      "name": "VoteOverrideCache",
+      "discriminator": [
+        195,
+        82,
+        50,
+        219,
+        140,
+        34,
+        108,
+        57
       ]
     }
   ],
@@ -1201,11 +1182,6 @@
       "code": 6038,
       "name": "SupportPeriodExpired",
       "msg": "Support period has expired for this proposal"
-    },
-    {
-      "code": 6039,
-      "name": "InvalidEpochRange",
-      "msg": "Invalid epoch range: end_epoch must be greater than start_epoch"
     }
   ],
   "types": [
@@ -1216,10 +1192,6 @@
         "fields": [
           {
             "name": "proposal_id",
-            "type": "pubkey"
-          },
-          {
-            "name": "author",
             "type": "pubkey"
           },
           {
@@ -1455,6 +1427,10 @@
           {
             "name": "voting_activated",
             "type": "bool"
+          },
+          {
+            "name": "snapshot_slot",
+            "type": "u64"
           }
         ]
       }
@@ -1678,6 +1654,10 @@
         "kind": "struct",
         "fields": [
           {
+            "name": "delegator",
+            "type": "pubkey"
+          },
+          {
             "name": "stake_account",
             "type": "pubkey"
           },
@@ -1724,6 +1704,58 @@
           {
             "name": "vote_override_timestamp",
             "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "VoteOverrideCache",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "validator",
+            "type": "pubkey"
+          },
+          {
+            "name": "proposal",
+            "type": "pubkey"
+          },
+          {
+            "name": "vote_account_validator",
+            "type": "pubkey"
+          },
+          {
+            "name": "for_votes_bp",
+            "type": "u64"
+          },
+          {
+            "name": "against_votes_bp",
+            "type": "u64"
+          },
+          {
+            "name": "abstain_votes_bp",
+            "type": "u64"
+          },
+          {
+            "name": "for_votes_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "against_votes_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "abstain_votes_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "total_stake",
+            "type": "u64"
           },
           {
             "name": "bump",

@@ -116,9 +116,6 @@ pub async fn support_proposal(
             proposal: proposal_pubkey,
             support: support_pda,
             spl_vote_account: vote_account,
-            consensus_result: consensus_result_pda,
-            meta_merkle_proof: meta_merkle_proof_pda,
-            snapshot_program: SNAPSHOT_PROGRAM_ID,
             system_program: system_program::ID,
         })
         .instructions()?;

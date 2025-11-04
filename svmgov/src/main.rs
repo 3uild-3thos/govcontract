@@ -7,9 +7,14 @@ use anchor_client::anchor_lang::declare_program;
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 
-use constants::*;
-use utils::{commands, config_command::{ConfigSubcommand, handle_config_command}, init, utils::*};
 use config::Config;
+use constants::*;
+use utils::{
+    commands,
+    config_command::{ConfigSubcommand, handle_config_command},
+    init,
+    utils::*,
+};
 
 declare_program!(govcontract);
 
@@ -435,24 +440,6 @@ enum Commands {
     },
 
     #[command(
-        about = "Add merkle root hash to a proposal for verification",
-        long_about = "This command adds a merkle root hash to a proposal for stake verification. \
-                      It requires the proposal ID and the merkle root hash as a hex string. \
-                      Only the original proposal author can call this command.\n\n\
-                      Example:\n\
-                      $ svmgov --identity-keypair /path/to/key.json add-merkle-root --proposal-id \"123\" --merkle-root \"0x1234567890abcdef...\""
-    )]
-    AddMerkleRoot {
-        /// Proposal ID to add the merkle root to
-        #[arg(long, help = "Proposal ID")]
-        proposal_id: String,
-
-        /// Merkle root hash as a hex string
-        #[arg(long, help = "Merkle root hash (hex string)")]
-        merkle_root: String,
-    },
-
-    #[command(
         about = "Initialize the CLI configuration",
         long_about = "This command sets up the initial configuration for svmgov CLI. \
                       It will ask you whether you are a validator or staker, and prompt for \
@@ -480,7 +467,9 @@ enum Commands {
 
 fn merge_cli_with_config(cli: Cli, config: Config) -> Cli {
     // Merge identity_keypair: CLI arg > config (based on user_type) > None
-    let identity_keypair = cli.identity_keypair.or_else(|| config.get_identity_keypair_path());
+    let identity_keypair = cli
+        .identity_keypair
+        .or_else(|| config.get_identity_keypair_path());
 
     // Merge rpc_url: CLI arg > config rpc_url > config network default > constants default
     let rpc_url = cli.rpc_url.or_else(|| {
@@ -683,18 +672,6 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 vote_account.clone(),
                 snapshot_slot.clone(),
                 network.clone(),
-            )
-            .await?;
-        }
-        Commands::AddMerkleRoot {
-            proposal_id,
-            merkle_root,
-        } => {
-            instructions::add_merkle_root(
-                proposal_id.to_string(),
-                merkle_root.to_string(),
-                cli.identity_keypair,
-                cli.rpc_url,
             )
             .await?;
         }

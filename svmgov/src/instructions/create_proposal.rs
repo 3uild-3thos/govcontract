@@ -146,9 +146,6 @@ pub async fn create_proposal(
             spl_vote_account: vote_account,
             proposal: proposal_pda,
             proposal_index: proposal_index_pda,
-            snapshot_program: SNAPSHOT_PROGRAM_ID,
-            consensus_result: consensus_result_pda,
-            meta_merkle_proof: meta_merkle_proof_pda,
             system_program: system_program::ID,
         })
         .instructions()?;
