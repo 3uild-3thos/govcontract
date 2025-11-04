@@ -1,11 +1,11 @@
 import { useMemo } from "react";
-import { useStakeAccounts } from "./useStakeAccounts";
+import { useWalletStakeAccounts } from "./useWalletStakeAccounts";
 
 export function useStakerVotingPower(
   userPubKey: string | undefined,
   enabled = true
 ) {
-  const { data: stakeAccounts, isLoading } = useStakeAccounts(
+  const { data: stakeAccounts, isLoading } = useWalletStakeAccounts(
     userPubKey,
     enabled
   );

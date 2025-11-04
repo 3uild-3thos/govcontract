@@ -1,39 +1,7 @@
 // export type VoteOutcome = "for" | "against" | "abstain";
 
+import { accentColors, TopVoterRecord } from "@/types";
 import BN from "bn.js";
-
-export interface TopVoterRecord {
-  id: string;
-  validatorName: string;
-  validatorIdentity: string;
-  stakedLamports: number;
-  // voteOutcome: VoteOutcome;
-  votePercentage: number;
-  voteTimestamp: string;
-  voteData: {
-    forVotesBp: BN;
-    againstVotesBp: BN;
-    abstainVotesBp: BN;
-  };
-  accentColor: string;
-}
-
-const accentColors = [
-  "linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)",
-  "linear-gradient(135deg, #06b6d4 0%, #0ea5e9 100%)",
-  "linear-gradient(135deg, #f97316 0%, #ea580c 100%)",
-  "linear-gradient(135deg, #fb7185 0%, #f43f5e 100%)",
-  "linear-gradient(135deg, #22d3ee 0%, #0891b2 100%)",
-  "linear-gradient(135deg, #84cc16 0%, #65a30d 100%)",
-  "linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)",
-  "linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)",
-  "linear-gradient(135deg, #ec4899 0%, #db2777 100%)",
-  "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-  "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
-  "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
-  "linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)",
-  "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
-];
 
 const getColorFromString = (str: string): string => {
   let hash = 0;
@@ -61,6 +29,7 @@ export const topVoters: TopVoterRecord[] = [
       abstainVotesBp: new BN(2000),
     },
     accentColor: getColorFromString("shinobi"),
+    walletType: "validator",
   },
   {
     id: "stakin",
@@ -76,6 +45,7 @@ export const topVoters: TopVoterRecord[] = [
       abstainVotesBp: new BN(2000),
     },
     accentColor: getColorFromString("stakin"),
+    walletType: "validator",
   },
   {
     id: "everstake",
@@ -91,6 +61,7 @@ export const topVoters: TopVoterRecord[] = [
       abstainVotesBp: new BN(2000),
     },
     accentColor: getColorFromString("everstake"),
+    walletType: "validator",
   },
   {
     id: "figment",
@@ -106,6 +77,7 @@ export const topVoters: TopVoterRecord[] = [
       abstainVotesBp: new BN(8000),
     },
     accentColor: getColorFromString("figment"),
+    walletType: "validator",
   },
   {
     id: "chorus-one",
@@ -121,6 +93,7 @@ export const topVoters: TopVoterRecord[] = [
       abstainVotesBp: new BN(500),
     },
     accentColor: getColorFromString("chorus-one"),
+    walletType: "validator",
   },
   {
     id: "p2p",
@@ -136,6 +109,7 @@ export const topVoters: TopVoterRecord[] = [
       abstainVotesBp: new BN(0),
     },
     accentColor: getColorFromString("p2p"),
+    walletType: "validator",
   },
   {
     id: "rockawayx",
@@ -151,6 +125,7 @@ export const topVoters: TopVoterRecord[] = [
       abstainVotesBp: new BN(1000),
     },
     accentColor: getColorFromString("rockawayx"),
+    walletType: "validator",
   },
   {
     id: "coinbase",
@@ -166,6 +141,7 @@ export const topVoters: TopVoterRecord[] = [
       abstainVotesBp: new BN(1000),
     },
     accentColor: getColorFromString("coinbase"),
+    walletType: "validator",
   },
   {
     id: "blockdaemon",
@@ -181,6 +157,7 @@ export const topVoters: TopVoterRecord[] = [
       abstainVotesBp: new BN(1000),
     },
     accentColor: getColorFromString("blockdaemon"),
+    walletType: "validator",
   },
   {
     id: "solana-foundation",
@@ -196,6 +173,7 @@ export const topVoters: TopVoterRecord[] = [
       abstainVotesBp: new BN(1000),
     },
     accentColor: getColorFromString("solana-foundation"),
+    walletType: "validator",
   },
   {
     id: "kiln",
@@ -211,6 +189,7 @@ export const topVoters: TopVoterRecord[] = [
       abstainVotesBp: new BN(1000),
     },
     accentColor: getColorFromString("kiln"),
+    walletType: "validator",
   },
   {
     id: "stakefish",
@@ -226,5 +205,6 @@ export const topVoters: TopVoterRecord[] = [
       abstainVotesBp: new BN(1000),
     },
     accentColor: getColorFromString("stakefish"),
+    walletType: "validator",
   },
 ];

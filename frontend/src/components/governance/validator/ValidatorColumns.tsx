@@ -9,9 +9,9 @@ import {
 } from "@/lib/governance/formatters";
 import { CopyableAddress } from "@/components/governance/shared/CopyableAddress";
 import { SortableHeaderButton } from "@/components/governance/shared/SortableHeaderButton";
-import { VoteAccountData } from "@/types";
+import { OldVoteAccountData } from "@/types";
 
-export const columns: ColumnDef<VoteAccountData>[] = [
+export const columns: ColumnDef<OldVoteAccountData>[] = [
   {
     accessorKey: "voteAccount",
     header: "VOTE ACCOUNT",

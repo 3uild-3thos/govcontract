@@ -4,7 +4,7 @@ import {
   determineWalletRole,
   getDefaultView,
 } from "@/lib/governance/role-detection";
-import { useStakeAccounts } from "./useStakeAccounts";
+import { useWalletStakeAccounts } from "./useWalletStakeAccounts";
 import { useDelegatedStakeAccounts } from "./useDelegatedStakeAccounts";
 
 interface UseWalletRoleReturn {
@@ -23,7 +23,7 @@ export function useWalletRole(
   );
 
   const { data: stakeAccounts, isLoading: isLoadingStake } =
-    useStakeAccounts(userPubKey);
+    useWalletStakeAccounts(userPubKey);
   const { data: delegatedStakeAccounts, isLoading: isLoadingDelegated } =
     useDelegatedStakeAccounts(userPubKey);
 

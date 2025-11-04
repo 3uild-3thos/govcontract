@@ -3,14 +3,12 @@ import { getSimd } from "@/hooks";
 import { getProposalStatus } from "@/lib/proposals";
 import type { ProposalRecord, RawProposalAccount } from "@/types";
 
-
 export const getProposals = async (
   blockchainParams: BlockchainParams
 ): Promise<ProposalRecord[]> => {
-  const program = createProgramWitDummyWallet(
-    blockchainParams.endpoint
-  );
+  const program = createProgramWitDummyWallet(blockchainParams.endpoint);
 
+  // TODO: implement pagination
   const proposalAccs = await program.account.proposal.all();
   console.log("proposalAccs:", proposalAccs);
 
@@ -40,7 +38,6 @@ export function mapProposalDto(
     startEpoch: raw.startEpoch.toNumber(),
     endEpoch: raw.endEpoch.toNumber(),
     creationTimestamp: raw.creationTimestamp?.toNumber() || 0,
-
 
     clusterSupportLamports: BigInt(raw.clusterSupportLamports?.toString() || 0),
     forVotesLamports: raw.forVotesLamports?.toNumber() || 0,

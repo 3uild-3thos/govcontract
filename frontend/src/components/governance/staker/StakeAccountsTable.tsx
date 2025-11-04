@@ -33,7 +33,7 @@ import { formatLamportsDisplay } from "@/lib/governance/formatters";
 import { StakeAccountStatus } from "@/components/governance/staker/StakeAccountStatus";
 import { StakeAccountVoteProposals } from "@/components/governance/staker/StakeAccountVoteProposals";
 import { StakeAccountData } from "@/types/stakeAccounts";
-import { useStakeAccounts } from "@/hooks";
+import { useWalletStakeAccounts } from "@/hooks";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Fragment, useMemo, useState } from "react";
 
@@ -80,7 +80,7 @@ export function StakeAccountsTable({
   // Expanded rows state
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const enabled = !isParentLoading;
-  const { data: stakeAccountsData, isLoading } = useStakeAccounts(
+  const { data: stakeAccountsData, isLoading } = useWalletStakeAccounts(
     userPubKey,
     enabled
   );

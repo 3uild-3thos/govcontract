@@ -3,6 +3,9 @@ import { getVoteAccounts } from "@/data";
 import { GET_VOTE_ACCOUNTS } from "@/helpers";
 import { useQuery } from "@tanstack/react-query";
 
+/**
+ * @deprecated cant fetch ALL vote accounts at once.
+ */
 export const useVoteAccounts = (enabled = true) => {
   const { endpointUrl: endpoint } = useEndpoint();
 

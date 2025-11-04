@@ -9,6 +9,7 @@ export * from "./useVoteDistribution";
 export * from "./useProposals";
 export * from "./useProposalDetails";
 export * from "./useVoteAccounts";
+export * from "./useValidatorProposalVoteAccount";
 export * from "./useWalletVoteOverrideAccounts";
 export * from "./useCastVote";
 export * from "./useCastVoteOverride";
@@ -35,7 +36,7 @@ export * from "./useProposalOverviewStats";
 export * from "./useSummaryStats";
 export * from "./useVoteProposals";
 
-export * from "./useStakeAccounts";
+export * from "./useWalletStakeAccounts";
 
 // DEPRECATED
 export * from "./DEPRECATED/useGetValidatorsBubbleChart";

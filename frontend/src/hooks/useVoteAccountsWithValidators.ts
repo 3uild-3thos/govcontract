@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { useGetValidators } from "./useGetValidators";
-import { Validator, VoteAccountData } from "@/types";
+import { Validator, OldVoteAccountData } from "@/types";
 import { useVoteAccounts } from "./useVoteAccounts";
 
 export type VoteValidatorEntry = {
   votePDA: string;
-  voteAccount: VoteAccountData;
+  voteAccount: OldVoteAccountData;
   validator: Validator | undefined;
 };
 

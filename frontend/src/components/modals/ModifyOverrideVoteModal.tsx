@@ -13,16 +13,27 @@ import { AppButton } from "@/components/ui/AppButton";
 import ErrorMessage from "./shared/ErrorMessage";
 import { VoteDistributionControls } from "./shared/VoteDistributionControls";
 import {
-  useStakeAccounts,
   useVoteDistribution,
   useWalletRole,
   VoteDistribution,
+  useWalletVoteOverrideAccounts,
 } from "@/hooks";
 import { toast } from "sonner";
 import { WalletRole } from "@/types";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import { FormEvent, useEffect, useState } from "react";
 import { useModifyVoteOverride } from "@/hooks";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui";
+import {
+  formatAddress,
+  formatLamportsDisplay,
+} from "@/lib/governance/formatters";
 
 interface OverrideVoteModalProps {
   proposalId?: string;
@@ -57,7 +68,8 @@ export function ModifyOverrideVoteModal({
 
   const wallet = useAnchorWallet();
 
-  const { data: stakeAccounts } = useStakeAccounts(
+  const { data: stakeAccounts } = useWalletVoteOverrideAccounts(
+    proposalId,
     wallet?.publicKey?.toBase58()
   );
 
@@ -111,10 +123,10 @@ export function ModifyOverrideVoteModal({
       }
 
       const stakeAccount = customStakeAccount;
-
-      const voteAccount = stakeAccounts.find(
-        (sa) => sa.stakeAccount === stakeAccount
-      )?.voteAccount;
+      // TODO: check if this is correct after we use new method of getting vote overrideaccounts
+      const voteAccount = stakeAccounts
+        .find((sa) => sa.stakeAccount.toBase58() === stakeAccount)
+        ?.voteAccountValidator.toBase58();
 
       if (stakeAccount === undefined) {
         toast.error("Not able to determine stake account");
@@ -222,15 +234,43 @@ export function ModifyOverrideVoteModal({
               </div>
 
               {/* Stake Account Selection */}
-              <div className="space-y-3">
-                <label className="text-sm font-medium text-white/80">
-                  Stake account used when casting vote
-                </label>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <div className="flex-1">
+                  <p className="text-sm text-white/80">Select stake account</p>
+                  <p className="text-xs text-white/60">
+                    Select the stake account you want to modify the vote for
+                  </p>
+                </div>
+              </label>
 
-                {/* TODO: PEDRO show stake account previously used, when we can detect if user already voted or not */}
-                <p className="text-xs text-white/60">STAKE ACCOUNT ADDRESS</p>
-              </div>
-
+              {/* Custom Stake Account Input */}
+              <Select
+                value={customStakeAccount}
+                onValueChange={(v) => setCustomStakeAccount(v)}
+              >
+                <SelectTrigger className="text-white w-full">
+                  <div className="flex gap-1">
+                    <span className="text-dao-text-secondary">
+                      Stake account:
+                    </span>
+                    <SelectValue placeholder="-" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent className="text-white bg-background/40 backdrop-blur">
+                  {stakeAccounts?.map((stakeAcc) => (
+                    <SelectItem
+                      key={stakeAcc.stakeAccount.toBase58()}
+                      value={stakeAcc.stakeAccount.toBase58()}
+                    >
+                      {formatAddress(stakeAcc.stakeAccount.toBase58())} -&nbsp;
+                      {
+                        formatLamportsDisplay(stakeAcc.stakeAmount.toNumber())
+                          .value
+                      }
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <VoteDistributionControls
                 distribution={distribution}
                 totalPercentage={totalPercentage}
