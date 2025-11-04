@@ -36,6 +36,7 @@ impl<'info> AddMerkleRoot<'info> {
             GovernanceError::InvalidMerkleRoot
         );
 
+        self.proposal.ballot_id = Some(consensus_result.ballot_id);
         self.proposal.merkle_root_hash = Some(consensus_result.ballot.meta_merkle_root);
 
         emit!(MerkleRootAdded {
