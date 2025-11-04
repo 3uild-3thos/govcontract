@@ -1,15 +1,15 @@
-import { VoteAccountData } from "@/types/voteAccounts";
+import { OldVoteAccountData } from "@/types/voteAccounts";
 import { ProposalRecord } from "@/types/proposals";
 import { StakeAccountData } from "@/types/stakeAccounts";
 
 export interface VoteProposalData {
-  voteAccount: VoteAccountData;
+  voteAccount: OldVoteAccountData;
   proposal: ProposalRecord;
   votePublicKey: string;
 }
 
 export const getVoteProposals = (
-  voteAccounts: VoteAccountData[],
+  voteAccounts: OldVoteAccountData[],
   proposals: ProposalRecord[],
   stakeAccount: StakeAccountData
 ): VoteProposalData[] => {
@@ -24,14 +24,16 @@ export const getVoteProposals = (
   });
 
   // Create a map of proposal public keys to proposal data
-  const proposalMap = new Map(proposals.map((proposal) => [proposal.publicKey.toBase58(), proposal]));
+  const proposalMap = new Map(
+    proposals.map((proposal) => [proposal.publicKey.toBase58(), proposal])
+  );
 
   // Combine vote and proposal data
   const result: VoteProposalData[] = [];
-  
+
   for (const voteAccount of validatorVotes) {
     const proposal = proposalMap.get(voteAccount.proposal.toBase58());
-    
+
     if (proposal) {
       result.push({
         voteAccount,
@@ -43,4 +45,3 @@ export const getVoteProposals = (
 
   return result;
 };
-

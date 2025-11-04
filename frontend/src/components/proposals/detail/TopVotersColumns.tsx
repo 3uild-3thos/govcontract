@@ -2,24 +2,18 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { SortableHeaderButton } from "@/components/governance/shared/SortableHeaderButton";
-import type { TopVoterRecord } from "@/dummy-data/top-voters";
 import {
   formatAddress,
   formatLamportsDisplay,
 } from "@/lib/governance/formatters";
 import { formatDate } from "@/helpers";
+import { TopVoterRecord } from "@/types";
 
 const LABELS = {
   for: "For",
   against: "Against",
   abstain: "Abstain",
 };
-
-// const BAR_GRADIENTS: Record<TopVoterRecord["voteOutcome"], string> = {
-//   for: "var(--color-dao-gradient-vote-for)",
-//   against: "var(--color-dao-gradient-vote-against)",
-//   abstain: "var(--color-dao-gradient-vote-abstain)",
-// };
 
 export const topVoterColumns: ColumnDef<TopVoterRecord>[] = [
   {

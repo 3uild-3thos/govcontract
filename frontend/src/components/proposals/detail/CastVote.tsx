@@ -53,7 +53,7 @@ function CastVote({ proposalPublicKey, disabled }: CastVoteProps) {
     modalName = "override-vote";
   }
 
-  const { data: hasUserVoted = true, isLoading: isLoadingHasUserVoted } =
+  const { data: hasUserVoted = false, isLoading: isLoadingHasUserVoted } =
     useHasUserVoted(proposalPublicKey?.toBase58());
 
   const disabledButtons =

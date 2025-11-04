@@ -14,7 +14,7 @@ import ErrorMessage from "./shared/ErrorMessage";
 import { VoteDistributionControls } from "./shared/VoteDistributionControls";
 import {
   useCastVoteOverride,
-  useStakeAccounts,
+  useWalletStakeAccounts,
   useVoteDistribution,
   useWalletRole,
   VoteDistribution,
@@ -69,7 +69,7 @@ export function OverrideVoteModal({
 
   const wallet = useAnchorWallet();
 
-  const { data: stakeAccounts } = useStakeAccounts(
+  const { data: stakeAccounts } = useWalletStakeAccounts(
     wallet?.publicKey?.toBase58()
   );
 
@@ -314,19 +314,6 @@ export function OverrideVoteModal({
                     </SelectContent>
                   </Select>
                 )}
-                {/* {stakeAccountOption === "specify" && (
-                  <input
-                    type="text"
-                    value={customStakeAccount}
-                    onChange={(e) => setCustomStakeAccount(e.target.value)}
-                    placeholder="Enter stake account address"
-                    className={cn(
-                      "input",
-                      "w-full rounded-md border bg-white/5 px-3 py-1.5",
-                      "placeholder:text-sm placeholder:text-white/40"
-                    )}
-                  />
-                )} */}
               </div>
 
               <VoteDistributionControls
