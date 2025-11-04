@@ -2,7 +2,7 @@ use crate::{constants::*, error::GovernanceError};
 use anchor_lang::prelude::*;
 
 #[account]
-#[derive(InitSpace, Default)]
+#[derive(InitSpace)]
 pub struct Proposal {
     /// The public key of the validator who created this proposal
     pub author: Pubkey,
@@ -31,6 +31,32 @@ pub struct Proposal {
     pub merkle_root_hash: Option<[u8; 32]>,
     /// Slot number when the validator stake snapshot was taken
     pub snapshot_slot: u64,
+}
+
+impl Default for Proposal {
+    fn default() -> Self {
+        Self {
+            author: Pubkey::default(),
+            title: "".to_string(),
+            description: "".to_string(),
+            creation_epoch: 0,
+            start_epoch: 0,
+            end_epoch: 0,
+            proposer_stake_weight_bp: 0,
+            cluster_support_lamports: 0,
+            for_votes_lamports: 0,
+            against_votes_lamports: 0,
+            abstain_votes_lamports: 0,
+            voting: false,
+            finalized: false,
+            proposal_bump: 0,
+            creation_timestamp: 0,
+            vote_count: 0,
+            index: 0,
+            merkle_root_hash: None,
+            snapshot_slot: 0,
+        }
+    }
 }
 
 impl Proposal {

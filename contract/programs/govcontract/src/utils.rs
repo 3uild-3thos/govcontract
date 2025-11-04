@@ -125,3 +125,35 @@ pub fn is_valid_github_link(link: &str) -> bool {
     // Check trailing '/' was handled (no empty last segment)
     (MIN_SEGMENTS..=MAX_SEGMENTS).contains(&segment_count)
 }
+
+/// Calculates the starting and ending slot for a given epoch.
+///
+/// Solana epochs consist of 432,000 slots each. This function calculates:
+/// - First slot: epoch * 432000
+/// - Last slot: (epoch + 1) * 432000 - 1
+///
+/// # Arguments
+///
+/// * `epoch` - The epoch number (u64)
+///
+/// # Returns
+///
+/// A tuple `(start_slot, end_slot)` representing the slot range for the epoch.
+///
+/// # Example
+///
+/// ```rust
+/// let (start, end) = get_epoch_slot_range(0);
+/// // Returns (0, 431999)
+///
+/// let (start, end) = get_epoch_slot_range(1);
+/// // Returns (432000, 863999)
+/// ```
+pub fn get_epoch_slot_range(epoch: u64) -> (u64, u64) {
+    const SLOTS_PER_EPOCH: u64 = 432_000;
+
+    let start_slot = epoch * SLOTS_PER_EPOCH;
+    let end_slot = (epoch + 1) * SLOTS_PER_EPOCH - 1;
+
+    (start_slot, end_slot)
+}
