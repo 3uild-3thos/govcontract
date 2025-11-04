@@ -94,7 +94,6 @@ impl<'info> CreateProposal<'info> {
             proposal_bump: bumps.proposal,
             creation_timestamp: clock.unix_timestamp,
             index: self.proposal_index.current_index + 1,
-            snapshot_slot: 0,
             ..Proposal::default()
         });
         self.proposal_index.current_index += 1;

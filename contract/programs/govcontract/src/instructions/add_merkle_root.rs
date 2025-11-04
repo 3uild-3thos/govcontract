@@ -25,7 +25,6 @@ impl<'info> AddMerkleRoot<'info> {
         );
 
         let consensus_result_data = self.consensus_result.try_borrow_data()?;
-        // todo check if this is correct or it should be [8..]
         let consensus_result = ConsensusResult::try_deserialize(&mut &consensus_result_data[..])?;
 
         require!(
