@@ -210,9 +210,12 @@ impl<'info> CastVoteOverride<'info> {
                 abstain_votes_lamports,
             )?;
 
+            // Calculate total overridden stake (current delegator + previously overridden delegators)
+            let total_overridden = delegator_stake
+                .checked_add(validator_vote.override_lamports)
+                .ok_or(GovernanceError::ArithmeticOverflow)?;
             let new_validator_stake = validator_stake
-                .checked_sub(delegator_stake)
-                .and_then(|stake| stake.checked_sub(validator_vote.override_lamports))
+                .checked_sub(total_overridden)
                 .ok_or(GovernanceError::ArithmeticOverflow)?;
 
             // Calculate new validator votes for each category based on actual lamports
@@ -230,16 +233,11 @@ impl<'info> CastVoteOverride<'info> {
                 abstain_votes_lamports_new,
             )?;
 
-            // Store TOTAL votes (validator reduced + delegator override)
-            validator_vote.for_votes_lamports = for_votes_lamports_new
-                .checked_add(for_votes_lamports)
-                .ok_or(GovernanceError::ArithmeticOverflow)?;
-            validator_vote.against_votes_lamports = against_votes_lamports_new
-                .checked_add(against_votes_lamports)
-                .ok_or(GovernanceError::ArithmeticOverflow)?;
-            validator_vote.abstain_votes_lamports = abstain_votes_lamports_new
-                .checked_add(abstain_votes_lamports)
-                .ok_or(GovernanceError::ArithmeticOverflow)?;
+            // Store ONLY validator's reduced votes (not including delegator override)
+            // The delegator's votes are already added to proposal totals separately
+            validator_vote.for_votes_lamports = for_votes_lamports_new;
+            validator_vote.against_votes_lamports = against_votes_lamports_new;
+            validator_vote.abstain_votes_lamports = abstain_votes_lamports_new;
             validator_vote.override_lamports = validator_vote
                 .override_lamports
                 .checked_add(delegator_stake)
