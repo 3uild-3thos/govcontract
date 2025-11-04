@@ -105,7 +105,7 @@ pub async fn get_vote_account_proof(
     network: &str,
 ) -> Result<VoteAccountProofResponse> {
     let base_url = get_api_base_url();
-    let mut url = format!(
+    let url = format!(
         "{}/proof/vote_account/{}?slot={}&network={}",
         base_url, vote_account, snapshot_slot, network
     );
@@ -152,10 +152,19 @@ pub async fn get_stake_account_proof(
     Ok(proof)
 }
 
-/// Get the base API URL from environment or default
+/// Get the base API URL from config, environment, or default
 fn get_api_base_url() -> String {
     dotenv::dotenv().ok();
 
+    // Check config first
+    if let Ok(config) = crate::config::Config::load() {
+        if let Some(url) = config.operator_api_url {
+            info!("API base URL (from config): {}", url);
+            return url;
+        }
+    }
+
+    // Fall back to environment variable or default
     let url = std::env::var(SVMGOV_OPERATOR_URL_ENV)
         .unwrap_or_else(|_| DEFAULT_OPERATOR_API_URL.to_string());
     info!("API base URL: {}", url);

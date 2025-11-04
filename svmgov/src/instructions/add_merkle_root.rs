@@ -1,9 +1,7 @@
 use std::str::FromStr;
 
 use anchor_client::solana_sdk::{pubkey::Pubkey, signer::Signer};
-use anchor_lang::AnchorDeserialize;
 use anyhow::{Result, anyhow};
-use log::info;
 
 use crate::{
     govcontract::client::{accounts, args},

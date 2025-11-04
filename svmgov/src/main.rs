@@ -1,3 +1,4 @@
+mod config;
 mod constants;
 mod instructions;
 mod utils;
@@ -7,7 +8,8 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 use constants::*;
-use utils::{commands, utils::*};
+use utils::{commands, config_command::{ConfigSubcommand, handle_config_command}, init, utils::*};
+use config::Config;
 
 declare_program!(govcontract);
 
@@ -449,9 +451,58 @@ enum Commands {
         #[arg(long, help = "Merkle root hash (hex string)")]
         merkle_root: String,
     },
+
+    #[command(
+        about = "Initialize the CLI configuration",
+        long_about = "This command sets up the initial configuration for svmgov CLI. \
+                      It will ask you whether you are a validator or staker, and prompt for \
+                      the appropriate keypair paths and network preferences.\n\n\
+                      Example:\n\
+                      $ svmgov init"
+    )]
+    Init,
+
+    #[command(
+        about = "Manage CLI configuration",
+        long_about = "This command allows you to view and modify configuration settings. \
+                      Use 'config show' to view all settings, 'config get <key>' to get a specific \
+                      value, or 'config set <key> <value>' to set a value.\n\n\
+                      Examples:\n\
+                      $ svmgov config show\n\
+                      $ svmgov config set network testnet\n\
+                      $ svmgov config get rpc-url"
+    )]
+    Config {
+        #[command(subcommand)]
+        subcommand: ConfigSubcommand,
+    },
+}
+
+fn merge_cli_with_config(cli: Cli, config: Config) -> Cli {
+    // Merge identity_keypair: CLI arg > config (based on user_type) > None
+    let identity_keypair = cli.identity_keypair.or_else(|| config.get_identity_keypair_path());
+
+    // Merge rpc_url: CLI arg > config rpc_url > config network default > constants default
+    let rpc_url = cli.rpc_url.or_else(|| {
+        if config.rpc_url.is_some() {
+            config.rpc_url.clone()
+        } else {
+            Some(config.get_rpc_url())
+        }
+    });
+
+    Cli {
+        identity_keypair,
+        rpc_url,
+        command: cli.command,
+    }
 }
 
 async fn handle_command(cli: Cli) -> Result<()> {
+    // Load config and merge with CLI args
+    let config = Config::load().unwrap_or_default();
+    let cli = merge_cli_with_config(cli, config);
+
     log::debug!(
         "Handling command: identity_keypair={:?}, rpc_url={:?}, command={:?}",
         cli.identity_keypair,
@@ -646,6 +697,12 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 cli.rpc_url,
             )
             .await?;
+        }
+        Commands::Init => {
+            init::run_init().await?;
+        }
+        Commands::Config { subcommand } => {
+            handle_config_command(subcommand.clone()).await?;
         }
     }
 
