@@ -1,22 +1,15 @@
 use anchor_lang::{
     prelude::*,
     solana_program::{
-        borsh0_10::try_from_slice_unchecked,
         epoch_stake::{get_epoch_stake_for_vote_account, get_epoch_total_stake},
         vote::{program as vote_program, state::VoteState},
     },
 };
 
-#[cfg(feature = "production")]
-use gov_v1::{ConsensusResult, MetaMerkleProof};
-#[cfg(feature = "testing")]
-use mock_gov_v1::{ConsensusResult, MetaMerkleProof};
-
 use crate::{
     constants::*,
     error::GovernanceError,
     events::ProposalSupported,
-    merkle_helpers::verify_merkle_proof_cpi,
     state::{Proposal, Support},
     utils::get_epoch_slot_range,
 };
@@ -80,8 +73,8 @@ impl<'info> SupportProposal<'info> {
         let cluster_scaled = (cluster_stake as u128) * CLUSTER_STAKE_MULTIPLIER;
         self.proposal.voting = if support_scaled >= cluster_scaled {
             let (start_slot, _) =
-                get_epoch_slot_range(clock.epoch + DISCUSSION_EPOCHS + SNAPSHOT_SLOT);
-            self.proposal.start_epoch = clock.epoch + DISCUSSION_EPOCHS + SNAPSHOT_SLOT;
+                get_epoch_slot_range(clock.epoch + DISCUSSION_EPOCHS + SNAPSHOT_EPOCH_EXTENSION);
+            self.proposal.start_epoch = clock.epoch + DISCUSSION_EPOCHS + SNAPSHOT_EPOCH_EXTENSION;
             self.proposal.end_epoch = self.proposal.start_epoch + VOTING_EPOCHS;
             self.proposal.snapshot_slot = start_slot + 1000; // 1000 slots into snapshot
             true

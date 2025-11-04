@@ -30,4 +30,4 @@ pub const CLUSTER_STAKE_MULTIPLIER: u128 = 5;
 
 pub const DISCUSSION_EPOCHS: u64 = 4;
 pub const VOTING_EPOCHS: u64 = 3;
-pub const SNAPSHOT_SLOT: u64 = 1;
+pub const SNAPSHOT_EPOCH_EXTENSION: u64 = 1;
