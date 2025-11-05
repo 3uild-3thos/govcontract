@@ -63,14 +63,10 @@ export const useProposalVotes = (proposalPublicKey: PublicKey | undefined) => {
         );
       }
 
-      // 3. Combine votes and voteOverrides into one array (simple union)
-      const combinedVotes = [...votes, ...voteOverrides];
-
-      // 4. Calculate total staked lamports (sum of all active stakes)
-      const totalStakedLamports = combinedVotes.reduce(
-        (sum, v) => sum + (v.activeStake || 0),
-        0
-      );
+      // Total stake is calculated from all validators' activated_stake
+      const totalStakedLamports = validators
+        ? validators.reduce((sum, v) => sum + (v.activated_stake || 0), 0)
+        : 0;
 
       // 5. Map to TopVoterRecord[]
       const validatorVoters = votes.map((v) => {

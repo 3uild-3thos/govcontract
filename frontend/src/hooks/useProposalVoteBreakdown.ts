@@ -1,17 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-
-import { useGetValidators } from "./useGetValidators";
-import { ProposalRecord, Validators } from "@/types";
-
-import {
-  useVoteAccountsWithValidators,
-  VoteAccountsWithValidators,
-} from "./useVoteAccountsWithValidators";
-import { REQUIRED_QUORUM_PCT } from "@/chain";
-import { useProposals } from "./useProposals";
 import { PublicKey } from "@solana/web3.js";
+import { useEndpoint } from "@/contexts/EndpointContext";
+import { createProgramWitDummyWallet } from "@/chain";
+import { REQUIRED_QUORUM_PCT } from "@/chain/quorum";
+import { useProposalVotes } from "./useProposalVotes";
+import { useGetValidators } from "./useGetValidators";
 
-interface LatestProposal {
+interface ProposalVoteBreakdown {
   title: string;
   description: string;
   voting: boolean;
@@ -27,150 +22,122 @@ interface LatestProposal {
   votesCount: number;
   requiredQuorum: number;
   currentQuorumPct: number;
+  totalStake: number;
 }
 
 export const useProposalVoteBreakdown = (
   proposalPubKey: PublicKey | undefined
 ) => {
-  const { data: proposals, isLoading: isLoadingProposals } = useProposals();
+  const { endpointUrl: endpoint } = useEndpoint();
+
+  // useProposalVotes already fetches both votes and vote overrides
+  const { data: proposalVotes, isLoading: isLoadingVotes } =
+    useProposalVotes(proposalPubKey);
+  // Get all validators to calculate total stake from all validators
   const { data: validators, isLoading: isLoadingValidators } =
     useGetValidators();
-  const { data: votesHashMap, isLoading: isLoadingVotesHashMap } =
-    useVoteAccountsWithValidators();
-
-  const isLoading =
-    isLoadingProposals || isLoadingValidators || isLoadingVotesHashMap;
 
   const query = useQuery({
     staleTime: 1000 * 120, // 2 minutes
-    enabled: !!proposalPubKey && !!validators && !!proposals && !!votesHashMap,
-    queryKey: [
-      "latestProposalData",
-      proposalPubKey,
-      validators?.length,
-      proposals?.length,
-      votesHashMap,
-    ],
-    queryFn: () => getData(proposalPubKey, validators, proposals, votesHashMap),
+    enabled: !!proposalPubKey && !!endpoint && !!proposalVotes && !!validators,
+    queryKey: ["proposal-vote-breakdown", proposalPubKey?.toBase58(), endpoint],
+    queryFn: () =>
+      getData(proposalPubKey!, endpoint, proposalVotes, validators),
   });
 
-  return { ...query, isLoading };
+  return {
+    ...query,
+    isLoading: query.isLoading || isLoadingVotes || isLoadingValidators,
+  };
 };
 
 const getData = async (
-  proposalPubKey: PublicKey | undefined,
-  validators: Validators | undefined,
-  proposals: ProposalRecord[] | undefined,
-  votesHashMap: VoteAccountsWithValidators | undefined
-) => {
-  if (
-    validators === undefined ||
-    proposals === undefined ||
-    proposalPubKey === undefined
-  )
-    throw new Error("Unable to get validators info");
-  // if (votes === undefined) throw new Error("Unable to get votes info");
-
-  if (proposals.length === 0) throw new Error("No proposals found");
-  // if (votes.length === 0) throw new Error("No votes found");
-
-  const totalStake = validators.reduce((acc, curr) => {
-    return (acc += curr.activated_stake);
-  }, 0);
-
-  // filter out finished
-  // sort bt creationEpoch
-  // grab the first one
-  const proposal = proposals.find((p) => p.publicKey.equals(proposalPubKey));
-
-  if (proposal === undefined) {
-    throw new Error("Proposal not found");
+  proposalPubKey: PublicKey,
+  endpoint: string,
+  proposalVotes: Awaited<ReturnType<typeof useProposalVotes>>["data"],
+  validators: Awaited<ReturnType<typeof useGetValidators>>["data"]
+): Promise<ProposalVoteBreakdown> => {
+  if (!proposalVotes) {
+    throw new Error("Proposal votes not available");
+  }
+  if (!validators) {
+    throw new Error("Validators not available");
   }
 
-  const { title, description, voting, finalized } = proposal;
+  const program = createProgramWitDummyWallet(endpoint);
 
-  if (votesHashMap === undefined) {
-    const latestProposalDataEmpty: LatestProposal = {
-      title,
-      description,
-      voting,
-      finalized,
-      forVotesPercentage: 0,
-      againstVotesPercentage: 0,
-      abstainVotesPercentage: 0,
-      undecidedVotesPercentage: 0,
-      forStake: 0,
-      againstStake: 0,
-      abstainStake: 0,
-      undecidedStake: totalStake,
-      votesCount: 0,
-      requiredQuorum: 0,
-      currentQuorumPct: 0,
-    };
+  // Fetch proposal account for title, description, voting, finalized
+  const proposalAccount = await program.account.proposal.fetch(proposalPubKey);
 
-    return latestProposalDataEmpty;
-  }
-
-  const votes = Object.values(votesHashMap.voteMap);
-
-  let forStakeSum = 0;
-  let againstStakeSum = 0;
-  let abstainStakeSum = 0;
-
-  let votesCount = 0;
-  // for each vote, get validator's activated_stake
-  for (const { voteAccount, validator } of votes) {
-    if (!proposal.publicKey.equals(voteAccount.proposal) || !validator) {
-      continue;
-    }
-
-    const stake = validator.activated_stake;
-
-    const forBp = voteAccount.forVotesBp.toNumber(); // 0 - 10000
-    const againstBp = voteAccount.againstVotesBp.toNumber();
-    const abstainBp = voteAccount.abstainVotesBp.toNumber();
-
-    forStakeSum += (stake * forBp) / 10_000;
-    againstStakeSum += (stake * againstBp) / 10_000;
-    abstainStakeSum += (stake * abstainBp) / 10_000;
-    votesCount += 1;
-  }
-
-  // undecided stake = total validator's stake - voted stake
-  const votedStake = forStakeSum + againstStakeSum + abstainStakeSum;
-  const undecidedStakeSum = totalStake - votedStake;
-
-  const forVotesPercentage = Math.round((forStakeSum / totalStake) * 100);
-  const againstVotesPercentage = Math.round(
-    (againstStakeSum / totalStake) * 100
-  );
-  const abstainVotesPercentage = Math.round(
-    (abstainStakeSum / totalStake) * 100
-  );
-  const undecidedVotesPercentage = Math.round(
-    (undecidedStakeSum / totalStake) * 100
+  // Calculate total stake from all validators (not just those who voted)
+  const totalStake = validators.reduce(
+    (sum, validator) => sum + (validator.activated_stake || 0),
+    0
   );
 
-  const requiredQuorum = Math.round(totalStake * REQUIRED_QUORUM_PCT);
-  const currentQuorumPct = Math.round((votedStake * 100) / totalStake);
+  // Calculate vote breakdown from proposalVotes
+  // proposalVotes contains TopVoterRecord[] with walletType "validator" or "staker"
+  let totalForStake = 0;
+  let totalAgainstStake = 0;
+  let totalAbstainStake = 0;
 
-  const latestProposalData: LatestProposal = {
-    title,
-    description,
-    voting,
-    finalized,
+  // Process all votes (both validators and stakers)
+  // TopVoterRecord has stakedLamports and voteData with basis points
+  proposalVotes.forEach((vote) => {
+    const stake = vote.stakedLamports || 0;
+    const bpToDecimal = 1 / 10000; // basis points to decimal (10000 bp = 1.0)
+
+    const forBp = vote.voteData.forVotesBp?.toNumber() || 0;
+    const againstBp = vote.voteData.againstVotesBp?.toNumber() || 0;
+    const abstainBp = vote.voteData.abstainVotesBp?.toNumber() || 0;
+
+    const forStake = stake * (forBp * bpToDecimal);
+    const againstStake = stake * (againstBp * bpToDecimal);
+    const abstainStake = stake * (abstainBp * bpToDecimal);
+
+    totalForStake += forStake;
+    totalAgainstStake += againstStake;
+    totalAbstainStake += abstainStake;
+  });
+
+  // Calculate total voted stake
+  const totalVotedStake = totalForStake + totalAgainstStake + totalAbstainStake;
+  const undecidedStake = totalStake - totalVotedStake;
+
+  // Calculate percentages
+  const forVotesPercentage =
+    totalStake > 0 ? (totalForStake / totalStake) * 100 : 0;
+  const againstVotesPercentage =
+    totalStake > 0 ? (totalAgainstStake / totalStake) * 100 : 0;
+  const abstainVotesPercentage =
+    totalStake > 0 ? (totalAbstainStake / totalStake) * 100 : 0;
+  const undecidedVotesPercentage =
+    totalStake > 0 ? (undecidedStake / totalStake) * 100 : 0;
+
+  // Calculate quorum
+  const requiredQuorum = REQUIRED_QUORUM_PCT * 100; // Convert to percentage
+  const currentQuorumPct =
+    totalStake > 0 ? (totalVotedStake / totalStake) * 100 : 0;
+
+  // Get votes count
+  const votesCount = proposalVotes.length;
+
+  return {
+    title: proposalAccount.title,
+    description: proposalAccount.description,
+    voting: proposalAccount.voting,
+    finalized: proposalAccount.finalized,
     forVotesPercentage,
     againstVotesPercentage,
     abstainVotesPercentage,
     undecidedVotesPercentage,
-    forStake: Math.round(forStakeSum),
-    againstStake: Math.round(againstStakeSum),
-    abstainStake: Math.round(abstainStakeSum),
-    undecidedStake: Math.round(undecidedStakeSum),
+    forStake: totalForStake,
+    againstStake: totalAgainstStake,
+    abstainStake: totalAbstainStake,
+    undecidedStake,
     votesCount,
     requiredQuorum,
     currentQuorumPct,
+    totalStake,
   };
-
-  return latestProposalData;
 };
