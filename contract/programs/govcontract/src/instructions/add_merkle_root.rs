@@ -17,31 +17,20 @@ pub struct AddMerkleRoot<'info> {
 }
 
 impl<'info> AddMerkleRoot<'info> {
-    pub fn add_merkle_root(&mut self) -> Result<()> {
+    pub fn add_merkle_root(&mut self, ballot_id: u64, merkle_root: [u8; 32]) -> Result<()> {
         let clock = Clock::get()?;
-        require!(
-            self.proposal.voting == false && self.proposal.finalized == false,
-            GovernanceError::CannotModifyAfterStart
-        );
-
-        let consensus_result_data = self.consensus_result.try_borrow_data()?;
-        let consensus_result = ConsensusResult::try_deserialize(&mut &consensus_result_data[..])?;
 
         require!(
-            consensus_result
-                .ballot
-                .meta_merkle_root
-                .iter()
-                .any(|&x| x != 0),
+            merkle_root.iter().any(|&x| x != 0),
             GovernanceError::InvalidMerkleRoot
         );
 
-        self.proposal.ballot_id = Some(consensus_result.ballot_id);
-        self.proposal.merkle_root_hash = Some(consensus_result.ballot.meta_merkle_root);
+        self.proposal.ballot_id = Some(ballot_id);
+        self.proposal.merkle_root_hash = Some(merkle_root);
 
         emit!(MerkleRootAdded {
             proposal_id: self.proposal.key(),
-            merkle_root_hash: consensus_result.ballot.meta_merkle_root,
+            merkle_root_hash: merkle_root,
         });
 
         Ok(())
