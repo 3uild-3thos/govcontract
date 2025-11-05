@@ -33,6 +33,12 @@ pub async fn list_proposals(
 
     // Stop the spinner
     spinner.finish_with_message("Proposals collected.");
+    for (_, proposal) in proposals.clone() {
+        println!(
+            "Proposal: {}",
+            Pubkey::new_from_array(proposal.merkle_root_hash.unwrap()).to_string()
+        );
+    }
 
     if proposals.is_empty() {
         println!("No proposals found.");
