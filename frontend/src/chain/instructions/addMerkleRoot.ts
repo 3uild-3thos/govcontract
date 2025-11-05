@@ -1,6 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
 import { AddMerkleRootParams, TransactionResult } from "./types";
-import { createProgramWithWallet, hexToBytes } from "./helpers";
 
 /**
  * Adds a merkle root hash to a proposal
@@ -9,29 +7,34 @@ export async function addMerkleRoot(
   params: AddMerkleRootParams
 ): Promise<TransactionResult> {
   try {
-    const { proposalId, merkleRootHash, wallet } = params;
+    const {
+      //  proposalId, merkleRootHash,
+      wallet,
+    } = params;
 
     if (!wallet || !wallet.publicKey) {
       throw new Error("Wallet not connected");
     }
 
-    const proposalPubkey = new PublicKey(proposalId);
-    const program = createProgramWithWallet(wallet);
+    // const proposalPubkey = new PublicKey(proposalId);
+    // const program = createProgramWithWallet(wallet);
 
-    // Convert hex string to byte array
-    const merkleRootBytes = hexToBytes(merkleRootHash);
+    // // Convert hex string to byte array
+    // const merkleRootBytes = hexToBytes(merkleRootHash);
 
     // Build and send transaction
-    const tx = await program.methods
-      .addMerkleRoot(Array.from(merkleRootBytes))
-      .accounts({
-        signer: wallet.publicKey,
-        proposal: proposalPubkey,
-      })
-      .rpc();
+    // const tx = await program.methods
+    //   .addMerkleRoot(Array.from(merkleRootBytes))
+    //   .accounts({
+    //     signer: wallet.publicKey,
+    //     proposal: proposalPubkey,
+    //   })
+    //   .rpc();
 
+    // TODO: we probably dont need this method
+    throw new Error("Not implemented");
     return {
-      signature: tx,
+      signature: "tx",
       success: true,
     };
   } catch (error) {
