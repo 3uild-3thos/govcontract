@@ -20,13 +20,13 @@ pub const MIN_PROPOSAL_STAKE_LAMPORTS: u64 = 10000 * 1_000_000_000;
 pub const CLUSTER_SUPPORT_MULTIPLIER: u128 = 1;
 
 #[cfg(feature = "production")]
-pub const CLUSTER_SUPPORT_MULTIPLIER: u128 = 1;
+pub const CLUSTER_SUPPORT_MULTIPLIER: u128 = 100000;
 
 #[cfg(feature = "testing")]
 pub const CLUSTER_STAKE_MULTIPLIER: u128 = 1;
 
 #[cfg(feature = "production")]
-pub const CLUSTER_STAKE_MULTIPLIER: u128 = 1000;
+pub const CLUSTER_STAKE_MULTIPLIER: u128 = 1;
 
 pub const DISCUSSION_EPOCHS: u64 = 4;
 pub const VOTING_EPOCHS: u64 = 3;
