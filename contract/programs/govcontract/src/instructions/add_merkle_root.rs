@@ -25,8 +25,15 @@ impl<'info> AddMerkleRoot<'info> {
         );
 
         let consensus_result_data = self.consensus_result.try_borrow_data()?;
+        msg!(
+            "consensus_result_data: {:?}",
+            consensus_result_data[..8].to_vec()
+        );
         let consensus_result = ConsensusResult::try_deserialize(&mut &consensus_result_data[..])?;
-
+        msg!(
+            "consensus_result: {:?}",
+            consensus_result.ballot.meta_merkle_root
+        );
         require!(
             consensus_result
                 .ballot
