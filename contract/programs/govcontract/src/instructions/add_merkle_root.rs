@@ -4,10 +4,13 @@ use gov_v1::{ConsensusResult, ID as GOV_V1_ID};
 
 #[derive(Accounts)]
 pub struct AddMerkleRoot<'info> {
+    pub signer: Signer<'info>,
+
+    /// CHECK: Consensus result account owned by snapshot program
     #[account(
         constraint = consensus_result.owner == &GOV_V1_ID @ GovernanceError::InvalidSnapshotProgram,
     )]
-    pub consensus_result: Signer<'info>,
+    pub consensus_result: UncheckedAccount<'info>,
     #[account(
         mut,
         constraint = !proposal.finalized @ GovernanceError::ProposalFinalized,
@@ -23,6 +26,10 @@ impl<'info> AddMerkleRoot<'info> {
             self.proposal.voting == false && self.proposal.finalized == false,
             GovernanceError::CannotModifyAfterStart
         );
+
+        if !self.consensus_result.is_signer {
+            return Err(GovernanceError::InvalidSnapshotProgram.into());
+        };
 
         let consensus_result_data = self.consensus_result.try_borrow_data()?;
         msg!(
