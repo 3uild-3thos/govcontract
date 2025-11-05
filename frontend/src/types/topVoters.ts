@@ -4,6 +4,7 @@ export interface TopVoterRecord {
   id: string;
   validatorName: string;
   validatorIdentity: string;
+  stakeAccount?: string;
   stakedLamports: number;
   // voteOutcome: VoteOutcome;
   votePercentage: number;
@@ -13,8 +14,8 @@ export interface TopVoterRecord {
     againstVotesBp: BN;
     abstainVotesBp: BN;
   };
-  walletType: "validator" | "staker";
   accentColor: string;
+  walletType: "validator" | "staker";
 }
 
 export const accentColors = [

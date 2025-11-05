@@ -8,6 +8,8 @@ import {
 } from "@/lib/governance/formatters";
 import { formatDate } from "@/helpers";
 import { TopVoterRecord } from "@/types";
+import { humanizeText } from "@/lib/helpers";
+import { CopyableAddressIcon } from "@/components/governance/shared/CopyableAddressIcon";
 
 const LABELS = {
   for: "For",
@@ -41,9 +43,43 @@ export const topVoterColumns: ColumnDef<TopVoterRecord>[] = [
             <span className="text-sm font-medium text-white/60">
               {validatorName}
             </span>
-            <span className="text-xs font-mono text-white/30">
+            <span className="flex gap-1 text-xs font-mono text-white/30">
               {formatAddress(validatorIdentity, 6)}
+              <CopyableAddressIcon
+                size={13}
+                address={validatorIdentity}
+                copyLabel="Copy full validator address"
+              />
             </span>
+          </div>
+        </div>
+      );
+    },
+    sortingFn: "alphanumeric",
+    enableHiding: false,
+  },
+  {
+    accessorKey: "walletType",
+    header: "Voted as",
+    cell: ({ row }) => {
+      const { walletType, stakeAccount } = row.original;
+
+      return (
+        <div className="flex items-center gap-4 justify-center">
+          <div className="flex flex-col">
+            <span className="text-sm font-medium text-white/60">
+              {humanizeText(walletType)}
+            </span>
+            {stakeAccount && (
+              <span className="flex gap-1 text-xs font-mono text-white/30">
+                {formatAddress(stakeAccount, 6)}
+                <CopyableAddressIcon
+                  size={13}
+                  address={stakeAccount}
+                  copyLabel="Copy full stake account address"
+                />
+              </span>
+            )}
           </div>
         </div>
       );

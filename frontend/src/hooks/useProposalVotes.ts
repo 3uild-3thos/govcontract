@@ -125,6 +125,7 @@ export const useProposalVotes = (proposalPublicKey: PublicKey | undefined) => {
           : typeof v.identity === "string"
           ? v.identity
           : "unknown";
+
         const validator = validatorMap[identity];
         const validatorName = validator?.name || "Unknown Validator";
         const stakedLamports = v.activeStake || 0;
@@ -151,6 +152,7 @@ export const useProposalVotes = (proposalPublicKey: PublicKey | undefined) => {
           stakedLamports,
           votePercentage,
           voteTimestamp,
+          stakeAccount: v.stakeAccount.toBase58(),
           voteData: {
             forVotesBp: v.forVotesBp ? new BN(v.forVotesBp) : new BN(0),
             againstVotesBp: v.againstVotesBp
