@@ -76,18 +76,6 @@ enum Commands {
         /// GitHub link for the proposal description.
         #[arg(long, help = "GitHub link for the proposal description")]
         description: String,
-
-        /// Snapshot slot for fetching merkle proofs
-        #[arg(long, help = "Snapshot slot for fetching merkle proofs")]
-        snapshot_slot: u64,
-
-        /// Network for fetching merkle proofs
-        #[arg(long, help = "Network for fetching merkle proofs")]
-        network: String,
-
-        /// Ballot ID for consensus result PDA derivation
-        #[arg(long, help = "Ballot ID")]
-        ballot_id: u64,
     },
 
     #[command(
@@ -101,18 +89,6 @@ enum Commands {
     SupportProposal {
         #[arg(long, help = "Proposal ID")]
         proposal_id: String,
-
-        /// Ballot ID for consensus result PDA derivation
-        #[arg(long, help = "Ballot ID")]
-        ballot_id: u64,
-
-        /// Snapshot slot for fetching merkle proofs
-        #[arg(long, help = "Snapshot slot for fetching merkle proofs")]
-        snapshot_slot: u64,
-
-        /// Network for fetching merkle proofs
-        #[arg(long, help = "Network for fetching merkle proofs")]
-        network: String,
     },
 
     #[command(
@@ -458,7 +434,6 @@ enum Commands {
         #[arg(long, help = "Vote account pubkey (base58) for the validator")]
         vote_account: String,
     },
-
 }
 
 async fn handle_command(cli: Cli) -> Result<()> {
@@ -474,9 +449,6 @@ async fn handle_command(cli: Cli) -> Result<()> {
             seed,
             title,
             description,
-            snapshot_slot,
-            network,
-            ballot_id,
         } => {
             instructions::create_proposal(
                 title.to_string(),
@@ -484,25 +456,14 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 *seed,
                 cli.identity_keypair,
                 cli.rpc_url,
-                snapshot_slot.clone(),
-                network.clone(),
-                ballot_id.clone(),
             )
             .await?;
         }
-        Commands::SupportProposal {
-            proposal_id,
-            ballot_id,
-            snapshot_slot,
-            network,
-        } => {
+        Commands::SupportProposal { proposal_id } => {
             instructions::support_proposal(
                 proposal_id.to_string(),
                 cli.identity_keypair,
                 cli.rpc_url,
-                ballot_id.clone(),
-                snapshot_slot.clone(),
-                network.clone(),
             )
             .await?;
         }
