@@ -4,13 +4,10 @@ use gov_v1::{ConsensusResult, ID as GOV_V1_ID};
 
 #[derive(Accounts)]
 pub struct AddMerkleRoot<'info> {
-    pub signer: Signer<'info>,
-
-    /// CHECK: Consensus result account owned by snapshot program
     #[account(
         constraint = consensus_result.owner == &GOV_V1_ID @ GovernanceError::InvalidSnapshotProgram,
     )]
-    pub consensus_result: UncheckedAccount<'info>,
+    pub consensus_result: Signer<'info>,
     #[account(
         mut,
         constraint = !proposal.finalized @ GovernanceError::ProposalFinalized,
@@ -20,42 +17,20 @@ pub struct AddMerkleRoot<'info> {
 }
 
 impl<'info> AddMerkleRoot<'info> {
-    pub fn add_merkle_root(&mut self) -> Result<()> {
+    pub fn add_merkle_root(&mut self, ballot_id: u64, merkle_root: [u8; 32]) -> Result<()> {
         let clock = Clock::get()?;
-        require!(
-            self.proposal.voting == false && self.proposal.finalized == false,
-            GovernanceError::CannotModifyAfterStart
-        );
 
-        if !self.consensus_result.is_signer {
-            return Err(GovernanceError::InvalidSnapshotProgram.into());
-        };
-
-        let consensus_result_data = self.consensus_result.try_borrow_data()?;
-        msg!(
-            "consensus_result_data: {:?}",
-            consensus_result_data[..8].to_vec()
-        );
-        let consensus_result = ConsensusResult::try_deserialize(&mut &consensus_result_data[..])?;
-        msg!(
-            "consensus_result: {:?}",
-            consensus_result.ballot.meta_merkle_root
-        );
         require!(
-            consensus_result
-                .ballot
-                .meta_merkle_root
-                .iter()
-                .any(|&x| x != 0),
+            merkle_root.iter().any(|&x| x != 0),
             GovernanceError::InvalidMerkleRoot
         );
 
-        self.proposal.ballot_id = Some(consensus_result.ballot_id);
-        self.proposal.merkle_root_hash = Some(consensus_result.ballot.meta_merkle_root);
+        self.proposal.ballot_id = Some(ballot_id);
+        self.proposal.merkle_root_hash = Some(merkle_root);
 
         emit!(MerkleRootAdded {
             proposal_id: self.proposal.key(),
-            merkle_root_hash: consensus_result.ballot.meta_merkle_root,
+            merkle_root_hash: merkle_root,
         });
 
         Ok(())
