@@ -45,7 +45,7 @@ export const useProposalVotes = (proposalPublicKey: PublicKey | undefined) => {
     enabled: !!proposalPublicKey,
     queryFn: async (): Promise<TopVoterRecord[]> => {
       if (!proposalPublicKey) {
-        throw new Error("Missing required data");
+        throw new Error("Missing proposal public key");
       }
 
       // 1. Fetch votes and voteOverride data from gov contract program

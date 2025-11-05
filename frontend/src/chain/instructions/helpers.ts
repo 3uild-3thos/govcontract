@@ -205,13 +205,13 @@ export async function getStakeAccountProof(
 export function generatePdasFromVoteProofResponse(
   proofResponse: VoteAccountProofResponse,
   snapshotProgramId: PublicKey = SNAPSHOT_PROGRAM_ID,
-  ballot_id: number
+  ballotId: number = 0
 ): [PublicKey, PublicKey] {
   // Derive consensus result PDA (this is typically derived from the snapshot slot)
   const [consensusResultPda] = PublicKey.findProgramAddressSync(
     [
       Buffer.from("ConsensusResult"),
-      new BN(ballot_id).toArrayLike(Buffer, "le", 8),
+      new BN(ballotId).toArrayLike(Buffer, "le", 8),
     ],
     snapshotProgramId
   );

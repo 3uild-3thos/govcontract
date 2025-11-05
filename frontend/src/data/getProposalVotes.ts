@@ -11,7 +11,7 @@ export const getProposalVotes = async (
   endpoint: string
 ): Promise<Array<OldVoteAccountData & { voter: PublicKey }>> => {
   const program = createProgramWitDummyWallet(endpoint);
-  console.log("proposalPublicKey:", proposalPublicKey);
+
   // Proposal field offset 40 (8 bytes discriminator + 32 bytes validator)
   const proposalVotes = await program.account.vote.all([
     {

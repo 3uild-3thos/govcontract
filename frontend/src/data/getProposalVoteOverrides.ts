@@ -27,7 +27,9 @@ export const getProposalVoteOverrides = async (
   const proposalOverrides = await program.account.voteOverride.all([
     {
       memcmp: {
-        offset: 72, // Offset where proposal field starts
+        // Offset updated according to latest govcontract.json.
+        // Now: 8 (discriminator) + 32 (stakeAccount) + 32 (validator) + 1 (bump) = 73
+        offset: 104,
         bytes: proposalPublicKey.toBase58(),
       },
     },
@@ -55,6 +57,7 @@ function mapVoteOverrideAccountDto(
   rawAccount: VoteOverrideAccount
 ): VoteOverrideAccountData {
   return {
+    delegator: rawAccount.delegator,
     stakeAccount: rawAccount.stakeAccount,
     validator: rawAccount.validator,
     proposal: rawAccount.proposal,

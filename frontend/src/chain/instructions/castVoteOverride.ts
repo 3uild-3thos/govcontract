@@ -33,6 +33,7 @@ export async function castVoteOverride(
     stakeAccount,
     wallet,
     voteAccount,
+    ballotId,
   } = params;
 
   if (!wallet || !wallet.publicKey) {
@@ -53,14 +54,18 @@ export async function castVoteOverride(
   const stakeAccountPubkey = new PublicKey(stakeAccount);
 
   // Get proofs
-  const network = blockchainParams.network || "mainnet";
+  const network = blockchainParams.network;
   const [metaMerkleProof, stakeMerkleProof] = await Promise.all([
     getVoteAccountProof(splVoteAccount.toBase58(), network, slot),
     getStakeAccountProof(stakeAccount, network, slot),
   ]);
 
   const [consensusResultPda, metaMerkleProofPda] =
-    generatePdasFromVoteProofResponse(metaMerkleProof, SNAPSHOT_PROGRAM_ID, 4);
+    generatePdasFromVoteProofResponse(
+      metaMerkleProof,
+      SNAPSHOT_PROGRAM_ID,
+      ballotId
+    );
 
   // Check if merkle account exists
   const merkleAccountInfo = await program.provider.connection.getAccountInfo(
@@ -69,10 +74,6 @@ export async function castVoteOverride(
   );
 
   if (!merkleAccountInfo) {
-    console.log("merkleAccountInfo is null");
-    console.log("consensusResultPda", consensusResultPda.toBase58());
-    console.log("metaMerkleProofPda", metaMerkleProofPda.toBase58());
-
     const govV1Program = createGovV1ProgramWithWallet(
       wallet,
       blockchainParams.endpoint

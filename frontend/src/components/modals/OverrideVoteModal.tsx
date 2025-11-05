@@ -18,6 +18,7 @@ import {
   useVoteDistribution,
   useWalletRole,
   VoteDistribution,
+  useWalletVoteOverrideAccounts,
 } from "@/hooks";
 import { toast } from "sonner";
 import { WalletRole } from "@/types";
@@ -37,6 +38,7 @@ import {
 
 interface OverrideVoteModalProps {
   proposalId?: string;
+  ballotId?: number;
   initialVoteDist?: VoteDistribution;
   isOpen: boolean;
   onClose: () => void;
@@ -46,6 +48,7 @@ type StakeAccountOption = "primary" | "specify";
 
 export function OverrideVoteModal({
   proposalId: initialProposalId,
+  ballotId,
   initialVoteDist,
   isOpen,
   onClose,
@@ -72,6 +75,13 @@ export function OverrideVoteModal({
   const { data: stakeAccounts } = useWalletStakeAccounts(
     wallet?.publicKey?.toBase58()
   );
+
+  const { data: voteOverrideAccounts = [] } = useWalletVoteOverrideAccounts(
+    proposalId,
+    wallet?.publicKey.toBase58()
+  );
+
+  console.log("stakeAccounts", stakeAccounts);
 
   const { walletRole } = useWalletRole(wallet?.publicKey?.toBase58());
 
@@ -152,6 +162,7 @@ export function OverrideVoteModal({
           abstainVotesBp: voteDistribution.abstain * 100,
           stakeAccount,
           voteAccount,
+          ballotId,
         },
         {
           onSuccess: handleSuccess,
@@ -306,6 +317,11 @@ export function OverrideVoteModal({
                         <SelectItem
                           key={stakeAcc.stakeAccount}
                           value={stakeAcc.stakeAccount}
+                          disabled={voteOverrideAccounts.some(
+                            (voa) =>
+                              voa.stakeAccount.toBase58() ===
+                              stakeAcc.stakeAccount
+                          )}
                         >
                           {formatAddress(stakeAcc.stakeAccount)} -&nbsp;
                           {formatLamportsDisplay(stakeAcc.activeStake).value}

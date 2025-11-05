@@ -6,6 +6,7 @@ export type ProposalStatus = "support" | "voting" | "finalized";
 export type ProposalRecord = {
   publicKey: PublicKey;
   id: string; // used for table
+  ballotId: number | undefined;
   // Identity
   simd: string | undefined;
   title: string;

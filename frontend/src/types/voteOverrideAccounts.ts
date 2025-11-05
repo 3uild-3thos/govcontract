@@ -4,6 +4,7 @@ import BN from "bn.js";
 
 export interface VoteOverrideAccountData {
   stakeAccount: PublicKey;
+  delegator: PublicKey;
   validator: PublicKey;
   proposal: PublicKey;
   voteAccountValidator: PublicKey;

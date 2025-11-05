@@ -29,6 +29,7 @@ import {
 
 export interface CastVoteModalDataProps {
   proposalId?: string;
+  ballotId?: number;
   initialVoteDist?: VoteDistribution;
 }
 
@@ -39,6 +40,7 @@ interface CastVoteModalProps extends CastVoteModalDataProps {
 
 export function CastVoteModal({
   proposalId: initialProposalId,
+  ballotId,
   initialVoteDist,
   isOpen,
   onClose,
@@ -105,6 +107,7 @@ export function CastVoteModal({
           forVotesBp: voteDistribution.for * 100,
           againstVotesBp: voteDistribution.against * 100,
           abstainVotesBp: voteDistribution.abstain * 100,
+          ballotId,
         },
         {
           onSuccess: handleSuccess,

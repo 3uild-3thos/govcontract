@@ -34,6 +34,7 @@ export interface CastVoteParams {
   abstainVotesBp: number;
   wallet: AnchorWallet | undefined;
   voteAccount?: PublicKey;
+  ballotId: number | undefined;
 }
 
 export interface ModifyVoteParams {
@@ -43,6 +44,7 @@ export interface ModifyVoteParams {
   abstainVotesBp: number;
   wallet: AnchorWallet | undefined;
   voteAccount?: PublicKey;
+  ballotId: number | undefined;
 }
 
 export interface CastVoteOverrideParams {
@@ -53,6 +55,7 @@ export interface CastVoteOverrideParams {
   stakeAccount: string;
   wallet: AnchorWallet | undefined;
   voteAccount: string;
+  ballotId: number | undefined;
 }
 
 export interface ModifyVoteOverrideParams {
@@ -63,6 +66,7 @@ export interface ModifyVoteOverrideParams {
   stakeAccount: string;
   wallet: AnchorWallet | undefined;
   voteAccount: string;
+  ballotId: number | undefined;
 }
 
 export interface SupportProposalParams {

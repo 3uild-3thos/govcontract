@@ -1,8 +1,7 @@
 import { useEndpoint } from "@/contexts/EndpointContext";
-import { getVoteOverrideAccounts } from "@/data/getVoteOverrideAccounts";
+import { getVoteOverrideAccounts } from "@/data";
 import { GET_WALLET_VOTE_OVERRIDE_ACCOUNTS } from "@/helpers";
 import { useQuery } from "@tanstack/react-query";
-import { useWalletStakeAccounts } from "./useWalletStakeAccounts";
 
 export const useWalletVoteOverrideAccounts = (
   proposalId: string | undefined,
@@ -11,10 +10,7 @@ export const useWalletVoteOverrideAccounts = (
 ) => {
   const { endpointUrl: endpoint } = useEndpoint();
 
-  const { data: stakeAccounts = [], isFetched: isFetchedStakeAccounts } =
-    useWalletStakeAccounts(userPubKey);
-
-  const queryEnabled = enabled && isFetchedStakeAccounts;
+  const queryEnabled = enabled && !!proposalId && !!userPubKey;
 
   return useQuery({
     queryKey: [
@@ -25,6 +21,6 @@ export const useWalletVoteOverrideAccounts = (
     ],
     enabled: queryEnabled,
     staleTime: 1000 * 120, // 2 minutes
-    queryFn: () => getVoteOverrideAccounts(endpoint, proposalId, stakeAccounts),
+    queryFn: () => getVoteOverrideAccounts(endpoint, proposalId, userPubKey),
   });
 };

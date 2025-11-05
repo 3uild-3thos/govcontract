@@ -17,6 +17,7 @@ import {
   useWalletRole,
   VoteDistribution,
   useWalletVoteOverrideAccounts,
+  useWalletStakeAccounts,
 } from "@/hooks";
 import { toast } from "sonner";
 import { WalletRole } from "@/types";
@@ -37,12 +38,14 @@ import {
 
 interface OverrideVoteModalProps {
   proposalId?: string;
+  ballotId?: number;
   isOpen: boolean;
   onClose: () => void;
 }
 
 export function ModifyOverrideVoteModal({
   proposalId: initialProposalId,
+  ballotId,
   isOpen,
   onClose,
 }: OverrideVoteModalProps) {
@@ -68,12 +71,16 @@ export function ModifyOverrideVoteModal({
 
   const wallet = useAnchorWallet();
 
-  const { data: stakeAccounts } = useWalletVoteOverrideAccounts(
-    proposalId,
+  const { data: stakeAccounts } = useWalletStakeAccounts(
     wallet?.publicKey?.toBase58()
   );
 
   const { walletRole } = useWalletRole(wallet?.publicKey?.toBase58());
+
+  const { data: voteOverrideAccounts = [] } = useWalletVoteOverrideAccounts(
+    proposalId,
+    wallet?.publicKey.toBase58()
+  );
 
   const { mutate: modifyVoteOverride } = useModifyVoteOverride();
 
@@ -123,10 +130,10 @@ export function ModifyOverrideVoteModal({
       }
 
       const stakeAccount = customStakeAccount;
-      // TODO: check if this is correct after we use new method of getting vote overrideaccounts
-      const voteAccount = stakeAccounts
-        .find((sa) => sa.stakeAccount.toBase58() === stakeAccount)
-        ?.voteAccountValidator.toBase58();
+
+      const voteAccount = stakeAccounts.find(
+        (sa) => sa.stakeAccount === stakeAccount
+      )?.voteAccount;
 
       if (stakeAccount === undefined) {
         toast.error("Not able to determine stake account");
@@ -147,6 +154,7 @@ export function ModifyOverrideVoteModal({
           abstainVotesBp: voteDistribution.abstain * 100,
           stakeAccount,
           voteAccount,
+          ballotId,
         },
         {
           onSuccess: handleSuccess,
@@ -259,14 +267,18 @@ export function ModifyOverrideVoteModal({
                 <SelectContent className="text-white bg-background/40 backdrop-blur">
                   {stakeAccounts?.map((stakeAcc) => (
                     <SelectItem
-                      key={stakeAcc.stakeAccount.toBase58()}
-                      value={stakeAcc.stakeAccount.toBase58()}
-                    >
-                      {formatAddress(stakeAcc.stakeAccount.toBase58())} -&nbsp;
-                      {
-                        formatLamportsDisplay(stakeAcc.stakeAmount.toNumber())
-                          .value
+                      key={stakeAcc.stakeAccount}
+                      value={stakeAcc.stakeAccount}
+                      disabled={
+                        !voteOverrideAccounts.some(
+                          (voa) =>
+                            voa.stakeAccount.toBase58() ===
+                            stakeAcc.stakeAccount
+                        )
                       }
+                    >
+                      {formatAddress(stakeAcc.stakeAccount)} -&nbsp;
+                      {formatLamportsDisplay(stakeAcc.activeStake).value}
                     </SelectItem>
                   ))}
                 </SelectContent>

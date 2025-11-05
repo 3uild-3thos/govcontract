@@ -89,7 +89,7 @@ export default function TopVotersTable({ proposal }: TopVotersTableProps) {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    getRowId: (row) => row.id,
+    getRowId: (row) => row.id + (row.stakeAccount || row.walletType),
     initialState: {
       pagination: {
         pageSize: 10,

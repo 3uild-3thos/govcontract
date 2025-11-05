@@ -28,8 +28,14 @@ export async function modifyVote(
   blockchainParams: BlockchainParams,
   slot: number | undefined
 ): Promise<TransactionResult> {
-  const { proposalId, forVotesBp, againstVotesBp, abstainVotesBp, wallet } =
-    params;
+  const {
+    proposalId,
+    forVotesBp,
+    againstVotesBp,
+    abstainVotesBp,
+    wallet,
+    ballotId,
+  } = params;
 
   if (!wallet || !wallet.publicKey) {
     throw new Error("Wallet not connected");
@@ -78,7 +84,11 @@ export async function modifyVote(
   console.log("fetched voteAccountProof", voteAccountProof);
 
   const [consensusResultPda, metaMerkleProofPda] =
-    generatePdasFromVoteProofResponse(voteAccountProof, SNAPSHOT_PROGRAM_ID, 4);
+    generatePdasFromVoteProofResponse(
+      voteAccountProof,
+      SNAPSHOT_PROGRAM_ID,
+      ballotId
+    );
 
   const merkleAccountInfo = await program.provider.connection.getAccountInfo(
     metaMerkleProofPda,
@@ -88,10 +98,6 @@ export async function modifyVote(
   const instructions: TransactionInstruction[] = [];
 
   if (!merkleAccountInfo) {
-    console.log("merkleAccountInfo is null");
-    console.log("consensusResultPda", consensusResultPda.toBase58());
-    console.log("metaMerkleProofPda", metaMerkleProofPda.toBase58());
-
     const initMerkleInstruction = await govV1Program.methods
       .initMetaMerkleProof(
         {

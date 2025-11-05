@@ -76,10 +76,6 @@ export async function modifyVoteOverride(
   const instructions: TransactionInstruction[] = [];
 
   if (!merkleAccountInfo) {
-    console.log("merkleAccountInfo is null");
-    console.log("consensusResultPda", consensusResultPda.toBase58());
-    console.log("metaMerkleProofPda", metaMerkleProofPda.toBase58());
-
     const govV1Program = createGovV1ProgramWithWallet(
       wallet,
       blockchainParams.endpoint

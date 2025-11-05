@@ -20,6 +20,7 @@ import { useAnchorWallet } from "@solana/wallet-adapter-react";
 
 export interface ModifyVoteModalDataProps {
   proposalId?: string;
+  ballotId?: number;
   initialVoteDist?: VoteDistribution;
 }
 
@@ -30,6 +31,7 @@ interface ModifyVoteModalProps extends ModifyVoteModalDataProps {
 
 export function ModifyVoteModal({
   proposalId: initialProposalId,
+  ballotId,
   initialVoteDist,
   isOpen,
   onClose,
@@ -86,6 +88,7 @@ export function ModifyVoteModal({
           forVotesBp: voteDistribution.for * 100,
           againstVotesBp: voteDistribution.against * 100,
           abstainVotesBp: voteDistribution.abstain * 100,
+          ballotId,
         },
         {
           onSuccess: handleSuccess,
