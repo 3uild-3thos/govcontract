@@ -70,7 +70,7 @@ export const getDelegatedStakeAccounts = async (
 
     allStakeAccounts.push(...parsed);
   }
-
+  console.log("allStakeAccounts:", allStakeAccounts);
   return allStakeAccounts;
 };
 
