@@ -1,13 +1,13 @@
-import { BlockchainParams, createProgramWitDummyWallet } from "@/chain";
+import { createProgramWitDummyWallet } from "@/chain";
 import { OldVoteAccountData, RawVoteAccountDataAccount } from "@/types";
 
 /**
  * @deprecated cant fetch ALL vote accounts at once.
  */
 export const getVoteAccounts = async (
-  blockchainParams: BlockchainParams
+  endpoint: string
 ): Promise<OldVoteAccountData[]> => {
-  const program = createProgramWitDummyWallet(blockchainParams.endpoint);
+  const program = createProgramWitDummyWallet(endpoint);
 
   // TODO: implement filter. we cant fetch all vote accounts at once.
   // fetch vote accounts for a specific proposals or stake account owner only

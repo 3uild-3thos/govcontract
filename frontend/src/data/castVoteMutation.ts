@@ -5,10 +5,10 @@ import {
   TransactionResult,
 } from "@/chain";
 
-
 export const castVoteMutation = async (
   params: CastVoteParams,
-  blockchainParams: BlockchainParams
+  blockchainParams: BlockchainParams,
+  slot: number | undefined
 ): Promise<TransactionResult> => {
-  return castVote(params, blockchainParams);
+  return castVote(params, blockchainParams, slot);
 };

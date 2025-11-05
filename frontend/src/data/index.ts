@@ -20,6 +20,8 @@ export * from "./modifyVoteOverrideMutation";
 export * from "./createProposalMutation";
 export * from "./supportProposalMutation";
 
+export * from "./getVoterWalletSummary";
+
 // DEPRECATED
 export * from "./OLD/getAllProposals";
 export * from "./OLD/getValidators";

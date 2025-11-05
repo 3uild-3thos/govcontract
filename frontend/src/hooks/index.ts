@@ -38,6 +38,8 @@ export * from "./useVoteProposals";
 
 export * from "./useWalletStakeAccounts";
 
+export * from "./useVoterWalletSummary";
+
 // DEPRECATED
 export * from "./DEPRECATED/useGetValidatorsBubbleChart";
 export * from "./DEPRECATED/useGetValidatorsTable";

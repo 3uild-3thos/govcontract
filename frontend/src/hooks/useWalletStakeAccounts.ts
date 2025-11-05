@@ -13,6 +13,6 @@ export const useWalletStakeAccounts = (
     staleTime: 1000 * 120, // 2 minutes
     enabled: enabled && !!userPubKey,
     queryKey: [GET_STAKE_ACCOUNTS, endpoint, userPubKey],
-    queryFn: () => getWalletStakeAccounts({ endpoint }, userPubKey),
+    queryFn: () => getWalletStakeAccounts(endpoint, userPubKey),
   });
 };

@@ -15,7 +15,6 @@ import {
   createGovV1ProgramWithWallet,
   getVoteAccountProof,
   getStakeAccountProof,
-  getVoterSummary,
   generatePdasFromVoteProofResponse,
   convertMerkleProofStrings,
   convertStakeMerkleLeafDataToIdlType,
@@ -28,7 +27,8 @@ import { BN } from "@coral-xyz/anchor";
  */
 export async function modifyVoteOverride(
   params: ModifyVoteOverrideParams,
-  blockchainParams: BlockchainParams
+  blockchainParams: BlockchainParams,
+  slot: number | undefined
 ): Promise<TransactionResult> {
   const {
     proposalId,
@@ -44,6 +44,10 @@ export async function modifyVoteOverride(
     throw new Error("Wallet not connected");
   }
 
+  if (slot === undefined) {
+    throw new Error("Slot is not defined");
+  }
+
   // Validate vote distribution
   validateVoteBasisPoints(forVotesBp, againstVotesBp, abstainVotesBp);
 
@@ -51,33 +55,13 @@ export async function modifyVoteOverride(
   const splVoteAccount = new PublicKey(voteAccount);
   const program = createProgramWithWallet(wallet, blockchainParams.endpoint);
 
-  // Get voter summary to get slot and stake accounts
-  const voterSummary = await getVoterSummary(
-    wallet.publicKey.toString(),
-    blockchainParams.network || "mainnet"
-  );
-  const slot = voterSummary.snapshot_slot;
-
-  // Determine stake account to use
-  let stakeAccountStr = stakeAccount;
-  if (!stakeAccountStr) {
-    if (
-      !voterSummary.stake_accounts ||
-      voterSummary.stake_accounts.length === 0
-    ) {
-      throw new Error("No stake account found for voter");
-    }
-    // TODO: fix this type casting
-    stakeAccountStr = voterSummary.stake_accounts[0].stake_account as string;
-  }
-
-  const stakeAccountPubkey = new PublicKey(stakeAccountStr);
+  const stakeAccountPubkey = new PublicKey(stakeAccount);
 
   // Get proofs
   const network = blockchainParams.network || "mainnet";
   const [metaMerkleProof, stakeMerkleProof] = await Promise.all([
     getVoteAccountProof(splVoteAccount.toBase58(), network, slot),
-    getStakeAccountProof(stakeAccountStr, network, slot),
+    getStakeAccountProof(stakeAccount, network, slot),
   ]);
 
   const [consensusResultPda, metaMerkleProofPda] =

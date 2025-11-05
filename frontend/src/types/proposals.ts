@@ -9,7 +9,7 @@ export type ProposalRecord = {
   // Identity
   simd: string | undefined;
   title: string;
-  summary: string; // Short text description for list view
+  // summary: string; // removed, since github summary is shown only when visible, and isn't fetched for all proposals
   description: string; // GitHub URL (renamed from 'link')
   author: string; // Pubkey
 

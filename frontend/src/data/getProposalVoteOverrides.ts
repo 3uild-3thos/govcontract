@@ -1,8 +1,4 @@
-import {
-  BlockchainParams,
-  createProgramWitDummyWallet,
-  VoteOverrideAccount,
-} from "@/chain";
+import { createProgramWitDummyWallet, VoteOverrideAccount } from "@/chain";
 import { VoteOverrideAccountData } from "@/types";
 import { PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
@@ -13,7 +9,7 @@ import BN from "bn.js";
  */
 export const getProposalVoteOverrides = async (
   proposalPublicKey: PublicKey,
-  blockchainParams?: BlockchainParams
+  endpoint: string
 ): Promise<
   Array<
     VoteOverrideAccountData & {
@@ -24,7 +20,7 @@ export const getProposalVoteOverrides = async (
     }
   >
 > => {
-  const program = createProgramWitDummyWallet(blockchainParams?.endpoint);
+  const program = createProgramWitDummyWallet(endpoint);
 
   // Filter vote override accounts by proposal public key directly on RPC
   // Proposal field is at offset 72 (8 bytes discriminator + 32 bytes stakeAccount + 32 bytes validator)

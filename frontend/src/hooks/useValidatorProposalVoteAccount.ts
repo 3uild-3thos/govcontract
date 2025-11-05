@@ -27,6 +27,6 @@ export const useValidatorProposalVoteAccount = (
     enabled: queryEnabled,
     staleTime: 1000 * 120, // 2 minutes
     queryFn: () =>
-      getValidatorProposalVoteAccount({ endpoint }, proposalId, voteAccount),
+      getValidatorProposalVoteAccount(endpoint, proposalId, voteAccount),
   });
 };

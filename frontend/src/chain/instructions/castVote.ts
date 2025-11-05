@@ -16,7 +16,6 @@ import {
   deriveVotePda,
   deriveVoteOverrideCachePda,
   validateVoteBasisPoints,
-  getVoterSummary,
   createGovV1ProgramWithWallet,
   getVoteAccountProof,
   generatePdasFromVoteProofResponse,
@@ -27,7 +26,8 @@ import {
  */
 export async function castVote(
   params: CastVoteParams,
-  blockchainParams: BlockchainParams
+  blockchainParams: BlockchainParams,
+  slot: number | undefined
 ): Promise<TransactionResult> {
   const { proposalId, forVotesBp, againstVotesBp, abstainVotesBp, wallet } =
     params;
@@ -36,14 +36,12 @@ export async function castVote(
     throw new Error("Wallet not connected");
   }
 
+  if (slot === undefined) {
+    throw new Error("Slot is not defined");
+  }
+
   // Validate vote distribution
   validateVoteBasisPoints(forVotesBp, againstVotesBp, abstainVotesBp);
-
-  const voterSummary = await getVoterSummary(
-    wallet.publicKey.toString(),
-    blockchainParams.network || "mainnet"
-  );
-  const slot = voterSummary.snapshot_slot;
 
   const proposalPubkey = new PublicKey(proposalId);
   const program = createProgramWithWallet(wallet, blockchainParams.endpoint);

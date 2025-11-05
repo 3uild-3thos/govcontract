@@ -4,8 +4,7 @@ import {
   determineWalletRole,
   getDefaultView,
 } from "@/lib/governance/role-detection";
-import { useWalletStakeAccounts } from "./useWalletStakeAccounts";
-import { useDelegatedStakeAccounts } from "./useDelegatedStakeAccounts";
+import { useVoterWalletSummary } from "./useVoterWalletSummary";
 
 interface UseWalletRoleReturn {
   walletRole: WalletRole;
@@ -22,21 +21,16 @@ export function useWalletRole(
     "staker"
   );
 
-  const { data: stakeAccounts, isLoading: isLoadingStake } =
-    useWalletStakeAccounts(userPubKey);
-  const { data: delegatedStakeAccounts, isLoading: isLoadingDelegated } =
-    useDelegatedStakeAccounts(userPubKey);
-
-  const isLoading = isLoadingStake || isLoadingDelegated;
+  const { data, isLoading } = useVoterWalletSummary(userPubKey);
 
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading || data === undefined) return;
 
-    const role = determineWalletRole(stakeAccounts, delegatedStakeAccounts);
+    const role = determineWalletRole(data.stake_accounts, data.vote_accounts);
 
     setWalletRole(role);
-    setSelectedView((prev) => prev ?? getDefaultView(role));
-  }, [isLoading, stakeAccounts, delegatedStakeAccounts]);
+    setSelectedView(getDefaultView(role));
+  }, [isLoading, data]);
 
   return { walletRole, selectedView, setSelectedView, isLoading };
 }

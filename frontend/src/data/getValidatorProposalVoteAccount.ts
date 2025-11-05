@@ -1,5 +1,4 @@
 import {
-  BlockchainParams,
   createProgramWitDummyWallet,
   deriveVotePda,
   GOVCONTRACT_PROGRAM_ID,
@@ -10,7 +9,7 @@ import { ValidatorVoteAccountData, VoteAccountData } from "@/types";
 import { PublicKey } from "@solana/web3.js";
 
 export const getValidatorProposalVoteAccount = async (
-  blockchainParams: BlockchainParams,
+  endpoint: string,
   proposalPublicKey: string | undefined,
   voteAccount: ValidatorVoteAccountData | undefined
 ): Promise<VoteAccountData | undefined> => {
@@ -19,7 +18,7 @@ export const getValidatorProposalVoteAccount = async (
 
   if (voteAccount === undefined) throw new Error("No vote account found");
 
-  const program = createProgramWitDummyWallet(blockchainParams.endpoint);
+  const program = createProgramWitDummyWallet(endpoint);
   const proposalPubkey = new PublicKey(proposalPublicKey);
 
   const splVoteAccount = new PublicKey(voteAccount.voteAccount);

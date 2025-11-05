@@ -13,6 +13,6 @@ export const useVoteAccounts = (enabled = true) => {
     queryKey: [GET_VOTE_ACCOUNTS, endpoint],
     enabled,
     staleTime: 1000 * 120, // 2 minutes
-    queryFn: () => getVoteAccounts({ endpoint }),
+    queryFn: () => getVoteAccounts(endpoint),
   });
 };

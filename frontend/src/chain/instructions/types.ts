@@ -4,6 +4,7 @@ import { BN } from "@coral-xyz/anchor";
 
 import govContractIdl from "@/chain/idl/govcontract.json";
 import govV1idl from "@/chain/idl/gov-v1.json";
+import { RPCEndpoint } from "@/types";
 
 // Common types
 export interface TransactionResult {
@@ -13,8 +14,7 @@ export interface TransactionResult {
 }
 
 export interface BlockchainParams {
-  // programId?: PublicKey;
-  network?: string;
+  network: RPCEndpoint;
   endpoint: string;
 }
 
@@ -22,8 +22,6 @@ export interface BlockchainParams {
 export interface CreateProposalParams {
   title: string;
   description: string;
-  startEpoch: number;
-  votingLengthEpochs: number;
   seed?: number;
   wallet: AnchorWallet | undefined;
   voteAccount?: PublicKey;
@@ -119,14 +117,16 @@ export interface StakeAccountProofResponse {
 export interface VoterSummaryResponse {
   network: string;
   snapshot_slot: number;
-  stake_accounts: Array<{
-    [key: string]: unknown;
-  }>;
-  vote_accounts: Array<{
+  voting_wallet: string;
+  stake_accounts: {
+    active_stake: number;
+    stake_account: string;
+    vote_account: string;
+  }[];
+  vote_accounts: {
     active_stake: number;
     vote_account: string;
-  }>;
-  voting_wallet: string;
+  }[];
 }
 
 export interface NetworkMetaResponse {

@@ -50,8 +50,8 @@ export const useProposalVotes = (proposalPublicKey: PublicKey | undefined) => {
 
       // 1. Fetch votes and voteOverride data from gov contract program
       const [votes, voteOverrides] = await Promise.all([
-        getProposalVotes(proposalPublicKey, { endpoint }),
-        getProposalVoteOverrides(proposalPublicKey, { endpoint }),
+        getProposalVotes(proposalPublicKey, endpoint),
+        getProposalVoteOverrides(proposalPublicKey, endpoint),
       ]);
 
       // 2. Optionally fetch validator details (name, etc.)

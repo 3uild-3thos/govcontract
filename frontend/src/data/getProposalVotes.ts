@@ -1,4 +1,4 @@
-import { BlockchainParams, createProgramWitDummyWallet } from "@/chain";
+import { createProgramWitDummyWallet } from "@/chain";
 import { OldVoteAccountData, RawVoteAccountDataAccount } from "@/types";
 import { PublicKey } from "@solana/web3.js";
 
@@ -8,9 +8,9 @@ import { PublicKey } from "@solana/web3.js";
  */
 export const getProposalVotes = async (
   proposalPublicKey: PublicKey,
-  blockchainParams?: BlockchainParams
+  endpoint: string
 ): Promise<Array<OldVoteAccountData & { voter: PublicKey }>> => {
-  const program = createProgramWitDummyWallet(blockchainParams?.endpoint);
+  const program = createProgramWitDummyWallet(endpoint);
   console.log("proposalPublicKey:", proposalPublicKey);
   // Proposal field offset 40 (8 bytes discriminator + 32 bytes validator)
   const proposalVotes = await program.account.vote.all([

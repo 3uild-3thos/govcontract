@@ -77,6 +77,10 @@ export function formatDate(dateStr: string | null): string | null {
  * @returns Formatted string like "3 days ago", "today", etc.
  */
 export function calculateTimeAgo(timestamp: number): string {
+  // If timestamp is in seconds (10 digits), convert to milliseconds
+  if (timestamp < 1e12) {
+    timestamp = timestamp * 1000;
+  }
   const now = Date.now();
   const diff = now - timestamp;
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));

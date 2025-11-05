@@ -7,7 +7,6 @@ import {
 import {
   createProgramWithWallet,
   deriveSupportPda,
-  getVoterSummary,
   getVoteAccountProof,
 } from "./helpers";
 
@@ -16,7 +15,8 @@ import {
  */
 export async function supportProposal(
   params: SupportProposalParams,
-  blockchainParams: BlockchainParams
+  blockchainParams: BlockchainParams,
+  slot: number | undefined
 ): Promise<TransactionResult> {
   const { proposalId, wallet } = params;
 
@@ -24,17 +24,16 @@ export async function supportProposal(
     throw new Error("Wallet not connected");
   }
 
-  const voterSummary = await getVoterSummary(
-    wallet.publicKey.toString(),
-    blockchainParams.network || "mainnet"
-  );
+  if (slot === undefined) {
+    throw new Error("Slot is not defined");
+  }
+
   const program = createProgramWithWallet(wallet, blockchainParams.endpoint);
 
   const voteAccounts = await program.provider.connection.getVoteAccounts();
   const validatorVoteAccount = voteAccounts.current.find(
     (acc) => acc.nodePubkey === wallet.publicKey.toBase58()
   );
-  const slot = voterSummary.snapshot_slot;
 
   const proposalPubkey = new PublicKey(proposalId);
 

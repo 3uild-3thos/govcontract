@@ -9,6 +9,6 @@ export const useProposals = () => {
   return useQuery({
     staleTime: 1000 * 120, // 2 minutes
     queryKey: [GET_ALL_PROPOSALS],
-    queryFn: () => getProposals({ endpoint }),
+    queryFn: () => getProposals(endpoint),
   });
 };

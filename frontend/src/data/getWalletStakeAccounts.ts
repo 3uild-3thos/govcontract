@@ -1,4 +1,3 @@
-import { BlockchainParams } from "@/chain";
 import { StakeAccountData, StakeAccountState } from "@/types/stakeAccounts";
 import {
   AccountInfo,
@@ -8,7 +7,7 @@ import {
 } from "@solana/web3.js";
 
 export const getWalletStakeAccounts = async (
-  { endpoint }: BlockchainParams,
+  endpoint: string,
   userPubkey: string | undefined
 ): Promise<StakeAccountData[]> => {
   const connection = new Connection(endpoint, "confirmed");

@@ -13,6 +13,6 @@ export const useValidatorVoteAccounts = (
     staleTime: 1000 * 120, // 2 minutes
     enabled: enabled && !!userPubKey,
     queryKey: [GET_WALLET_VOTE_OVERRIDE_ACCOUNTS, endpoint, userPubKey],
-    queryFn: () => getValidatorVoteAccounts({ endpoint }, userPubKey),
+    queryFn: () => getValidatorVoteAccounts(endpoint, userPubKey),
   });
 };

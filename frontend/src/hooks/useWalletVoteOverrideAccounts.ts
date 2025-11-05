@@ -25,7 +25,6 @@ export const useWalletVoteOverrideAccounts = (
     ],
     enabled: queryEnabled,
     staleTime: 1000 * 120, // 2 minutes
-    queryFn: () =>
-      getVoteOverrideAccounts({ endpoint }, proposalId, stakeAccounts),
+    queryFn: () => getVoteOverrideAccounts(endpoint, proposalId, stakeAccounts),
   });
 };

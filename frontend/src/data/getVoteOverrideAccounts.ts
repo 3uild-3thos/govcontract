@@ -1,5 +1,4 @@
 import {
-  BlockchainParams,
   createProgramWitDummyWallet,
   deriveVoteOverridePda,
   deriveVotePda,
@@ -11,14 +10,14 @@ import { StakeAccountData } from "@/types/stakeAccounts";
 import { PublicKey } from "@solana/web3.js";
 
 export const getVoteOverrideAccounts = async (
-  blockchainParams: BlockchainParams,
+  endpoint: string,
   proposalPublicKey: string | undefined,
   stakeAccounts: StakeAccountData[]
 ): Promise<VoteOverrideAccountData[]> => {
   if (proposalPublicKey === undefined)
     throw new Error("Proposal public key is not loaded");
 
-  const program = createProgramWitDummyWallet(blockchainParams.endpoint);
+  const program = createProgramWitDummyWallet(endpoint);
   const proposalPubkey = new PublicKey(proposalPublicKey);
 
   // First, derive the validator_vote PDA for each stake account

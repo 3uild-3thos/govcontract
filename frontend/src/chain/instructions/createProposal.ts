@@ -7,7 +7,6 @@ import {
 } from "./types";
 import {
   createProgramWithWallet,
-  getVoterSummary,
   getVoteAccountProof,
   deriveProposalIndexPda,
 } from "./helpers";
@@ -18,25 +17,17 @@ import { deriveProposalAccount } from "../helpers";
  */
 export async function createProposal(
   params: CreateProposalParams,
-  blockchainParams: BlockchainParams
+  blockchainParams: BlockchainParams,
+  slot: number | undefined
 ): Promise<TransactionResult> {
-  const {
-    title,
-    description,
-    // startEpoch,
-    // votingLengthEpochs,
-    seed,
-    wallet,
-  } = params;
+  const { title, description, seed, wallet } = params;
   if (!wallet || !wallet.publicKey) {
     throw new Error("Wallet not connected");
   }
 
-  const voterSummary = await getVoterSummary(
-    wallet.publicKey.toString(),
-    blockchainParams.network || "mainnet"
-  );
-  const slot = voterSummary.snapshot_slot;
+  if (slot === undefined) {
+    throw new Error("Slot is not defined");
+  }
 
   // Generate random seed if not provided
   const seedValue = new BN(

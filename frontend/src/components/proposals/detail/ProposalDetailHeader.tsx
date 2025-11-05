@@ -8,6 +8,7 @@ import { useCopyToClipboard } from "@/hooks";
 import LifecycleIndicator from "@/components/ui/LifecycleIndicator";
 import { formatAddress } from "@/lib/governance/formatters";
 import type { ProposalRecord } from "@/types";
+import { ProposalDescription } from "../ProposalDescription";
 
 interface ProposalDetailHeaderProps {
   proposal: ProposalRecord | undefined;
@@ -44,19 +45,13 @@ export default function ProposalDetailHeader({
 
   return (
     <div className="glass-card space-y-6 p-6">
-      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-        <div className="flex-1 space-y-3">
+      <div className="flex flex-col gap-4">
+        <div className="flex justify-between items-center space-y-3">
           <h2 className="h2">{proposal.title}</h2>
-          <div className="lg:hidden">
-            <StatusBadge status={proposal.status || "active"} variant="pill" />
-          </div>
-          <p className=" text-sm leading-6 text-pretty text-white/60 line-clamp-3">
-            {proposal.summary}
-          </p>
+          <StatusBadge status={proposal.status} variant="pill" />
         </div>
-        <div className="hidden lg:block">
-          <StatusBadge status={proposal.status || "active"} variant="pill" />
-        </div>
+
+        <ProposalDescription githubUrl={proposal.description} />
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-wrap items-center gap-2 sm:gap-3 lg:gap-6 border-t border-white/10 pt-3 sm:pt-4 text-sm leading-none lg:leading-normal">

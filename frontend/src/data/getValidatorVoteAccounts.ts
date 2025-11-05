@@ -1,10 +1,9 @@
-import { BlockchainParams } from "@/chain";
 import { ValidatorVoteAccountData } from "@/types";
 import { Connection, VoteAccountInfo } from "@solana/web3.js";
 import { BN } from "bn.js";
 
 export const getValidatorVoteAccounts = async (
-  { endpoint }: BlockchainParams,
+  endpoint: string,
   validatorPubkey: string | undefined
 ) => {
   const connection = new Connection(endpoint, "confirmed");
