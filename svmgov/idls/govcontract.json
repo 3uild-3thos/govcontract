@@ -32,6 +32,49 @@
       "args": []
     },
     {
+      "name": "adjust_epochs",
+      "discriminator": [
+        125,
+        172,
+        203,
+        164,
+        101,
+        34,
+        202,
+        182
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "signer": true
+        },
+        {
+          "name": "proposal",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "creation_epoch",
+          "type": {
+            "option": "u64"
+          }
+        },
+        {
+          "name": "start_epoch",
+          "type": {
+            "option": "u64"
+          }
+        },
+        {
+          "name": "end_epoch",
+          "type": {
+            "option": "u64"
+          }
+        }
+      ]
+    },
+    {
       "name": "cast_vote",
       "discriminator": [
         20,

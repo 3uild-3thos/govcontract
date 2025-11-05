@@ -3,7 +3,7 @@ use std::str::FromStr;
 use anchor_client::solana_sdk::{pubkey::Pubkey, signer::Signer, transaction::Transaction};
 use anchor_lang::system_program;
 use anyhow::Result;
-use gov_v1::{ID as SNAPSHOT_PROGRAM_ID, MetaMerkleLeaf, MetaMerkleProof};
+use gov_v1::{MetaMerkleLeaf, MetaMerkleProof};
 use log::info;
 
 use crate::{
@@ -58,8 +58,7 @@ pub async fn create_proposal(
     }
 
     info!(
-        "snapshot_program: {:?} consensus_result: {:?}, meta_merkle_proof: {:?}",
-        SNAPSHOT_PROGRAM_ID.to_string(),
+        "consensus_result: {:?}, meta_merkle_proof: {:?}",
         consensus_result_pda.to_string(),
         meta_merkle_proof_pda.to_string(),
     );
@@ -146,9 +145,6 @@ pub async fn create_proposal(
             spl_vote_account: vote_account,
             proposal: proposal_pda,
             proposal_index: proposal_index_pda,
-            snapshot_program: SNAPSHOT_PROGRAM_ID,
-            consensus_result: consensus_result_pda,
-            meta_merkle_proof: meta_merkle_proof_pda,
             system_program: system_program::ID,
         })
         .instructions()?;

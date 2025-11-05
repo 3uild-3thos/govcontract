@@ -212,6 +212,33 @@ enum Commands {
     },
 
     #[command(
+        about = "Adjust proposal epochs (creation, start, end)",
+        long_about = "This command allows the proposal author to adjust the creation, start, and end epochs of a proposal. \
+                      Only the original proposal author can adjust epochs, and only before voting has started. \
+                      You can adjust any combination of epochs by providing the optional flags.\n\n\
+                      Examples:\n\
+                      $ svmgov --identity-keypair /path/to/key.json adjust-epochs --proposal-id \"123\" --start-epoch 100 --end-epoch 103\n\
+                      $ svmgov --identity-keypair /path/to/key.json adjust-epochs --proposal-id \"123\" --creation-epoch 95"
+    )]
+    AdjustEpochs {
+        /// Proposal ID to adjust epochs for
+        #[arg(long, help = "Proposal ID")]
+        proposal_id: String,
+
+        /// New creation epoch (optional)
+        #[arg(long, help = "New creation epoch")]
+        creation_epoch: Option<u64>,
+
+        /// New start epoch (optional)
+        #[arg(long, help = "New start epoch")]
+        start_epoch: Option<u64>,
+
+        /// New end epoch (optional)
+        #[arg(long, help = "New end epoch")]
+        end_epoch: Option<u64>,
+    },
+
+    #[command(
         about = "Display a proposal and it's details",
         long_about = "This command retrieves and displays a governance proposal and it's details from the Solana Validator Governance program. \
                       An optional RPC URL can be provided to connect to the chain; otherwise, a default URL is used.\n\n\
@@ -432,23 +459,6 @@ enum Commands {
         vote_account: String,
     },
 
-    #[command(
-        about = "Add merkle root hash to a proposal for verification",
-        long_about = "This command adds a merkle root hash to a proposal for stake verification. \
-                      It requires the proposal ID and the merkle root hash as a hex string. \
-                      Only the original proposal author can call this command.\n\n\
-                      Example:\n\
-                      $ svmgov --identity-keypair /path/to/key.json add-merkle-root --proposal-id \"123\" --merkle-root \"0x1234567890abcdef...\""
-    )]
-    AddMerkleRoot {
-        /// Proposal ID to add the merkle root to
-        #[arg(long, help = "Proposal ID")]
-        proposal_id: String,
-
-        /// Merkle root hash as a hex string
-        #[arg(long, help = "Merkle root hash (hex string)")]
-        merkle_root: String,
-    },
 }
 
 async fn handle_command(cli: Cli) -> Result<()> {
@@ -548,6 +558,22 @@ async fn handle_command(cli: Cli) -> Result<()> {
             )
             .await?;
         }
+        Commands::AdjustEpochs {
+            proposal_id,
+            creation_epoch,
+            start_epoch,
+            end_epoch,
+        } => {
+            instructions::adjust_epochs(
+                proposal_id.to_string(),
+                *creation_epoch,
+                *start_epoch,
+                *end_epoch,
+                cli.identity_keypair,
+                cli.rpc_url,
+            )
+            .await?;
+        }
         Commands::ListProposals {
             status,
             limit,
@@ -632,18 +658,6 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 vote_account.clone(),
                 snapshot_slot.clone(),
                 network.clone(),
-            )
-            .await?;
-        }
-        Commands::AddMerkleRoot {
-            proposal_id,
-            merkle_root,
-        } => {
-            instructions::add_merkle_root(
-                proposal_id.to_string(),
-                merkle_root.to_string(),
-                cli.identity_keypair,
-                cli.rpc_url,
             )
             .await?;
         }

@@ -111,4 +111,15 @@ pub mod govcontract {
 
         Ok(())
     }
+
+    pub fn adjust_epochs(
+        ctx: Context<AdjustEpochs>,
+        creation_epoch: Option<u64>,
+        start_epoch: Option<u64>,
+        end_epoch: Option<u64>,
+    ) -> Result<()> {
+        ctx.accounts
+            .adjust_epochs(creation_epoch, start_epoch, end_epoch)?;
+        Ok(())
+    }
 }
