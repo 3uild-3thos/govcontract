@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/govcontract.json`.
  */
 export type Govcontract = {
-  address: "DUWGu3sMy4ymJWwUs53eaCyNzZRFoxhmi3Ggf1kh8Q61";
+  address: "3GBS7ZjQV5cKfsazbA2CSGm8kVQjjT6ow9XxZtSxRH3G";
   metadata: {
     name: "govcontract";
     version: "0.1.0";
@@ -18,7 +18,7 @@ export type Govcontract = {
       discriminator: [235, 31, 120, 49, 53, 9, 197, 147];
       accounts: [
         {
-          name: "signer";
+          name: "consensusResult";
           signer: true;
         },
         {
@@ -26,14 +26,7 @@ export type Govcontract = {
           writable: true;
         }
       ];
-      args: [
-        {
-          name: "merkleRootHash";
-          type: {
-            array: ["u8", 32];
-          };
-        }
-      ];
+      args: [];
     },
     {
       name: "castVote";
@@ -345,15 +338,6 @@ export type Govcontract = {
         },
         {
           name: "splVoteAccount";
-        },
-        {
-          name: "snapshotProgram";
-        },
-        {
-          name: "consensusResult";
-        },
-        {
-          name: "metaMerkleProof";
         },
         {
           name: "systemProgram";
@@ -680,15 +664,6 @@ export type Govcontract = {
           name: "splVoteAccount";
         },
         {
-          name: "snapshotProgram";
-        },
-        {
-          name: "consensusResult";
-        },
-        {
-          name: "metaMerkleProof";
-        },
-        {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
         }
@@ -964,10 +939,6 @@ export type Govcontract = {
             type: "pubkey";
           },
           {
-            name: "author";
-            type: "pubkey";
-          },
-          {
             name: "merkleRootHash";
             type: {
               array: ["u8", 32];
@@ -1070,6 +1041,12 @@ export type Govcontract = {
             name: "snapshotSlot";
             docs: ["Slot number when the validator stake snapshot was taken"];
             type: "u64";
+          },
+          {
+            name: "ballotId";
+            type: {
+              option: "u64";
+            };
           }
         ];
       };
@@ -1186,6 +1163,10 @@ export type Govcontract = {
           {
             name: "votingActivated";
             type: "bool";
+          },
+          {
+            name: "snapshotSlot";
+            type: "u64";
           }
         ];
       };
@@ -1404,6 +1385,10 @@ export type Govcontract = {
       type: {
         kind: "struct";
         fields: [
+          {
+            name: "delegator";
+            type: "pubkey";
+          },
           {
             name: "stakeAccount";
             type: "pubkey";
