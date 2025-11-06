@@ -1,10 +1,10 @@
 import React from "react";
-import { useVoteProposals } from "@/hooks";
+import { useStakerVotedProposals } from "@/hooks";
 import { StakeAccountData } from "@/types/stakeAccounts";
 import { Card } from "@/components/ui/Card";
 import { CopyableAddress } from "@/components/governance/shared/CopyableAddress";
 import { formatLamportsDisplay } from "@/lib/governance/formatters";
-import { ProposalDescription } from "@/components/proposals/ProposalDescription";
+import Link from "next/link";
 
 interface StakeAccountVoteProposalsProps {
   stakeAccount: StakeAccountData;
@@ -17,7 +17,7 @@ export function StakeAccountVoteProposals({
     data: voteProposals,
     isLoading,
     error,
-  } = useVoteProposals(stakeAccount);
+  } = useStakerVotedProposals(stakeAccount);
 
   if (isLoading) {
     return (
@@ -57,7 +57,7 @@ export function StakeAccountVoteProposals({
         <h4 className="text-sm font-semibold text-white/80">
           Proposals Participated In ({voteProposals.length})
         </h4>
-        <p className="text-xs text-white/60">
+        <div className="text-xs text-white/60">
           Votes cast by validator{" "}
           {stakeAccount.voteAccount ? (
             <CopyableAddress
@@ -69,7 +69,7 @@ export function StakeAccountVoteProposals({
             "Unknown"
           )}{" "}
           using delegated stake power
-        </p>
+        </div>
       </div>
 
       <div className="space-y-3">
@@ -81,9 +81,16 @@ export function StakeAccountVoteProposals({
             <div className="space-y-2">
               {/* Proposal Title */}
               <div className="flex items-start justify-between">
-                <h5 className="text-sm font-medium text-white/90 line-clamp-2">
-                  {voteProposal.proposal.title}
-                </h5>
+                <Link
+                  href={`/proposals/${voteProposal.proposal.publicKey.toBase58()}`}
+                  className="space-y-3 block"
+                >
+                  <h3 className="h3 whitespace-pre-wrap text-lg font-semibold tracking-tight text-white sm:text-xl hover-gradient-text transition-all duration-200">
+                    {voteProposal.proposal.simd &&
+                      `${voteProposal.proposal.simd}: `}
+                    {voteProposal.proposal.title}
+                  </h3>
+                </Link>
                 <span
                   className={`text-xs px-2 py-1 rounded-full ${
                     voteProposal.proposal.status === "voting"
@@ -98,9 +105,9 @@ export function StakeAccountVoteProposals({
               </div>
 
               {/* Proposal Description */}
-              <ProposalDescription
+              {/* <ProposalDescription
                 githubUrl={voteProposal.proposal.description}
-              />
+              /> */}
 
               {/* Vote Details */}
               <div className="flex items-center justify-between pt-2 border-t border-white/10">
@@ -133,7 +140,7 @@ export function StakeAccountVoteProposals({
                   Total:{" "}
                   {
                     formatLamportsDisplay(
-                      voteProposal.voteAccount.stake?.toNumber() || 0
+                      voteProposal.voteAccount.stakeAmount?.toNumber() || 0
                     ).value
                   }
                 </div>

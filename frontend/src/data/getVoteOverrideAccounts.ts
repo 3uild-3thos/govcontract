@@ -1,36 +1,52 @@
 import { createProgramWitDummyWallet, VoteOverrideAccount } from "@/chain";
 import { VoteOverrideAccountData } from "@/types";
 import { ProgramAccount } from "@coral-xyz/anchor";
+import { MemcmpFilter } from "@solana/web3.js";
+
+interface GetVoteOverrideFilter {
+  name: "delegator" | "proposal" | "validator" | "stakeAccount";
+  value: string;
+}
+
+export type GetVoteOverrideFilters = GetVoteOverrideFilter[];
+
+const filterOffsetMap = {
+  delegator: 8, // 8 bytes discriminator
+  stakeAccount: 40, // 8 bytes discriminator + 32 bytes delegator
+  validator: 72, // 8 bytes discriminator + 32 bytes delegator + 32 bytes stakeAccount
+  proposal: 104, // 8 bytes discriminator + 32 bytes delegator + 32 bytes stakeAccount + 32 bytes validator
+};
+
+export function filtersToMemcmp(
+  filters: GetVoteOverrideFilters
+): MemcmpFilter[] {
+  return filters
+    .filter((f) => typeof f.value === "string" && !!f.value)
+    .map((f) => ({
+      memcmp: {
+        offset: filterOffsetMap[f.name],
+        bytes: f.value,
+      },
+    }));
+}
 
 export const getVoteOverrideAccounts = async (
   endpoint: string,
-  proposalPublicKey: string | undefined,
-  userPubkey: string | undefined
+  filters: GetVoteOverrideFilters
 ): Promise<VoteOverrideAccountData[]> => {
-  if (proposalPublicKey === undefined)
-    throw new Error("Proposal public key is not loaded");
-
-  if (userPubkey === undefined)
-    throw new Error("Proposal public key is not loaded");
+  if (filters.length === 0) {
+    throw new Error(
+      "getVoteOverrideAccounts: At least one filter is required. Cannot fetch all voteOverride accounts."
+    );
+  }
 
   const program = createProgramWitDummyWallet(endpoint);
 
-  const voteOverrideAccs = await program.account.voteOverride.all([
-    {
-      memcmp: {
-        // delegator is at offset 8 (discriminator) in VoteOverride account
-        offset: 8,
-        bytes: userPubkey,
-      },
-    },
-    {
-      memcmp: {
-        // proposal is at offset 104 (8 discriminator + 32 delegator + 32 stakeAccount + 32 validator)
-        offset: 104,
-        bytes: proposalPublicKey,
-      },
-    },
-  ]);
+  const memcmpFilters = filtersToMemcmp(filters);
+
+  const voteOverrideAccs = await program.account.voteOverride.all(
+    memcmpFilters
+  );
 
   console.log("voteOverrideAccs", voteOverrideAccs);
 
@@ -47,6 +63,7 @@ function mapVoteOverrideAccountDto(
   const raw = rawAccount.account;
 
   return {
+    publicKey: rawAccount.publicKey,
     delegator: raw.delegator,
     stakeAccount: raw.stakeAccount,
     validator: raw.validator,

@@ -1,9 +1,4 @@
-import {
-  createProgramWitDummyWallet,
-  deriveVotePda,
-  GOVCONTRACT_PROGRAM_ID,
-  VoteAccount,
-} from "@/chain";
+import { createProgramWitDummyWallet, VoteAccount } from "@/chain";
 import { ValidatorVoteAccountData, VoteAccountData } from "@/types";
 
 import { PublicKey } from "@solana/web3.js";
@@ -12,7 +7,7 @@ export const getValidatorProposalVoteAccount = async (
   endpoint: string,
   proposalPublicKey: string | undefined,
   voteAccount: ValidatorVoteAccountData | undefined
-): Promise<VoteAccountData | undefined> => {
+): Promise<VoteAccountData | null> => {
   if (proposalPublicKey === undefined)
     throw new Error("Proposal public key is not loaded");
 
@@ -21,37 +16,48 @@ export const getValidatorProposalVoteAccount = async (
   const program = createProgramWitDummyWallet(endpoint);
   const proposalPubkey = new PublicKey(proposalPublicKey);
 
-  const splVoteAccount = new PublicKey(voteAccount.voteAccount);
-  const validatorVotePda = deriveVotePda(
-    proposalPubkey,
-    splVoteAccount,
-    GOVCONTRACT_PROGRAM_ID
-  );
+  const validatorPubkey = new PublicKey(voteAccount.nodePubkey);
 
-  // Try to fetch. If not found, throw an error clearly showing both addresses.
-  try {
-    const voteAccountData = await program.account.vote.fetch(validatorVotePda);
+  // Filter by validator (offset 8) and proposal (offset 40)
+  // Vote account structure: 8 bytes discriminator + 32 bytes validator + 32 bytes proposal + ...
+  const voteAccounts = await program.account.vote.all([
+    {
+      memcmp: {
+        offset: 8, // Validator field offset (after 8-byte discriminator)
+        bytes: validatorPubkey.toBase58(),
+      },
+    },
+    {
+      memcmp: {
+        offset: 40, // Proposal field offset (8 discriminator + 32 validator)
+        bytes: proposalPubkey.toBase58(),
+      },
+    },
+  ]);
 
-    return mapVoteOverrideAccountDto(voteAccountData);
-  } catch (error) {
-    console.error(
-      Error(
-        `Failed to fetch vote account at PDA: ${validatorVotePda.toBase58()}\n` +
-          `SPL vote account: ${splVoteAccount.toBase58()}\n` +
-          `Original error: ${
-            error instanceof Error ? error.message : String(error)
-          }`
-      )
+  if (voteAccounts.length === 0) {
+    console.warn(
+      `No vote account found for validator ${validatorPubkey.toBase58()} and proposal ${proposalPubkey.toBase58()}`
     );
-
-    return undefined;
+    return null;
   }
+
+  // Should only be one result since PDA is unique per (proposal, spl_vote_account)
+  if (voteAccounts.length > 1) {
+    console.warn(
+      `Multiple vote accounts found for validator ${validatorPubkey.toBase58()} and proposal ${proposalPubkey.toBase58()}, using first one`
+    );
+  }
+
+  console.log("validator voteAccounts", voteAccounts);
+
+  return mapVoteAccountDto(voteAccounts[0].account);
 };
 
 /**
  * Maps raw on-chain vote account to internal type.
  */
-function mapVoteOverrideAccountDto(raw: VoteAccount): VoteAccountData {
+function mapVoteAccountDto(raw: VoteAccount): VoteAccountData {
   return {
     validator: raw.validator,
     proposal: raw.proposal,

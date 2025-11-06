@@ -15,6 +15,7 @@ import ErrorMessage from "./shared/ErrorMessage";
 import { VoteDistributionControls } from "./shared/VoteDistributionControls";
 import {
   useCastVote,
+  useValidatorVotingPower,
   useVoteDistribution,
   useWalletRole,
   VoteDistribution,
@@ -61,8 +62,9 @@ export function CastVoteModal({
   const wallet = useAnchorWallet();
 
   const { walletRole } = useWalletRole(wallet?.publicKey?.toBase58());
-  const votingPower = 1000;
-  const isLoadingVotingPower = false;
+
+  const { votingPower, isLoading: isLoadingVotingPower } =
+    useValidatorVotingPower(wallet?.publicKey?.toBase58());
 
   const { mutate: castVote } = useCastVote();
 

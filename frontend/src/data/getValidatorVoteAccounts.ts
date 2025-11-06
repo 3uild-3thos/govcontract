@@ -1,6 +1,5 @@
 import { ValidatorVoteAccountData } from "@/types";
 import { Connection, VoteAccountInfo } from "@solana/web3.js";
-import { BN } from "bn.js";
 
 export const getValidatorVoteAccounts = async (
   endpoint: string,
@@ -12,6 +11,7 @@ export const getValidatorVoteAccounts = async (
     throw new Error("User public key is required");
   }
 
+  // TODO: use get validator hook already fetches this info, so we don't need to fetch it here. use that hook instead
   const voteAccounts = await connection.getVoteAccounts();
   const validatorVoteAccount = voteAccounts.current.find(
     (acc) => acc.nodePubkey === validatorPubkey
@@ -22,6 +22,7 @@ export const getValidatorVoteAccounts = async (
       `No SPL vote account found for validator identity ${validatorPubkey}`
     );
   }
+
   return mapValidatorVoteAccountDto(validatorVoteAccount);
 };
 
@@ -30,7 +31,7 @@ function mapValidatorVoteAccountDto(
 ): ValidatorVoteAccountData {
   return {
     voteAccount: raw.votePubkey,
-    activeStake: new BN(`${raw.activatedStake}`),
+    activeStake: raw.activatedStake,
     nodePubkey: raw.nodePubkey,
   };
 }

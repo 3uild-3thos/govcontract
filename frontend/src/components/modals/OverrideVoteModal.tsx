@@ -18,7 +18,7 @@ import {
   useVoteDistribution,
   useWalletRole,
   VoteDistribution,
-  useWalletVoteOverrideAccounts,
+  useVoteOverrideAccounts,
 } from "@/hooks";
 import { toast } from "sonner";
 import { WalletRole } from "@/types";
@@ -35,6 +35,8 @@ import {
   formatAddress,
   formatLamportsDisplay,
 } from "@/lib/governance/formatters";
+import { GetVoteOverrideFilters } from "@/data";
+import { PublicKey } from "@solana/web3.js";
 
 interface OverrideVoteModalProps {
   proposalId?: string;
@@ -42,6 +44,32 @@ interface OverrideVoteModalProps {
   initialVoteDist?: VoteDistribution;
   isOpen: boolean;
   onClose: () => void;
+}
+
+/**
+ * Builds vote override filters for a specific proposal and delegator
+ */
+function buildVoteOverrideFilters(
+  proposalPublicKey: string | undefined,
+  delegatorPublicKey: PublicKey | null
+): GetVoteOverrideFilters {
+  const filters: GetVoteOverrideFilters = [];
+
+  if (proposalPublicKey) {
+    filters.push({
+      name: "proposal" as const,
+      value: proposalPublicKey,
+    });
+  }
+
+  if (delegatorPublicKey) {
+    filters.push({
+      name: "delegator" as const,
+      value: delegatorPublicKey.toBase58(),
+    });
+  }
+
+  return filters;
 }
 
 export function OverrideVoteModal({
@@ -71,11 +99,13 @@ export function OverrideVoteModal({
   const { data: stakeAccounts } = useWalletStakeAccounts(
     wallet?.publicKey?.toBase58()
   );
-
-  const { data: voteOverrideAccounts = [] } = useWalletVoteOverrideAccounts(
+  const voteOverrideFilters = buildVoteOverrideFilters(
     proposalId,
-    wallet?.publicKey.toBase58()
+    wallet?.publicKey ?? null
   );
+
+  const { data: voteOverrideAccounts = [] } =
+    useVoteOverrideAccounts(voteOverrideFilters);
 
   console.log("stakeAccounts", stakeAccounts);
 

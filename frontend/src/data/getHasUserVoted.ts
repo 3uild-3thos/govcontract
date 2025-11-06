@@ -21,7 +21,7 @@ export const getVoteOverrideByStakeAccount = (
 
 export const getUserHasVoted = async (
   voteOverrideAccounts: VoteOverrideAccountData[],
-  voteAccount: VoteAccountData | undefined
+  voteAccount: VoteAccountData | undefined | null
 ): Promise<boolean> => {
   return voteOverrideAccounts.length > 0 || !!voteAccount;
 };

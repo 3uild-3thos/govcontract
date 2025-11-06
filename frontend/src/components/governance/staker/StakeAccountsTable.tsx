@@ -285,7 +285,7 @@ export function StakeAccountsTable({
                     <Fragment key={row.id}>
                       {/* Main Row */}
                       <TableRow
-                        className="border-white/10 hover:bg-white/5 sm:hover:bg-transparent cursor-pointer sm:cursor-default"
+                        className="border-white/10 cursor-pointer sm:cursor-default"
                         onClick={() => handleRowClick(row.original)}
                       >
                         {row.getVisibleCells().map((cell) => {
@@ -333,7 +333,7 @@ export function StakeAccountsTable({
 
                       {/* Expanded Content Row */}
                       {isExpanded && (
-                        <TableRow className="border-white/10">
+                        <TableRow className="border-white/10 hover:bg-transparent">
                           <TableCell
                             colSpan={columns.length + 1}
                             className="p-0 bg-white/2"

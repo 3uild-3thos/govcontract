@@ -1,8 +1,6 @@
-import BN from "bn.js";
-
 export interface ValidatorVoteAccountData {
   voteAccount: string;
-  activeStake: BN;
+  activeStake: number;
   nodePubkey: string;
 }
 

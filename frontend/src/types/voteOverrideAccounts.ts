@@ -3,6 +3,7 @@ import { PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 
 export interface VoteOverrideAccountData {
+  publicKey: PublicKey;
   stakeAccount: PublicKey;
   delegator: PublicKey;
   validator: PublicKey;

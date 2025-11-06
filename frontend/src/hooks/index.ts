@@ -10,7 +10,7 @@ export * from "./useProposals";
 export * from "./useProposalDetails";
 export * from "./useVoteAccounts";
 export * from "./useValidatorProposalVoteAccount";
-export * from "./useWalletVoteOverrideAccounts";
+export * from "./useVoteOverrideAccounts";
 export * from "./useCastVote";
 export * from "./useCastVoteOverride";
 export * from "./useModifyVote";
@@ -25,6 +25,7 @@ export * from "./useProposalVotes";
 export * from "./useHasUserVoted";
 
 export * from "./useStakerVotingPower";
+export * from "./useValidatorVotingPower";
 
 export * from "./useProposalVoteBreakdown";
 
@@ -34,7 +35,8 @@ export * from "./useProposalSimdDescription";
 
 export * from "./useProposalOverviewStats";
 export * from "./useSummaryStats";
-export * from "./useVoteProposals";
+
+export * from "./useStakerVotedProposals";
 
 export * from "./useWalletStakeAccounts";
 

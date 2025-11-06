@@ -1,12 +1,39 @@
 import { useEndpoint } from "@/contexts/EndpointContext";
-import { getUserHasVoted } from "@/data";
+import { getUserHasVoted, GetVoteOverrideFilters } from "@/data";
 import { GET_USER_HAS_VOTED } from "@/helpers";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useQuery } from "@tanstack/react-query";
-import { useWalletVoteOverrideAccounts } from "./useWalletVoteOverrideAccounts";
+import { PublicKey } from "@solana/web3.js";
+import { useVoteOverrideAccounts } from "./useVoteOverrideAccounts";
 import { useWalletRole } from "./useWalletRole";
 import { WalletRole } from "@/types";
 import { useValidatorProposalVoteAccount } from "./useValidatorProposalVoteAccount";
+
+/**
+ * Builds vote override filters for a specific proposal and delegator
+ */
+function buildVoteOverrideFilters(
+  proposalPublicKey: string | undefined,
+  delegatorPublicKey: PublicKey | null
+): GetVoteOverrideFilters {
+  const filters: GetVoteOverrideFilters = [];
+
+  if (proposalPublicKey) {
+    filters.push({
+      name: "proposal" as const,
+      value: proposalPublicKey,
+    });
+  }
+
+  if (delegatorPublicKey) {
+    filters.push({
+      name: "delegator" as const,
+      value: delegatorPublicKey.toBase58(),
+    });
+  }
+
+  return filters;
+}
 
 export const useHasUserVoted = (
   proposalPublicKey: string | undefined,
@@ -19,20 +46,22 @@ export const useHasUserVoted = (
 
   const isValidator = walletRole === WalletRole.VALIDATOR;
   const isStaker = walletRole === WalletRole.STAKER;
+  const isBoth = walletRole === WalletRole.BOTH;
 
-  const isBoth = isValidator && isStaker;
-
-  const fetchVoteOverrideEnabled = isBoth || isStaker;
   const fetchVoteAccountsEnabled = isBoth || isValidator;
+
+  const voteOverrideFilters = buildVoteOverrideFilters(
+    proposalPublicKey,
+    publicKey
+  );
+
+  const fetchVoteOverrideEnabled =
+    (isBoth || isStaker) && voteOverrideFilters.length > 0; // at least one filter is required
 
   const {
     data: voteOverrideAccounts = [],
     isLoading: isLoadingVoteOverrideAccounts,
-  } = useWalletVoteOverrideAccounts(
-    proposalPublicKey,
-    publicKey?.toBase58(),
-    fetchVoteOverrideEnabled
-  );
+  } = useVoteOverrideAccounts(voteOverrideFilters, fetchVoteOverrideEnabled);
 
   const { data: voteAccount, isLoading: isLoadingVoteAccount } =
     useValidatorProposalVoteAccount(
