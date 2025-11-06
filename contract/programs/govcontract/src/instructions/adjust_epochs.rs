@@ -8,8 +8,6 @@ pub struct AdjustEpochs<'info> {
     #[account(
         mut,
         constraint = signer.key() == proposal.author @ GovernanceError::UnauthorizedMerkleRootUpdate,
-        constraint = !proposal.finalized @ GovernanceError::ProposalFinalized,
-        constraint = !proposal.voting @ GovernanceError::CannotModifyAfterStart,
     )]
     pub proposal: Account<'info, Proposal>,
 }
@@ -21,7 +19,6 @@ impl<'info> AdjustEpochs<'info> {
         start_epoch: Option<u64>,
         end_epoch: Option<u64>,
     ) -> Result<()> {
-        // Update epochs if provided
         if let Some(epoch) = creation_epoch {
             self.proposal.creation_epoch = epoch;
         }
