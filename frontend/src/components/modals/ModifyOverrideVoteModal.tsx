@@ -102,9 +102,9 @@ export function ModifyOverrideVoteModal({
   };
 
   const handleError = (err: Error) => {
-    console.log("error mutating cast vote:", err);
-    toast.error(`Error voting for proposal ${proposalId}`);
-    setError(err instanceof Error ? err.message : "Failed to cast vote");
+    console.log("error mutating modify vote:", err);
+    toast.error(`Error modifying for proposal ${proposalId}`);
+    setError(err instanceof Error ? err.message : "Failed to modify vote");
     setIsLoading(false);
   };
 

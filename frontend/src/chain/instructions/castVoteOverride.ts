@@ -14,6 +14,9 @@ import {
   convertMerkleProofStrings,
   convertStakeMerkleLeafDataToIdlType,
   validateVoteBasisPoints,
+  deriveVotePda,
+  deriveVoteOverridePda,
+  deriveVoteOverrideCachePda,
 } from "./helpers";
 import { BN } from "@coral-xyz/anchor";
 
@@ -143,6 +146,25 @@ export async function castVoteOverride(
   const againstVotesBn = new BN(againstVotesBp);
   const abstainVotesBn = new BN(abstainVotesBp);
 
+  const votePda = deriveVotePda(
+    proposalPubkey,
+    splVoteAccount,
+    program.programId
+  );
+
+  const voteOverridePda = deriveVoteOverridePda(
+    proposalPubkey,
+    stakeAccountPubkey,
+    votePda,
+    program.programId
+  );
+
+  const voteOverrideCachePda = deriveVoteOverrideCachePda(
+    proposalPubkey,
+    votePda,
+    program.programId
+  );
+
   // Build cast vote override instruction
   const castVoteOverrideInstruction = await program.methods
     .castVoteOverride(
@@ -152,7 +174,7 @@ export async function castVoteOverride(
       stakeMerkleProofVec,
       stakeMerkleLeaf
     )
-    .accounts({
+    .accountsStrict({
       signer: wallet.publicKey,
       splVoteAccount: splVoteAccount,
       splStakeAccount: stakeAccountPubkey,
@@ -160,6 +182,10 @@ export async function castVoteOverride(
       consensusResult: consensusResultPda,
       metaMerkleProof: metaMerkleProofPda,
       snapshotProgram: SNAPSHOT_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+      voteOverride: voteOverridePda,
+      voteOverrideCache: voteOverrideCachePda,
+      validatorVote: votePda,
     })
     .instruction();
 

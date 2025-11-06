@@ -1,9 +1,4 @@
-import {
-  PublicKey,
-  SystemProgram,
-  TransactionInstruction,
-  Transaction,
-} from "@solana/web3.js";
+import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import {
   ModifyVoteOverrideParams,
   TransactionResult,
@@ -19,6 +14,9 @@ import {
   convertMerkleProofStrings,
   convertStakeMerkleLeafDataToIdlType,
   validateVoteBasisPoints,
+  deriveVoteOverridePda,
+  deriveVoteOverrideCachePda,
+  deriveVotePda,
 } from "./helpers";
 import { BN } from "@coral-xyz/anchor";
 
@@ -38,6 +36,7 @@ export async function modifyVoteOverride(
     stakeAccount,
     wallet,
     voteAccount,
+    ballotId,
   } = params;
 
   if (!wallet || !wallet.publicKey) {
@@ -65,7 +64,11 @@ export async function modifyVoteOverride(
   ]);
 
   const [consensusResultPda, metaMerkleProofPda] =
-    generatePdasFromVoteProofResponse(metaMerkleProof, SNAPSHOT_PROGRAM_ID, 4);
+    generatePdasFromVoteProofResponse(
+      metaMerkleProof,
+      SNAPSHOT_PROGRAM_ID,
+      ballotId
+    );
 
   // Check if merkle account exists
   const merkleAccountInfo = await program.provider.connection.getAccountInfo(
@@ -73,9 +76,8 @@ export async function modifyVoteOverride(
     "confirmed"
   );
 
-  const instructions: TransactionInstruction[] = [];
-
   if (!merkleAccountInfo) {
+    console.log("merkle proof does not exist, initializing");
     const govV1Program = createGovV1ProgramWithWallet(
       wallet,
       blockchainParams.endpoint
@@ -116,7 +118,21 @@ export async function modifyVoteOverride(
       })
       .instruction();
 
-    instructions.push(initMerkleInstruction);
+    const recentBlockhash =
+      await program.provider.connection.getLatestBlockhash("confirmed");
+
+    const transaction = new Transaction();
+    transaction.add(initMerkleInstruction);
+    transaction.feePayer = wallet.publicKey;
+    transaction.recentBlockhash = recentBlockhash.blockhash;
+
+    const tx = await wallet.signTransaction(transaction);
+
+    const signature = await program.provider.connection.sendRawTransaction(
+      tx.serialize(),
+      { preflightCommitment: "confirmed" }
+    );
+    console.log("signature initMerkleInstruction", signature);
   }
 
   // Convert merkle proof data
@@ -131,6 +147,25 @@ export async function modifyVoteOverride(
   const againstVotesBn = new BN(againstVotesBp);
   const abstainVotesBn = new BN(abstainVotesBp);
 
+  const votePda = deriveVotePda(
+    proposalPubkey,
+    splVoteAccount,
+    program.programId
+  );
+
+  const voteOverridePda = deriveVoteOverridePda(
+    proposalPubkey,
+    stakeAccountPubkey,
+    votePda,
+    program.programId
+  );
+
+  const voteOverrideCachePda = deriveVoteOverrideCachePda(
+    proposalPubkey,
+    votePda,
+    program.programId
+  );
+
   // Build modify vote override instruction
   const modifyVoteOverrideInstruction = await program.methods
     .modifyVoteOverride(
@@ -140,7 +175,7 @@ export async function modifyVoteOverride(
       stakeMerkleProofVec,
       stakeMerkleLeaf
     )
-    .accounts({
+    .accountsStrict({
       signer: wallet.publicKey,
       splVoteAccount: splVoteAccount,
       splStakeAccount: stakeAccountPubkey,
@@ -148,13 +183,15 @@ export async function modifyVoteOverride(
       consensusResult: consensusResultPda,
       metaMerkleProof: metaMerkleProofPda,
       snapshotProgram: SNAPSHOT_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+      voteOverride: voteOverridePda,
+      voteOverrideCache: voteOverrideCachePda,
+      validatorVote: votePda,
     })
     .instruction();
 
-  instructions.push(modifyVoteOverrideInstruction);
-
   const transaction = new Transaction();
-  transaction.add(...instructions);
+  transaction.add(modifyVoteOverrideInstruction);
   transaction.feePayer = wallet.publicKey;
   transaction.recentBlockhash = (
     await program.provider.connection.getLatestBlockhash("confirmed")
@@ -162,6 +199,20 @@ export async function modifyVoteOverride(
 
   const tx = await wallet.signTransaction(transaction);
 
+  //   error mutating modify vote: SendTransactionError: Simulation failed.
+  // Message: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x177c.
+  // Logs:
+  // [
+  //   "Program 3GBS7ZjQV5cKfsazbA2CSGm8kVQjjT6ow9XxZtSxRH3G invoke [1]",
+  //   "Program log: Instruction: ModifyVoteOverride",
+  //   "Program F3ZY8uXns4UDorFc9FASojnecMTq5yT5QakrjdocxTLF invoke [2]",
+  //   "Program log: Instruction: VerifyMerkleProof",
+  //   "Program F3ZY8uXns4UDorFc9FASojnecMTq5yT5QakrjdocxTLF consumed 7250 of 182371 compute units",
+  //   "Program F3ZY8uXns4UDorFc9FASojnecMTq5yT5QakrjdocxTLF success",
+  //   "Program log: AnchorError thrown in programs/govcontract/src/instructions/modify_vote_override.rs:218. Error Code: InvalidVoteAccount. Error Number: 6012. Error Message: Invalid vote account, proposal id mismatch.",
+  //   "Program 3GBS7ZjQV5cKfsazbA2CSGm8kVQjjT6ow9XxZtSxRH3G consumed 27902 of 200000 compute units",
+  //   "Program 3GBS7ZjQV5cKfsazbA2CSGm8kVQjjT6ow9XxZtSxRH3G failed: custom program error: 0x177c"
+  // ].
   const signature = await program.provider.connection.sendRawTransaction(
     tx.serialize(),
     { preflightCommitment: "confirmed" }
