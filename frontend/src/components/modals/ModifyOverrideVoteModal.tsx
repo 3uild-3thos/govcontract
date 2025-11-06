@@ -51,14 +51,15 @@ export function ModifyOverrideVoteModal({
 }: OverrideVoteModalProps) {
   const [proposalId, setProposalId] = useState(initialProposalId);
 
-  const [customStakeAccount, setCustomStakeAccount] = useState<
+  const [selectedStakeAccount, setSelectedStakeAccount] = useState<
     string | undefined
   >(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
 
-  // TODO: PEDRO initialize this after getting previously casted vote info
-  const initialVoteDist: VoteDistribution | undefined = undefined;
+  const [initialVoteDist, setInitialVoteDist] = useState<
+    VoteDistribution | undefined
+  >(undefined);
 
   const {
     distribution,
@@ -84,12 +85,28 @@ export function ModifyOverrideVoteModal({
 
   const { mutate: modifyVoteOverride } = useModifyVoteOverride();
 
-  const isValidStakeAccount = customStakeAccount !== undefined;
+  const isValidStakeAccount = selectedStakeAccount !== undefined;
+
+  useEffect(() => {
+    if (selectedStakeAccount) {
+      const selectedStakeAccountVote = voteOverrideAccounts.find(
+        (voa) => voa.stakeAccount.toBase58() === selectedStakeAccount
+      );
+      if (selectedStakeAccountVote) {
+        const voteDistribution: VoteDistribution = {
+          for: selectedStakeAccountVote.forVotesBp.toNumber() / 100,
+          against: selectedStakeAccountVote.againstVotesBp.toNumber() / 100,
+          abstain: selectedStakeAccountVote.abstainVotesBp.toNumber() / 100,
+        };
+        setInitialVoteDist(voteDistribution);
+      }
+    }
+  }, [selectedStakeAccount, voteOverrideAccounts]);
 
   useEffect(() => {
     if (isOpen) {
       setProposalId(initialProposalId);
-      setCustomStakeAccount(undefined);
+      setSelectedStakeAccount(undefined);
       resetDistribution();
       setError(undefined);
     }
@@ -129,13 +146,11 @@ export function ModifyOverrideVoteModal({
         return;
       }
 
-      const stakeAccount = customStakeAccount;
-
       const voteAccount = stakeAccounts.find(
-        (sa) => sa.stakeAccount === stakeAccount
+        (sa) => sa.stakeAccount === selectedStakeAccount
       )?.voteAccount;
 
-      if (stakeAccount === undefined) {
+      if (selectedStakeAccount === undefined) {
         toast.error("Not able to determine stake account");
         setIsLoading(false);
         return;
@@ -152,7 +167,7 @@ export function ModifyOverrideVoteModal({
           forVotesBp: voteDistribution.for * 100,
           againstVotesBp: voteDistribution.against * 100,
           abstainVotesBp: voteDistribution.abstain * 100,
-          stakeAccount,
+          stakeAccount: selectedStakeAccount,
           voteAccount,
           ballotId,
         },
@@ -179,7 +194,7 @@ export function ModifyOverrideVoteModal({
 
     console.log("Overriding vote:", {
       proposalId,
-      stakeAccount: customStakeAccount,
+      selectedStakeAccount,
       distribution,
     });
     handleVote(distribution);
@@ -187,7 +202,7 @@ export function ModifyOverrideVoteModal({
 
   const handleClose = () => {
     setProposalId("");
-    setCustomStakeAccount("");
+    setSelectedStakeAccount("");
     resetDistribution();
     setError(undefined);
     onClose();
@@ -242,47 +257,53 @@ export function ModifyOverrideVoteModal({
               </div>
 
               {/* Stake Account Selection */}
-              <label className="flex items-start gap-3 cursor-pointer">
-                <div className="flex-1">
-                  <p className="text-sm text-white/80">Select stake account</p>
-                  <p className="text-xs text-white/60">
-                    Select the stake account you want to modify the vote for
-                  </p>
-                </div>
-              </label>
 
-              {/* Custom Stake Account Input */}
-              <Select
-                value={customStakeAccount}
-                onValueChange={(v) => setCustomStakeAccount(v)}
-              >
-                <SelectTrigger className="text-white w-full">
-                  <div className="flex gap-1">
-                    <span className="text-dao-text-secondary">
-                      Stake account:
-                    </span>
-                    <SelectValue placeholder="-" />
+              <div className="space-y-3">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <div className="flex-1">
+                    <p className="text-sm text-white/80">
+                      Select stake account
+                    </p>
+                    <p className="text-xs text-white/60">
+                      Select the stake account you want to modify the vote for
+                    </p>
                   </div>
-                </SelectTrigger>
-                <SelectContent className="text-white bg-background/40 backdrop-blur">
-                  {stakeAccounts?.map((stakeAcc) => (
-                    <SelectItem
-                      key={stakeAcc.stakeAccount}
-                      value={stakeAcc.stakeAccount}
-                      disabled={
-                        !voteOverrideAccounts.some(
-                          (voa) =>
-                            voa.stakeAccount.toBase58() ===
-                            stakeAcc.stakeAccount
-                        )
-                      }
-                    >
-                      {formatAddress(stakeAcc.stakeAccount)} -&nbsp;
-                      {formatLamportsDisplay(stakeAcc.activeStake).value}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                </label>
+
+                {/* Custom Stake Account Input */}
+                <Select
+                  value={selectedStakeAccount}
+                  onValueChange={setSelectedStakeAccount}
+                >
+                  <SelectTrigger className="text-white w-full">
+                    <div className="flex gap-1">
+                      <span className="text-dao-text-secondary">
+                        Stake account:
+                      </span>
+                      <SelectValue placeholder="-" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent className="text-white bg-background/40 backdrop-blur">
+                    {stakeAccounts?.map((stakeAcc) => (
+                      <SelectItem
+                        key={stakeAcc.stakeAccount}
+                        value={stakeAcc.stakeAccount}
+                        disabled={
+                          !voteOverrideAccounts.some(
+                            (voa) =>
+                              voa.stakeAccount.toBase58() ===
+                              stakeAcc.stakeAccount
+                          )
+                        }
+                      >
+                        {formatAddress(stakeAcc.stakeAccount)} -&nbsp;
+                        {formatLamportsDisplay(stakeAcc.activeStake).value}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <VoteDistributionControls
                 distribution={distribution}
                 totalPercentage={totalPercentage}
