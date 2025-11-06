@@ -601,6 +601,15 @@ dependencies = [
 [[package]]
 name = "gov-v1"
 version = "0.1.0"
+source = "git+https://github.com/dhruvsol/gov-v1-testnet#180e1faef5a34e65c07e74744cf856dcac83fe82"
+dependencies = [
+ "anchor-lang",
+ "govcontract 0.1.0 (git+https://github.com/3uild-3thos/govcontract)",
+]
+
+[[package]]
+name = "gov-v1"
+version = "0.1.0"
 source = "git+https://github.com/exo-tech-xyz/gov-v1#0ddf230185d813381a5335a15aea56fe57bb875f"
 dependencies = [
  "anchor-lang",
@@ -611,8 +620,17 @@ name = "govcontract"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "gov-v1",
+ "gov-v1 0.1.0 (git+https://github.com/dhruvsol/gov-v1-testnet)",
  "mock_gov_v1",
+]
+
+[[package]]
+name = "govcontract"
+version = "0.1.0"
+source = "git+https://github.com/3uild-3thos/govcontract#90072e7138012312304ec8d0a17e21d2ffa148b1"
+dependencies = [
+ "anchor-lang",
+ "gov-v1 0.1.0 (git+https://github.com/exo-tech-xyz/gov-v1)",
 ]
 
 [[package]]

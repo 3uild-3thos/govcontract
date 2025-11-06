@@ -14,7 +14,7 @@ use gov_v1::StakeMerkleLeaf;
 #[cfg(feature = "testing")]
 use mock_gov_v1::StakeMerkleLeaf;
 
-declare_id!("GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc");
+declare_id!("3GBS7ZjQV5cKfsazbA2CSGm8kVQjjT6ow9XxZtSxRH3G");
 
 #[program]
 pub mod govcontract {
@@ -101,14 +101,29 @@ pub mod govcontract {
         Ok(())
     }
 
-    pub fn add_merkle_root(ctx: Context<AddMerkleRoot>) -> Result<()> {
-        ctx.accounts.add_merkle_root()?;
+    pub fn add_merkle_root(
+        ctx: Context<AddMerkleRoot>,
+        ballot_id: u64,
+        merkle_root: [u8; 32],
+    ) -> Result<()> {
+        ctx.accounts.add_merkle_root(ballot_id, merkle_root)?;
         Ok(())
     }
 
     pub fn finalize_proposal(ctx: Context<FinalizeProposal>) -> Result<()> {
         ctx.accounts.finalize_proposal()?;
 
+        Ok(())
+    }
+
+    pub fn adjust_epochs(
+        ctx: Context<AdjustEpochs>,
+        creation_epoch: Option<u64>,
+        start_epoch: Option<u64>,
+        end_epoch: Option<u64>,
+    ) -> Result<()> {
+        ctx.accounts
+            .adjust_epochs(creation_epoch, start_epoch, end_epoch)?;
         Ok(())
     }
 }

@@ -13,7 +13,7 @@ mock_gov_v1 = "65smeZTDVuVRQZ1zdUF8wXRMDXhAMVTxRbV3n3MyXLPJ"
 govcontract = "GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc"
 
 [programs.testnet]
-govcontract = "GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc"
+govcontract = "3GBS7ZjQV5cKfsazbA2CSGm8kVQjjT6ow9XxZtSxRH3G"
 
 [registry]
 url = "https://api.apr.dev"
