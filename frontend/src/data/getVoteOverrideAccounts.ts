@@ -23,6 +23,13 @@ export const getVoteOverrideAccounts = async (
         bytes: userPubkey,
       },
     },
+    {
+      memcmp: {
+        // proposal is at offset 104 (8 discriminator + 32 delegator + 32 stakeAccount + 32 validator)
+        offset: 104,
+        bytes: proposalPublicKey,
+      },
+    },
   ]);
 
   console.log("voteOverrideAccs", voteOverrideAccs);
