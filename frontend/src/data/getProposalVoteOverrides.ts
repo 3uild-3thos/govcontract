@@ -39,7 +39,10 @@ export const getProposalVoteOverrides = async (
 
   // Map to the expected format with voter, activeStake, identity, and voteTimestamp fields
   return proposalOverrides.map((override) => {
-    const mapped = mapVoteOverrideAccountDto(override.account);
+    const mapped = mapVoteOverrideAccountDto(
+      override.account,
+      override.publicKey
+    );
     return {
       ...mapped,
       voter: override.account.stakeAccount, // Use stake account as the voter identifier
@@ -54,9 +57,11 @@ export const getProposalVoteOverrides = async (
  * Maps raw on-chain vote override account to internal type.
  */
 function mapVoteOverrideAccountDto(
-  rawAccount: VoteOverrideAccount
+  rawAccount: VoteOverrideAccount,
+  publicKey: PublicKey
 ): VoteOverrideAccountData {
   return {
+    publicKey,
     delegator: rawAccount.delegator,
     stakeAccount: rawAccount.stakeAccount,
     validator: rawAccount.validator,
