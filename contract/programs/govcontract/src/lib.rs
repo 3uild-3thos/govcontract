@@ -101,8 +101,12 @@ pub mod govcontract {
         Ok(())
     }
 
-    pub fn add_merkle_root(ctx: Context<AddMerkleRoot>) -> Result<()> {
-        ctx.accounts.add_merkle_root()?;
+    pub fn add_merkle_root(
+        ctx: Context<AddMerkleRoot>,
+        ballot_id: u64,
+        merkle_root: [u8; 32],
+    ) -> Result<()> {
+        ctx.accounts.add_merkle_root(ballot_id, merkle_root)?;
         Ok(())
     }
 
