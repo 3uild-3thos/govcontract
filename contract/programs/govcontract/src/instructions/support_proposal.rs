@@ -74,8 +74,12 @@ impl<'info> SupportProposal<'info> {
         self.proposal.voting = if support_scaled >= cluster_scaled {
             let (start_slot, _) =
                 get_epoch_slot_range(clock.epoch + DISCUSSION_EPOCHS + SNAPSHOT_EPOCH_EXTENSION);
-            self.proposal.start_epoch = clock.epoch + DISCUSSION_EPOCHS + SNAPSHOT_EPOCH_EXTENSION;
-            self.proposal.end_epoch = self.proposal.start_epoch + VOTING_EPOCHS;
+            // start voting 1 epoch after snapshot
+            // checking in any vote or others is start_epoch <= current_epoch < end_epoch
+            self.proposal.start_epoch =
+                clock.epoch + DISCUSSION_EPOCHS + SNAPSHOT_EPOCH_EXTENSION + 1;
+            self.proposal.end_epoch =
+                clock.epoch + DISCUSSION_EPOCHS + SNAPSHOT_EPOCH_EXTENSION + 1 + VOTING_EPOCHS;
             self.proposal.snapshot_slot = start_slot + 1000; // 1000 slots into snapshot
             true
         } else {

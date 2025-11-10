@@ -80,4 +80,8 @@ pub enum GovernanceError {
     MerkleRootNotSet,
     #[msg("Support period has expired for this proposal")]
     SupportPeriodExpired,
+    #[msg("Consensus result has not been set for this proposal")]
+    ConsensusResultNotSet,
+    #[msg("Unauthorized: caller is not authorized to perform this action")]
+    Unauthorized,
 }

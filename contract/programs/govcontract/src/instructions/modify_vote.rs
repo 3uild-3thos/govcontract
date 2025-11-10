@@ -88,15 +88,26 @@ impl<'info> ModifyVote<'info> {
             GovernanceError::MustBeOwnedBySnapshotProgram
         );
 
+        require!(
+            self.proposal.consensus_result.is_some(),
+            GovernanceError::ConsensusResultNotSet
+        );
+
+        // unwrap is safe because we checked that the consensus result is set in the previous require
+        require_keys_eq!(
+            self.proposal.consensus_result.unwrap(),
+            self.consensus_result.key(),
+            GovernanceError::InvalidConsensusResultPDA
+        );
         let consensus_result_data = self.consensus_result.try_borrow_data()?;
         let consensus_result = ConsensusResult::try_deserialize(&mut &consensus_result_data[..])?;
 
-        let merkle_root = self
-            .proposal
-            .merkle_root_hash
-            .ok_or(GovernanceError::MerkleRootNotSet)?;
         require!(
-            consensus_result.ballot.meta_merkle_root == merkle_root,
+            consensus_result
+                .ballot
+                .meta_merkle_root
+                .iter()
+                .any(|&x| x != 0),
             GovernanceError::InvalidMerkleRoot
         );
 
@@ -150,7 +161,7 @@ impl<'info> ModifyVote<'info> {
         let voter_stake = full_validator_stake
             .checked_sub(self.vote.override_lamports)
             .ok_or(GovernanceError::ArithmeticOverflow)?;
-        
+
         let for_votes_lamports = calculate_vote_lamports!(voter_stake, for_votes_bp)?;
         let against_votes_lamports = calculate_vote_lamports!(voter_stake, against_votes_bp)?;
         let abstain_votes_lamports = calculate_vote_lamports!(voter_stake, abstain_votes_bp)?;

@@ -101,14 +101,14 @@ pub mod govcontract {
         Ok(())
     }
 
-    pub fn add_merkle_root(ctx: Context<AddMerkleRoot>) -> Result<()> {
-        ctx.accounts.add_merkle_root()?;
-        Ok(())
-    }
-
     pub fn finalize_proposal(ctx: Context<FinalizeProposal>) -> Result<()> {
         ctx.accounts.finalize_proposal()?;
 
+        Ok(())
+    }
+
+    pub fn flush_merkle_root(ctx: Context<FlushMerkleRoot>) -> Result<()> {
+        ctx.accounts.flush_merkle_root()?;
         Ok(())
     }
 }
