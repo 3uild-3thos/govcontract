@@ -134,7 +134,7 @@ function getStakerConfig(
       {
         label: "Modify Vote",
         variant: "outline",
-        onClick: () => openModal("modify-vote"),
+        onClick: () => openModal("modify-override-vote"),
         className: "governance-action-secondary",
         icon: <PencilLine className="size-4" />,
         disabled,

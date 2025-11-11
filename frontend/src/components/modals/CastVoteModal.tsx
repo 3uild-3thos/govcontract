@@ -27,6 +27,7 @@ import {
   formatAddress,
   formatLamportsDisplay,
 } from "@/lib/governance/formatters";
+import { VotingProposalsDropdown } from "../VotingProposalsDropdown";
 
 export interface CastVoteModalDataProps {
   proposalId?: string;
@@ -166,27 +167,11 @@ export function CastVoteModal({
               className="space-y-6"
             >
               {/* Proposal ID Input */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="proposal-id"
-                  className="text-sm font-medium text-white/80"
-                >
-                  Proposal ID
-                </label>
-                <input
-                  id="proposal-id"
-                  type="text"
-                  value={proposalId}
-                  onChange={(e) => setProposalId(e.target.value)}
-                  placeholder="Enter proposal public key"
-                  className={cn(
-                    "input",
-                    "mt-1 w-full rounded-md border border-white/10 bg-white/5 px-3 py-1.5",
-                    "placeholder:text-sm placeholder:text-white/40"
-                  )}
-                  disabled={!!initialProposalId}
-                />
-              </div>
+              <VotingProposalsDropdown
+                value={proposalId}
+                onValueChange={setProposalId}
+                disabled={!!initialProposalId}
+              />
 
               {/* Voting Info */}
               <div className="rounded-lg bg-white/5 p-4">
@@ -209,7 +194,6 @@ export function CastVoteModal({
                   </div>
                 </div>
               </div>
-
               <VoteDistributionControls
                 distribution={distribution}
                 totalPercentage={totalPercentage}
@@ -220,7 +204,6 @@ export function CastVoteModal({
                 invalidTotalMessage="Total must equal 100%"
                 className="space-y-3"
               />
-
               {/* Error Message */}
               {error && <ErrorMessage error={error} />}
             </form>

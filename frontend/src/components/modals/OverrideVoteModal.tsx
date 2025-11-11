@@ -8,7 +8,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
 import { AppButton } from "@/components/ui/AppButton";
 import ErrorMessage from "./shared/ErrorMessage";
 import { VoteDistributionControls } from "./shared/VoteDistributionControls";
@@ -24,19 +23,10 @@ import { toast } from "sonner";
 import { WalletRole } from "@/types";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import { FormEvent, useEffect, useState } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-  SelectTrigger,
-} from "../ui";
-import {
-  formatAddress,
-  formatLamportsDisplay,
-} from "@/lib/governance/formatters";
 import { GetVoteOverrideFilters } from "@/data";
 import { PublicKey } from "@solana/web3.js";
+import { VotingProposalsDropdown } from "../VotingProposalsDropdown";
+import { StakeAccountsDropdown } from "../StakeAccountsDropdown";
 
 interface OverrideVoteModalProps {
   proposalId?: string;
@@ -106,8 +96,6 @@ export function OverrideVoteModal({
 
   const { data: voteOverrideAccounts = [] } =
     useVoteOverrideAccounts(voteOverrideFilters);
-
-  console.log("stakeAccounts", stakeAccounts);
 
   const { walletRole } = useWalletRole(wallet?.publicKey?.toBase58());
 
@@ -248,27 +236,11 @@ export function OverrideVoteModal({
               className="space-y-6"
             >
               {/* Proposal ID Input */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="proposal-id"
-                  className="text-sm font-medium text-white/80"
-                >
-                  Proposal ID
-                </label>
-                <input
-                  id="proposal-id"
-                  type="text"
-                  value={proposalId}
-                  onChange={(e) => setProposalId(e.target.value)}
-                  placeholder="Enter proposal public key"
-                  className={cn(
-                    "input",
-                    "mt-1 w-full rounded-md border border-white/10 bg-white/5 px-3 py-1.5",
-                    "placeholder:text-sm placeholder:text-white/40"
-                  )}
-                  disabled={initialProposalId !== undefined}
-                />
-              </div>
+              <VotingProposalsDropdown
+                value={proposalId}
+                onValueChange={setProposalId}
+                disabled={!!initialProposalId}
+              />
 
               {/* Stake Account Selection */}
               <div className="space-y-3">
@@ -283,37 +255,14 @@ export function OverrideVoteModal({
                     </p>
                   </div>
                 </label>
-
                 {/* Custom Stake Account Input */}
-                <Select
+                <StakeAccountsDropdown
                   value={selectedStakeAccount}
                   onValueChange={setSelectedStakeAccount}
-                >
-                  <SelectTrigger className="text-white w-full">
-                    <div className="flex gap-1">
-                      <span className="text-dao-text-secondary">
-                        Stake account:
-                      </span>
-                      <SelectValue placeholder="-" />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent className="text-white bg-background/40 backdrop-blur">
-                    {stakeAccounts?.map((stakeAcc) => (
-                      <SelectItem
-                        key={stakeAcc.stakeAccount}
-                        value={stakeAcc.stakeAccount}
-                        disabled={voteOverrideAccounts.some(
-                          (voa) =>
-                            voa.stakeAccount.toBase58() ===
-                            stakeAcc.stakeAccount
-                        )}
-                      >
-                        {formatAddress(stakeAcc.stakeAccount)} -&nbsp;
-                        {formatLamportsDisplay(stakeAcc.activeStake).value}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  disabledAccounts={voteOverrideAccounts.map((voa) =>
+                    voa.stakeAccount.toBase58()
+                  )}
+                />
               </div>
 
               <VoteDistributionControls

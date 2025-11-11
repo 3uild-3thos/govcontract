@@ -4,7 +4,11 @@ import { getProposalStatus } from "@/lib/proposals";
 import type { ProposalRecord, RawProposalAccount } from "@/types";
 
 export const getProposals = async (
-  endpoint: string
+  endpoint: string,
+  filters?: {
+    voting?: boolean;
+    finalized?: boolean;
+  }
 ): Promise<ProposalRecord[]> => {
   const program = createProgramWitDummyWallet(endpoint);
 
@@ -12,7 +16,19 @@ export const getProposals = async (
   const proposalAccs = await program.account.proposal.all();
   console.log("proposalAccs:", proposalAccs);
 
-  const data = proposalAccs.map(mapProposalDto);
+  let data = proposalAccs.map(mapProposalDto);
+
+  if (filters) {
+    if (filters.voting !== undefined) {
+      data = data.filter((proposal) => proposal.voting === filters.voting);
+    }
+    if (filters.finalized !== undefined) {
+      data = data.filter(
+        (proposal) => proposal.finalized === filters.finalized
+      );
+    }
+  }
+
   console.log("data:", data);
   return data;
 };
