@@ -1,4 +1,4 @@
-use anchor_lang::prelude::*;
+use anchor_lang::{prelude::*, solana_program::vote};
 
 use crate::{
     constants::*, error::GovernanceError, events::MerkleRootFlushed, state::Proposal,
@@ -17,14 +17,14 @@ pub struct FlushMerkleRoot<'info> {
     pub proposal: Account<'info, Proposal>,
     /// CHECK: Vote account is too big to deserialize, so we check on owner and size
     #[account(
-        constraint = spl_vote_account.owner == &anchor_lang::solana_program::vote::program::ID @ anchor_lang::solana_program::program_error::ProgramError::InvalidAccountOwner,
+        constraint = spl_vote_account.owner == &vote::program::ID @ ProgramError::InvalidAccountOwner,
     )]
     pub spl_vote_account: UncheckedAccount<'info>,
     /// CHECK: Ballot box account - may or may not exist, checked with data_is_empty()
     pub ballot_box: UncheckedAccount<'info>,
     /// CHECK: Ballot program account
     #[account(
-        constraint = ballot_program.key == &gov_v1::ID @ anchor_lang::solana_program::program_error::ProgramError::InvalidAccountOwner,
+        constraint = ballot_program.key == &gov_v1::ID @ ProgramError::InvalidAccountOwner,
     )]
     pub ballot_program: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
@@ -61,6 +61,7 @@ impl<'info> FlushMerkleRoot<'info> {
             // Create seed components with sufficient lifetime
             let proposal_seed_val = self.proposal.proposal_seed.to_le_bytes();
             let vote_account_key = self.proposal.vote_account_pubkey.key();
+
             let seeds: &[&[u8]] = &[
                 b"proposal".as_ref(),
                 &proposal_seed_val,

@@ -76,7 +76,9 @@ impl<'info> CreateProposal<'info> {
 
         let clock = Clock::get()?;
 
-        let vote_account = match VoteState::deserialize(&self.spl_vote_account.data.borrow()) {
+        let vote_account_data = self.spl_vote_account.data.borrow();
+        // TODO: Check if this deserialization is correct
+        let vote_account = match VoteState::deserialize(&vote_account_data) {
             Ok(vote_account) => vote_account,
             Err(_) => return Err(GovernanceError::InvalidVoteAccount.into()),
         };
