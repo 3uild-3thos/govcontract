@@ -1,9 +1,6 @@
 use anchor_lang::{
     prelude::*,
-    solana_program::{
-        borsh0_10::try_from_slice_unchecked,
-        vote::{program as vote_program, state::VoteState},
-    },
+    solana_program::vote::{program as vote_program, state::VoteState},
 };
 
 use crate::{
