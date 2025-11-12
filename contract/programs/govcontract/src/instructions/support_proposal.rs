@@ -35,6 +35,15 @@ pub struct SupportProposal<'info> {
     )]
     pub spl_vote_account: UncheckedAccount<'info>,
 
+    /// CHECK: Ballot box account - may or may not exist, checked with data_is_empty()
+    pub ballot_box: UncheckedAccount<'info>,
+
+    /// CHECK: Ballot program account
+    #[account(
+        constraint = ballot_program.key == &gov_v1::ID @ ProgramError::InvalidAccountOwner,
+    )]
+    pub ballot_program: UncheckedAccount<'info>,
+
     pub system_program: Program<'info, System>,
 }
 
@@ -74,13 +83,53 @@ impl<'info> SupportProposal<'info> {
         self.proposal.voting = if support_scaled >= cluster_scaled {
             let (start_slot, _) =
                 get_epoch_slot_range(clock.epoch + DISCUSSION_EPOCHS + SNAPSHOT_EPOCH_EXTENSION);
+            let snapshot_slot = start_slot + 1000;
             // start voting 1 epoch after snapshot
             // checking in any vote or others is start_epoch <= current_epoch < end_epoch
             self.proposal.start_epoch =
                 clock.epoch + DISCUSSION_EPOCHS + SNAPSHOT_EPOCH_EXTENSION + 1;
             self.proposal.end_epoch =
                 clock.epoch + DISCUSSION_EPOCHS + SNAPSHOT_EPOCH_EXTENSION + 1 + VOTING_EPOCHS;
-            self.proposal.snapshot_slot = start_slot + 1000; // 1000 slots into snapshot
+            self.proposal.snapshot_slot = snapshot_slot; // 1000 slots into snapshot
+
+            let (consensus_result_pda, _) = Pubkey::find_program_address(
+                &[b"ConsensusResult", &snapshot_slot.to_le_bytes()],
+                &self.ballot_program.key,
+            );
+
+            self.proposal.consensus_result = Some(consensus_result_pda);
+
+            if self.ballot_box.data_is_empty() {
+                // Create seed components with sufficient lifetime
+                let proposal_seed_val = self.proposal.proposal_seed.to_le_bytes();
+                let vote_account_key = self.proposal.vote_account_pubkey.key();
+                let seeds: &[&[u8]] = &[
+                    b"proposal".as_ref(),
+                    &proposal_seed_val,
+                    vote_account_key.as_ref(),
+                ];
+                let signer = &[&seeds[..]];
+                // Initialize the consensus result
+                let cpi_ctx = CpiContext::new_with_signer(
+                    self.ballot_program.to_account_info(),
+                    gov_v1::cpi::accounts::InitBallotBox {
+                        payer: self.signer.to_account_info(),
+                        proposal: self.proposal.to_account_info(),
+                        ballot_box: self.ballot_box.to_account_info(),
+                        program_config: self.ballot_program.to_account_info(),
+                        system_program: self.system_program.to_account_info(),
+                    },
+                    signer,
+                );
+
+                gov_v1::cpi::init_ballot_box(
+                    cpi_ctx,
+                    snapshot_slot,
+                    self.proposal.proposal_seed, // we are not storing this
+                    self.spl_vote_account.key(),
+                )?;
+            }
+
             true
         } else {
             false

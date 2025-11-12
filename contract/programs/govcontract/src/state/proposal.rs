@@ -30,6 +30,9 @@ pub struct Proposal {
     pub consensus_result: Option<Pubkey>,
     /// Slot number when the validator stake snapshot was taken
     pub snapshot_slot: u64,
+    // Seeds for CPI
+    pub proposal_seed: u64,
+    pub vote_account_pubkey: Pubkey,
 }
 
 impl Default for Proposal {
@@ -54,6 +57,8 @@ impl Default for Proposal {
             index: 0,
             snapshot_slot: 0,
             consensus_result: None,
+            proposal_seed: 0,
+            vote_account_pubkey: Pubkey::default(),
         }
     }
 }

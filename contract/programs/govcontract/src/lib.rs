@@ -32,7 +32,7 @@ pub mod govcontract {
         description: String,
     ) -> Result<()> {
         ctx.accounts
-            .create_proposal(title, description, &ctx.bumps)?;
+            .create_proposal(seed, title, description, &ctx.bumps)?;
         Ok(())
     }
 

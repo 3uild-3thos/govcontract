@@ -20,6 +20,6 @@ testing = ["mock_gov_v1"]
 
 [dependencies]
 anchor-lang = { version = "0.31.1", features = ["init-if-needed"]}
-gov-v1 = { git = "https://github.com/exo-tech-xyz/gov-v1", features = ["cpi"], optional = true }
+gov-v1 = { git = "https://github.com/exo-tech-xyz/gov-v1", branch = "signer-check",features = ["cpi"], optional = true }
 mock_gov_v1 = { path = "../mock-gov-v1", features = ["cpi"], optional = true }
 
