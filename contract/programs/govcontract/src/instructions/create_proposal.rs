@@ -4,10 +4,7 @@ use anchor_lang::{
     prelude::*,
     solana_program::{
         epoch_stake::{get_epoch_stake_for_vote_account, get_epoch_total_stake},
-        vote::{
-            program as vote_program,
-            state::{Vote, VoteState},
-        },
+        vote::{program as vote_program, state::VoteState},
     },
 };
 

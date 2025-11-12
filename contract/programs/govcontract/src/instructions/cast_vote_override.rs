@@ -17,10 +17,7 @@ use crate::{
     merkle_helpers::verify_merkle_proof_cpi,
     state::{Proposal, Vote, VoteOverride, VoteOverrideCache},
 };
-#[cfg(feature = "production")]
 use gov_v1::{ConsensusResult, MetaMerkleProof, StakeMerkleLeaf};
-#[cfg(feature = "testing")]
-use mock_gov_v1::{ConsensusResult, MetaMerkleProof, StakeMerkleLeaf};
 
 #[derive(Accounts)]
 pub struct CastVoteOverride<'info> {
