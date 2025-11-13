@@ -1,10 +1,17 @@
 import { useEndpoint } from "@/contexts/EndpointContext";
 import {
+  useGetValidators,
+  useValidatorVotingPower,
+  useWalletStakeAccounts,
+} from "@/hooks";
+import { useSnapshotMeta } from "@/hooks/useSnapshotMeta";
+import {
   formatLamportsDisplay,
   formatOptionalCount,
   formatOptionalSlot,
 } from "@/lib/governance/formatters";
 import type { ViewType } from "@/types/governance";
+import { useAnchorWallet } from "@solana/wallet-adapter-react";
 
 interface DashboardStatsProps {
   currentView: ViewType;
@@ -22,16 +29,37 @@ type StatEntry = {
 
 export function DashboardStats({
   currentView,
-  isLoading,
+  isLoading: isLoadingProps,
 }: DashboardStatsProps) {
   const { endpointType } = useEndpoint();
+  const { data: snapshotMeta, isLoading: isLoadingSnapshotMeta } =
+    useSnapshotMeta();
 
-  const snapshotSlot = 245789456;
-  const delegationsReceived = 123;
+  const { data: validators, isLoading: isLoadingValidators } =
+    useGetValidators();
+
+  const wallet = useAnchorWallet();
+
+  const { data: stakeAccounts, isLoading: isLoadingStakeAccounts } =
+    useWalletStakeAccounts(wallet?.publicKey?.toBase58());
+
+  const { votingPower, isLoading: isLoadingVotingPower } =
+    useValidatorVotingPower(wallet?.publicKey?.toBase58());
+
+  const isLoading =
+    isLoadingSnapshotMeta ||
+    isLoadingValidators ||
+    isLoadingStakeAccounts ||
+    isLoadingProps;
+
+  const snapshotSlot = snapshotMeta?.slot;
+  const delegationsReceived = votingPower;
+  // TODO: clarify what this number is exactly
   const voteAccountsCount = 321;
 
-  const totalStaked = 0;
-  const activeValidators = 0;
+  const totalStaked =
+    stakeAccounts?.reduce((acc, curr) => acc + curr.activeStake, 0) || 0;
+  const activeValidators = validators?.length || 0;
 
   // TODO: on mobile only show "custom" when the network is a custom URL, otherwise show the network name
 
@@ -43,18 +71,18 @@ export function DashboardStats({
             value: endpointType,
             mobileValue: endpointType,
             showRaw: false,
-            isLoading,
+            isLoading: false,
           },
           {
             label: "Snapshot Slot",
             value: formatOptionalSlot(snapshotSlot),
             showRaw: false,
-            isLoading,
+            isLoading: isLoadingSnapshotMeta,
           },
           {
             label: "Delegations Received",
             ...formatLamportsDisplay(delegationsReceived),
-            isLoading,
+            isLoading: isLoadingVotingPower,
           },
           {
             label: "Vote Accounts",
@@ -69,24 +97,24 @@ export function DashboardStats({
             value: endpointType,
             mobileValue: endpointType,
             showRaw: false,
-            isLoading,
+            isLoading: false,
           },
           {
             label: "Snapshot Slot",
             value: formatOptionalSlot(snapshotSlot),
             showRaw: false,
-            isLoading,
+            isLoading: isLoadingSnapshotMeta,
           },
           {
             label: "Total Staked",
             ...formatLamportsDisplay(totalStaked),
-            isLoading,
+            isLoading: isLoadingStakeAccounts,
           },
           {
             label: "Active Validators",
             value: formatOptionalCount(activeValidators),
             showRaw: false,
-            isLoading,
+            isLoading: isLoadingValidators,
           },
         ];
 

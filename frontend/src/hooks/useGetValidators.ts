@@ -22,7 +22,6 @@ const getValidators = async (endpoint: string): Promise<Validators> => {
     connection.getVoteAccounts(),
   ]);
 
-  console.log("voteAccounts:", voteAccounts);
   if (
     stakeWizValidators.status === "fulfilled" &&
     voteAccounts.status === "fulfilled"
