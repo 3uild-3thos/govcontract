@@ -11,7 +11,7 @@ use log::info;
 use serde_json::{Value, json};
 
 use crate::{
-    anchor_client_setup, create_spinner, find_delegator_stake_accounts,
+    anchor_client_setup, create_spinner,
     govcontract::accounts::{Proposal, Vote},
 };
 
@@ -73,9 +73,7 @@ pub async fn list_proposals(
                     "creation_timestamp": proposal.creation_timestamp,
                     "vote_count": proposal.vote_count,
                     "index": proposal.index,
-                    "merkle_root_hash": proposal.merkle_root_hash.map(|hash|
-                        format!("0x{}", hex::encode(hash))
-                    ),
+                    "consensus_result": proposal.consensus_result.map(|cr| cr.to_string()),
                     "snapshot_slot": proposal.snapshot_slot,
                 })
             })
@@ -174,26 +172,6 @@ pub async fn get_proposal(rpc_url: Option<String>, proposal_id: &String) -> Resu
     let proposal_acc = program.account::<Proposal>(proposal_pubkey).await?;
 
     println!("Proposal id:  {} \n{}", proposal_id, proposal_acc);
-
-    Ok(())
-}
-
-pub async fn list_stake_accounts(rpc_url: Option<String>, delegator_wallet: Pubkey) -> Result<()> {
-    // Create a mock Payer
-    let mock_payer = Arc::new(Keypair::new());
-
-    // Set up RPC client via anchor setup (consistent with other commands)
-    let program = anchor_client_setup(rpc_url, mock_payer)?;
-    let rpc_client = program.rpc();
-
-    // Fetch and log
-    let stakes = find_delegator_stake_accounts(&delegator_wallet, &rpc_client).await?;
-    for (stake_pk, vote_pk, active_stake) in stakes {
-        println!(
-            "Stake Account: {}, Vote Account: {}, Active Stake: {}",
-            stake_pk, vote_pk, active_stake
-        );
-    }
 
     Ok(())
 }

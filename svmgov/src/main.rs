@@ -84,17 +84,9 @@ enum Commands {
         #[arg(long, help = "GitHub link for the proposal description")]
         description: String,
 
-        /// Snapshot slot for fetching merkle proofs
-        #[arg(long, help = "Snapshot slot for fetching merkle proofs")]
-        snapshot_slot: u64,
-
         /// Network for fetching merkle proofs
         #[arg(long, help = "Network for fetching merkle proofs")]
         network: String,
-
-        /// Ballot ID for consensus result PDA derivation
-        #[arg(long, help = "Ballot ID")]
-        ballot_id: u64,
     },
 
     #[command(
@@ -108,14 +100,6 @@ enum Commands {
     SupportProposal {
         #[arg(long, help = "Proposal ID")]
         proposal_id: String,
-
-        /// Ballot ID for consensus result PDA derivation
-        #[arg(long, help = "Ballot ID")]
-        ballot_id: u64,
-
-        /// Snapshot slot for fetching merkle proofs
-        #[arg(long, help = "Snapshot slot for fetching merkle proofs")]
-        snapshot_slot: u64,
 
         /// Network for fetching merkle proofs
         #[arg(long, help = "Network for fetching merkle proofs")]
@@ -140,10 +124,6 @@ enum Commands {
         #[arg(long, help = "Proposal ID")]
         proposal_id: String,
 
-        /// Ballot ID for consensus result PDA derivation
-        #[arg(long, help = "Ballot ID")]
-        ballot_id: u64,
-
         /// Basis points for 'For' vote.
         #[arg(long, help = "Basis points for 'For'")]
         for_votes: u64,
@@ -155,10 +135,6 @@ enum Commands {
         /// Basis points for 'Abstain' vote.
         #[arg(long, help = "Basis points for 'Abstain'")]
         abstain_votes: u64,
-
-        /// Snapshot slot for fetching merkle proofs
-        #[arg(long, help = "Snapshot slot for fetching merkle proofs")]
-        snapshot_slot: u64,
 
         /// Network for fetching merkle proofs
         #[arg(long, help = "Network for fetching merkle proofs")]
@@ -178,10 +154,6 @@ enum Commands {
         #[arg(long, help = "Proposal ID")]
         proposal_id: String,
 
-        /// Ballot ID for consensus result PDA derivation
-        #[arg(long, help = "Ballot ID")]
-        ballot_id: u64,
-
         /// Basis points for 'For' vote.
         #[arg(long, help = "Basis points for 'For'")]
         for_votes: u64,
@@ -193,10 +165,6 @@ enum Commands {
         /// Basis points for 'Abstain' vote.
         #[arg(long, help = "Basis points for 'Abstain'")]
         abstain_votes: u64,
-
-        /// Snapshot slot for fetching merkle proofs
-        #[arg(long, help = "Snapshot slot for fetching merkle proofs")]
-        snapshot_slot: u64,
 
         /// Network for fetching merkle proofs
         #[arg(long, help = "Network for fetching merkle proofs")]
@@ -315,10 +283,6 @@ enum Commands {
         #[arg(long, help = "Proposal ID")]
         proposal_id: String,
 
-        /// Ballot ID for consensus result PDA derivation
-        #[arg(long, help = "Ballot ID")]
-        ballot_id: u64,
-
         /// Basis points for 'For' vote
         #[arg(
             long,
@@ -351,10 +315,6 @@ enum Commands {
         )]
         stake_account: String,
 
-        /// Snapshot slot for fetching merkle proofs
-        #[arg(long, help = "Snapshot slot for fetching merkle proofs")]
-        snapshot_slot: u64,
-
         /// Network for fetching merkle proofs
         #[arg(long, help = "Network for fetching merkle proofs")]
         network: String,
@@ -385,10 +345,6 @@ enum Commands {
         /// Proposal ID for which to modify the vote override
         #[arg(long, help = "Proposal ID")]
         proposal_id: String,
-
-        /// Ballot ID for consensus result PDA derivation
-        #[arg(long, help = "Ballot ID")]
-        ballot_id: u64,
 
         /// Basis points for 'For' vote
         #[arg(
@@ -421,10 +377,6 @@ enum Commands {
             help = "Stake account to use for override modification (base58 pubkey)"
         )]
         stake_account: String,
-
-        /// Snapshot slot for fetching merkle proofs
-        #[arg(long, help = "Snapshot slot for fetching merkle proofs")]
-        snapshot_slot: u64,
 
         /// Network for fetching merkle proofs
         #[arg(long, help = "Network for fetching merkle proofs")]
@@ -504,9 +456,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
             seed,
             title,
             description,
-            snapshot_slot,
             network,
-            ballot_id,
         } => {
             instructions::create_proposal(
                 title.to_string(),
@@ -514,68 +464,54 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 *seed,
                 cli.identity_keypair,
                 cli.rpc_url,
-                snapshot_slot.clone(),
                 network.clone(),
-                ballot_id.clone(),
             )
             .await?;
         }
         Commands::SupportProposal {
             proposal_id,
-            ballot_id,
-            snapshot_slot,
             network,
         } => {
             instructions::support_proposal(
                 proposal_id.to_string(),
                 cli.identity_keypair,
                 cli.rpc_url,
-                ballot_id.clone(),
-                snapshot_slot.clone(),
                 network.clone(),
             )
             .await?;
         }
         Commands::CastVote {
             proposal_id,
-            ballot_id,
             for_votes,
             against_votes,
             abstain_votes,
-            snapshot_slot,
             network,
         } => {
             instructions::cast_vote(
                 proposal_id.to_string(),
-                ballot_id.clone(),
                 *for_votes,
                 *against_votes,
                 *abstain_votes,
                 cli.identity_keypair,
                 cli.rpc_url,
-                snapshot_slot.clone(),
                 network.clone(),
             )
             .await?;
         }
         Commands::ModifyVote {
             proposal_id,
-            ballot_id,
             for_votes,
             against_votes,
             abstain_votes,
-            snapshot_slot,
             network,
         } => {
             instructions::modify_vote(
                 proposal_id.to_string(),
-                ballot_id.clone(),
                 *for_votes,
                 *against_votes,
                 *abstain_votes,
                 cli.identity_keypair,
                 cli.rpc_url,
-                snapshot_slot.clone(),
                 network.clone(),
             )
             .await?;
@@ -619,20 +555,17 @@ async fn handle_command(cli: Cli) -> Result<()> {
         }
         Commands::CastVoteOverride {
             proposal_id,
-            ballot_id,
             for_votes,
             against_votes,
             abstain_votes,
             operator_api,
             stake_account,
-            snapshot_slot,
             network,
             staker_keypair,
             vote_account,
         } => {
             instructions::cast_vote_override(
                 proposal_id.to_string(),
-                ballot_id.clone(),
                 *for_votes,
                 *against_votes,
                 *abstain_votes,
@@ -641,27 +574,23 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 operator_api.clone(),
                 stake_account.clone(),
                 vote_account.clone(),
-                snapshot_slot.clone(),
                 network.clone(),
             )
             .await?;
         }
         Commands::ModifyVoteOverride {
             proposal_id,
-            ballot_id,
             for_votes,
             against_votes,
             abstain_votes,
             operator_api,
             stake_account,
-            snapshot_slot,
             network,
             staker_keypair,
             vote_account,
         } => {
             instructions::modify_vote_override(
                 proposal_id.to_string(),
-                ballot_id.clone(),
                 *for_votes,
                 *against_votes,
                 *abstain_votes,
@@ -670,7 +599,6 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 operator_api.clone(),
                 stake_account.clone(),
                 vote_account.clone(),
-                snapshot_slot.clone(),
                 network.clone(),
             )
             .await?;

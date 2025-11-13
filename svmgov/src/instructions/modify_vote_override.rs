@@ -7,12 +7,11 @@ use gov_v1::ID as SNAPSHOT_PROGRAM_ID;
 
 use crate::{
     constants::*,
-    govcontract::client::{accounts, args},
+    govcontract::{accounts::Proposal, client::{accounts, args}},
     utils::{
         api_helpers::{
-            convert_merkle_proof_strings, convert_stake_merkle_leaf_data_to_idl_type,
-            generate_pdas_from_vote_proof_response, get_stake_account_proof,
-            get_vote_account_proof,
+            self, convert_merkle_proof_strings, convert_stake_merkle_leaf_data_to_idl_type,
+            get_stake_account_proof, get_vote_account_proof,
         },
         utils::{
             create_spinner, derive_vote_override_cache_pda, derive_vote_override_pda,
@@ -23,7 +22,6 @@ use crate::{
 
 pub async fn modify_vote_override(
     proposal_id: String,
-    ballot_id: u64,
     for_votes: u64,
     against_votes: u64,
     abstain_votes: u64,
@@ -32,7 +30,6 @@ pub async fn modify_vote_override(
     _operator_api: Option<String>,
     stake_account_override: String,
     vote_account: String,
-    snapshot_slot: u64,
     network: String,
 ) -> Result<()> {
     if for_votes + against_votes + abstain_votes != BASIS_POINTS_TOTAL {
@@ -47,6 +44,17 @@ pub async fn modify_vote_override(
 
     let (payer, program, _merkle_proof_program) = setup_all_with_staker(staker_keypair, rpc_url)?;
 
+    // Fetch proposal to get snapshot_slot and consensus_result
+    let proposal = program
+        .account::<Proposal>(proposal_pubkey)
+        .await
+        .map_err(|e| anyhow!("Failed to fetch proposal: {}", e))?;
+
+    let snapshot_slot = proposal.snapshot_slot;
+    let consensus_result_pda = proposal
+        .consensus_result
+        .ok_or_else(|| anyhow!("Proposal consensus_result is not set"))?;
+
     let stake_account_str = stake_account_override.clone();
     let vote_account_pubkey = Pubkey::from_str(&vote_account)
         .map_err(|_| anyhow!("Invalid vote account: {}", vote_account))?;
@@ -56,8 +64,8 @@ pub async fn modify_vote_override(
     let stake_merkle_proof =
         get_stake_account_proof(&stake_account_str, snapshot_slot, &network).await?;
 
-    let (consensus_result_pda, meta_merkle_proof_pda) =
-        generate_pdas_from_vote_proof_response(ballot_id, &meta_merkle_proof)?;
+    // Generate meta_merkle_proof_pda using the consensus_result from proposal
+    let meta_merkle_proof_pda = api_helpers::generate_meta_merkle_proof_pda(&consensus_result_pda, &vote_account_pubkey)?;
 
     let validator_vote_pda = derive_vote_pda(&proposal_pubkey, &vote_account_pubkey, &program.id());
     let vote_override_pda = derive_vote_override_pda(

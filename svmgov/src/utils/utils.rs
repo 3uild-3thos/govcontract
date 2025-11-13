@@ -17,7 +17,7 @@ use anchor_client::{
     },
 };
 use anchor_lang::{AnchorDeserialize, Id, prelude::Pubkey};
-use anyhow::{Result, anyhow};
+use anyhow::{Context, Result, anyhow};
 use chrono::prelude::*;
 use indicatif::{ProgressBar, ProgressStyle};
 use textwrap::wrap;
@@ -266,59 +266,6 @@ pub async fn find_spl_vote_accounts(
     Ok(spl_vote_pubkeys)
 }
 
-/// Returns stake pubkey + vote pubkey + validator pubkey + stake amount
-pub(crate) async fn find_delegator_stake_accounts(
-    withdraw_authority: &Pubkey,
-    rpc_client: &RpcClient,
-) -> Result<Vec<(Pubkey, Pubkey, u64)>> {
-    let filters = vec![
-        RpcFilterType::DataSize(STAKE_ACCOUNT_DATA_SIZE),
-        RpcFilterType::Memcmp(Memcmp::new(
-            STAKE_ACCOUNT_WITHDRAW_AUTHORITY_OFFSET,
-            MemcmpEncodedBytes::Bytes(withdraw_authority.to_bytes().to_vec()),
-        )),
-    ];
-
-    let config = RpcProgramAccountsConfig {
-        filters: Some(filters),
-        account_config: RpcAccountInfoConfig {
-            encoding: Some(UiAccountEncoding::JsonParsed),
-            commitment: Some(CommitmentConfig {
-                commitment: CommitmentLevel::Finalized,
-            }),
-            ..RpcAccountInfoConfig::default()
-        },
-        with_context: None,
-        sort_results: Some(true),
-    };
-
-    let accounts = rpc_client
-        .get_program_accounts_with_config(&stake::program::id(), config)
-        .await?;
-
-    let mut stakes = vec![];
-
-    for (stake_pubkey, account) in accounts {
-        if let Ok(StakeStateV2::Stake(_meta, stake, _flags)) =
-            StakeStateV2::deserialize(&mut &account.data[..])
-        {
-            if stake.delegation.stake > 0 && stake.delegation.deactivation_epoch == u64::MAX {
-                stakes.push((
-                    stake_pubkey,
-                    stake.delegation.voter_pubkey,
-                    stake.delegation.stake,
-                ));
-            }
-        }
-    }
-
-    if stakes.is_empty() {
-        return Err(anyhow!("No active stake accounts found for this delegator"));
-    }
-
-    Ok(stakes)
-}
-
 fn set_cluster(rpc_url: Option<String>) -> Cluster {
     if let Some(rpc_url) = rpc_url {
         let wss_url = rpc_url.replace("https://", "wss://");
@@ -403,17 +350,7 @@ impl fmt::Display for Proposal {
             "Finalized:",
             if self.finalized { "Yes" } else { "No" }
         )?;
-        if let Some(merkle_root) = self.merkle_root_hash {
-            writeln!(
-                f,
-                "{:<25} 0x{}",
-                "Merkle Root Hash:",
-                hex::encode(merkle_root)
-            )?;
-        } else {
-            writeln!(f, "{:<25} Not set", "Merkle Root Hash:")?;
-        }
-        writeln!(f, "{:<25} {}", "Snapshot Slot:", self.snapshot_slot)?;
+
         writeln!(f, "{:<25}", "Description:")?;
         for line in wrapped_desc {
             writeln!(f, "  {}", line)?;
@@ -532,4 +469,12 @@ pub fn derive_vote_override_cache_pda(
     ];
     let (pda, _) = Pubkey::find_program_address(seeds, program_id);
     pda
+}
+pub fn get_epoch_slot_range(epoch: u64) -> (u64, u64) {
+    const SLOTS_PER_EPOCH: u64 = 432_000;
+
+    let start_slot = epoch * SLOTS_PER_EPOCH;
+    let end_slot = (epoch + 1) * SLOTS_PER_EPOCH - 1;
+
+    (start_slot, end_slot)
 }

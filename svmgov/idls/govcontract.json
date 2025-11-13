@@ -1,5 +1,5 @@
 {
-  "address": "3GBS7ZjQV5cKfsazbA2CSGm8kVQjjT6ow9XxZtSxRH3G",
+  "address": "GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc",
   "metadata": {
     "name": "govcontract",
     "version": "0.1.0",
@@ -7,30 +7,6 @@
     "description": "Created with Anchor"
   },
   "instructions": [
-    {
-      "name": "add_merkle_root",
-      "discriminator": [
-        235,
-        31,
-        120,
-        49,
-        53,
-        9,
-        197,
-        147
-      ],
-      "accounts": [
-        {
-          "name": "consensus_result",
-          "signer": true
-        },
-        {
-          "name": "proposal",
-          "writable": true
-        }
-      ],
-      "args": []
-    },
     {
       "name": "cast_vote",
       "discriminator": [
@@ -442,6 +418,44 @@
       "args": []
     },
     {
+      "name": "flush_merkle_root",
+      "discriminator": [
+        10,
+        71,
+        17,
+        246,
+        162,
+        57,
+        144,
+        87
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "proposal",
+          "writable": true
+        },
+        {
+          "name": "spl_vote_account"
+        },
+        {
+          "name": "ballot_box"
+        },
+        {
+          "name": "ballot_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "initialize_index",
       "discriminator": [
         204,
@@ -794,6 +808,12 @@
           "name": "spl_vote_account"
         },
         {
+          "name": "ballot_box"
+        },
+        {
+          "name": "ballot_program"
+        },
+        {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
@@ -883,16 +903,16 @@
   ],
   "events": [
     {
-      "name": "MerkleRootAdded",
+      "name": "MerkleRootFlushed",
       "discriminator": [
-        171,
-        59,
-        45,
-        200,
-        89,
-        55,
-        150,
-        244
+        120,
+        37,
+        53,
+        216,
+        119,
+        172,
+        17,
+        144
       ]
     },
     {
@@ -1182,11 +1202,21 @@
       "code": 6038,
       "name": "SupportPeriodExpired",
       "msg": "Support period has expired for this proposal"
+    },
+    {
+      "code": 6039,
+      "name": "ConsensusResultNotSet",
+      "msg": "Consensus result has not been set for this proposal"
+    },
+    {
+      "code": 6040,
+      "name": "Unauthorized",
+      "msg": "Unauthorized: caller is not authorized to perform this action"
     }
   ],
   "types": [
     {
-      "name": "MerkleRootAdded",
+      "name": "MerkleRootFlushed",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1195,13 +1225,16 @@
             "type": "pubkey"
           },
           {
-            "name": "merkle_root_hash",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
+            "name": "author",
+            "type": "pubkey"
+          },
+          {
+            "name": "new_snapshot_slot",
+            "type": "u64"
+          },
+          {
+            "name": "flush_timestamp",
+            "type": "i64"
           }
         ]
       }
@@ -1292,17 +1325,9 @@
             "type": "u32"
           },
           {
-            "name": "merkle_root_hash",
-            "docs": [
-              "Merkle root hash representing the snapshot of validator stakes at proposal creation"
-            ],
+            "name": "consensus_result",
             "type": {
-              "option": {
-                "array": [
-                  "u8",
-                  32
-                ]
-              }
+              "option": "pubkey"
             }
           },
           {
@@ -1311,6 +1336,14 @@
               "Slot number when the validator stake snapshot was taken"
             ],
             "type": "u64"
+          },
+          {
+            "name": "proposal_seed",
+            "type": "u64"
+          },
+          {
+            "name": "vote_account_pubkey",
+            "type": "pubkey"
           }
         ]
       }

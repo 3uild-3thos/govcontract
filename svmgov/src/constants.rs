@@ -15,13 +15,6 @@ pub const DEFAULT_OPERATOR_API_URL: &str = "http://84.32.100.123:8000";
 // UI constants
 pub const SPINNER_TICK_DURATION_MS: u64 = 100;
 
-// Stake account constants
-pub const STAKE_ACCOUNT_DATA_SIZE: u64 = 200;
-pub const STAKE_ACCOUNT_WITHDRAW_AUTHORITY_OFFSET: usize = 44;
-
-// Mock data constants
-pub const MOCK_MERKLE_PROOF_LEVELS: usize = 3;
-
 // Environment variable names
 pub const SVMGOV_KEY_ENV: &str = "SVMGOV_KEY";
 pub const SVMGOV_RPC_ENV: &str = "SVMGOV_RPC";
