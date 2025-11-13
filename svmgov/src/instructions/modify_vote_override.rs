@@ -7,11 +7,14 @@ use gov_v1::ID as SNAPSHOT_PROGRAM_ID;
 
 use crate::{
     constants::*,
-    govcontract::{accounts::Proposal, client::{accounts, args}},
+    govcontract::{
+        accounts::Proposal,
+        client::{accounts, args},
+    },
     utils::{
         api_helpers::{
             self, convert_merkle_proof_strings, convert_stake_merkle_leaf_data_to_idl_type,
-            get_stake_account_proof, get_vote_account_proof,
+            get_stake_account_proof,
         },
         utils::{
             create_spinner, derive_vote_override_cache_pda, derive_vote_override_pda,
@@ -59,13 +62,12 @@ pub async fn modify_vote_override(
     let vote_account_pubkey = Pubkey::from_str(&vote_account)
         .map_err(|_| anyhow!("Invalid vote account: {}", vote_account))?;
 
-    let meta_merkle_proof = get_vote_account_proof(&vote_account, snapshot_slot, &network).await?;
-
     let stake_merkle_proof =
         get_stake_account_proof(&stake_account_str, snapshot_slot, &network).await?;
 
     // Generate meta_merkle_proof_pda using the consensus_result from proposal
-    let meta_merkle_proof_pda = api_helpers::generate_meta_merkle_proof_pda(&consensus_result_pda, &vote_account_pubkey)?;
+    let meta_merkle_proof_pda =
+        api_helpers::generate_meta_merkle_proof_pda(&consensus_result_pda, &vote_account_pubkey)?;
 
     let validator_vote_pda = derive_vote_pda(&proposal_pubkey, &vote_account_pubkey, &program.id());
     let vote_override_pda = derive_vote_override_pda(

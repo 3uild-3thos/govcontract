@@ -19,3 +19,7 @@ pub const SPINNER_TICK_DURATION_MS: u64 = 100;
 pub const SVMGOV_KEY_ENV: &str = "SVMGOV_KEY";
 pub const SVMGOV_RPC_ENV: &str = "SVMGOV_RPC";
 pub const SVMGOV_OPERATOR_URL_ENV: &str = "SVMGOV_OPERATOR_URL";
+
+pub const DISCUSSION_EPOCHS: u64 = 4;
+pub const VOTING_EPOCHS: u64 = 3;
+pub const SNAPSHOT_EPOCH_EXTENSION: u64 = 1;

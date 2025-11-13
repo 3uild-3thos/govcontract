@@ -6,10 +6,8 @@ use anyhow::{Result, anyhow};
 use gov_v1::ID as SNAPSHOT_PROGRAM_ID;
 
 use crate::{
-    govcontract::{
-        accounts::Proposal,
-        client::{accounts, args},
-    },
+    constants::{DISCUSSION_EPOCHS, SNAPSHOT_EPOCH_EXTENSION},
+    govcontract::client::{accounts, args},
     utils::utils::{create_spinner, derive_support_pda, get_epoch_slot_range, setup_all},
 };
 
@@ -25,24 +23,18 @@ pub async fn support_proposal(
     let (payer, vote_account, program, _merkle_proof_program) =
         setup_all(identity_keypair, rpc_url).await?;
 
-    // Fetch proposal to get proposal_seed for ballot_box derivation
-    let proposal = program
-        .account::<Proposal>(proposal_pubkey)
-        .await
-        .map_err(|e| anyhow!("Failed to fetch proposal: {}", e))?;
-
     let support_pda = derive_support_pda(&proposal_pubkey, &vote_account, &program.id());
 
     let spinner = create_spinner("Supporting proposal...");
 
-    let (start_slot, end_slot) = get_epoch_slot_range(proposal.start_epoch);
-    // Derive ballot_box PDA - seeds: [b"proposal", proposal_seed, vote_account]
+    let clock = program.rpc().get_epoch_info().await?;
+    let target_epoch = clock.epoch + DISCUSSION_EPOCHS + SNAPSHOT_EPOCH_EXTENSION;
+
+    let (start_slot, _) = get_epoch_slot_range(target_epoch);
+    let snapshot_slot = start_slot + 1000;
+
     let ballot_box_pda = {
-        let seeds = &[
-            b"proposal".as_ref(),
-            &proposal.proposal_seed.to_le_bytes(),
-            &proposal.vote_account_pubkey.as_ref(),
-        ];
+        let seeds = &[b"BallotBox".as_ref(), &snapshot_slot.to_le_bytes()];
         let (pda, _) = Pubkey::find_program_address(seeds, &SNAPSHOT_PROGRAM_ID);
         pda
     };
