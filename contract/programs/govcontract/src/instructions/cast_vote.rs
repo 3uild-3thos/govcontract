@@ -1,9 +1,6 @@
 use anchor_lang::{
     prelude::*,
-    solana_program::{
-        borsh0_10::try_from_slice_unchecked,
-        vote::{program as vote_program, state::VoteState},
-    },
+    solana_program::vote::{program as vote_program, state::VoteState},
 };
 
 use crate::{
@@ -14,10 +11,7 @@ use crate::{
     merkle_helpers::verify_merkle_proof_cpi,
     state::{Proposal, Vote, VoteOverrideCache},
 };
-#[cfg(feature = "production")]
 use gov_v1::{ConsensusResult, MetaMerkleProof};
-#[cfg(feature = "testing")]
-use mock_gov_v1::{ConsensusResult, MetaMerkleProof};
 
 #[derive(Accounts)]
 pub struct CastVote<'info> {
@@ -100,18 +94,28 @@ impl<'info> CastVote<'info> {
             GovernanceError::MustBeOwnedBySnapshotProgram
         );
 
+        require!(
+            self.proposal.consensus_result.is_some(),
+            GovernanceError::ConsensusResultNotSet
+        );
+
+        // unwrap is safe because we checked that the consensus result is set in the previous require
+        require_keys_eq!(
+            self.proposal.consensus_result.unwrap(),
+            self.consensus_result.key(),
+            GovernanceError::InvalidConsensusResultPDA
+        );
         let consensus_result_data = self.consensus_result.try_borrow_data()?;
         let consensus_result = ConsensusResult::try_deserialize(&mut &consensus_result_data[..])?;
 
-        let merkle_root = self
-            .proposal
-            .merkle_root_hash
-            .ok_or(GovernanceError::MerkleRootNotSet)?;
         require!(
-            consensus_result.ballot.meta_merkle_root == merkle_root,
+            consensus_result
+                .ballot
+                .meta_merkle_root
+                .iter()
+                .any(|&x| x != 0),
             GovernanceError::InvalidMerkleRoot
         );
-
         // Deserialize MetaMerkleProof for crosschecking
         let meta_account_data = self.meta_merkle_proof.try_borrow_data()?;
         let meta_merkle_proof = MetaMerkleProof::try_deserialize(&mut &meta_account_data[..])?;
@@ -159,16 +163,16 @@ impl<'info> CastVote<'info> {
         // Check if override cache PDA exists and has been initialized
         // If it does, apply cached delegator votes
         if self.vote_override_cache.data_len() > 0 && self.vote_override_cache.owner == &crate::ID {
-            let override_cache: VoteOverrideCache = match anchor_lang::AccountDeserialize::try_deserialize(
-                &mut self.vote_override_cache.data.borrow().as_ref()
-            ) {
-                Ok(cache) => cache,
-                Err(_) => {
-                    // Account exists but is not a valid VoteOverrideCache - treat as non-existent
-                    return Err(GovernanceError::InvalidVoteAccount.into());
-                }
-            };
-                
+            let override_cache: VoteOverrideCache =
+                match anchor_lang::AccountDeserialize::try_deserialize(
+                    &mut self.vote_override_cache.data.borrow().as_ref(),
+                ) {
+                    Ok(cache) => cache,
+                    Err(_) => {
+                        // Account exists but is not a valid VoteOverrideCache - treat as non-existent
+                        return Err(GovernanceError::InvalidVoteAccount.into());
+                    }
+                };
 
             // Add cached votes
             self.proposal.add_vote_lamports(

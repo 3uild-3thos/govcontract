@@ -27,11 +27,12 @@ pub struct Proposal {
     pub creation_timestamp: i64,
     pub vote_count: u32,
     pub index: u32,
-    /// Merkle root hash representing the snapshot of validator stakes at proposal creation
-    pub merkle_root_hash: Option<[u8; 32]>,
+    pub consensus_result: Option<Pubkey>,
     /// Slot number when the validator stake snapshot was taken
     pub snapshot_slot: u64,
-    pub ballot_id: Option<u64>,
+    // Seeds for CPI
+    pub proposal_seed: u64,
+    pub vote_account_pubkey: Pubkey,
 }
 
 impl Default for Proposal {
@@ -54,9 +55,10 @@ impl Default for Proposal {
             creation_timestamp: 0,
             vote_count: 0,
             index: 0,
-            merkle_root_hash: None,
             snapshot_slot: 0,
-            ballot_id: None,
+            consensus_result: None,
+            proposal_seed: 0,
+            vote_account_pubkey: Pubkey::default(),
         }
     }
 }

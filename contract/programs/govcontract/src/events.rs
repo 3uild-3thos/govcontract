@@ -69,12 +69,6 @@ pub struct VoteModified {
 }
 
 #[event]
-pub struct MerkleRootAdded {
-    pub proposal_id: Pubkey,
-    pub merkle_root_hash: [u8; 32],
-}
-
-#[event]
 pub struct VoteOverrideModified {
     pub proposal_id: Pubkey,
     pub delegator: Pubkey,
@@ -102,4 +96,12 @@ pub struct ProposalFinalized {
     pub total_abstain_votes: u64,
     pub total_votes_count: u32,
     pub finalization_timestamp: i64,
+}
+
+#[event]
+pub struct MerkleRootFlushed {
+    pub proposal_id: Pubkey,
+    pub author: Pubkey,
+    pub new_snapshot_slot: u64,
+    pub flush_timestamp: i64,
 }

@@ -1,10 +1,7 @@
 use anchor_lang::{
     prelude::*,
     solana_program::{
-        borsh0_10::try_from_slice_unchecked,
-        program::invoke_signed,
         stake::program as stake_program,
-        system_instruction::create_account,
         vote::{program as vote_program, state::VoteState},
     },
 };
@@ -17,10 +14,7 @@ use crate::{
     merkle_helpers::verify_merkle_proof_cpi,
     state::{Proposal, Vote, VoteOverride, VoteOverrideCache},
 };
-#[cfg(feature = "production")]
 use gov_v1::{ConsensusResult, MetaMerkleProof, StakeMerkleLeaf};
-#[cfg(feature = "testing")]
-use mock_gov_v1::{ConsensusResult, MetaMerkleProof, StakeMerkleLeaf};
 
 #[derive(Accounts)]
 pub struct CastVoteOverride<'info> {
@@ -119,15 +113,26 @@ impl<'info> CastVoteOverride<'info> {
             GovernanceError::MustBeOwnedBySnapshotProgram
         );
 
+        require!(
+            self.proposal.consensus_result.is_some(),
+            GovernanceError::ConsensusResultNotSet
+        );
+
+        // unwrap is safe because we checked that the consensus result is set in the previous require
+        require_keys_eq!(
+            self.proposal.consensus_result.unwrap(),
+            self.consensus_result.key(),
+            GovernanceError::InvalidConsensusResultPDA
+        );
         let consensus_result_data = self.consensus_result.try_borrow_data()?;
         let consensus_result = ConsensusResult::try_deserialize(&mut &consensus_result_data[..])?;
 
-        let merkle_root = self
-            .proposal
-            .merkle_root_hash
-            .ok_or(GovernanceError::MerkleRootNotSet)?;
         require!(
-            consensus_result.ballot.meta_merkle_root == merkle_root,
+            consensus_result
+                .ballot
+                .meta_merkle_root
+                .iter()
+                .any(|&x| x != 0),
             GovernanceError::InvalidMerkleRoot
         );
 

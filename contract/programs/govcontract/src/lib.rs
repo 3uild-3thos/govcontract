@@ -9,10 +9,7 @@ mod utils;
 use anchor_lang::prelude::*;
 use instructions::*;
 
-#[cfg(feature = "production")]
 use gov_v1::StakeMerkleLeaf;
-#[cfg(feature = "testing")]
-use mock_gov_v1::StakeMerkleLeaf;
 
 declare_id!("GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc");
 
@@ -32,7 +29,7 @@ pub mod govcontract {
         description: String,
     ) -> Result<()> {
         ctx.accounts
-            .create_proposal(title, description, &ctx.bumps)?;
+            .create_proposal(seed, title, description, &ctx.bumps)?;
         Ok(())
     }
 
@@ -101,14 +98,14 @@ pub mod govcontract {
         Ok(())
     }
 
-    pub fn add_merkle_root(ctx: Context<AddMerkleRoot>) -> Result<()> {
-        ctx.accounts.add_merkle_root()?;
-        Ok(())
-    }
-
     pub fn finalize_proposal(ctx: Context<FinalizeProposal>) -> Result<()> {
         ctx.accounts.finalize_proposal()?;
 
+        Ok(())
+    }
+
+    pub fn flush_merkle_root(ctx: Context<FlushMerkleRoot>) -> Result<()> {
+        ctx.accounts.flush_merkle_root()?;
         Ok(())
     }
 }

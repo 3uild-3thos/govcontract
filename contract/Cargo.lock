@@ -601,7 +601,7 @@ dependencies = [
 [[package]]
 name = "gov-v1"
 version = "0.1.0"
-source = "git+https://github.com/exo-tech-xyz/gov-v1#0ddf230185d813381a5335a15aea56fe57bb875f"
+source = "git+https://github.com/exo-tech-xyz/gov-v1?branch=signer-check#7c7db845821bd2bfaba12dc604e1b4977ba1bb4e"
 dependencies = [
  "anchor-lang",
 ]
@@ -612,7 +612,6 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "gov-v1",
- "mock_gov_v1",
 ]
 
 [[package]]
@@ -761,13 +760,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "488016bfae457b036d996092f6cb448677611ce4449e970ceaf42695203f218a"
 dependencies = [
  "autocfg",
-]
-
-[[package]]
-name = "mock_gov_v1"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
 ]
 
 [[package]]
