@@ -5,3 +5,6 @@ HkAGc7akgEH7HxkHWNk3htZHMid7fmG2eU6SxyGf9PKa.json
 
 .env
 pm-testnet.json
+
+node_modules
+.next
