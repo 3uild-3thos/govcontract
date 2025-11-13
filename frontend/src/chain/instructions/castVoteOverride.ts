@@ -10,11 +10,13 @@ import {
   createGovV1ProgramWithWallet,
   getVoteAccountProof,
   getStakeAccountProof,
-  getVoterSummary,
   generatePdasFromVoteProofResponse,
   convertMerkleProofStrings,
   convertStakeMerkleLeafDataToIdlType,
   validateVoteBasisPoints,
+  deriveVotePda,
+  deriveVoteOverridePda,
+  deriveVoteOverrideCachePda,
 } from "./helpers";
 import { BN } from "@coral-xyz/anchor";
 
@@ -23,7 +25,8 @@ import { BN } from "@coral-xyz/anchor";
  */
 export async function castVoteOverride(
   params: CastVoteOverrideParams,
-  blockchainParams: BlockchainParams
+  blockchainParams: BlockchainParams,
+  slot: number | undefined
 ): Promise<TransactionResult> {
   const {
     proposalId,
@@ -33,10 +36,15 @@ export async function castVoteOverride(
     stakeAccount,
     wallet,
     voteAccount,
+    ballotId,
   } = params;
 
   if (!wallet || !wallet.publicKey) {
     throw new Error("Wallet not connected");
+  }
+
+  if (slot === undefined) {
+    throw new Error("Slot is not defined");
   }
 
   // Validate vote distribution
@@ -46,37 +54,21 @@ export async function castVoteOverride(
   const splVoteAccount = new PublicKey(voteAccount);
   const program = createProgramWithWallet(wallet, blockchainParams.endpoint);
 
-  // Get voter summary to get slot and stake accounts
-  const voterSummary = await getVoterSummary(
-    wallet.publicKey.toString(),
-    blockchainParams.network || "mainnet"
-  );
-  const slot = voterSummary.snapshot_slot;
-
-  // Determine stake account to use
-  let stakeAccountStr = stakeAccount;
-  if (!stakeAccountStr) {
-    if (
-      !voterSummary.stake_accounts ||
-      voterSummary.stake_accounts.length === 0
-    ) {
-      throw new Error("No stake account found for voter");
-    }
-    // TODO: fix this type casting
-    stakeAccountStr = voterSummary.stake_accounts[0].stake_account as string;
-  }
-
-  const stakeAccountPubkey = new PublicKey(stakeAccountStr);
+  const stakeAccountPubkey = new PublicKey(stakeAccount);
 
   // Get proofs
-  const network = blockchainParams.network || "mainnet";
+  const network = blockchainParams.network;
   const [metaMerkleProof, stakeMerkleProof] = await Promise.all([
     getVoteAccountProof(splVoteAccount.toBase58(), network, slot),
-    getStakeAccountProof(stakeAccountStr, network, slot),
+    getStakeAccountProof(stakeAccount, network, slot),
   ]);
 
   const [consensusResultPda, metaMerkleProofPda] =
-    generatePdasFromVoteProofResponse(metaMerkleProof, SNAPSHOT_PROGRAM_ID, 4);
+    generatePdasFromVoteProofResponse(
+      metaMerkleProof,
+      SNAPSHOT_PROGRAM_ID,
+      ballotId
+    );
 
   // Check if merkle account exists
   const merkleAccountInfo = await program.provider.connection.getAccountInfo(
@@ -85,10 +77,6 @@ export async function castVoteOverride(
   );
 
   if (!merkleAccountInfo) {
-    console.log("merkleAccountInfo is null");
-    console.log("consensusResultPda", consensusResultPda.toBase58());
-    console.log("metaMerkleProofPda", metaMerkleProofPda.toBase58());
-
     const govV1Program = createGovV1ProgramWithWallet(
       wallet,
       blockchainParams.endpoint
@@ -158,6 +146,25 @@ export async function castVoteOverride(
   const againstVotesBn = new BN(againstVotesBp);
   const abstainVotesBn = new BN(abstainVotesBp);
 
+  const votePda = deriveVotePda(
+    proposalPubkey,
+    splVoteAccount,
+    program.programId
+  );
+
+  const voteOverridePda = deriveVoteOverridePda(
+    proposalPubkey,
+    stakeAccountPubkey,
+    votePda,
+    program.programId
+  );
+
+  const voteOverrideCachePda = deriveVoteOverrideCachePda(
+    proposalPubkey,
+    votePda,
+    program.programId
+  );
+
   // Build cast vote override instruction
   const castVoteOverrideInstruction = await program.methods
     .castVoteOverride(
@@ -167,7 +174,7 @@ export async function castVoteOverride(
       stakeMerkleProofVec,
       stakeMerkleLeaf
     )
-    .accounts({
+    .accountsStrict({
       signer: wallet.publicKey,
       splVoteAccount: splVoteAccount,
       splStakeAccount: stakeAccountPubkey,
@@ -175,6 +182,10 @@ export async function castVoteOverride(
       consensusResult: consensusResultPda,
       metaMerkleProof: metaMerkleProofPda,
       snapshotProgram: SNAPSHOT_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+      voteOverride: voteOverridePda,
+      voteOverrideCache: voteOverrideCachePda,
+      validatorVote: votePda,
     })
     .instruction();
 

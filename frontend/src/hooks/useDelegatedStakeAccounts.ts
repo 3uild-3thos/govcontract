@@ -9,7 +9,7 @@ export const useDelegatedStakeAccounts = (userPubKey: string | undefined) => {
   return useQuery({
     staleTime: 1000 * 120, // 2 minutes
     enabled: !!userPubKey,
-    queryKey: [GET_DELEGATED_STAKE_ACCOUNTS, userPubKey],
-    queryFn: () => getDelegatedStakeAccounts({ endpoint }, userPubKey),
+    queryKey: [GET_DELEGATED_STAKE_ACCOUNTS, userPubKey, endpoint],
+    queryFn: () => getDelegatedStakeAccounts(endpoint, userPubKey),
   });
 };

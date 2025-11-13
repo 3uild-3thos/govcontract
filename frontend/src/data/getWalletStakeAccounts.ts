@@ -1,4 +1,3 @@
-import { BlockchainParams } from "@/chain";
 import { StakeAccountData, StakeAccountState } from "@/types/stakeAccounts";
 import {
   AccountInfo,
@@ -7,14 +6,12 @@ import {
   PublicKey,
 } from "@solana/web3.js";
 
-// TODO: feel free to create a new file for the blockchain fetching logic, and rename this one to proposalsMapper or smth like that
-
-export const getStakeAccounts = async (
-  { endpoint }: BlockchainParams,
+export const getWalletStakeAccounts = async (
+  endpoint: string,
   userPubkey: string | undefined
 ): Promise<StakeAccountData[]> => {
   const connection = new Connection(endpoint, "confirmed");
-  
+
   if (!userPubkey) {
     throw new Error("User public key is required");
   }

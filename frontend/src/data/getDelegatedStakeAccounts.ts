@@ -1,4 +1,3 @@
-import { BlockchainParams } from "@/chain";
 import { Connection, PublicKey, StakeProgram } from "@solana/web3.js";
 
 interface ParsedStakeAccount {
@@ -11,7 +10,7 @@ interface ParsedStakeAccount {
 }
 
 export const getDelegatedStakeAccounts = async (
-  { endpoint }: BlockchainParams,
+  endpoint: string,
   validatorIdentityPubKey: string | undefined
 ): Promise<ParsedStakeAccount[]> => {
   const connection = new Connection(endpoint, "confirmed");

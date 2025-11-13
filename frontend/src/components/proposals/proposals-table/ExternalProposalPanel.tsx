@@ -89,6 +89,8 @@ function VoteActions({
 
   const isValidator = walletRole === WalletRole.VALIDATOR;
   const isStaker = walletRole === WalletRole.STAKER;
+  const isBoth = walletRole === WalletRole.BOTH;
+
   const isVoting = state === "voting";
   const isSupporting = state === "support";
 
@@ -102,7 +104,7 @@ function VoteActions({
             className="w-full justify-center border-white/15 bg-white/10 text-sm font-medium text-white/75 hover:text-white"
             disabled={disabled}
             onClick={() => {
-              if (isValidator) {
+              if (isValidator || isBoth) {
                 openModal("modify-vote", { proposalId });
               } else if (isStaker) {
                 openModal("modify-override-vote", { proposalId });
@@ -115,7 +117,7 @@ function VoteActions({
             className="w-full justify-center text-sm font-semibold text-foreground"
             disabled={disabled}
             onClick={() => {
-              if (isValidator) {
+              if (isValidator || isBoth) {
                 openModal("cast-vote", { proposalId });
               } else if (isStaker) {
                 openModal("override-vote", { proposalId });
@@ -125,7 +127,7 @@ function VoteActions({
         </>
       )}
 
-      {isSupporting && isValidator && (
+      {isSupporting && (isValidator || isBoth) && (
         <AppButton
           variant="gradient"
           text="Support"

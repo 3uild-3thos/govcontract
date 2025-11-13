@@ -5,7 +5,6 @@ import govV1Idl from "@/chain/idl/gov-v1.json";
 import {
   VoteAccountProofResponse,
   StakeAccountProofResponse,
-  VoterSummaryResponse,
   SNAPSHOT_PROGRAM_ID,
   StakeMerkleLeafRaw,
   StakeMerkleLeafConverted,
@@ -153,7 +152,7 @@ export function createProgramWitDummyWallet(endpoint?: string) {
 
 // TODO: temporary, until CORS issue with api.solgov.online is fixed, and until it has HTTPS
 // Helper function to build the API URL (use proxy in browser, direct URL on server)
-function buildSolgovUrl(endpoint: string): string {
+export function buildSolgovUrl(endpoint: string): string {
   // Use Next.js API proxy when running in browser to avoid CORS
   // if (typeof window !== "undefined") {
   //   // Browser: use proxy with path parameter
@@ -168,27 +167,12 @@ function buildSolgovUrl(endpoint: string): string {
 // API helpers using the solgov.online service
 export async function getVoteAccountProof(
   voteAccount: string,
-  network: string = "testnet",
-  slot?: number
+  network: string,
+  slot: number
 ): Promise<VoteAccountProofResponse> {
-  // Get current slot if not provided
-  let currentSlot = slot;
-  if (!currentSlot) {
-    const metaUrl = buildSolgovUrl(`meta?network=${network}`);
-    const metaResponse = await fetch(metaUrl);
-    if (!metaResponse.ok) {
-      throw new Error(
-        `Failed to get network metadata: ${metaResponse.statusText}`
-      );
-    }
-    const metaData = await metaResponse.json();
-    currentSlot = metaData.slot;
-  }
-
   const url = buildSolgovUrl(
-    `proof/vote_account/${voteAccount}?network=${network}&slot=${currentSlot}`
+    `proof/vote_account/${voteAccount}?network=${network}&slot=${slot}`
   );
-  console.log("vote account url", url);
   const response = await fetch(url);
 
   if (!response.ok) {
@@ -200,27 +184,12 @@ export async function getVoteAccountProof(
 
 export async function getStakeAccountProof(
   stakeAccount: string,
-  network: string = "testnet",
-  slot?: number
+  network: string,
+  slot: number
 ): Promise<StakeAccountProofResponse> {
-  // Get current slot if not provided
-  let currentSlot = slot;
-  if (!currentSlot) {
-    const metaUrl = buildSolgovUrl(`meta?network=${network}`);
-    const metaResponse = await fetch(metaUrl);
-    if (!metaResponse.ok) {
-      throw new Error(
-        `Failed to get network metadata: ${metaResponse.statusText}`
-      );
-    }
-    const metaData = await metaResponse.json();
-    currentSlot = metaData.slot;
-  }
-
   const url = buildSolgovUrl(
-    `proof/stake_account/${stakeAccount}?network=${network}&slot=${currentSlot}`
+    `proof/stake_account/${stakeAccount}?network=${network}&slot=${slot}`
   );
-  console.log("stake account url", url);
   const response = await fetch(url);
 
   if (!response.ok) {
@@ -232,52 +201,17 @@ export async function getStakeAccountProof(
   return await response.json();
 }
 
-export async function getVoterSummary(
-  walletAddress: string,
-  network: string = "testnet",
-  slot?: number
-): Promise<VoterSummaryResponse> {
-  try {
-    // Get current slot if not provided
-    let currentSlot = slot;
-    if (!currentSlot) {
-      const metaUrl = buildSolgovUrl(`meta?network=${network}`);
-      const metaResponse = await fetch(metaUrl);
-      if (!metaResponse.ok) {
-        throw new Error(
-          `Failed to get network metadata: ${metaResponse.statusText}`
-        );
-      }
-      const metaData = await metaResponse.json();
-      currentSlot = metaData.slot;
-    }
-
-    const url = buildSolgovUrl(
-      `voter/${walletAddress}?network=${network}&slot=${currentSlot}`
-    );
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(`Failed to get voter summary: ${response.statusText}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    throw new Error(`Failed to get voter summary: ${error}`);
-  }
-}
-
 // Generate PDAs from vote proof response
 export function generatePdasFromVoteProofResponse(
   proofResponse: VoteAccountProofResponse,
   snapshotProgramId: PublicKey = SNAPSHOT_PROGRAM_ID,
-  ballot_id: number
+  ballotId: number = 0
 ): [PublicKey, PublicKey] {
   // Derive consensus result PDA (this is typically derived from the snapshot slot)
   const [consensusResultPda] = PublicKey.findProgramAddressSync(
     [
       Buffer.from("ConsensusResult"),
-      new BN(ballot_id).toArrayLike(Buffer, "le", 8),
+      new BN(ballotId).toArrayLike(Buffer, "le", 8),
     ],
     snapshotProgramId
   );

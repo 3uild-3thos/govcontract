@@ -1,20 +1,34 @@
-import { BlockchainParams, createProgramWitDummyWallet } from "@/chain";
+import { createProgramWitDummyWallet } from "@/chain";
 import { getSimd } from "@/hooks";
 import { getProposalStatus } from "@/lib/proposals";
 import type { ProposalRecord, RawProposalAccount } from "@/types";
 
-
 export const getProposals = async (
-  blockchainParams: BlockchainParams
+  endpoint: string,
+  filters?: {
+    voting?: boolean;
+    finalized?: boolean;
+  }
 ): Promise<ProposalRecord[]> => {
-  const program = createProgramWitDummyWallet(
-    blockchainParams.endpoint
-  );
+  const program = createProgramWitDummyWallet(endpoint);
 
+  // TODO: implement pagination
   const proposalAccs = await program.account.proposal.all();
   console.log("proposalAccs:", proposalAccs);
 
-  const data = proposalAccs.map(mapProposalDto);
+  let data = proposalAccs.map(mapProposalDto);
+
+  if (filters) {
+    if (filters.voting !== undefined) {
+      data = data.filter((proposal) => proposal.voting === filters.voting);
+    }
+    if (filters.finalized !== undefined) {
+      data = data.filter(
+        (proposal) => proposal.finalized === filters.finalized
+      );
+    }
+  }
+
   console.log("data:", data);
   return data;
 };
@@ -30,9 +44,9 @@ export function mapProposalDto(
   return {
     publicKey: rawAccount.publicKey,
     id: index.toString(),
+    ballotId: rawAccount.account.ballotId?.toNumber(),
     simd,
     title: raw.title,
-    summary: raw.description,
     description: raw.description,
     author: raw.author.toBase58(),
 
@@ -40,7 +54,6 @@ export function mapProposalDto(
     startEpoch: raw.startEpoch.toNumber(),
     endEpoch: raw.endEpoch.toNumber(),
     creationTimestamp: raw.creationTimestamp?.toNumber() || 0,
-
 
     clusterSupportLamports: BigInt(raw.clusterSupportLamports?.toString() || 0),
     forVotesLamports: raw.forVotesLamports?.toNumber() || 0,

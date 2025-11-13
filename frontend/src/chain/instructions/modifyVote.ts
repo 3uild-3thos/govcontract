@@ -15,7 +15,6 @@ import {
   createProgramWithWallet,
   deriveVotePda,
   validateVoteBasisPoints,
-  getVoterSummary,
   createGovV1ProgramWithWallet,
   getVoteAccountProof,
   generatePdasFromVoteProofResponse,
@@ -26,23 +25,28 @@ import {
  */
 export async function modifyVote(
   params: ModifyVoteParams,
-  blockchainParams: BlockchainParams
+  blockchainParams: BlockchainParams,
+  slot: number | undefined
 ): Promise<TransactionResult> {
-  const { proposalId, forVotesBp, againstVotesBp, abstainVotesBp, wallet } =
-    params;
+  const {
+    proposalId,
+    forVotesBp,
+    againstVotesBp,
+    abstainVotesBp,
+    wallet,
+    ballotId,
+  } = params;
 
   if (!wallet || !wallet.publicKey) {
     throw new Error("Wallet not connected");
   }
 
+  if (slot === undefined) {
+    throw new Error("Slot is not defined");
+  }
+
   // Validate vote distribution
   validateVoteBasisPoints(forVotesBp, againstVotesBp, abstainVotesBp);
-
-  const voterSummary = await getVoterSummary(
-    wallet.publicKey.toString(),
-    blockchainParams.network || "mainnet"
-  );
-  const slot = voterSummary.snapshot_slot;
 
   const proposalPubkey = new PublicKey(proposalId);
   const program = createProgramWithWallet(wallet, blockchainParams.endpoint);
@@ -80,7 +84,11 @@ export async function modifyVote(
   console.log("fetched voteAccountProof", voteAccountProof);
 
   const [consensusResultPda, metaMerkleProofPda] =
-    generatePdasFromVoteProofResponse(voteAccountProof, SNAPSHOT_PROGRAM_ID, 4);
+    generatePdasFromVoteProofResponse(
+      voteAccountProof,
+      SNAPSHOT_PROGRAM_ID,
+      ballotId
+    );
 
   const merkleAccountInfo = await program.provider.connection.getAccountInfo(
     metaMerkleProofPda,
@@ -90,10 +98,6 @@ export async function modifyVote(
   const instructions: TransactionInstruction[] = [];
 
   if (!merkleAccountInfo) {
-    console.log("merkleAccountInfo is null");
-    console.log("consensusResultPda", consensusResultPda.toBase58());
-    console.log("metaMerkleProofPda", metaMerkleProofPda.toBase58());
-
     const initMerkleInstruction = await govV1Program.methods
       .initMetaMerkleProof(
         {

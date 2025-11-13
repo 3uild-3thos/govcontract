@@ -1,49 +1,56 @@
-import {
-  BlockchainParams,
-  createProgramWitDummyWallet,
-  deriveVoteOverridePda,
-  GOVCONTRACT_PROGRAM_ID,
-  VoteOverrideAccount,
-} from "@/chain";
+import { createProgramWitDummyWallet, VoteOverrideAccount } from "@/chain";
 import { VoteOverrideAccountData } from "@/types";
-import { StakeAccountData } from "@/types/stakeAccounts";
-import { PublicKey } from "@solana/web3.js";
+import { ProgramAccount } from "@coral-xyz/anchor";
+import { MemcmpFilter } from "@solana/web3.js";
+
+interface GetVoteOverrideFilter {
+  name: "delegator" | "proposal" | "validator" | "stakeAccount";
+  value: string;
+}
+
+export type GetVoteOverrideFilters = GetVoteOverrideFilter[];
+
+const filterOffsetMap = {
+  delegator: 8, // 8 bytes discriminator
+  stakeAccount: 40, // 8 bytes discriminator + 32 bytes delegator
+  validator: 72, // 8 bytes discriminator + 32 bytes delegator + 32 bytes stakeAccount
+  proposal: 104, // 8 bytes discriminator + 32 bytes delegator + 32 bytes stakeAccount + 32 bytes validator
+};
+
+export function filtersToMemcmp(
+  filters: GetVoteOverrideFilters
+): MemcmpFilter[] {
+  return filters
+    .filter((f) => typeof f.value === "string" && !!f.value)
+    .map((f) => ({
+      memcmp: {
+        offset: filterOffsetMap[f.name],
+        bytes: f.value,
+      },
+    }));
+}
 
 export const getVoteOverrideAccounts = async (
-  blockchainParams: BlockchainParams,
-  proposalPublicKey: string | undefined,
-  stakeAccounts: StakeAccountData[]
+  endpoint: string,
+  filters: GetVoteOverrideFilters
 ): Promise<VoteOverrideAccountData[]> => {
-  if (proposalPublicKey === undefined)
-    throw new Error("Proposal public key is not loaded");
-
-  const program = createProgramWitDummyWallet(blockchainParams.endpoint);
-
-  const derivedPdas = stakeAccounts
-    .filter((d) => d.voteAccount !== undefined)
-    .map((d) =>
-      deriveVoteOverridePda(
-        new PublicKey(proposalPublicKey),
-        new PublicKey(d.stakeAccount),
-        new PublicKey(d.voteAccount!),
-        GOVCONTRACT_PROGRAM_ID
-      )
+  if (filters.length === 0) {
+    throw new Error(
+      "getVoteOverrideAccounts: At least one filter is required. Cannot fetch all voteOverride accounts."
     );
+  }
 
-  console.log("derivedPdas", derivedPdas);
+  const program = createProgramWitDummyWallet(endpoint);
 
-  const voteOverrideAccs = await program.account.voteOverride.fetchMultiple(
-    derivedPdas
+  const memcmpFilters = filtersToMemcmp(filters);
+
+  const voteOverrideAccs = await program.account.voteOverride.all(
+    memcmpFilters
   );
-  console.log("voteOverrideAccs:", voteOverrideAccs);
 
-  const voteOverrideCacheAccs =
-    await program.account.voteOverrideCache.fetchMultiple(derivedPdas);
-  console.log("voteOverrideCacheAccs:", voteOverrideCacheAccs);
+  console.log("voteOverrideAccs", voteOverrideAccs);
 
-  // if value is null, needs cast override
-  // if value exists, modify override
-
+  // Filter out null accounts and map to DTO
   return voteOverrideAccs.map(mapVoteOverrideAccountDto);
 };
 
@@ -51,14 +58,13 @@ export const getVoteOverrideAccounts = async (
  * Maps raw on-chain vote account to internal type.
  */
 function mapVoteOverrideAccountDto(
-  rawAccount: VoteOverrideAccount | null
+  rawAccount: ProgramAccount<VoteOverrideAccount>
 ): VoteOverrideAccountData {
-  // TODO filter nulls before
-  if (rawAccount === null) throw new Error("null??");
-
-  const raw = rawAccount;
+  const raw = rawAccount.account;
 
   return {
+    publicKey: rawAccount.publicKey,
+    delegator: raw.delegator,
     stakeAccount: raw.stakeAccount,
     validator: raw.validator,
     proposal: raw.proposal,

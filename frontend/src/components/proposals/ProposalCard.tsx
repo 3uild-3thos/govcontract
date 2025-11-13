@@ -143,6 +143,7 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
     simd,
     publicKey,
     endEpoch,
+    ballotId,
   } = proposal;
 
   const actionButtonText = getActionButtonText(status);
@@ -173,9 +174,12 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
     const buttonText = (event.target as HTMLButtonElement).innerText;
 
     if (buttonText === "Modify Vote") {
-      openModal(modifyModalName, { proposalId: publicKey.toBase58() });
+      openModal(modifyModalName, {
+        proposalId: publicKey.toBase58(),
+        ballotId,
+      });
     } else if (buttonText === "Cast Vote") {
-      openModal(castModalName, { proposalId: publicKey.toBase58() });
+      openModal(castModalName, { proposalId: publicKey.toBase58(), ballotId });
     } else if (buttonText === "Support") {
       openModal("support-proposal", { proposalId: publicKey.toBase58() });
     }

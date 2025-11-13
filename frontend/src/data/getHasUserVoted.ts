@@ -1,4 +1,4 @@
-import { VoteOverrideAccountData } from "@/types";
+import { VoteAccountData, VoteOverrideAccountData } from "@/types";
 
 /**
  * Checks if a given stake account has created a vote override account for a specific proposal
@@ -20,16 +20,8 @@ export const getVoteOverrideByStakeAccount = (
 };
 
 export const getUserHasVoted = async (
-  voteOverrideAccounts: VoteOverrideAccountData[]
-  // voteAccounts: VoteAccountData[],
+  voteOverrideAccounts: VoteOverrideAccountData[],
+  voteAccount: VoteAccountData | undefined | null
 ): Promise<boolean> => {
-  // console.log("voteOverrideAccount:", voteOverrideAccount);
-
-  // const voteAccount = voteAccounts.find(
-  //   (voteAccount) =>
-  //     voteAccount.proposal.toString() === proposalPublicKey &&
-  //     voteAccount.voteAccount.toString() === userPublicKey
-  // );
-
-  return voteOverrideAccounts.length > 0;
+  return voteOverrideAccounts.length > 0 || !!voteAccount;
 };

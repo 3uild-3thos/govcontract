@@ -1,9 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
-import { useVoteAccountsWithValidators } from "./useVoteAccountsWithValidators";
-import { TopVoterRecord } from "@/dummy-data/top-voters";
-import { VoteAccountData, Validator } from "@/types";
+import { TopVoterRecord } from "@/types/topVoters";
+import { Validator } from "@/types";
+import { getProposalVotes, getProposalVoteOverrides } from "@/data";
+import { useEndpoint } from "@/contexts/EndpointContext";
+import { useGetValidators } from "./useGetValidators";
 
 const accentColors = [
   "linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)",
@@ -33,96 +35,137 @@ const getColorFromString = (str: string): string => {
   return accentColors[index];
 };
 
-/**
- * Maps vote account data to TopVoterRecord format
- */
-function mapVoteToTopVoterRecord(
-  voteAccount: VoteAccountData,
-  validator: Validator | undefined,
-  totalStakedLamports: number
-): TopVoterRecord {
-  const validatorName = validator?.name || `Unknown Validator`;
-  const validatorIdentity =
-    validator?.vote_identity || voteAccount.identity?.toBase58() || "";
-
-  const totalStake = voteAccount.activeStake || 0;
-
-  // Calculate vote percentage: this voter's stake / total stake of all voters * 100
-  const votePercentage =
-    totalStakedLamports > 0 && totalStake > 0
-      ? (totalStake / totalStakedLamports) * 100
-      : 0;
-
-  // Format vote timestamp
-  const voteTimestamp = voteAccount.voteTimestamp
-    ? new Date(voteAccount.voteTimestamp.toNumber() * 1000).toISOString()
-    : new Date().toISOString();
-
-  return {
-    id: validatorIdentity || voteAccount.voteAccount.toBase58(),
-    validatorName,
-    validatorIdentity,
-    stakedLamports: totalStake,
-    votePercentage,
-    voteTimestamp,
-    voteData: {
-      forVotesBp: voteAccount.forVotesBp || new BN(0),
-      againstVotesBp: voteAccount.againstVotesBp || new BN(0),
-      abstainVotesBp: voteAccount.abstainVotesBp || new BN(0),
-    },
-    accentColor: getColorFromString(validatorName),
-  };
-}
-
 export const useProposalVotes = (proposalPublicKey: PublicKey | undefined) => {
-  const { data: voteAccountsWithValidators, isLoading } =
-    useVoteAccountsWithValidators();
+  const { endpointUrl: endpoint } = useEndpoint();
+  const { data: validators } = useGetValidators();
 
-  const query = useQuery({
-    queryKey: ["proposal-votes", proposalPublicKey?.toBase58()],
+  return useQuery({
+    queryKey: ["proposal-votes", proposalPublicKey?.toBase58(), endpoint],
     staleTime: 1000 * 120, // 2 minutes
-    enabled: !!proposalPublicKey && !!voteAccountsWithValidators && !isLoading,
+    enabled: !!proposalPublicKey,
     queryFn: async (): Promise<TopVoterRecord[]> => {
-      if (!proposalPublicKey || !voteAccountsWithValidators) {
-        throw new Error("Missing required data");
+      if (!proposalPublicKey) {
+        throw new Error("Missing proposal public key");
       }
 
-      const { voteMap } = voteAccountsWithValidators;
+      // 1. Fetch votes and voteOverride data from gov contract program
+      const [votes, voteOverrides] = await Promise.all([
+        getProposalVotes(proposalPublicKey, endpoint),
+        getProposalVoteOverrides(proposalPublicKey, endpoint),
+      ]);
 
-      // Filter votes for the specific proposal
-      const proposalVotes = Object.values(voteMap).filter((entry) =>
-        entry.voteAccount.proposal.equals(proposalPublicKey)
-      );
-
-      // Calculate total staked lamports across all voters for percentage calculation
-      const totalStakedLamports = proposalVotes.reduce(
-        (sum, entry) => sum + (entry.voteAccount.activeStake || 0),
-        0
-      );
-
-      // Map to TopVoterRecord format
-      const topVoterRecords: TopVoterRecord[] = proposalVotes.map((entry) =>
-        mapVoteToTopVoterRecord(
-          entry.voteAccount,
-          entry.validator,
-          totalStakedLamports
-        )
-      );
-
-      // Filter out voters that didn't vote (all vote splits are 0)
-      const votersWhoVoted = topVoterRecords.filter((voter) => {
-        const { forVotesBp, againstVotesBp, abstainVotesBp } = voter.voteData;
-        return (
-          forVotesBp.gt(new BN(0)) ||
-          againstVotesBp.gt(new BN(0)) ||
-          abstainVotesBp.gt(new BN(0))
+      // 2. Optionally fetch validator details (name, etc.)
+      // If you don't need detailed mapping, you might skip this, or use a static list.
+      let validatorMap: Record<string, Validator> = {};
+      if (validators) {
+        validatorMap = Object.fromEntries(
+          validators.map((v) => [v.vote_identity, v])
         );
+      }
+
+      // Total stake is calculated from all validators' activated_stake
+      const totalStakedLamports = validators
+        ? validators.reduce((sum, v) => sum + (v.activated_stake || 0), 0)
+        : 0;
+
+      // 5. Map to TopVoterRecord[]
+      const validatorVoters = votes.map((v) => {
+        const identity = v.identity?.toBase58
+          ? v.identity.toBase58()
+          : typeof v.identity === "string"
+          ? v.identity
+          : "unknown";
+        const validator = validatorMap[identity];
+        const validatorName = validator?.name || "Unknown Validator";
+        const stakedLamports = v.activeStake || 0;
+        const votePercentage =
+          totalStakedLamports > 0 && stakedLamports > 0
+            ? (stakedLamports / totalStakedLamports) * 100
+            : 0;
+        // If voteTimestamp is unix/BN, convert to string
+        let voteTimestamp: string;
+        if (v.voteTimestamp && typeof v.voteTimestamp.toNumber === "function") {
+          voteTimestamp = new Date(
+            v.voteTimestamp.toNumber() * 1000
+          ).toISOString();
+        } else if (typeof v.voteTimestamp === "number") {
+          voteTimestamp = new Date(v.voteTimestamp * 1000).toISOString();
+        } else {
+          voteTimestamp = new Date().toISOString();
+        }
+
+        return {
+          id: identity,
+          validatorName,
+          validatorIdentity: identity,
+          stakedLamports,
+          votePercentage,
+          voteTimestamp,
+          voteData: {
+            forVotesBp: v.forVotesBp ? new BN(v.forVotesBp) : new BN(0),
+            againstVotesBp: v.againstVotesBp
+              ? new BN(v.againstVotesBp)
+              : new BN(0),
+            abstainVotesBp: v.abstainVotesBp
+              ? new BN(v.abstainVotesBp)
+              : new BN(0),
+          },
+          accentColor: getColorFromString(validatorName),
+          walletType: "validator" as const,
+        };
       });
 
-      // Sort by staked lamports (descending)
-      return votersWhoVoted.sort((a, b) => b.stakedLamports - a.stakedLamports);
+      const stakerVoters = voteOverrides.map((v) => {
+        const identity = v.identity?.toBase58
+          ? v.identity.toBase58()
+          : typeof v.identity === "string"
+          ? v.identity
+          : "unknown";
+
+        const validator = validatorMap[identity];
+        const validatorName = validator?.name || "Unknown Validator";
+        const stakedLamports = v.activeStake || 0;
+        const votePercentage =
+          totalStakedLamports > 0 && stakedLamports > 0
+            ? (stakedLamports / totalStakedLamports) * 100
+            : 0;
+        // If voteTimestamp is unix/BN, convert to string
+        let voteTimestamp: string;
+        if (v.voteTimestamp && typeof v.voteTimestamp.toNumber === "function") {
+          voteTimestamp = new Date(
+            v.voteTimestamp.toNumber() * 1000
+          ).toISOString();
+        } else if (typeof v.voteTimestamp === "number") {
+          voteTimestamp = new Date(v.voteTimestamp * 1000).toISOString();
+        } else {
+          voteTimestamp = new Date().toISOString();
+        }
+
+        return {
+          id: identity,
+          validatorName,
+          validatorIdentity: identity,
+          stakedLamports,
+          votePercentage,
+          voteTimestamp,
+          stakeAccount: v.stakeAccount.toBase58(),
+          voteData: {
+            forVotesBp: v.forVotesBp ? new BN(v.forVotesBp) : new BN(0),
+            againstVotesBp: v.againstVotesBp
+              ? new BN(v.againstVotesBp)
+              : new BN(0),
+            abstainVotesBp: v.abstainVotesBp
+              ? new BN(v.abstainVotesBp)
+              : new BN(0),
+          },
+          accentColor: getColorFromString(validatorName),
+          walletType: "staker" as const,
+        };
+      });
+
+      const topVoters = [...validatorVoters, ...stakerVoters];
+
+      return topVoters;
     },
   });
-
-  return { ...query, isLoading: isLoading || query.isLoading };
 };

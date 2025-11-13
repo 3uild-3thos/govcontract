@@ -36,7 +36,7 @@ import {
   formatLamportsDisplay,
   formatOptionalCount,
 } from "@/lib/governance/formatters";
-import { VoteAccountData } from "@/types";
+import { OldVoteAccountData } from "@/types";
 import { useVoteAccountsWithValidators, VoteValidatorEntry } from "@/hooks";
 
 const stakeSizeOptions = [
@@ -57,9 +57,8 @@ export function VoteAccountsTable() {
   const [stakeSizeFilter, setStakeSizeFilter] = React.useState("All");
 
   // Mobile drawer state
-  const [selectedRow, setSelectedRow] = React.useState<VoteAccountData | null>(
-    null
-  );
+  const [selectedRow, setSelectedRow] =
+    React.useState<OldVoteAccountData | null>(null);
   const [drawerOpen, setDrawerOpen] = React.useState(false);
 
   const {
@@ -120,7 +119,7 @@ export function VoteAccountsTable() {
     setSorting([]);
   };
 
-  const handleRowClick = (rowData: VoteAccountData) => {
+  const handleRowClick = (rowData: OldVoteAccountData) => {
     // Only on mobile (check if screen width is less than sm breakpoint)
     if (window.innerWidth < 640) {
       setSelectedRow(rowData);

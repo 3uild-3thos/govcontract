@@ -33,7 +33,7 @@ import { formatLamportsDisplay } from "@/lib/governance/formatters";
 import { StakeAccountStatus } from "@/components/governance/staker/StakeAccountStatus";
 import { StakeAccountVoteProposals } from "@/components/governance/staker/StakeAccountVoteProposals";
 import { StakeAccountData } from "@/types/stakeAccounts";
-import { useStakeAccounts } from "@/hooks";
+import { useWalletStakeAccounts } from "@/hooks";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Fragment, useMemo, useState } from "react";
 
@@ -80,7 +80,7 @@ export function StakeAccountsTable({
   // Expanded rows state
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const enabled = !isParentLoading;
-  const { data: stakeAccountsData, isLoading } = useStakeAccounts(
+  const { data: stakeAccountsData, isLoading } = useWalletStakeAccounts(
     userPubKey,
     enabled
   );
@@ -285,7 +285,7 @@ export function StakeAccountsTable({
                     <Fragment key={row.id}>
                       {/* Main Row */}
                       <TableRow
-                        className="border-white/10 hover:bg-white/5 sm:hover:bg-transparent cursor-pointer sm:cursor-default"
+                        className="border-white/10 cursor-pointer sm:cursor-default"
                         onClick={() => handleRowClick(row.original)}
                       >
                         {row.getVisibleCells().map((cell) => {
@@ -333,7 +333,7 @@ export function StakeAccountsTable({
 
                       {/* Expanded Content Row */}
                       {isExpanded && (
-                        <TableRow className="border-white/10">
+                        <TableRow className="border-white/10 hover:bg-transparent">
                           <TableCell
                             colSpan={columns.length + 1}
                             className="p-0 bg-white/2"

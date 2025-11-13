@@ -24,8 +24,6 @@ interface CreateProposalModalProps {
 interface CreateProposalData {
   title: string;
   description: string;
-  startEpoch: string;
-  votingLength: string;
 }
 
 export function CreateProposalModal({
@@ -35,8 +33,6 @@ export function CreateProposalModal({
   const [formData, setFormData] = React.useState<CreateProposalData>({
     title: "",
     description: "",
-    startEpoch: "",
-    votingLength: "",
   });
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | undefined>();
@@ -49,8 +45,6 @@ export function CreateProposalModal({
       setFormData({
         title: "",
         description: "",
-        startEpoch: "",
-        votingLength: "",
       });
       setError(undefined);
     }
@@ -70,12 +64,7 @@ export function CreateProposalModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (
-      !formData.title ||
-      !formData.description ||
-      !formData.startEpoch ||
-      !formData.votingLength
-    ) {
+    if (!formData.title || !formData.description) {
       return;
     }
 
@@ -87,8 +76,6 @@ export function CreateProposalModal({
       {
         title: formData.title,
         description: formData.description,
-        startEpoch: +formData.startEpoch,
-        votingLengthEpochs: +formData.votingLength,
         wallet,
       },
       {
@@ -102,18 +89,12 @@ export function CreateProposalModal({
     setFormData({
       title: "",
       description: "",
-      startEpoch: "",
-      votingLength: "",
     });
     setError(undefined);
     onClose();
   };
 
-  const isFormValid =
-    formData.title &&
-    formData.description &&
-    formData.startEpoch &&
-    formData.votingLength;
+  const isFormValid = formData.title && formData.description;
 
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
@@ -182,54 +163,6 @@ export function CreateProposalModal({
                     setFormData({ ...formData, description: e.target.value })
                   }
                   placeholder="https://github.com/..."
-                  className={cn(
-                    "input",
-                    "w-full rounded-md border bg-white/5 px-3 py-1.5",
-                    "placeholder:text-sm placeholder:text-white/40 mt-1"
-                  )}
-                />
-              </div>
-
-              {/* Start Epoch Input */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="start-epoch"
-                  className="text-sm font-medium text-white/80"
-                >
-                  Start Epoch
-                </label>
-                <input
-                  id="start-epoch"
-                  type="text"
-                  value={formData.startEpoch}
-                  onChange={(e) =>
-                    setFormData({ ...formData, startEpoch: e.target.value })
-                  }
-                  placeholder="Enter start epoch"
-                  className={cn(
-                    "input",
-                    "w-full rounded-md border bg-white/5 px-3 py-1.5",
-                    "placeholder:text-sm placeholder:text-white/40 mt-1"
-                  )}
-                />
-              </div>
-
-              {/* Voting Length Input */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="voting-length"
-                  className="text-sm font-medium text-white/80"
-                >
-                  Voting Length (Epochs)
-                </label>
-                <input
-                  id="voting-length"
-                  type="text"
-                  value={formData.votingLength}
-                  onChange={(e) =>
-                    setFormData({ ...formData, votingLength: e.target.value })
-                  }
-                  placeholder="Number of epochs"
                   className={cn(
                     "input",
                     "w-full rounded-md border bg-white/5 px-3 py-1.5",

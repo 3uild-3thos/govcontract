@@ -19,6 +19,7 @@ interface QuorumDonutProps {
   forLamports: number;
   againstLamports: number;
   abstainLamports: number;
+  totalLamports: number;
   quorumPercentage?: number;
 }
 
@@ -48,13 +49,13 @@ export default function QuorumDonut({
   forLamports,
   againstLamports,
   abstainLamports,
+  totalLamports,
   quorumPercentage,
 }: QuorumDonutProps) {
   const colors = defaultColors;
 
   // Memoize calculations to avoid re-computing on every render
-  const { chartData, totalLamports, totalSol } = useMemo(() => {
-    const totalLamports = forLamports + againstLamports + abstainLamports;
+  const { chartData, totalSol } = useMemo(() => {
     const totalSol = formatSOL(totalLamports);
 
     const chartData = [
@@ -64,7 +65,7 @@ export default function QuorumDonut({
     ];
 
     return { chartData, totalLamports, totalSol };
-  }, [forLamports, againstLamports, abstainLamports]);
+  }, [totalLamports, forLamports, againstLamports, abstainLamports]);
 
   // Calculate the rotation for the quorum marker in degrees
   const quorumAngleDegrees = quorumPercentage ? quorumPercentage * 360 : 0;

@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export type VoteOption = "for" | "against" | "abstain";
 
@@ -45,7 +45,7 @@ function parsePercentage(raw: string | number) {
 function adjustDistribution(
   previous: VoteDistribution,
   option: VoteOption,
-  nextValue: number,
+  nextValue: number
 ) {
   const distribution: VoteDistribution = {
     ...previous,
@@ -79,26 +79,23 @@ function adjustDistribution(
 }
 
 export function useVoteDistribution(
-  initial: VoteDistribution = DEFAULT_DISTRIBUTION,
+  initial: VoteDistribution = DEFAULT_DISTRIBUTION
 ) {
-  const initialRef = React.useRef(initial);
-
-  React.useEffect(() => {
-    initialRef.current = initial;
+  const [distribution, setDistribution] = useState<VoteDistribution>(initial);
+  useEffect(() => {
+    setDistribution(initial);
   }, [initial]);
 
-  const [distribution, setDistribution] = React.useState(initialRef.current);
-
-  const handleOptionChange = React.useCallback(
+  const handleOptionChange = useCallback(
     (option: VoteOption, rawValue: string) => {
       setDistribution((prev) =>
-        adjustDistribution(prev, option, parsePercentage(rawValue)),
+        adjustDistribution(prev, option, parsePercentage(rawValue))
       );
     },
-    [],
+    []
   );
 
-  const handleQuickSelect = React.useCallback((option: VoteOption) => {
+  const handleQuickSelect = useCallback((option: VoteOption) => {
     setDistribution({
       for: option === "for" ? 100 : 0,
       against: option === "against" ? 100 : 0,
@@ -106,8 +103,8 @@ export function useVoteDistribution(
     });
   }, []);
 
-  const resetDistribution = React.useCallback((next?: VoteDistribution) => {
-    setDistribution(next ?? initialRef.current);
+  const resetDistribution = useCallback((next?: VoteDistribution) => {
+    setDistribution(next ?? DEFAULT_DISTRIBUTION);
   }, []);
 
   const totalPercentage =
@@ -123,4 +120,3 @@ export function useVoteDistribution(
     resetDistribution,
   };
 }
-

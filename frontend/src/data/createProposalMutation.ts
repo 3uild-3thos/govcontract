@@ -5,10 +5,10 @@ import {
   TransactionResult,
 } from "@/chain";
 
-
 export const createProposalMutation = async (
   params: CreateProposalParams,
-  blockchainParams: BlockchainParams
+  blockchainParams: BlockchainParams,
+  slot: number | undefined
 ): Promise<TransactionResult> => {
-  return createProposal(params, blockchainParams);
+  return createProposal(params, blockchainParams, slot);
 };

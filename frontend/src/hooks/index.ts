@@ -9,7 +9,8 @@ export * from "./useVoteDistribution";
 export * from "./useProposals";
 export * from "./useProposalDetails";
 export * from "./useVoteAccounts";
-export * from "./useWalletVoteOverrideAccounts";
+export * from "./useValidatorProposalVoteAccount";
+export * from "./useVoteOverrideAccounts";
 export * from "./useCastVote";
 export * from "./useCastVoteOverride";
 export * from "./useModifyVote";
@@ -24,6 +25,7 @@ export * from "./useProposalVotes";
 export * from "./useHasUserVoted";
 
 export * from "./useStakerVotingPower";
+export * from "./useValidatorVotingPower";
 
 export * from "./useProposalVoteBreakdown";
 
@@ -33,9 +35,12 @@ export * from "./useProposalSimdDescription";
 
 export * from "./useProposalOverviewStats";
 export * from "./useSummaryStats";
-export * from "./useVoteProposals";
 
-export * from "./useStakeAccounts";
+export * from "./useStakerVotedProposals";
+
+export * from "./useWalletStakeAccounts";
+
+export * from "./useVoterWalletSummary";
 
 // DEPRECATED
 export * from "./DEPRECATED/useGetValidatorsBubbleChart";

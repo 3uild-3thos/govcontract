@@ -7,7 +7,8 @@ import {
 
 export const modifyVoteMutation = async (
   params: ModifyVoteParams,
-  blockchainParams: BlockchainParams
+  blockchainParams: BlockchainParams,
+  slot: number | undefined
 ): Promise<TransactionResult> => {
-  return modifyVote(params, blockchainParams);
+  return modifyVote(params, blockchainParams, slot);
 };

@@ -56,6 +56,7 @@ const VoteBreakdown = ({
               forLamports={votes.forStake}
               againstLamports={votes.againstStake}
               abstainLamports={votes.abstainStake}
+              totalLamports={votes.totalStake}
               quorumPercentage={proposal.quorumPercent / 100}
             />
           )}

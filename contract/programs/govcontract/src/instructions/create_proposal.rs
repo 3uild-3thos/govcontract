@@ -49,6 +49,7 @@ pub struct CreateProposal<'info> {
 impl<'info> CreateProposal<'info> {
     pub fn create_proposal(
         &mut self,
+        seed: u64,
         title: String,
         description: String,
         bumps: &CreateProposalBumps,
@@ -72,6 +73,20 @@ impl<'info> CreateProposal<'info> {
 
         let clock = Clock::get()?;
 
+        let vote_account_data = self.spl_vote_account.data.borrow();
+        // TODO: Check if this deserialization is correct
+        let vote_account = match VoteState::deserialize(&vote_account_data) {
+            Ok(vote_account) => vote_account,
+            Err(_) => return Err(GovernanceError::InvalidVoteAccount.into()),
+        };
+
+        // Ensuring signer is the same as the vote account node_pubkey
+        require_keys_eq!(
+            vote_account.node_pubkey,
+            self.signer.key(),
+            GovernanceError::InvalidVoteAccount
+        );
+
         // Calculate stake weight basis points
         let cluster_stake = get_epoch_total_stake();
         let proposer_stake = get_epoch_stake_for_vote_account(self.spl_vote_account.key);
@@ -94,6 +109,8 @@ impl<'info> CreateProposal<'info> {
             proposal_bump: bumps.proposal,
             creation_timestamp: clock.unix_timestamp,
             index: self.proposal_index.current_index + 1,
+            proposal_seed: seed,
+            vote_account_pubkey: self.spl_vote_account.key(),
             ..Proposal::default()
         });
         self.proposal_index.current_index += 1;

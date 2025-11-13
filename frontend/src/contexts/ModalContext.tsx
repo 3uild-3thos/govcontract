@@ -37,12 +37,15 @@ interface ModalDataMap {
   "cast-vote": CastVoteModalDataProps;
   "override-vote": {
     proposalId?: string;
+    ballotId?: number;
   };
   "modify-vote": {
     proposalId?: string;
+    ballotId?: number;
   };
   "modify-override-vote": {
     proposalId?: string;
+    ballotId?: number;
   };
   settings: Record<string, never>;
 }

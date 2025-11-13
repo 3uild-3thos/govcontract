@@ -13,38 +13,72 @@ import { AppButton } from "@/components/ui/AppButton";
 import ErrorMessage from "./shared/ErrorMessage";
 import { VoteDistributionControls } from "./shared/VoteDistributionControls";
 import {
-  useStakeAccounts,
   useVoteDistribution,
   useWalletRole,
   VoteDistribution,
+  useWalletStakeAccounts,
+  useVoteOverrideAccounts,
 } from "@/hooks";
 import { toast } from "sonner";
 import { WalletRole } from "@/types";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import { FormEvent, useEffect, useState } from "react";
 import { useModifyVoteOverride } from "@/hooks";
+import { GetVoteOverrideFilters } from "@/data";
+import { PublicKey } from "@solana/web3.js";
+import { StakeAccountsDropdown } from "../StakeAccountsDropdown";
+import { VotingProposalsDropdown } from "../VotingProposalsDropdown";
 
 interface OverrideVoteModalProps {
   proposalId?: string;
+  ballotId?: number;
   isOpen: boolean;
   onClose: () => void;
 }
 
+/**
+ * Builds vote override filters for a specific proposal and delegator
+ */
+function buildVoteOverrideFilters(
+  proposalPublicKey: string | undefined,
+  delegatorPublicKey: PublicKey | null
+): GetVoteOverrideFilters {
+  const filters: GetVoteOverrideFilters = [];
+
+  if (proposalPublicKey) {
+    filters.push({
+      name: "proposal" as const,
+      value: proposalPublicKey,
+    });
+  }
+
+  if (delegatorPublicKey) {
+    filters.push({
+      name: "delegator" as const,
+      value: delegatorPublicKey.toBase58(),
+    });
+  }
+
+  return filters;
+}
+
 export function ModifyOverrideVoteModal({
   proposalId: initialProposalId,
+  ballotId,
   isOpen,
   onClose,
 }: OverrideVoteModalProps) {
   const [proposalId, setProposalId] = useState(initialProposalId);
 
-  const [customStakeAccount, setCustomStakeAccount] = useState<
+  const [selectedStakeAccount, setSelectedStakeAccount] = useState<
     string | undefined
   >(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
 
-  // TODO: PEDRO initialize this after getting previously casted vote info
-  const initialVoteDist: VoteDistribution | undefined = undefined;
+  const [initialVoteDist, setInitialVoteDist] = useState<
+    VoteDistribution | undefined
+  >(undefined);
 
   const {
     distribution,
@@ -57,20 +91,46 @@ export function ModifyOverrideVoteModal({
 
   const wallet = useAnchorWallet();
 
-  const { data: stakeAccounts } = useStakeAccounts(
+  const { data: stakeAccounts } = useWalletStakeAccounts(
     wallet?.publicKey?.toBase58()
   );
 
   const { walletRole } = useWalletRole(wallet?.publicKey?.toBase58());
 
+  const voteOverrideFilters = buildVoteOverrideFilters(
+    proposalId,
+    wallet?.publicKey ?? null
+  );
+
+  const { data: voteOverrideAccounts = [] } = useVoteOverrideAccounts(
+    voteOverrideFilters,
+    voteOverrideFilters.length > 0 // at least one filter is required
+  );
+
   const { mutate: modifyVoteOverride } = useModifyVoteOverride();
 
-  const isValidStakeAccount = customStakeAccount !== undefined;
+  const isValidStakeAccount = selectedStakeAccount !== undefined;
+
+  useEffect(() => {
+    if (selectedStakeAccount) {
+      const selectedStakeAccountVote = voteOverrideAccounts.find(
+        (voa) => voa.stakeAccount.toBase58() === selectedStakeAccount
+      );
+      if (selectedStakeAccountVote) {
+        const voteDistribution: VoteDistribution = {
+          for: selectedStakeAccountVote.forVotesBp.toNumber() / 100,
+          against: selectedStakeAccountVote.againstVotesBp.toNumber() / 100,
+          abstain: selectedStakeAccountVote.abstainVotesBp.toNumber() / 100,
+        };
+        setInitialVoteDist(voteDistribution);
+      }
+    }
+  }, [selectedStakeAccount, voteOverrideAccounts]);
 
   useEffect(() => {
     if (isOpen) {
       setProposalId(initialProposalId);
-      setCustomStakeAccount(undefined);
+      setSelectedStakeAccount(undefined);
       resetDistribution();
       setError(undefined);
     }
@@ -83,9 +143,9 @@ export function ModifyOverrideVoteModal({
   };
 
   const handleError = (err: Error) => {
-    console.log("error mutating cast vote:", err);
-    toast.error(`Error voting for proposal ${proposalId}`);
-    setError(err instanceof Error ? err.message : "Failed to cast vote");
+    console.log("error mutating modify vote:", err);
+    toast.error(`Error modifying for proposal ${proposalId}`);
+    setError(err instanceof Error ? err.message : "Failed to modify vote");
     setIsLoading(false);
   };
 
@@ -110,13 +170,11 @@ export function ModifyOverrideVoteModal({
         return;
       }
 
-      const stakeAccount = customStakeAccount;
-
       const voteAccount = stakeAccounts.find(
-        (sa) => sa.stakeAccount === stakeAccount
+        (sa) => sa.stakeAccount === selectedStakeAccount
       )?.voteAccount;
 
-      if (stakeAccount === undefined) {
+      if (selectedStakeAccount === undefined) {
         toast.error("Not able to determine stake account");
         setIsLoading(false);
         return;
@@ -133,8 +191,9 @@ export function ModifyOverrideVoteModal({
           forVotesBp: voteDistribution.for * 100,
           againstVotesBp: voteDistribution.against * 100,
           abstainVotesBp: voteDistribution.abstain * 100,
-          stakeAccount,
+          stakeAccount: selectedStakeAccount,
           voteAccount,
+          ballotId,
         },
         {
           onSuccess: handleSuccess,
@@ -159,7 +218,7 @@ export function ModifyOverrideVoteModal({
 
     console.log("Overriding vote:", {
       proposalId,
-      stakeAccount: customStakeAccount,
+      selectedStakeAccount,
       distribution,
     });
     handleVote(distribution);
@@ -167,7 +226,7 @@ export function ModifyOverrideVoteModal({
 
   const handleClose = () => {
     setProposalId("");
-    setCustomStakeAccount("");
+    setSelectedStakeAccount("");
     resetDistribution();
     setError(undefined);
     onClose();
@@ -199,36 +258,40 @@ export function ModifyOverrideVoteModal({
               className="space-y-6"
             >
               {/* Proposal ID Input */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="proposal-id"
-                  className="text-sm font-medium text-white/80"
-                >
-                  Proposal ID
-                </label>
-                <input
-                  id="proposal-id"
-                  type="text"
-                  value={proposalId}
-                  onChange={(e) => setProposalId(e.target.value)}
-                  placeholder="Enter proposal public key"
-                  className={cn(
-                    "input",
-                    "mt-1 w-full rounded-md border border-white/10 bg-white/5 px-3 py-1.5",
-                    "placeholder:text-sm placeholder:text-white/40"
-                  )}
-                  disabled={initialProposalId !== undefined}
-                />
-              </div>
+              <VotingProposalsDropdown
+                value={proposalId}
+                onValueChange={setProposalId}
+                disabled={!!initialProposalId}
+              />
 
               {/* Stake Account Selection */}
+
               <div className="space-y-3">
-                <label className="text-sm font-medium text-white/80">
-                  Stake account used when casting vote
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <div className="flex-1">
+                    <p className="text-sm text-white/80">
+                      Select stake account
+                    </p>
+                    <p className="text-xs text-white/60">
+                      Select the stake account you want to modify the vote for
+                    </p>
+                  </div>
                 </label>
 
-                {/* TODO: PEDRO show stake account previously used, when we can detect if user already voted or not */}
-                <p className="text-xs text-white/60">STAKE ACCOUNT ADDRESS</p>
+                {/* Custom Stake Account Input */}
+                <StakeAccountsDropdown
+                  value={selectedStakeAccount}
+                  onValueChange={setSelectedStakeAccount}
+                  disabledAccounts={stakeAccounts
+                    ?.filter(
+                      (sa) =>
+                        !voteOverrideAccounts.some(
+                          (voa) =>
+                            voa.stakeAccount.toBase58() === sa.stakeAccount
+                        )
+                    )
+                    .map((sa) => sa.stakeAccount)}
+                />
               </div>
 
               <VoteDistributionControls

@@ -8,52 +8,69 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
 import { AppButton } from "@/components/ui/AppButton";
 import ErrorMessage from "./shared/ErrorMessage";
 import { VoteDistributionControls } from "./shared/VoteDistributionControls";
 import {
   useCastVoteOverride,
-  useStakeAccounts,
+  useWalletStakeAccounts,
   useVoteDistribution,
   useWalletRole,
   VoteDistribution,
+  useVoteOverrideAccounts,
 } from "@/hooks";
 import { toast } from "sonner";
 import { WalletRole } from "@/types";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import { FormEvent, useEffect, useState } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-  SelectTrigger,
-} from "../ui";
-import {
-  formatAddress,
-  formatLamportsDisplay,
-} from "@/lib/governance/formatters";
+import { GetVoteOverrideFilters } from "@/data";
+import { PublicKey } from "@solana/web3.js";
+import { VotingProposalsDropdown } from "../VotingProposalsDropdown";
+import { StakeAccountsDropdown } from "../StakeAccountsDropdown";
 
 interface OverrideVoteModalProps {
   proposalId?: string;
+  ballotId?: number;
   initialVoteDist?: VoteDistribution;
   isOpen: boolean;
   onClose: () => void;
 }
 
-type StakeAccountOption = "primary" | "specify";
+/**
+ * Builds vote override filters for a specific proposal and delegator
+ */
+function buildVoteOverrideFilters(
+  proposalPublicKey: string | undefined,
+  delegatorPublicKey: PublicKey | null
+): GetVoteOverrideFilters {
+  const filters: GetVoteOverrideFilters = [];
+
+  if (proposalPublicKey) {
+    filters.push({
+      name: "proposal" as const,
+      value: proposalPublicKey,
+    });
+  }
+
+  if (delegatorPublicKey) {
+    filters.push({
+      name: "delegator" as const,
+      value: delegatorPublicKey.toBase58(),
+    });
+  }
+
+  return filters;
+}
 
 export function OverrideVoteModal({
   proposalId: initialProposalId,
+  ballotId,
   initialVoteDist,
   isOpen,
   onClose,
 }: OverrideVoteModalProps) {
   const [proposalId, setProposalId] = useState(initialProposalId);
-  const [stakeAccountOption, setStakeAccountOption] =
-    useState<StakeAccountOption>("primary");
-  const [customStakeAccount, setCustomStakeAccount] = useState<
+  const [selectedStakeAccount, setSelectedStakeAccount] = useState<
     string | undefined
   >(undefined);
   const [isLoading, setIsLoading] = useState(false);
@@ -69,22 +86,27 @@ export function OverrideVoteModal({
 
   const wallet = useAnchorWallet();
 
-  const { data: stakeAccounts } = useStakeAccounts(
+  const { data: stakeAccounts } = useWalletStakeAccounts(
     wallet?.publicKey?.toBase58()
   );
+  const voteOverrideFilters = buildVoteOverrideFilters(
+    proposalId,
+    wallet?.publicKey ?? null
+  );
+
+  const { data: voteOverrideAccounts = [] } =
+    useVoteOverrideAccounts(voteOverrideFilters);
 
   const { walletRole } = useWalletRole(wallet?.publicKey?.toBase58());
 
   const { mutate: castVoteOverride } = useCastVoteOverride();
 
-  const isValidStakeAccount =
-    stakeAccountOption === "primary" || customStakeAccount !== undefined;
+  const isValidStakeAccount = selectedStakeAccount !== undefined;
 
   useEffect(() => {
     if (isOpen) {
       setProposalId(initialProposalId);
-      setStakeAccountOption("primary");
-      setCustomStakeAccount(undefined);
+      setSelectedStakeAccount(undefined);
       resetDistribution();
       setError(undefined);
     }
@@ -124,10 +146,7 @@ export function OverrideVoteModal({
         return;
       }
 
-      const stakeAccount =
-        stakeAccountOption === "primary"
-          ? stakeAccounts[0]?.stakeAccount
-          : customStakeAccount;
+      const stakeAccount = selectedStakeAccount;
 
       const voteAccount = stakeAccounts.find(
         (sa) => sa.stakeAccount === stakeAccount
@@ -152,6 +171,7 @@ export function OverrideVoteModal({
           abstainVotesBp: voteDistribution.abstain * 100,
           stakeAccount,
           voteAccount,
+          ballotId,
         },
         {
           onSuccess: handleSuccess,
@@ -176,9 +196,7 @@ export function OverrideVoteModal({
 
     console.log("Overriding vote:", {
       proposalId,
-      stakeAccount:
-        stakeAccountOption === "primary" ? "primary" : customStakeAccount,
-      usePrimaryStake: stakeAccountOption === "primary",
+      stakeAccount: selectedStakeAccount,
       distribution,
     });
     handleVote(distribution);
@@ -186,8 +204,7 @@ export function OverrideVoteModal({
 
   const handleClose = () => {
     setProposalId("");
-    setStakeAccountOption("primary");
-    setCustomStakeAccount("");
+    setSelectedStakeAccount("");
     resetDistribution();
     setError(undefined);
     onClose();
@@ -219,114 +236,33 @@ export function OverrideVoteModal({
               className="space-y-6"
             >
               {/* Proposal ID Input */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="proposal-id"
-                  className="text-sm font-medium text-white/80"
-                >
-                  Proposal ID
-                </label>
-                <input
-                  id="proposal-id"
-                  type="text"
-                  value={proposalId}
-                  onChange={(e) => setProposalId(e.target.value)}
-                  placeholder="Enter proposal public key"
-                  className={cn(
-                    "input",
-                    "mt-1 w-full rounded-md border border-white/10 bg-white/5 px-3 py-1.5",
-                    "placeholder:text-sm placeholder:text-white/40"
-                  )}
-                  disabled={initialProposalId !== undefined}
-                />
-              </div>
+              <VotingProposalsDropdown
+                value={proposalId}
+                onValueChange={setProposalId}
+                disabled={!!initialProposalId}
+              />
 
               {/* Stake Account Selection */}
               <div className="space-y-3">
-                <label className="text-sm font-medium text-white/80">
-                  Stake Account
-                </label>
-
-                {/* Primary Stake Account Option */}
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="stake-account"
-                    value="primary"
-                    checked={stakeAccountOption === "primary"}
-                    onChange={() => setStakeAccountOption("primary")}
-                    className="mt-1 h-4 w-4 accent-primary"
-                  />
-                  <div className="flex-1">
-                    <p className="text-sm text-white/80">
-                      Use primary stake account
-                    </p>
-                    <p className="text-xs text-white/60">
-                      Automatically use your first stake account
-                    </p>
-                  </div>
-                </label>
-
                 {/* Specify Stake Account Option */}
                 <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="stake-account"
-                    value="specify"
-                    checked={stakeAccountOption === "specify"}
-                    onChange={() => setStakeAccountOption("specify")}
-                    className="mt-1 h-4 w-4 accent-primary"
-                  />
                   <div className="flex-1">
                     <p className="text-sm text-white/80">
-                      Specify stake account
+                      Select stake account
                     </p>
                     <p className="text-xs text-white/60">
                       Provide a specific stake account address
                     </p>
                   </div>
                 </label>
-
                 {/* Custom Stake Account Input */}
-                {stakeAccountOption === "specify" && (
-                  <Select
-                    value={customStakeAccount}
-                    onValueChange={(v) => setCustomStakeAccount(v)}
-                  >
-                    <SelectTrigger className="text-white w-full">
-                      <div className="flex gap-1">
-                        <span className="text-dao-text-secondary">
-                          Stake account:
-                        </span>
-                        <SelectValue placeholder="-" />
-                      </div>
-                    </SelectTrigger>
-                    <SelectContent className="text-white bg-background/40 backdrop-blur">
-                      {stakeAccounts?.map((stakeAcc) => (
-                        <SelectItem
-                          key={stakeAcc.stakeAccount}
-                          value={stakeAcc.stakeAccount}
-                        >
-                          {formatAddress(stakeAcc.stakeAccount)} -&nbsp;
-                          {formatLamportsDisplay(stakeAcc.activeStake).value}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-                {/* {stakeAccountOption === "specify" && (
-                  <input
-                    type="text"
-                    value={customStakeAccount}
-                    onChange={(e) => setCustomStakeAccount(e.target.value)}
-                    placeholder="Enter stake account address"
-                    className={cn(
-                      "input",
-                      "w-full rounded-md border bg-white/5 px-3 py-1.5",
-                      "placeholder:text-sm placeholder:text-white/40"
-                    )}
-                  />
-                )} */}
+                <StakeAccountsDropdown
+                  value={selectedStakeAccount}
+                  onValueChange={setSelectedStakeAccount}
+                  disabledAccounts={voteOverrideAccounts.map((voa) =>
+                    voa.stakeAccount.toBase58()
+                  )}
+                />
               </div>
 
               <VoteDistributionControls

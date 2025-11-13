@@ -3,6 +3,9 @@ import { getVoteAccounts } from "@/data";
 import { GET_VOTE_ACCOUNTS } from "@/helpers";
 import { useQuery } from "@tanstack/react-query";
 
+/**
+ * @deprecated cant fetch ALL vote accounts at once.
+ */
 export const useVoteAccounts = (enabled = true) => {
   const { endpointUrl: endpoint } = useEndpoint();
 
@@ -10,6 +13,6 @@ export const useVoteAccounts = (enabled = true) => {
     queryKey: [GET_VOTE_ACCOUNTS, endpoint],
     enabled,
     staleTime: 1000 * 120, // 2 minutes
-    queryFn: () => getVoteAccounts({ endpoint }),
+    queryFn: () => getVoteAccounts(endpoint),
   });
 };
