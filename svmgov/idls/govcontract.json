@@ -8,6 +8,62 @@
   },
   "instructions": [
     {
+      "name": "adjust_proposal_timing",
+      "discriminator": [
+        82,
+        66,
+        219,
+        217,
+        123,
+        150,
+        223,
+        224
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "proposal",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "creation_timestamp",
+          "type": {
+            "option": "i64"
+          }
+        },
+        {
+          "name": "creation_epoch",
+          "type": {
+            "option": "u64"
+          }
+        },
+        {
+          "name": "start_epoch",
+          "type": {
+            "option": "u64"
+          }
+        },
+        {
+          "name": "end_epoch",
+          "type": {
+            "option": "u64"
+          }
+        },
+        {
+          "name": "snapshot_slot",
+          "type": {
+            "option": "u64"
+          }
+        }
+      ]
+    },
+    {
       "name": "cast_vote",
       "discriminator": [
         20,
@@ -955,6 +1011,19 @@
       ]
     },
     {
+      "name": "ProposalTimingAdjusted",
+      "discriminator": [
+        151,
+        58,
+        224,
+        49,
+        142,
+        133,
+        182,
+        107
+      ]
+    },
+    {
       "name": "VoteCast",
       "discriminator": [
         39,
@@ -1464,6 +1533,46 @@
           {
             "name": "snapshot_slot",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProposalTimingAdjusted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "proposal_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "author",
+            "type": "pubkey"
+          },
+          {
+            "name": "new_creation_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "new_creation_epoch",
+            "type": "u64"
+          },
+          {
+            "name": "new_start_epoch",
+            "type": "u64"
+          },
+          {
+            "name": "new_end_epoch",
+            "type": "u64"
+          },
+          {
+            "name": "new_snapshot_slot",
+            "type": "u64"
+          },
+          {
+            "name": "adjustment_timestamp",
+            "type": "i64"
           }
         ]
       }
