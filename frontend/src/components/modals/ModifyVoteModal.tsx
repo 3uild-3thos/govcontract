@@ -17,10 +17,11 @@ import { VoteDistributionControls } from "./shared/VoteDistributionControls";
 import { useModifyVote, useVoteDistribution, VoteDistribution } from "@/hooks";
 import { toast } from "sonner";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
 
 export interface ModifyVoteModalDataProps {
   proposalId?: string;
-  ballotId?: number;
+  consensusResult?: PublicKey;
   initialVoteDist?: VoteDistribution;
 }
 
@@ -31,7 +32,7 @@ interface ModifyVoteModalProps extends ModifyVoteModalDataProps {
 
 export function ModifyVoteModal({
   proposalId: initialProposalId,
-  ballotId,
+  consensusResult,
   initialVoteDist,
   isOpen,
   onClose,
@@ -88,7 +89,7 @@ export function ModifyVoteModal({
           forVotesBp: voteDistribution.for * 100,
           againstVotesBp: voteDistribution.against * 100,
           abstainVotesBp: voteDistribution.abstain * 100,
-          ballotId,
+          consensusResult,
         },
         {
           onSuccess: handleSuccess,

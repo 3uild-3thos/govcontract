@@ -17,7 +17,7 @@ import {
   validateVoteBasisPoints,
   createGovV1ProgramWithWallet,
   getVoteAccountProof,
-  generatePdasFromVoteProofResponse,
+  getMetaMerkleProofPda,
 } from "./helpers";
 
 /**
@@ -34,7 +34,7 @@ export async function modifyVote(
     againstVotesBp,
     abstainVotesBp,
     wallet,
-    ballotId,
+    consensusResult,
   } = params;
 
   if (!wallet || !wallet.publicKey) {
@@ -43,6 +43,10 @@ export async function modifyVote(
 
   if (slot === undefined) {
     throw new Error("Slot is not defined");
+  }
+
+  if (consensusResult === undefined) {
+    throw new Error("Consensus result not defined");
   }
 
   // Validate vote distribution
@@ -83,12 +87,11 @@ export async function modifyVote(
   );
   console.log("fetched voteAccountProof", voteAccountProof);
 
-  const [consensusResultPda, metaMerkleProofPda] =
-    generatePdasFromVoteProofResponse(
-      voteAccountProof,
-      SNAPSHOT_PROGRAM_ID,
-      ballotId
-    );
+  const metaMerkleProofPda = getMetaMerkleProofPda(
+    voteAccountProof,
+    SNAPSHOT_PROGRAM_ID,
+    consensusResult
+  );
 
   const merkleAccountInfo = await program.provider.connection.getAccountInfo(
     metaMerkleProofPda,
@@ -120,7 +123,7 @@ export async function modifyVote(
         new BN(1)
       )
       .accountsStrict({
-        consensusResult: consensusResultPda,
+        consensusResult,
         merkleProof: metaMerkleProofPda,
         payer: wallet.publicKey,
         systemProgram: SystemProgram.programId,
@@ -143,7 +146,7 @@ export async function modifyVote(
       vote: votePda,
       splVoteAccount: splVoteAccount,
       snapshotProgram: SNAPSHOT_PROGRAM_ID,
-      consensusResult: consensusResultPda,
+      consensusResult,
       metaMerkleProof: metaMerkleProofPda,
       systemProgram: SystemProgram.programId,
     })

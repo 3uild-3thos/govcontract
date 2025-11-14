@@ -10,13 +10,13 @@ import {
   createGovV1ProgramWithWallet,
   getVoteAccountProof,
   getStakeAccountProof,
-  generatePdasFromVoteProofResponse,
   convertMerkleProofStrings,
   convertStakeMerkleLeafDataToIdlType,
   validateVoteBasisPoints,
   deriveVotePda,
   deriveVoteOverridePda,
   deriveVoteOverrideCachePda,
+  getMetaMerkleProofPda,
 } from "./helpers";
 import { BN } from "@coral-xyz/anchor";
 
@@ -36,7 +36,7 @@ export async function castVoteOverride(
     stakeAccount,
     wallet,
     voteAccount,
-    ballotId,
+    consensusResult,
   } = params;
 
   if (!wallet || !wallet.publicKey) {
@@ -45,6 +45,10 @@ export async function castVoteOverride(
 
   if (slot === undefined) {
     throw new Error("Slot is not defined");
+  }
+
+  if (consensusResult === undefined) {
+    throw new Error("Consensus result not defined");
   }
 
   // Validate vote distribution
@@ -63,12 +67,11 @@ export async function castVoteOverride(
     getStakeAccountProof(stakeAccount, network, slot),
   ]);
 
-  const [consensusResultPda, metaMerkleProofPda] =
-    generatePdasFromVoteProofResponse(
-      metaMerkleProof,
-      SNAPSHOT_PROGRAM_ID,
-      ballotId
-    );
+  const metaMerkleProofPda = getMetaMerkleProofPda(
+    metaMerkleProof,
+    SNAPSHOT_PROGRAM_ID,
+    consensusResult
+  );
 
   // Check if merkle account exists
   const merkleAccountInfo = await program.provider.connection.getAccountInfo(
@@ -110,7 +113,7 @@ export async function castVoteOverride(
         new BN(1)
       )
       .accountsStrict({
-        consensusResult: consensusResultPda,
+        consensusResult,
         merkleProof: metaMerkleProofPda,
         payer: wallet.publicKey,
         systemProgram: SystemProgram.programId,
@@ -179,7 +182,7 @@ export async function castVoteOverride(
       splVoteAccount: splVoteAccount,
       splStakeAccount: stakeAccountPubkey,
       proposal: proposalPubkey,
-      consensusResult: consensusResultPda,
+      consensusResult,
       metaMerkleProof: metaMerkleProofPda,
       snapshotProgram: SNAPSHOT_PROGRAM_ID,
       systemProgram: SystemProgram.programId,

@@ -44,7 +44,6 @@ export function mapProposalDto(
   return {
     publicKey: rawAccount.publicKey,
     id: index.toString(),
-    ballotId: rawAccount.account.ballotId?.toNumber(),
     simd,
     title: raw.title,
     description: raw.description,
@@ -68,6 +67,8 @@ export function mapProposalDto(
     status,
     voting: raw.voting,
     finalized: raw.finalized,
+
+    consensusResult: rawAccount.account.consensusResult || undefined,
 
     proposalBump: raw.proposalBump,
     index: raw.index,

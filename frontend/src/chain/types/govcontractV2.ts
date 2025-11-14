@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/govcontract.json`.
  */
 export type Govcontract = {
-  address: "3GBS7ZjQV5cKfsazbA2CSGm8kVQjjT6ow9XxZtSxRH3G";
+  address: "6MX2RaV2vfTGv6c7zCmRAod2E6MdAgR6be2Vb3NsMxPW";
   metadata: {
     name: "govcontract";
     version: "0.1.0";
@@ -13,21 +13,6 @@ export type Govcontract = {
     description: "Created with Anchor";
   };
   instructions: [
-    {
-      name: "addMerkleRoot";
-      discriminator: [235, 31, 120, 49, 53, 9, 197, 147];
-      accounts: [
-        {
-          name: "consensusResult";
-          signer: true;
-        },
-        {
-          name: "proposal";
-          writable: true;
-        }
-      ];
-      args: [];
-    },
     {
       name: "castVote";
       discriminator: [20, 212, 15, 189, 69, 180, 69, 151];
@@ -375,6 +360,35 @@ export type Govcontract = {
       args: [];
     },
     {
+      name: "flushMerkleRoot";
+      discriminator: [10, 71, 17, 246, 162, 57, 144, 87];
+      accounts: [
+        {
+          name: "signer";
+          writable: true;
+          signer: true;
+        },
+        {
+          name: "proposal";
+          writable: true;
+        },
+        {
+          name: "splVoteAccount";
+        },
+        {
+          name: "ballotBox";
+        },
+        {
+          name: "ballotProgram";
+        },
+        {
+          name: "systemProgram";
+          address: "11111111111111111111111111111111";
+        }
+      ];
+      args: [];
+    },
+    {
       name: "initializeIndex";
       discriminator: [204, 67, 3, 74, 139, 139, 233, 10];
       accounts: [
@@ -664,6 +678,12 @@ export type Govcontract = {
           name: "splVoteAccount";
         },
         {
+          name: "ballotBox";
+        },
+        {
+          name: "ballotProgram";
+        },
+        {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
         }
@@ -699,8 +719,8 @@ export type Govcontract = {
   ];
   events: [
     {
-      name: "merkleRootAdded";
-      discriminator: [171, 59, 45, 200, 89, 55, 150, 244];
+      name: "merkleRootFlushed";
+      discriminator: [120, 37, 53, 216, 119, 172, 17, 144];
     },
     {
       name: "proposalCreated";
@@ -926,11 +946,21 @@ export type Govcontract = {
       code: 6038;
       name: "supportPeriodExpired";
       msg: "Support period has expired for this proposal";
+    },
+    {
+      code: 6039;
+      name: "consensusResultNotSet";
+      msg: "Consensus result has not been set for this proposal";
+    },
+    {
+      code: 6040;
+      name: "unauthorized";
+      msg: "Unauthorized: caller is not authorized to perform this action";
     }
   ];
   types: [
     {
-      name: "merkleRootAdded";
+      name: "merkleRootFlushed";
       type: {
         kind: "struct";
         fields: [
@@ -939,10 +969,16 @@ export type Govcontract = {
             type: "pubkey";
           },
           {
-            name: "merkleRootHash";
-            type: {
-              array: ["u8", 32];
-            };
+            name: "author";
+            type: "pubkey";
+          },
+          {
+            name: "newSnapshotSlot";
+            type: "u64";
+          },
+          {
+            name: "flushTimestamp";
+            type: "i64";
           }
         ];
       };
@@ -1027,14 +1063,9 @@ export type Govcontract = {
             type: "u32";
           },
           {
-            name: "merkleRootHash";
-            docs: [
-              "Merkle root hash representing the snapshot of validator stakes at proposal creation"
-            ];
+            name: "consensusResult";
             type: {
-              option: {
-                array: ["u8", 32];
-              };
+              option: "pubkey";
             };
           },
           {
@@ -1043,10 +1074,12 @@ export type Govcontract = {
             type: "u64";
           },
           {
-            name: "ballotId";
-            type: {
-              option: "u64";
-            };
+            name: "proposalSeed";
+            type: "u64";
+          },
+          {
+            name: "voteAccountPubkey";
+            type: "pubkey";
           }
         ];
       };

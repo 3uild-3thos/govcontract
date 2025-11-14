@@ -1,8 +1,10 @@
 import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
+import { BN } from "@coral-xyz/anchor";
 import {
   BlockchainParams,
   SupportProposalParams,
   TransactionResult,
+  SNAPSHOT_PROGRAM_ID,
 } from "./types";
 import {
   createProgramWithWallet,
@@ -56,6 +58,26 @@ export async function supportProposal(
   );
   console.log("fetched voteAccountProof", voteAccountProof);
 
+  const DISCUSSION_EPOCHS = 4;
+  const SNAPSHOT_EPOCH_EXTENSION = 1;
+
+  const epochInfo = await program.provider.connection.getEpochInfo();
+  const targetEpoch =
+    epochInfo.epoch + DISCUSSION_EPOCHS + SNAPSHOT_EPOCH_EXTENSION;
+
+  const epochSchedule = await program.provider.connection.getEpochSchedule();
+  const startSlot = epochSchedule.getFirstSlotInEpoch(targetEpoch);
+  const snapshotSlot = startSlot + 1000;
+
+  const seeds = [
+    Buffer.from("BallotBox"),
+    new BN(snapshotSlot).toArrayLike(Buffer, "le", 8),
+  ];
+  const [ballotBoxPda] = PublicKey.findProgramAddressSync(
+    seeds,
+    SNAPSHOT_PROGRAM_ID
+  );
+
   // Build support proposal instruction
   const supportProposalInstruction = await program.methods
     .supportProposal()
@@ -65,6 +87,8 @@ export async function supportProposal(
       support: supportPda,
       splVoteAccount: new PublicKey(validatorVoteAccount.votePubkey),
       systemProgram: SystemProgram.programId,
+      ballotBox: ballotBoxPda,
+      ballotProgram: SNAPSHOT_PROGRAM_ID,
     })
     .instruction();
 

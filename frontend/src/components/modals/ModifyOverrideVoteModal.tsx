@@ -30,7 +30,7 @@ import { VotingProposalsDropdown } from "../VotingProposalsDropdown";
 
 interface OverrideVoteModalProps {
   proposalId?: string;
-  ballotId?: number;
+  consensusResult?: PublicKey;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -63,7 +63,7 @@ function buildVoteOverrideFilters(
 
 export function ModifyOverrideVoteModal({
   proposalId: initialProposalId,
-  ballotId,
+  consensusResult,
   isOpen,
   onClose,
 }: OverrideVoteModalProps) {
@@ -192,7 +192,7 @@ export function ModifyOverrideVoteModal({
           abstainVotesBp: voteDistribution.abstain * 100,
           stakeAccount: selectedStakeAccount,
           voteAccount,
-          ballotId,
+          consensusResult,
         },
         {
           onSuccess: handleSuccess,
