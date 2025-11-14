@@ -108,4 +108,22 @@ pub mod govcontract {
         ctx.accounts.flush_merkle_root()?;
         Ok(())
     }
+
+    pub fn adjust_proposal_timing(
+        ctx: Context<AdjustProposalTiming>,
+        creation_timestamp: Option<i64>,
+        creation_epoch: Option<u64>,
+        start_epoch: Option<u64>,
+        end_epoch: Option<u64>,
+        snapshot_slot: Option<u64>,
+    ) -> Result<()> {
+        ctx.accounts.adjust_timing(
+            creation_timestamp,
+            creation_epoch,
+            start_epoch,
+            end_epoch,
+            snapshot_slot,
+        )?;
+        Ok(())
+    }
 }

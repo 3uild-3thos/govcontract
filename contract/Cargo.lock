@@ -601,7 +601,7 @@ dependencies = [
 [[package]]
 name = "gov-v1"
 version = "0.1.0"
-source = "git+https://github.com/dhruvsol/gov-v1-testnet?branch=signer-check#ab0962cacbfce91a3204b0869efeb0948c4638a2"
+source = "git+https://github.com/dhruvsol/gov-v1-testnet?branch=signer-check#17f16e99760be69d686b2ef35137e86e40834c89"
 dependencies = [
  "anchor-lang",
 ]
