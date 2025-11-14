@@ -36,6 +36,7 @@ pub struct SupportProposal<'info> {
     pub spl_vote_account: UncheckedAccount<'info>,
 
     /// CHECK: Ballot box account - may or may not exist, checked with data_is_empty()
+    #[account(mut)]
     pub ballot_box: UncheckedAccount<'info>,
 
     /// CHECK: Ballot program account

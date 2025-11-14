@@ -1,6 +1,9 @@
 use std::str::FromStr;
 
-use anchor_client::solana_sdk::{pubkey::Pubkey, signer::Signer, transaction::Transaction};
+use anchor_client::{
+    solana_client::rpc_config::RpcSendTransactionConfig,
+    solana_sdk::{pubkey::Pubkey, signer::Signer, transaction::Transaction},
+};
 use anchor_lang::system_program;
 use anyhow::{Result, anyhow};
 use gov_v1::ID as SNAPSHOT_PROGRAM_ID;
@@ -63,8 +66,18 @@ pub async fn support_proposal(
 
     let sig = program
         .rpc()
-        .send_and_confirm_transaction(&transaction)
+        .send_transaction_with_config(
+            &transaction,
+            RpcSendTransactionConfig {
+                skip_preflight: true,
+                ..Default::default()
+            },
+        )
         .await?;
+    // let sig = program
+    //     .rpc()
+    //     .send_and_confirm_transaction(&transaction)
+    //     .await?;
 
     spinner.finish_with_message(format!(
         "Proposal supported. https://explorer.solana.com/tx/{}",
