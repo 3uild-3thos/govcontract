@@ -113,6 +113,10 @@ impl<'info> SupportProposal<'info> {
                 // Create seed components with sufficient lifetime
                 let proposal_seed_val = self.proposal.proposal_seed.to_le_bytes();
                 let vote_account_key = self.proposal.vote_account_pubkey.key();
+
+                msg!("{:?}", proposal_seed_val);
+                msg!("{:?}", vote_account_key);
+
                 let seeds: &[&[u8]] = &[
                     b"proposal".as_ref(),
                     &proposal_seed_val,
@@ -132,12 +136,12 @@ impl<'info> SupportProposal<'info> {
                     signer,
                 );
 
-                gov_v1::cpi::init_ballot_box(
-                    cpi_ctx,
-                    snapshot_slot,
-                    self.proposal.proposal_seed, // we are not storing this
-                    self.spl_vote_account.key(),
-                )?;
+                // gov_v1::cpi::init_ballot_box(
+                //     cpi_ctx,
+                //     snapshot_slot,
+                //     self.proposal.proposal_seed, // we are not storing this
+                //     self.spl_vote_account.key(),
+                // )?;
             }
 
             true
