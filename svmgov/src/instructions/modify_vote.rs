@@ -7,22 +7,20 @@ use gov_v1::ID as SNAPSHOT_PROGRAM_ID;
 
 use crate::{
     constants::*,
-    govcontract::client::{accounts, args},
+    govcontract::{accounts::Proposal, client::{accounts, args}},
     utils::{
-        api_helpers::{generate_pdas_from_vote_proof_response, get_vote_account_proof},
+        api_helpers::{self, get_vote_account_proof},
         utils::{create_spinner, derive_vote_pda, setup_all},
     },
 };
 
 pub async fn modify_vote(
     proposal_id: String,
-    ballot_id: u64,
     for_votes: u64,
     against_votes: u64,
     abstain_votes: u64,
     identity_keypair: Option<String>,
     rpc_url: Option<String>,
-    snapshot_slot: u64,
     network: String,
 ) -> Result<()> {
     if for_votes + against_votes + abstain_votes != BASIS_POINTS_TOTAL {
@@ -38,11 +36,24 @@ pub async fn modify_vote(
     let (payer, vote_account, program, _merkle_proof_program) =
         setup_all(identity_keypair, rpc_url).await?;
 
+    // Fetch proposal to get snapshot_slot and consensus_result
+    let proposal = program
+        .account::<Proposal>(proposal_pubkey)
+        .await
+        .map_err(|e| anyhow!("Failed to fetch proposal: {}", e))?;
+
+    let snapshot_slot = proposal.snapshot_slot;
+    let consensus_result_pda = proposal
+        .consensus_result
+        .ok_or_else(|| anyhow!("Proposal consensus_result is not set"))?;
+
     let proof_response =
         get_vote_account_proof(&vote_account.to_string(), snapshot_slot, &network).await?;
 
-    let (consensus_result_pda, meta_merkle_proof_pda) =
-        generate_pdas_from_vote_proof_response(ballot_id, &proof_response)?;
+    // Generate meta_merkle_proof_pda using the consensus_result from proposal
+    let vote_account_pubkey = Pubkey::from_str(&proof_response.meta_merkle_leaf.vote_account)
+        .map_err(|e| anyhow!("Invalid vote_account pubkey in response: {}", e))?;
+    let meta_merkle_proof_pda = api_helpers::generate_meta_merkle_proof_pda(&consensus_result_pda, &vote_account_pubkey)?;
 
     let vote_pda = derive_vote_pda(&proposal_pubkey, &vote_account, &program.id());
 

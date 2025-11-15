@@ -1,0 +1,44 @@
+# List Proposals
+
+List all governance proposals, optionally filtered by status.
+
+## Description
+
+This command retrieves and displays a list of all governance proposals from the Solana Validator Governance program. You can filter by status and limit the number of results.
+
+## Arguments
+
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `--status` | String | No | - | Filter by proposal status (e.g., `active`) |
+| `--limit` | usize | No | `0` | Limit the number of proposals listed (0 = no limit) |
+| `--json` | bool | No | `false` | Output in JSON format |
+
+## Global Arguments
+
+| Name | Type | Required | Default | Description |
+|------|----------|---------|-------------|
+| `--rpc-url`, `-r` | String | No | `SVMGOV_RPC` env var | Custom RPC URL |
+
+> Using config: With `~/.svmgov/config.toml`, the RPC URL is resolved automatically.
+
+## Examples
+
+```bash
+# With config (recommended)
+svmgov list-proposals
+
+# Filter to only active proposals
+svmgov list-proposals --status active
+
+# List first 5 proposals in JSON format
+svmgov list-proposals --limit 5 --json true
+
+# Without config (explicit RPC)
+svmgov list-proposals --rpc-url https://api.mainnet-beta.solana.com
+```
+
+## Output Format
+
+By default, proposals are displayed in a human-readable format. Use `--json true` for machine-readable JSON output.
+

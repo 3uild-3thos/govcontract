@@ -26,7 +26,11 @@ indicatif = "0.18.0"
 reqwest = { version = "0.12.23", features = ["json"] }
 bs58 = "0.5.1"
 hex = "0.4.3"
-gov-v1 = { git = "https://github.com/dhruvsol/gov-v1-testnet.git" }
+gov-v1 = {git = "https://github.com/dhruvsol/gov-v1-testnet", branch = "signer-check" }
 dotenv = "0.15.0"
+toml = "0.8"
+dirs = "5.0"
+inquire = "0.7"
+base64 = "0.22.1"
 [dev-dependencies]
 tempfile = "3.0"
