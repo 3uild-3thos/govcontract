@@ -1,16 +1,16 @@
-import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
-import { BN } from "@coral-xyz/anchor";
+import { PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
+import { BN } from '@coral-xyz/anchor';
 import {
   BlockchainParams,
   SupportProposalParams,
   TransactionResult,
   SNAPSHOT_PROGRAM_ID,
-} from "./types";
+} from './types';
 import {
   createProgramWithWallet,
   deriveSupportPda,
   getVoteAccountProof,
-} from "./helpers";
+} from './helpers';
 
 /**
  * Supports a governance proposal
@@ -23,11 +23,11 @@ export async function supportProposal(
   const { proposalId, wallet } = params;
 
   if (!wallet || !wallet.publicKey) {
-    throw new Error("Wallet not connected");
+    throw new Error('Wallet not connected');
   }
 
   if (slot === undefined) {
-    throw new Error("Slot is not defined");
+    throw new Error('Slot is not defined');
   }
 
   const program = createProgramWithWallet(wallet, blockchainParams.endpoint);
@@ -56,7 +56,7 @@ export async function supportProposal(
     blockchainParams.network,
     slot
   );
-  console.log("fetched voteAccountProof", voteAccountProof);
+  console.log('fetched voteAccountProof', voteAccountProof);
 
   const DISCUSSION_EPOCHS = 4;
   const SNAPSHOT_EPOCH_EXTENSION = 1;
@@ -70,8 +70,8 @@ export async function supportProposal(
   const snapshotSlot = startSlot + 1000;
 
   const seeds = [
-    Buffer.from("BallotBox"),
-    new BN(snapshotSlot).toArrayLike(Buffer, "le", 8),
+    Buffer.from('BallotBox'),
+    new BN(snapshotSlot).toArrayLike(Buffer, 'le', 8),
   ];
   const [ballotBoxPda] = PublicKey.findProgramAddressSync(
     seeds,
@@ -92,11 +92,20 @@ export async function supportProposal(
     })
     .instruction();
 
+  console.log('supportProposalInstruction', {
+    signer: wallet.publicKey.toBase58(),
+    proposal: proposalPubkey.toBase58(),
+    support: supportPda.toBase58(),
+    splVoteAccount: new PublicKey(validatorVoteAccount.votePubkey).toBase58(),
+    systemProgram: SystemProgram.programId.toBase58(),
+    ballotBox: ballotBoxPda.toBase58(),
+    ballotProgram: SNAPSHOT_PROGRAM_ID.toBase58(),
+  });
   const transaction = new Transaction();
   transaction.add(supportProposalInstruction);
   transaction.feePayer = wallet.publicKey;
   transaction.recentBlockhash = (
-    await program.provider.connection.getLatestBlockhash("confirmed")
+    await program.provider.connection.getLatestBlockhash('confirmed')
   ).blockhash;
 
   const tx = await wallet.signTransaction(transaction);
@@ -105,7 +114,7 @@ export async function supportProposal(
     tx.serialize()
   );
 
-  console.log("signature support proposal", signature);
+  console.log('signature support proposal', signature);
 
   return {
     signature,
