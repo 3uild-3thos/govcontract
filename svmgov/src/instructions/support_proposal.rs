@@ -11,7 +11,10 @@ use gov_v1::ID as SNAPSHOT_PROGRAM_ID;
 use crate::{
     constants::{DISCUSSION_EPOCHS, SNAPSHOT_EPOCH_EXTENSION},
     govcontract::client::{accounts, args},
-    utils::utils::{create_spinner, derive_support_pda, get_epoch_slot_range, setup_all},
+    utils::utils::{
+        create_spinner, derive_program_config_pda, derive_support_pda, get_epoch_slot_range,
+        setup_all,
+    },
 };
 
 pub async fn support_proposal(
@@ -42,6 +45,8 @@ pub async fn support_proposal(
         pda
     };
 
+    let program_config_pda = derive_program_config_pda(&SNAPSHOT_PROGRAM_ID);
+
     let support_proposal_ixs = program
         .request()
         .args(args::SupportProposal {})
@@ -51,6 +56,7 @@ pub async fn support_proposal(
             support: support_pda,
             spl_vote_account: vote_account,
             ballot_box: ballot_box_pda,
+            program_config: program_config_pda,
             ballot_program: SNAPSHOT_PROGRAM_ID,
             system_program: system_program::ID,
         })
@@ -64,20 +70,20 @@ pub async fn support_proposal(
         blockhash,
     );
 
-    let sig = program
-        .rpc()
-        .send_transaction_with_config(
-            &transaction,
-            RpcSendTransactionConfig {
-                skip_preflight: true,
-                ..Default::default()
-            },
-        )
-        .await?;
     // let sig = program
     //     .rpc()
-    //     .send_and_confirm_transaction(&transaction)
+    //     .send_transaction_with_config(
+    //         &transaction,
+    //         RpcSendTransactionConfig {
+    //             skip_preflight: true,
+    //             ..Default::default()
+    //         },
+    //     )
     //     .await?;
+    let sig = program
+        .rpc()
+        .send_and_confirm_transaction(&transaction)
+        .await?;
 
     spinner.finish_with_message(format!(
         "Proposal supported. https://explorer.solana.com/tx/{}",

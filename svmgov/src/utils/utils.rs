@@ -470,6 +470,14 @@ pub fn derive_vote_override_cache_pda(
     let (pda, _) = Pubkey::find_program_address(seeds, program_id);
     pda
 }
+/// Derives the ProgramConfig PDA using the seeds [b"ProgramConfig"]
+/// This matches the on-chain derivation in the support_proposal instruction.
+pub fn derive_program_config_pda(ballot_program_id: &Pubkey) -> Pubkey {
+    let seeds = &[b"ProgramConfig".as_ref()];
+    let (pda, _) = Pubkey::find_program_address(seeds, ballot_program_id);
+    pda
+}
+
 pub fn get_epoch_slot_range(epoch: u64) -> (u64, u64) {
     const SLOTS_PER_EPOCH: u64 = 432_000;
 

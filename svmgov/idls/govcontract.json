@@ -864,10 +864,40 @@
           "name": "spl_vote_account"
         },
         {
-          "name": "ballot_box"
+          "name": "ballot_box",
+          "writable": true
         },
         {
           "name": "ballot_program"
+        },
+        {
+          "name": "program_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  80,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  67,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "ballot_program"
+            }
+          }
         },
         {
           "name": "system_program",
