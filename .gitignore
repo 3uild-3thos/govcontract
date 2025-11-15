@@ -8,3 +8,5 @@ pm-testnet.json
 
 node_modules
 .next
+
+ax.json

@@ -136,12 +136,12 @@ impl<'info> SupportProposal<'info> {
                     signer,
                 );
 
-                // gov_v1::cpi::init_ballot_box(
-                //     cpi_ctx,
-                //     snapshot_slot,
-                //     self.proposal.proposal_seed, // we are not storing this
-                //     self.spl_vote_account.key(),
-                // )?;
+                gov_v1::cpi::init_ballot_box(
+                    cpi_ctx,
+                    snapshot_slot,
+                    self.proposal.proposal_seed, // we are not storing this
+                    self.proposal.vote_account_pubkey.key(),
+                )?;
             }
 
             true
