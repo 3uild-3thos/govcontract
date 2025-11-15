@@ -70,20 +70,20 @@ pub async fn support_proposal(
         blockhash,
     );
 
-    // let sig = program
-    //     .rpc()
-    //     .send_transaction_with_config(
-    //         &transaction,
-    //         RpcSendTransactionConfig {
-    //             skip_preflight: true,
-    //             ..Default::default()
-    //         },
-    //     )
-    //     .await?;
     let sig = program
         .rpc()
-        .send_and_confirm_transaction(&transaction)
+        .send_transaction_with_config(
+            &transaction,
+            RpcSendTransactionConfig {
+                skip_preflight: true,
+                ..Default::default()
+            },
+        )
         .await?;
+    // let sig = program
+    //     .rpc()
+    //     .send_and_confirm_transaction(&transaction)
+    //     .await?;
 
     spinner.finish_with_message(format!(
         "Proposal supported. https://explorer.solana.com/tx/{}",
