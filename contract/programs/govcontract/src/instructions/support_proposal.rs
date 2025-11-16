@@ -2,9 +2,13 @@ use anchor_lang::{
     prelude::*,
     solana_program::{
         epoch_stake::{get_epoch_stake_for_vote_account, get_epoch_total_stake},
+        instruction::Instruction,
+        program::invoke_signed,
         vote::{program as vote_program, state::VoteState},
     },
+    ToAccountMetas,
 };
+use borsh::BorshSerialize;
 
 use crate::{
     constants::*,
@@ -57,6 +61,13 @@ pub struct SupportProposal<'info> {
     pub system_program: Program<'info, System>,
 }
 
+pub struct InitBallotBox<'info> {
+    pub payer: AccountInfo<'info>,
+    pub proposal: AccountInfo<'info>,
+    pub ballot_box: AccountInfo<'info>,
+    pub program_config: AccountInfo<'info>,
+    pub system_program: AccountInfo<'info>,
+}
 impl<'info> SupportProposal<'info> {
     pub fn support_proposal(&mut self, bumps: &SupportProposalBumps) -> Result<()> {
         let clock = Clock::get()?;
@@ -122,26 +133,51 @@ impl<'info> SupportProposal<'info> {
                     &proposal_seed_val,
                     vote_account_key.as_ref(),
                 ];
-                let signer = &[&seeds[..]];
-                // Initialize the consensus result
-                let cpi_ctx = CpiContext::new_with_signer(
-                    self.ballot_program.to_account_info(),
-                    gov_v1::cpi::accounts::InitBallotBox {
-                        payer: self.signer.to_account_info(),
-                        proposal: self.proposal.to_account_info(),
-                        ballot_box: self.ballot_box.to_account_info(),
-                        program_config: self.program_config.to_account_info(),
-                        system_program: self.system_program.to_account_info(),
-                    },
-                    signer,
-                );
+                let signer_seeds = &[&seeds[..]];
 
-                gov_v1::cpi::init_ballot_box(
-                    cpi_ctx,
-                    snapshot_slot,
-                    self.proposal.proposal_seed, // we are not storing this
-                    self.proposal.vote_account_pubkey.key(),
-                )?;
+                // Build CPI accounts struct
+                let cpi_accounts = vec![
+                    AccountMeta::new(self.signer.key(), true),
+                    AccountMeta::new(self.proposal.key(), true),
+                    AccountMeta::new(self.ballot_box.key(), false),
+                    AccountMeta::new(self.program_config.key(), false),
+                    AccountMeta::new_readonly(self.system_program.key(), false),
+                ];
+
+                // Build instruction data: discriminator + args
+                let mut instruction_data = Vec::new();
+                // Add discriminator for init_ballot_box: [164, 20, 45, 213, 67, 43, 193, 212]
+                instruction_data.extend_from_slice(&[164, 20, 45, 213, 67, 43, 193, 212]);
+                // Serialize args using borsh: snapshot_slot (u64), proposal_seed (u64), vote_account_pubkey (Pubkey)
+                snapshot_slot.serialize(&mut instruction_data)?;
+                self.proposal
+                    .proposal_seed
+                    .serialize(&mut instruction_data)?;
+                self.proposal
+                    .vote_account_pubkey
+                    .key()
+                    .serialize(&mut instruction_data)?;
+
+                // Create instruction
+                let instruction = Instruction {
+                    program_id: self.ballot_program.key(),
+                    accounts: cpi_accounts,
+                    data: instruction_data,
+                };
+
+                // Collect account infos in the same order as account metas
+                let account_infos = &[
+                    self.signer.to_account_info(),
+                    self.proposal.to_account_info(),
+                    self.ballot_box.to_account_info(),
+                    self.program_config.to_account_info(),
+                    self.system_program.to_account_info(),
+                    self.ballot_program.to_account_info(),
+                ];
+
+                msg!("invoke");
+                // Invoke with signer seeds
+                invoke_signed(&instruction, account_infos, signer_seeds)?;
             }
 
             true
