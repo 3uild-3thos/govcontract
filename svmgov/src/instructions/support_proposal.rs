@@ -72,32 +72,23 @@ pub async fn support_proposal(
         blockhash,
     );
 
-    let transaction_data =
-        base64::engine::general_purpose::STANDARD.encode(transaction.message_data());
-
-    spinner.finish_with_message(format!(
-        "Proposal supported base64 encoded transaction data: {:?}",
-        transaction_data
-    ));
-    // let sig = program
-    //     .rpc()
-    //     .send_transaction_with_config(
-    //         &transaction,
-    //         RpcSendTransactionConfig {
-    //             skip_preflight: true,
-    //             ..Default::default()
-    //         },
-    //     )
-    //     .await?;
-    // let sig = program
-    //     .rpc()
-    //     .send_and_confirm_transaction(&transaction)
-    //     .await?;
+    // let transaction_data =
+    //     base64::engine::general_purpose::STANDARD.encode(transaction.message_data());
 
     // spinner.finish_with_message(format!(
-    //     "Proposal supported. https://explorer.solana.com/tx/{}",
-    //     sig
+    //     "Proposal supported base64 encoded transaction data: {:?}",
+    //     transaction_data
     // ));
+
+    let sig = program
+        .rpc()
+        .send_and_confirm_transaction(&transaction)
+        .await?;
+
+    spinner.finish_with_message(format!(
+        "Proposal supported. https://explorer.solana.com/tx/{}",
+        sig
+    ));
 
     Ok(())
 }
