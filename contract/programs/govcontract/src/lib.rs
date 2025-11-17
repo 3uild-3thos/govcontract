@@ -11,7 +11,7 @@ use instructions::*;
 
 use gov_v1::StakeMerkleLeaf;
 
-declare_id!("GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc");
+declare_id!("6MX2RaV2vfTGv6c7zCmRAod2E6MdAgR6be2Vb3NsMxPW");
 
 #[program]
 pub mod govcontract {
@@ -106,6 +106,24 @@ pub mod govcontract {
 
     pub fn flush_merkle_root(ctx: Context<FlushMerkleRoot>) -> Result<()> {
         ctx.accounts.flush_merkle_root()?;
+        Ok(())
+    }
+
+    pub fn adjust_proposal_timing(
+        ctx: Context<AdjustProposalTiming>,
+        creation_timestamp: Option<i64>,
+        creation_epoch: Option<u64>,
+        start_epoch: Option<u64>,
+        end_epoch: Option<u64>,
+        snapshot_slot: Option<u64>,
+    ) -> Result<()> {
+        ctx.accounts.adjust_timing(
+            creation_timestamp,
+            creation_epoch,
+            start_epoch,
+            end_epoch,
+            snapshot_slot,
+        )?;
         Ok(())
     }
 }

@@ -1,0 +1,134 @@
+# svmgov Governance CLI
+
+Welcome to the svmgov Governance CLI documentation. svmgov is a command-line interface tool designed for Solana validators and delegators to interact with the Solana Validator Governance program.
+
+## What is svmgov?
+
+svmgov enables validators and delegators to:
+
+- **Create governance proposals** - Validators can propose new governance rules
+- **Support proposals** - Validators can support proposals to help them reach the cluster support threshold
+- **Cast votes** - Validators can vote on active proposals
+- **Override votes** - Delegators can override their validator's vote using stake account verification
+- **View proposals and votes** - List and inspect governance proposals and votes
+
+## Installation
+
+Install svmgov using Cargo:
+
+```bash
+cargo install --path svmgov
+```
+
+Or build from source:
+
+```bash
+git clone https://github.com/3uild-3thos/govcontract.git
+cd govcontract/svmgov
+cargo build --release
+```
+
+## Configuration
+
+svmgov supports environment variables for global options:
+
+- `SVMGOV_KEY` - Path to identity keypair (equivalent to `--identity-keypair`)
+- `SVMGOV_RPC` - RPC URL (equivalent to `--rpc-url`)
+
+Flags override environment variables if both are provided.
+
+## Documentation Structure
+
+This documentation is organized by user type:
+
+- **[For Validators](/validators)** - Commands for validators to create proposals, support proposals, and cast votes
+- **[For Stakers](/stakers)** - Commands for delegators to override validator votes
+- **[Reference](/reference)** - Detailed reference for arguments and configuration
+
+## Quick Start (recommended)
+
+svmgov reads a global config stored at `~/.svmgov/config.toml`. Configure it once, then run commands without repeating flags.
+
+1) Initialize configuration (interactive):
+
+```bash
+svmgov init
+```
+
+This will ask:
+- Are you a Validator or Staker?
+- Path to your keypair (validator identity or staker keypair)
+- Default network (mainnet/testnet)
+
+It creates/updates `~/.svmgov/config.toml` with fields like:
+
+```toml
+# ~/.svmgov/config.toml
+user_type = "Validator"            # or "Staker"
+identity_keypair_path = "/path/to/validator.json"
+staker_keypair_path = "/path/to/staker.json"
+network = "mainnet"
+# Optional overrides
+rpc_url = "https://api.mainnet-beta.solana.com"
+operator_api_url = "https://operator.example.com"
+```
+
+2) Adjust any value later using the config command:
+
+```bash
+# Show entire config
+svmgov config show
+
+# Set values
+svmgov config set network mainnet
+svmgov config set rpc-url https://api.mainnet-beta.solana.com
+svmgov config set operator-api-url https://operator.example.com
+
+# Keypair depends on user type selected during init
+svmgov config set identity-keypair /path/to/validator.json   # for validators
+svmgov config set staker-keypair /path/to/staker.json        # for stakers
+```
+
+3) Run commands (no repeated flags needed):
+
+```bash
+# List proposals using defaults from ~/.svmgov/config.toml
+svmgov list-proposals
+
+# Create a proposal (validators)
+svmgov create-proposal \
+  --title "Update Fee Structure" \
+  --description "https://github.com/repo/issue/123" \
+  --network mainnet
+
+# Cast a vote (validators)
+svmgov cast-vote \
+  --proposal-id <ID> \
+  --for-votes 7000 --against-votes 2000 --abstain-votes 1000 \
+  --network mainnet
+
+# Override a vote (stakers)
+svmgov cast-vote-override \
+  --proposal-id <ID> \
+  --for-votes 6000 --against-votes 3000 --abstain-votes 1000 \
+  --stake-account <STAKE_PUBKEY> \
+  --network mainnet
+```
+
+Notes:
+- The CLI merges sources in this order: explicit flags > config file > built-in defaults.
+- `svmgov config set` supports keys: `network`, `rpc-url`, `operator-api-url`, `identity-keypair`, `staker-keypair`.
+
+## Getting Help
+
+For command-specific help, use:
+
+```bash
+svmgov <command> --help
+```
+
+For example:
+```bash
+svmgov create-proposal --help
+```
+

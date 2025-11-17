@@ -105,7 +105,7 @@ pub async fn get_vote_account_proof(
     network: &str,
 ) -> Result<VoteAccountProofResponse> {
     let base_url = get_api_base_url();
-    let mut url = format!(
+    let url = format!(
         "{}/proof/vote_account/{}?slot={}&network={}",
         base_url, vote_account, snapshot_slot, network
     );
@@ -152,10 +152,19 @@ pub async fn get_stake_account_proof(
     Ok(proof)
 }
 
-/// Get the base API URL from environment or default
+/// Get the base API URL from config, environment, or default
 fn get_api_base_url() -> String {
     dotenv::dotenv().ok();
 
+    // Check config first
+    if let Ok(config) = crate::config::Config::load() {
+        if let Some(url) = config.operator_api_url {
+            info!("API base URL (from config): {}", url);
+            return url;
+        }
+    }
+
+    // Fall back to environment variable or default
     let url = std::env::var(SVMGOV_OPERATOR_URL_ENV)
         .unwrap_or_else(|_| DEFAULT_OPERATOR_API_URL.to_string());
     info!("API base URL: {}", url);
@@ -282,8 +291,8 @@ pub fn convert_stake_merkle_leaf_data_to_idl_type(
 }
 
 /// Generate ConsensusResult PDA for a given snapshot slot
-pub fn generate_consensus_result_pda(ballot_id: u64) -> Result<Pubkey> {
-    let (pda, _bump) = ConsensusResult::pda(ballot_id);
+pub fn generate_consensus_result_pda(snapshot_slot: u64) -> Result<Pubkey> {
+    let (pda, _bump) = ConsensusResult::pda(snapshot_slot);
     Ok(pda)
 }
 
@@ -298,10 +307,10 @@ pub fn generate_meta_merkle_proof_pda(
 
 /// Generate both ConsensusResult and MetaMerkleProof PDAs from VoteAccountProofResponse
 pub fn generate_pdas_from_vote_proof_response(
-    ballot_id: u64,
+    snapshot_slot: u64,
     response: &VoteAccountProofResponse,
 ) -> Result<(Pubkey, Pubkey)> {
-    let consensus_pda = generate_consensus_result_pda(ballot_id)?;
+    let consensus_pda = generate_consensus_result_pda(snapshot_slot)?;
     let vote_account = Pubkey::from_str(&response.meta_merkle_leaf.vote_account)
         .map_err(|e| anyhow!("Invalid vote_account pubkey in response: {}", e))?;
     let meta_proof = generate_meta_merkle_proof_pda(&consensus_pda, &vote_account)?;

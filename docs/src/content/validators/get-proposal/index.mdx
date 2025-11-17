@@ -1,0 +1,38 @@
+# Get Proposal
+
+Display a specific governance proposal and its details.
+
+## Description
+
+This command retrieves and displays detailed information about a specific governance proposal, including its status, votes, and metadata.
+
+## Arguments
+
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `--proposal-id` | String | Yes | - | The proposal's ID (PDA) to display |
+
+## Global Arguments
+
+| Name | Type | Required | Default | Description |
+|------|----------|---------|-------------|
+| `--rpc-url`, `-r` | String | No | `SVMGOV_RPC` env var | Custom RPC URL |
+
+## Example
+
+```bash
+svmgov get-proposal \
+  --proposal-id "ABC123..." \
+  --rpc-url https://api.mainnet-beta.solana.com
+```
+
+## Output
+
+The command displays:
+- Proposal title and description
+- Author and creation timestamp
+- Voting status (active/inactive)
+- Current vote counts (For, Against, Abstain)
+- Cluster support percentage
+- Snapshot slot and consensus result
+

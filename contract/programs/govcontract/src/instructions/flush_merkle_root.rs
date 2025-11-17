@@ -35,7 +35,14 @@ impl<'info> FlushMerkleRoot<'info> {
         let clock = Clock::get()?;
 
         // Clear the consensus_result
-        self.proposal.consensus_result = None;
+        require!(
+            self.proposal.snapshot_slot > 0,
+            GovernanceError::InvalidSnapshotSlot
+        );
+        require!(
+            self.proposal.consensus_result.is_some(),
+            GovernanceError::ConsensusResultNotSet
+        );
 
         // Recalculate snapshot_slot based on current epoch
         // Using the same logic as in support_proposal
@@ -66,6 +73,7 @@ impl<'info> FlushMerkleRoot<'info> {
                 b"proposal".as_ref(),
                 &proposal_seed_val,
                 vote_account_key.as_ref(),
+                &[self.proposal.proposal_bump],
             ];
             let signer = &[&seeds[..]];
             // Initialize the ballot box via CPI
