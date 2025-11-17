@@ -46,7 +46,7 @@ pub enum GovernanceError {
     InvalidVoteAccountSize,
     #[msg("Stake account invalid")]
     InvalidStakeAccount,
-    #[msg("Stake account invalid")]
+    #[msg("Invalid stake account state")]
     InvalidStakeState,
     #[msg("Invalid Stake account size")]
     InvalidStakeAccountSize,
@@ -58,16 +58,16 @@ pub enum GovernanceError {
     MerkleRootAlreadySet,
     #[msg("Merkle root hash cannot be all zeros")]
     InvalidMerkleRoot,
-    #[msg("Invalid snapshot slot: snapshot slot must be less past or current slot")]
+    #[msg("Invalid snapshot slot: snapshot slot must be past or current slot")]
     InvalidSnapshotSlot,
     #[msg("Account must be owned by Snapshot program")]
     MustBeOwnedBySnapshotProgram,
     #[msg("Invalid consensus result PDA")]
     InvalidConsensusResultPDA,
-    #[msg("Can't deserialize MetaMerkleProof PDA")]
-    CantDeserializeMMPPDA,
-    #[msg("Can't deserialize ConsensusResult")]
-    CantDeserializeConsensusResult,
+    #[msg("Cannot deserialize MetaMerkleProof PDA")]
+    CannotDeserializeMetaMerkleProofPDA,
+    #[msg("Cannot deserialize ConsensusResult")]
+    CannotDeserializeConsensusResult,
     #[msg("Cannot modify proposal after voting has started")]
     CannotModifyAfterStart,
     #[msg("Voting length exceeds maximum allowed epochs")]
@@ -80,6 +80,8 @@ pub enum GovernanceError {
     MerkleRootNotSet,
     #[msg("Support period has expired for this proposal")]
     SupportPeriodExpired,
+    #[msg("Support period not yet started or ended")]
+    SupportPeriodNotStartedOrEnded,
     #[msg("Consensus result has not been set for this proposal")]
     ConsensusResultNotSet,
     #[msg("Unauthorized: caller is not authorized to perform this action")]

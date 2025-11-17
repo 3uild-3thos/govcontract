@@ -66,11 +66,10 @@ impl<'info> SupportProposal<'info> {
             self.proposal.voting == false && self.proposal.finalized == false,
             GovernanceError::ProposalClosed
         );
-        require!(!self.proposal.finalized, GovernanceError::ProposalFinalized);
 
         require!(
             clock.epoch == self.proposal.creation_epoch + MAX_SUPPORT_EPOCHS,
-            GovernanceError::SupportPeriodExpired
+            GovernanceError::SupportPeriodNotStartedOrEnded
         );
 
         // assuming this returns in lamports

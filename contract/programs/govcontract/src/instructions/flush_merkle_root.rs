@@ -27,6 +27,14 @@ pub struct FlushMerkleRoot<'info> {
         constraint = ballot_program.key == &gov_v1::ID @ ProgramError::InvalidAccountOwner,
     )]
     pub ballot_program: UncheckedAccount<'info>,
+    /// CHECK: Program config account
+    #[account(
+        seeds = [b"ProgramConfig"],
+        bump,
+        seeds::program = ballot_program.key(),
+        constraint = program_config.owner == &gov_v1::ID @ ProgramError::InvalidAccountOwner,
+    )]
+    pub program_config: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }
 
@@ -83,7 +91,7 @@ impl<'info> FlushMerkleRoot<'info> {
                     payer: self.signer.to_account_info(),
                     proposal: self.proposal.to_account_info(),
                     ballot_box: self.ballot_box.to_account_info(),
-                    program_config: self.ballot_program.to_account_info(),
+                    program_config: self.program_config.to_account_info(),
                     system_program: self.system_program.to_account_info(),
                 },
                 signer,
