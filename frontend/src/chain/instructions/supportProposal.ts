@@ -51,13 +51,6 @@ export async function supportProposal(
     program.programId
   );
 
-  const voteAccountProof = await getVoteAccountProof(
-    validatorVoteAccount.votePubkey,
-    blockchainParams.network,
-    slot
-  );
-  console.log('fetched voteAccountProof', voteAccountProof);
-
   const DISCUSSION_EPOCHS = 4;
   const SNAPSHOT_EPOCH_EXTENSION = 1;
 
@@ -77,6 +70,10 @@ export async function supportProposal(
     seeds,
     SNAPSHOT_PROGRAM_ID
   );
+  const [programConfigPda] = PublicKey.findProgramAddressSync(
+    [Buffer.from('ProgramConfig')],
+    SNAPSHOT_PROGRAM_ID
+  );
 
   // Build support proposal instruction
   const supportProposalInstruction = await program.methods
@@ -89,18 +86,10 @@ export async function supportProposal(
       systemProgram: SystemProgram.programId,
       ballotBox: ballotBoxPda,
       ballotProgram: SNAPSHOT_PROGRAM_ID,
+      programConfig: programConfigPda,
     })
     .instruction();
 
-  console.log('supportProposalInstruction', {
-    signer: wallet.publicKey.toBase58(),
-    proposal: proposalPubkey.toBase58(),
-    support: supportPda.toBase58(),
-    splVoteAccount: new PublicKey(validatorVoteAccount.votePubkey).toBase58(),
-    systemProgram: SystemProgram.programId.toBase58(),
-    ballotBox: ballotBoxPda.toBase58(),
-    ballotProgram: SNAPSHOT_PROGRAM_ID.toBase58(),
-  });
   const transaction = new Transaction();
   transaction.add(supportProposalInstruction);
   transaction.feePayer = wallet.publicKey;
