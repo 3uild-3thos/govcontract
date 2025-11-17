@@ -18,7 +18,7 @@ import {
   validateVoteBasisPoints,
   createGovV1ProgramWithWallet,
   getVoteAccountProof,
-  generatePdasFromVoteProofResponse,
+  getMetaMerkleProofPda,
 } from "./helpers";
 
 /**
@@ -35,7 +35,7 @@ export async function castVote(
     againstVotesBp,
     abstainVotesBp,
     wallet,
-    ballotId,
+    consensusResult,
   } = params;
 
   if (!wallet || !wallet.publicKey) {
@@ -44,6 +44,10 @@ export async function castVote(
 
   if (slot === undefined) {
     throw new Error("Slot is not defined");
+  }
+
+  if (consensusResult === undefined) {
+    throw new Error("Consensus result not defined");
   }
 
   // Validate vote distribution
@@ -88,12 +92,11 @@ export async function castVote(
     slot
   );
 
-  const [consensusResultPda, metaMerkleProofPda] =
-    generatePdasFromVoteProofResponse(
-      voteAccountProof,
-      SNAPSHOT_PROGRAM_ID,
-      ballotId || 0
-    );
+  const metaMerkleProofPda = getMetaMerkleProofPda(
+    voteAccountProof,
+    SNAPSHOT_PROGRAM_ID,
+    consensusResult
+  );
 
   const merkleAccountInfo = await program.provider.connection.getAccountInfo(
     metaMerkleProofPda,
@@ -125,7 +128,7 @@ export async function castVote(
         new BN(1)
       )
       .accountsStrict({
-        consensusResult: consensusResultPda,
+        consensusResult,
         merkleProof: metaMerkleProofPda,
         payer: wallet.publicKey,
         systemProgram: SystemProgram.programId,
@@ -148,7 +151,7 @@ export async function castVote(
       vote: votePda,
       splVoteAccount: splVoteAccount,
       snapshotProgram: SNAPSHOT_PROGRAM_ID,
-      consensusResult: consensusResultPda,
+      consensusResult,
       metaMerkleProof: metaMerkleProofPda,
       systemProgram: SystemProgram.programId,
       voteOverrideCache: voteOverrideCachePda,

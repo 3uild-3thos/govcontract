@@ -18,6 +18,7 @@ import {
   useState,
 } from "react";
 import { ModifyOverrideVoteModal } from "@/components/modals/ModifyOverrideVoteModal";
+import { PublicKey } from "@solana/web3.js";
 
 export type ModalType =
   | "support-proposal"
@@ -37,15 +38,15 @@ interface ModalDataMap {
   "cast-vote": CastVoteModalDataProps;
   "override-vote": {
     proposalId?: string;
-    ballotId?: number;
+    consensusResult?: PublicKey;
   };
   "modify-vote": {
     proposalId?: string;
-    ballotId?: number;
+    consensusResult?: PublicKey;
   };
   "modify-override-vote": {
     proposalId?: string;
-    ballotId?: number;
+    consensusResult?: PublicKey;
   };
   settings: Record<string, never>;
 }

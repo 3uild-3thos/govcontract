@@ -9,7 +9,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
 import { AppButton } from "@/components/ui/AppButton";
 import ErrorMessage from "./shared/ErrorMessage";
 import { VoteDistributionControls } from "./shared/VoteDistributionControls";
@@ -28,10 +27,11 @@ import {
   formatLamportsDisplay,
 } from "@/lib/governance/formatters";
 import { VotingProposalsDropdown } from "../VotingProposalsDropdown";
+import { PublicKey } from "@solana/web3.js";
 
 export interface CastVoteModalDataProps {
   proposalId?: string;
-  ballotId?: number;
+  consensusResult?: PublicKey;
   initialVoteDist?: VoteDistribution;
 }
 
@@ -42,7 +42,7 @@ interface CastVoteModalProps extends CastVoteModalDataProps {
 
 export function CastVoteModal({
   proposalId: initialProposalId,
-  ballotId,
+  consensusResult,
   initialVoteDist,
   isOpen,
   onClose,
@@ -110,7 +110,7 @@ export function CastVoteModal({
           forVotesBp: voteDistribution.for * 100,
           againstVotesBp: voteDistribution.against * 100,
           abstainVotesBp: voteDistribution.abstain * 100,
-          ballotId,
+          consensusResult,
         },
         {
           onSuccess: handleSuccess,

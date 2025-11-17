@@ -34,7 +34,7 @@ import {
 import { Pagination } from "@/components/ui/AppPagniation";
 import { AppButton } from "@/components/ui/AppButton";
 import ExternalProposalPanel from "./ExternalProposalPanel";
-import { ProposalRecord } from "@/types";
+import { ProposalRecord, ProposalStatus } from "@/types";
 import { useProposals } from "@/hooks";
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 
@@ -42,12 +42,18 @@ export type ProposalRow = ProposalRecord & { id: string };
 
 const TABLE_COLUMNS = columns;
 
-const STATUS_FILTER_LABELS: Record<string, string> = {
+type StatusFilter = "all" | ProposalStatus;
+
+const STATUS_FILTER_LABELS: Record<StatusFilter, string> = {
   all: "Filter by",
-  active: "Active",
-  finalizing: "Finalizing",
+  support: "Support",
+  voting: "Voting",
   finalized: "Finalized",
 };
+
+const filterOptions: StatusFilter[] = Object.keys(
+  STATUS_FILTER_LABELS
+) as StatusFilter[];
 
 const getIsExpanded = (state: ExpandedState, rowId: string) =>
   Boolean((state as Record<string, boolean>)[rowId]);
@@ -56,7 +62,7 @@ export default function ProposalsTable({ title }: { title: string }) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [expanded, setExpanded] = useState<ExpandedState>({});
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [showEligibleOnly, setShowEligibleOnly] = useState(false);
 
   const { data: proposalsData, isLoading: isLoadingProposals } = useProposals();
@@ -197,26 +203,19 @@ export default function ProposalsTable({ title }: { title: string }) {
             >
               <DropdownMenuRadioGroup
                 value={statusFilter}
-                onValueChange={setStatusFilter}
+                onValueChange={(value) =>
+                  setStatusFilter(value as StatusFilter)
+                }
               >
-                <DropdownMenuRadioItem value="all" className="text-white/80">
-                  All Status
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="active" className="text-white/80">
-                  Active
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem
-                  value="finalizing"
-                  className="text-white/80"
-                >
-                  Finalizing
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem
-                  value="finalized"
-                  className="text-white/80"
-                >
-                  Finalized
-                </DropdownMenuRadioItem>
+                {filterOptions.map((option) => (
+                  <DropdownMenuRadioItem
+                    key={option}
+                    value={option}
+                    className="text-white/80"
+                  >
+                    {STATUS_FILTER_LABELS[option]}
+                  </DropdownMenuRadioItem>
+                ))}
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>

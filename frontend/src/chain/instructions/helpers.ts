@@ -202,31 +202,22 @@ export async function getStakeAccountProof(
 }
 
 // Generate PDAs from vote proof response
-export function generatePdasFromVoteProofResponse(
+export function getMetaMerkleProofPda(
   proofResponse: VoteAccountProofResponse,
   snapshotProgramId: PublicKey = SNAPSHOT_PROGRAM_ID,
-  ballotId: number = 0
-): [PublicKey, PublicKey] {
-  // Derive consensus result PDA (this is typically derived from the snapshot slot)
-  const [consensusResultPda] = PublicKey.findProgramAddressSync(
-    [
-      Buffer.from("ConsensusResult"),
-      new BN(ballotId).toArrayLike(Buffer, "le", 8),
-    ],
-    snapshotProgramId
-  );
-
+  consensusResult: PublicKey
+): PublicKey {
   // Derive meta merkle proof PDA (this is typically derived from the vote account)
   const [metaMerkleProofPda] = PublicKey.findProgramAddressSync(
     [
       Buffer.from("MetaMerkleProof"),
-      consensusResultPda.toBuffer(),
+      consensusResult.toBuffer(),
       new PublicKey(proofResponse.meta_merkle_leaf.vote_account).toBuffer(),
     ],
     snapshotProgramId
   );
 
-  return [consensusResultPda, metaMerkleProofPda];
+  return metaMerkleProofPda;
 }
 
 // Convert merkle proof strings to the format expected by the program

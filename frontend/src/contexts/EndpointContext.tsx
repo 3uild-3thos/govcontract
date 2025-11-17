@@ -21,7 +21,7 @@ export const RPC_URLS: Record<Exclude<RPCEndpoint, "custom">, string> = {
   devnet: "https://api.devnet.solana.com",
 };
 
-const DEFAULT_TYPE: RPCEndpoint = "devnet";
+const DEFAULT_TYPE: RPCEndpoint = "testnet";
 const DEFAULT_URL = RPC_URLS[DEFAULT_TYPE];
 
 const STORAGE_KEY = "solana-rpc-endpoint";

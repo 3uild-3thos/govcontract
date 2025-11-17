@@ -10,13 +10,13 @@ import {
   createGovV1ProgramWithWallet,
   getVoteAccountProof,
   getStakeAccountProof,
-  generatePdasFromVoteProofResponse,
   convertMerkleProofStrings,
   convertStakeMerkleLeafDataToIdlType,
   validateVoteBasisPoints,
   deriveVoteOverridePda,
   deriveVoteOverrideCachePda,
   deriveVotePda,
+  getMetaMerkleProofPda,
 } from "./helpers";
 import { BN } from "@coral-xyz/anchor";
 
@@ -36,7 +36,7 @@ export async function modifyVoteOverride(
     stakeAccount,
     wallet,
     voteAccount,
-    ballotId,
+    consensusResult,
   } = params;
 
   if (!wallet || !wallet.publicKey) {
@@ -45,6 +45,10 @@ export async function modifyVoteOverride(
 
   if (slot === undefined) {
     throw new Error("Slot is not defined");
+  }
+
+  if (consensusResult === undefined) {
+    throw new Error("Consensus result not defined");
   }
 
   // Validate vote distribution
@@ -63,12 +67,11 @@ export async function modifyVoteOverride(
     getStakeAccountProof(stakeAccount, network, slot),
   ]);
 
-  const [consensusResultPda, metaMerkleProofPda] =
-    generatePdasFromVoteProofResponse(
-      metaMerkleProof,
-      SNAPSHOT_PROGRAM_ID,
-      ballotId
-    );
+  const metaMerkleProofPda = getMetaMerkleProofPda(
+    metaMerkleProof,
+    SNAPSHOT_PROGRAM_ID,
+    consensusResult
+  );
 
   // Check if merkle account exists
   const merkleAccountInfo = await program.provider.connection.getAccountInfo(
@@ -111,7 +114,7 @@ export async function modifyVoteOverride(
         new BN(1)
       )
       .accountsStrict({
-        consensusResult: consensusResultPda,
+        consensusResult,
         merkleProof: metaMerkleProofPda,
         payer: wallet.publicKey,
         systemProgram: SystemProgram.programId,
@@ -180,7 +183,7 @@ export async function modifyVoteOverride(
       splVoteAccount: splVoteAccount,
       splStakeAccount: stakeAccountPubkey,
       proposal: proposalPubkey,
-      consensusResult: consensusResultPda,
+      consensusResult,
       metaMerkleProof: metaMerkleProofPda,
       snapshotProgram: SNAPSHOT_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
@@ -199,20 +202,6 @@ export async function modifyVoteOverride(
 
   const tx = await wallet.signTransaction(transaction);
 
-  //   error mutating modify vote: SendTransactionError: Simulation failed.
-  // Message: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x177c.
-  // Logs:
-  // [
-  //   "Program 3GBS7ZjQV5cKfsazbA2CSGm8kVQjjT6ow9XxZtSxRH3G invoke [1]",
-  //   "Program log: Instruction: ModifyVoteOverride",
-  //   "Program F3ZY8uXns4UDorFc9FASojnecMTq5yT5QakrjdocxTLF invoke [2]",
-  //   "Program log: Instruction: VerifyMerkleProof",
-  //   "Program F3ZY8uXns4UDorFc9FASojnecMTq5yT5QakrjdocxTLF consumed 7250 of 182371 compute units",
-  //   "Program F3ZY8uXns4UDorFc9FASojnecMTq5yT5QakrjdocxTLF success",
-  //   "Program log: AnchorError thrown in programs/govcontract/src/instructions/modify_vote_override.rs:218. Error Code: InvalidVoteAccount. Error Number: 6012. Error Message: Invalid vote account, proposal id mismatch.",
-  //   "Program 3GBS7ZjQV5cKfsazbA2CSGm8kVQjjT6ow9XxZtSxRH3G consumed 27902 of 200000 compute units",
-  //   "Program 3GBS7ZjQV5cKfsazbA2CSGm8kVQjjT6ow9XxZtSxRH3G failed: custom program error: 0x177c"
-  // ].
   const signature = await program.provider.connection.sendRawTransaction(
     tx.serialize(),
     { preflightCommitment: "confirmed" }

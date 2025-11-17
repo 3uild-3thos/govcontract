@@ -8,7 +8,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
 import { AppButton } from "@/components/ui/AppButton";
 import ErrorMessage from "./shared/ErrorMessage";
 import { VoteDistributionControls } from "./shared/VoteDistributionControls";
@@ -31,7 +30,7 @@ import { VotingProposalsDropdown } from "../VotingProposalsDropdown";
 
 interface OverrideVoteModalProps {
   proposalId?: string;
-  ballotId?: number;
+  consensusResult?: PublicKey;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -64,7 +63,7 @@ function buildVoteOverrideFilters(
 
 export function ModifyOverrideVoteModal({
   proposalId: initialProposalId,
-  ballotId,
+  consensusResult,
   isOpen,
   onClose,
 }: OverrideVoteModalProps) {
@@ -193,7 +192,7 @@ export function ModifyOverrideVoteModal({
           abstainVotesBp: voteDistribution.abstain * 100,
           stakeAccount: selectedStakeAccount,
           voteAccount,
-          ballotId,
+          consensusResult,
         },
         {
           onSuccess: handleSuccess,

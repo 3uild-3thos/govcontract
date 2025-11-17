@@ -7,7 +7,7 @@ export default function ProposalsStatsGrid() {
   const { stats, isLoading } = useProposalOverviewStats();
 
   return (
-    <div className="grid gap-4 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 grid-cols-1 text-center lg:grid-cols-3">
       {stats.map((stat) => (
         <StatsCard key={stat.id} {...stat} isLoading={isLoading} />
       ))}

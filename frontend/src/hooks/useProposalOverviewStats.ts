@@ -50,11 +50,11 @@ export const useProposalOverviewStats = (): Stats => {
         label: "Number of Validators",
         value: numOfValidators,
       },
-      {
-        id: "number-of-stakers",
-        label: "Number of Stakers",
-        value: 123232232,
-      },
+      // {
+      //   id: "number-of-stakers",
+      //   label: "Number of Stakers",
+      //   value: 123232232,
+      // },
     ],
   };
 };

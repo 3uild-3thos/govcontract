@@ -1,4 +1,4 @@
-import { useProposals, useWalletStakeAccounts } from "@/hooks";
+import { useWalletStakeAccounts } from "@/hooks";
 import {
   Select,
   SelectContent,
