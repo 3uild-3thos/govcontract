@@ -1,16 +1,12 @@
-import { PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
-import { BN } from '@coral-xyz/anchor';
+import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
+import { BN } from "@coral-xyz/anchor";
 import {
   BlockchainParams,
   SupportProposalParams,
   TransactionResult,
   SNAPSHOT_PROGRAM_ID,
-} from './types';
-import {
-  createProgramWithWallet,
-  deriveSupportPda,
-  getVoteAccountProof,
-} from './helpers';
+} from "./types";
+import { createProgramWithWallet, deriveSupportPda } from "./helpers";
 
 /**
  * Supports a governance proposal
@@ -23,11 +19,11 @@ export async function supportProposal(
   const { proposalId, wallet } = params;
 
   if (!wallet || !wallet.publicKey) {
-    throw new Error('Wallet not connected');
+    throw new Error("Wallet not connected");
   }
 
   if (slot === undefined) {
-    throw new Error('Slot is not defined');
+    throw new Error("Slot is not defined");
   }
 
   const program = createProgramWithWallet(wallet, blockchainParams.endpoint);
@@ -63,15 +59,15 @@ export async function supportProposal(
   const snapshotSlot = startSlot + 1000;
 
   const seeds = [
-    Buffer.from('BallotBox'),
-    new BN(snapshotSlot).toArrayLike(Buffer, 'le', 8),
+    Buffer.from("BallotBox"),
+    new BN(snapshotSlot).toArrayLike(Buffer, "le", 8),
   ];
   const [ballotBoxPda] = PublicKey.findProgramAddressSync(
     seeds,
     SNAPSHOT_PROGRAM_ID
   );
   const [programConfigPda] = PublicKey.findProgramAddressSync(
-    [Buffer.from('ProgramConfig')],
+    [Buffer.from("ProgramConfig")],
     SNAPSHOT_PROGRAM_ID
   );
 
@@ -94,7 +90,7 @@ export async function supportProposal(
   transaction.add(supportProposalInstruction);
   transaction.feePayer = wallet.publicKey;
   transaction.recentBlockhash = (
-    await program.provider.connection.getLatestBlockhash('confirmed')
+    await program.provider.connection.getLatestBlockhash("confirmed")
   ).blockhash;
 
   const tx = await wallet.signTransaction(transaction);
@@ -103,7 +99,7 @@ export async function supportProposal(
     tx.serialize()
   );
 
-  console.log('signature support proposal', signature);
+  console.log("signature support proposal", signature);
 
   return {
     signature,
