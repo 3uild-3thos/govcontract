@@ -2,13 +2,9 @@ use anchor_lang::{
     prelude::*,
     solana_program::{
         epoch_stake::{get_epoch_stake_for_vote_account, get_epoch_total_stake},
-        instruction::Instruction,
-        program::invoke_signed,
         vote::{program as vote_program, state::VoteState},
     },
-    ToAccountMetas,
 };
-use borsh::BorshSerialize;
 
 use crate::{
     constants::*,
@@ -61,13 +57,6 @@ pub struct SupportProposal<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub struct InitBallotBox<'info> {
-    pub payer: AccountInfo<'info>,
-    pub proposal: AccountInfo<'info>,
-    pub ballot_box: AccountInfo<'info>,
-    pub program_config: AccountInfo<'info>,
-    pub system_program: AccountInfo<'info>,
-}
 impl<'info> SupportProposal<'info> {
     pub fn support_proposal(&mut self, bumps: &SupportProposalBumps) -> Result<()> {
         let clock = Clock::get()?;

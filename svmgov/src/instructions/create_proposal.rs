@@ -1,10 +1,7 @@
-use std::str::FromStr;
 
-use anchor_client::solana_sdk::{pubkey::Pubkey, signer::Signer, transaction::Transaction};
+use anchor_client::solana_sdk::{signer::Signer, transaction::Transaction};
 use anchor_lang::system_program;
 use anyhow::Result;
-use gov_v1::{ID as SNAPSHOT_PROGRAM_ID, MetaMerkleLeaf, MetaMerkleProof};
-use log::info;
 
 use crate::{
     govcontract::client::{accounts, args},
@@ -17,7 +14,7 @@ pub async fn create_proposal(
     seed: Option<u64>,
     identity_keypair: Option<String>,
     rpc_url: Option<String>,
-    network: String,
+    _network: String,
 ) -> Result<()> {
     log::debug!(
         "create_proposal: title={}, description={}, seed={:?}, identity_keypair={:?}, rpc_url={:?}",
@@ -28,7 +25,7 @@ pub async fn create_proposal(
         rpc_url
     );
 
-    let (payer, vote_account, program, merkle_proof_program) =
+    let (payer, vote_account, program, _merkle_proof_program) =
         setup_all(identity_keypair, rpc_url).await?;
 
     let seed_value = seed.unwrap_or_else(rand::random::<u64>);

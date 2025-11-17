@@ -187,41 +187,6 @@ enum Commands {
     },
 
     #[command(
-        about = "Adjust proposal timing fields (author only)",
-        long_about = "This command allows the proposal author to adjust timing-related fields of a proposal. \
-                      Only the proposal author can call this command. All timing fields are optional - only provided fields will be updated. \
-                      The proposal must not be finalized.\n\n\
-                      Examples:\n\
-                      $ svmgov --identity-keypair /path/to/key.json adjust-proposal-timing --proposal-id \"123\" --start-epoch 100 --end-epoch 110\n\
-                      $ svmgov --identity-keypair /path/to/key.json adjust-proposal-timing --proposal-id \"123\" --snapshot-slot 5000000 --creation-timestamp 1234567890"
-    )]
-    AdjustProposalTiming {
-        /// Proposal ID to adjust timing for.
-        #[arg(long, help = "Proposal ID")]
-        proposal_id: String,
-
-        /// Creation timestamp (Unix timestamp in seconds).
-        #[arg(long, help = "Creation timestamp (Unix timestamp in seconds)")]
-        creation_timestamp: Option<i64>,
-
-        /// Creation epoch.
-        #[arg(long, help = "Creation epoch")]
-        creation_epoch: Option<u64>,
-
-        /// Start epoch for voting.
-        #[arg(long, help = "Start epoch for voting")]
-        start_epoch: Option<u64>,
-
-        /// End epoch for voting.
-        #[arg(long, help = "End epoch for voting")]
-        end_epoch: Option<u64>,
-
-        /// Snapshot slot number.
-        #[arg(long, help = "Snapshot slot number")]
-        snapshot_slot: Option<u64>,
-    },
-
-    #[command(
         about = "Display a proposal and it's details",
         long_about = "This command retrieves and displays a governance proposal and it's details from the Solana Validator Governance program. \
                       An optional RPC URL can be provided to connect to the chain; otherwise, a default URL is used.\n\n\
@@ -554,26 +519,6 @@ async fn handle_command(cli: Cli) -> Result<()> {
         Commands::FinalizeProposal { proposal_id } => {
             instructions::finalize_proposal(
                 proposal_id.to_string(),
-                cli.identity_keypair,
-                cli.rpc_url,
-            )
-            .await?;
-        }
-        Commands::AdjustProposalTiming {
-            proposal_id,
-            creation_timestamp,
-            creation_epoch,
-            start_epoch,
-            end_epoch,
-            snapshot_slot,
-        } => {
-            instructions::adjust_proposal_timing(
-                proposal_id.to_string(),
-                *creation_timestamp,
-                *creation_epoch,
-                *start_epoch,
-                *end_epoch,
-                *snapshot_slot,
                 cli.identity_keypair,
                 cli.rpc_url,
             )

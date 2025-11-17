@@ -1,14 +1,9 @@
 use std::str::FromStr;
 
-use anchor_client::{
-    solana_client::rpc_config::RpcSendTransactionConfig,
-    solana_sdk::{pubkey::Pubkey, signer::Signer, transaction::Transaction},
-};
+use anchor_client::solana_sdk::{pubkey::Pubkey, signer::Signer, transaction::Transaction};
 use anchor_lang::system_program;
 use anyhow::{Result, anyhow};
-use base64::Engine;
 use gov_v1::ID as SNAPSHOT_PROGRAM_ID;
-use serde::Serialize;
 
 use crate::{
     constants::{DISCUSSION_EPOCHS, SNAPSHOT_EPOCH_EXTENSION},

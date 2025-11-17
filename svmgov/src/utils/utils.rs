@@ -2,22 +2,11 @@ use std::{collections::HashMap, fmt, fs, str::FromStr, sync::Arc, time::Duration
 
 use anchor_client::{
     Client, Cluster, Program,
-    solana_account_decoder::UiAccountEncoding,
-    solana_client::{
-        nonblocking::rpc_client::RpcClient,
-        rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig},
-        rpc_filter::{Memcmp, MemcmpEncodedBytes, RpcFilterType},
-    },
-    solana_sdk::{
-        commitment_config::{CommitmentConfig, CommitmentLevel},
-        native_token::LAMPORTS_PER_SOL,
-        signature::Keypair,
-        signer::Signer,
-        stake::{self, state::StakeStateV2},
-    },
+    solana_client::nonblocking::rpc_client::RpcClient,
+    solana_sdk::{native_token::LAMPORTS_PER_SOL, signature::Keypair, signer::Signer},
 };
-use anchor_lang::{AnchorDeserialize, Id, prelude::Pubkey};
-use anyhow::{Context, Result, anyhow};
+use anchor_lang::{Id, prelude::Pubkey};
+use anyhow::{Result, anyhow};
 use chrono::prelude::*;
 use indicatif::{ProgressBar, ProgressStyle};
 use textwrap::wrap;
