@@ -36,6 +36,7 @@ pub struct SupportProposal<'info> {
     pub spl_vote_account: UncheckedAccount<'info>,
 
     /// CHECK: Ballot box account - may or may not exist, checked with data_is_empty()
+    #[account(mut)]
     pub ballot_box: UncheckedAccount<'info>,
 
     /// CHECK: Ballot program account
@@ -43,6 +44,15 @@ pub struct SupportProposal<'info> {
         constraint = ballot_program.key == &gov_v1::ID @ ProgramError::InvalidAccountOwner,
     )]
     pub ballot_program: UncheckedAccount<'info>,
+
+    /// CHECK: Program config account
+    #[account(
+        seeds = [b"ProgramConfig"],
+        bump,
+        seeds::program = ballot_program.key(),
+        constraint = program_config.owner == &gov_v1::ID @ ProgramError::InvalidAccountOwner,
+    )]
+    pub program_config: UncheckedAccount<'info>,
 
     pub system_program: Program<'info, System>,
 }
@@ -56,11 +66,10 @@ impl<'info> SupportProposal<'info> {
             self.proposal.voting == false && self.proposal.finalized == false,
             GovernanceError::ProposalClosed
         );
-        require!(!self.proposal.finalized, GovernanceError::ProposalFinalized);
 
         require!(
             clock.epoch == self.proposal.creation_epoch + MAX_SUPPORT_EPOCHS,
-            GovernanceError::SupportPeriodExpired
+            GovernanceError::SupportPeriodNotStartedOrEnded
         );
 
         // assuming this returns in lamports
@@ -103,30 +112,31 @@ impl<'info> SupportProposal<'info> {
                 // Create seed components with sufficient lifetime
                 let proposal_seed_val = self.proposal.proposal_seed.to_le_bytes();
                 let vote_account_key = self.proposal.vote_account_pubkey.key();
+
                 let seeds: &[&[u8]] = &[
                     b"proposal".as_ref(),
                     &proposal_seed_val,
                     vote_account_key.as_ref(),
+                    &[self.proposal.proposal_bump],
                 ];
-                let signer = &[&seeds[..]];
-                // Initialize the consensus result
+                let signer_seeds = &[&seeds[..]];
+
                 let cpi_ctx = CpiContext::new_with_signer(
                     self.ballot_program.to_account_info(),
                     gov_v1::cpi::accounts::InitBallotBox {
                         payer: self.signer.to_account_info(),
                         proposal: self.proposal.to_account_info(),
                         ballot_box: self.ballot_box.to_account_info(),
-                        program_config: self.ballot_program.to_account_info(),
+                        program_config: self.program_config.to_account_info(),
                         system_program: self.system_program.to_account_info(),
                     },
-                    signer,
+                    signer_seeds,
                 );
-
                 gov_v1::cpi::init_ballot_box(
                     cpi_ctx,
                     snapshot_slot,
-                    self.proposal.proposal_seed, // we are not storing this
-                    self.spl_vote_account.key(),
+                    self.proposal.proposal_seed,
+                    self.proposal.vote_account_pubkey,
                 )?;
             }
 

@@ -12,7 +12,7 @@ govcontract = "AXnkQnEEMBsKcJ1gSXP1aW6tZMGWodzEaoB6b3bRib2r"
 govcontract = "GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc"
 
 [programs.testnet]
-govcontract = "GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc"
+govcontract = "6MX2RaV2vfTGv6c7zCmRAod2E6MdAgR6be2Vb3NsMxPW"
 
 [registry]
 url = "https://api.apr.dev"
