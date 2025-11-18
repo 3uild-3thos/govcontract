@@ -24,17 +24,18 @@ export const SupportButton = ({
   const { data: hasUserSupported, isLoading: isLoadingHasUserSupported } =
     useHasUserSupported(proposalId);
 
+  const isValidator = [WalletRole.VALIDATOR, WalletRole.BOTH].includes(
+    walletRole
+  );
+
   const disabled =
     disabledProps ||
     isLoadingHasUserSupported ||
     hasUserSupported ||
-    !connected;
+    !connected ||
+    !isValidator;
 
   const isSupporting = proposalStatus === "supporting";
-
-  const isValidator = [WalletRole.VALIDATOR, WalletRole.BOTH].includes(
-    walletRole
-  );
 
   let tooltipText =
     !isValidator && connected
@@ -48,7 +49,7 @@ export const SupportButton = ({
   const showTooltip =
     !(connected && publicKey && isValidator) || hasUserSupported;
 
-  if ((!isValidator && connected) || !isSupporting) {
+  if (!isSupporting) {
     return null;
   }
 
