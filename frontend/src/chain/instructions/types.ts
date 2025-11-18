@@ -118,6 +118,12 @@ export interface StakeAccountProofResponse {
   snapshot_slot: number;
 }
 
+export interface ChainVoteAccountData {
+  activeStake: number;
+  voteAccount: string;
+  nodePubkey: string;
+}
+
 export interface VoterSummaryResponse {
   network: string;
   snapshot_slot: number;
@@ -128,8 +134,8 @@ export interface VoterSummaryResponse {
     vote_account: string;
   }[];
   vote_accounts: {
-    active_stake: number;
-    vote_account: string;
+    activeStake: number;
+    voteAccount: string;
   }[];
 }
 

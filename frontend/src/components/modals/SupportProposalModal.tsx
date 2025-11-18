@@ -36,7 +36,9 @@ export function SupportProposalModal({
 
   const wallet = useAnchorWallet();
 
-  const { mutate: supportProposal } = useSupportProposal();
+  const { mutate: supportProposal } = useSupportProposal(
+    wallet?.publicKey?.toBase58()
+  );
 
   React.useEffect(() => {
     if (isOpen) {

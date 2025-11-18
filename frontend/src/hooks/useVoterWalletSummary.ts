@@ -5,7 +5,6 @@ import { useSnapshotMeta } from "./useSnapshotMeta";
 
 export const useVoterWalletSummary = (userPubKey: string | undefined) => {
   const { endpointType } = useEndpoint();
-
   const { data: meta, isFetched: isFetchedMeta } = useSnapshotMeta();
 
   return useQuery({

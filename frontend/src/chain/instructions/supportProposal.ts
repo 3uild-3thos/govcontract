@@ -5,6 +5,7 @@ import {
   SupportProposalParams,
   TransactionResult,
   SNAPSHOT_PROGRAM_ID,
+  ChainVoteAccountData,
 } from "./types";
 import { createProgramWithWallet, deriveSupportPda } from "./helpers";
 
@@ -14,7 +15,8 @@ import { createProgramWithWallet, deriveSupportPda } from "./helpers";
 export async function supportProposal(
   params: SupportProposalParams,
   blockchainParams: BlockchainParams,
-  slot: number | undefined
+  slot: number | undefined,
+  validatorVoteAccount: ChainVoteAccountData | undefined
 ): Promise<TransactionResult> {
   const { proposalId, wallet } = params;
 
@@ -28,22 +30,19 @@ export async function supportProposal(
 
   const program = createProgramWithWallet(wallet, blockchainParams.endpoint);
 
-  const voteAccounts = await program.provider.connection.getVoteAccounts();
-  const validatorVoteAccount = voteAccounts.current.find(
-    (acc) => acc.nodePubkey === wallet.publicKey.toBase58()
-  );
-
-  const proposalPubkey = new PublicKey(proposalId);
-
   if (!validatorVoteAccount) {
     throw new Error(
       `No SPL vote account found for validator identity ${wallet.publicKey.toBase58()}`
     );
   }
+
+  const proposalPubkey = new PublicKey(proposalId);
+  const splVoteAccount = new PublicKey(validatorVoteAccount.voteAccount);
+
   // Derive support PDA - based on IDL, it uses proposal and signer
   const supportPda = deriveSupportPda(
     proposalPubkey,
-    new PublicKey(validatorVoteAccount.votePubkey),
+    splVoteAccount,
     program.programId
   );
 
@@ -78,7 +77,7 @@ export async function supportProposal(
       signer: wallet.publicKey,
       proposal: proposalPubkey,
       support: supportPda,
-      splVoteAccount: new PublicKey(validatorVoteAccount.votePubkey),
+      splVoteAccount,
       systemProgram: SystemProgram.programId,
       ballotBox: ballotBoxPda,
       ballotProgram: SNAPSHOT_PROGRAM_ID,

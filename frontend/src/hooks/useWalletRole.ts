@@ -5,6 +5,7 @@ import {
   getDefaultView,
 } from "@/lib/governance/role-detection";
 import { useVoterWalletSummary } from "./useVoterWalletSummary";
+import { useChainVoteAccount } from "./useChainVoteAccount";
 
 interface UseWalletRoleReturn {
   walletRole: WalletRole;
@@ -23,14 +24,20 @@ export function useWalletRole(
 
   const { data, isLoading } = useVoterWalletSummary(userPubKey);
 
+  const { data: chainVoteAccount } = useChainVoteAccount(userPubKey);
+
   useEffect(() => {
     if (isLoading || data === undefined) return;
 
-    const role = determineWalletRole(data.stake_accounts, data.vote_accounts);
+    const role = determineWalletRole(
+      data.stake_accounts,
+      data.vote_accounts,
+      chainVoteAccount || undefined
+    );
 
     setWalletRole(role);
     setSelectedView(getDefaultView(role));
-  }, [isLoading, data]);
+  }, [isLoading, data, chainVoteAccount]);
 
   return { walletRole, selectedView, setSelectedView, isLoading };
 }

@@ -14,7 +14,6 @@ export const getProposals = async (
 
   // TODO: implement pagination
   const proposalAccs = await program.account.proposal.all();
-  console.log("proposalAccs:", proposalAccs);
 
   let data = proposalAccs.map(mapProposalDto);
 
@@ -29,7 +28,8 @@ export const getProposals = async (
     }
   }
 
-  console.log("data:", data);
+  data = data.sort((a, b) => b.creationTimestamp - a.creationTimestamp);
+
   return data;
 };
 

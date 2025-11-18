@@ -1,3 +1,4 @@
+import { ChainVoteAccountData } from "@/chain";
 import { ViewType } from "@/types";
 
 export enum WalletRole {
@@ -9,14 +10,15 @@ export enum WalletRole {
 
 export function determineWalletRole(
   stakeAccounts: unknown[] | undefined,
-  delegatedStakeAccounts: unknown[] | undefined
+  voteAccounts: unknown[] | undefined,
+  chainVoteAccount: ChainVoteAccountData | undefined
 ): WalletRole {
   const hasStake = !!stakeAccounts?.length;
-  const hasDelegated = !!delegatedStakeAccounts?.length;
+  const hasVoteAccounts = !!voteAccounts?.length && !!chainVoteAccount;
 
-  if (hasStake && hasDelegated) return WalletRole.BOTH;
+  if (hasStake && hasVoteAccounts) return WalletRole.BOTH;
   else if (hasStake) return WalletRole.STAKER;
-  else if (hasDelegated) return WalletRole.VALIDATOR;
+  else if (hasVoteAccounts) return WalletRole.VALIDATOR;
 
   // default to staker even if there are no stake accounts
   return WalletRole.STAKER;
