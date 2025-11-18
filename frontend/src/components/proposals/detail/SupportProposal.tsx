@@ -23,15 +23,14 @@ export default function SupportProposal({
   isLoading,
   disabled,
 }: CastVoteProps) {
-  // TODO: CAST VOTE
-  // TODO: make check if user validator already supported this proposal (here or in parent component)
-
   const { openModal } = useModal();
 
   const { connected, publicKey } = useWallet();
   const { walletRole } = useWalletRole(publicKey?.toBase58());
 
-  const isValidator = walletRole === WalletRole.VALIDATOR;
+  const isValidator = [WalletRole.VALIDATOR, WalletRole.BOTH].includes(
+    walletRole
+  );
 
   const disabledButtons = disabled || isLoading || !proposalPublicKey;
 
