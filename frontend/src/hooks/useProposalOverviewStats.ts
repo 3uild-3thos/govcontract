@@ -26,7 +26,7 @@ export const useProposalOverviewStats = (): Stats => {
     [proposals]
   );
   const supportingProposals = useMemo(
-    () => proposals?.filter((p) => p.status === "support").length || 0,
+    () => proposals?.filter((p) => p.status === "supporting").length || 0,
     [proposals]
   );
 

@@ -7,3 +7,4 @@ export type GovContractProgram = Program<Govcontract>;
 export type ProposalAccount = IdlAccounts<Govcontract>["proposal"];
 export type VoteAccount = IdlAccounts<Govcontract>["vote"];
 export type VoteOverrideAccount = IdlAccounts<Govcontract>["voteOverride"];
+export type SupportAccount = IdlAccounts<Govcontract>["support"];

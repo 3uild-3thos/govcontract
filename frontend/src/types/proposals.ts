@@ -1,7 +1,7 @@
 import { ProposalAccount } from "@/chain";
 import { PublicKey } from "@solana/web3.js";
 
-export type ProposalStatus = "support" | "voting" | "finalized";
+export type ProposalStatus = "supporting" | "voting" | "finalized";
 
 export type ProposalRecord = {
   publicKey: PublicKey;

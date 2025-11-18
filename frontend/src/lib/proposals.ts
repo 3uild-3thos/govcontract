@@ -4,9 +4,9 @@ export const getProposalStatus = (
   voting: boolean,
   finalized: boolean
 ): ProposalStatus => {
-  if (!voting && !finalized) return "support";
+  if (!voting && !finalized) return "supporting";
   else if (voting && !finalized) return "voting";
   else if (!voting && finalized) return "finalized";
 
-  return "support";
+  return "supporting";
 };

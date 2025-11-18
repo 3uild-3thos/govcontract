@@ -46,7 +46,7 @@ type StatusFilter = "all" | ProposalStatus;
 
 const STATUS_FILTER_LABELS: Record<StatusFilter, string> = {
   all: "Filter by",
-  support: "Support",
+  supporting: "Supporting",
   voting: "Voting",
   finalized: "Finalized",
 };

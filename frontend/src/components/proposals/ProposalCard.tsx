@@ -39,7 +39,7 @@ const getActionButtonText = (status: ProposalStatus) => {
     return "Cast Vote";
   }
 
-  if (status === "support") {
+  if (status === "supporting") {
     return "Support";
   }
 

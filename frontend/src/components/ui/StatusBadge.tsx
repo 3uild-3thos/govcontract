@@ -6,7 +6,7 @@ const STATUS_CLASSNAME: Record<
   ProposalStatus,
   Record<StatusBadgeVariant, string>
 > = {
-  support: {
+  supporting: {
     default:
       "bg-[var(--color-dao-status-finalizing)]/5 text-[var(--color-dao-status-finalizing)]",
     pill: "bg-[var(--color-dao-status-finalizing)]/30 text-[var(--color-dao-status-finalizing)]",

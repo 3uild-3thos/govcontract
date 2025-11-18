@@ -3,7 +3,7 @@ import type { ProposalStatus } from "@/types";
 import type { PhaseDefinition, PhaseDetail, ConnectorVariant } from "./types";
 
 export const PHASE_DETAILS: Record<ProposalStatus, PhaseDetail> = {
-  support: {
+  supporting: {
     title: "Current: Support Phase",
     body: "This proposal is gathering the required support. Once the threshold is met it will move into the voting phase.",
   },
@@ -22,7 +22,7 @@ export const PHASE_DETAILS: Record<ProposalStatus, PhaseDetail> = {
 };
 
 export const PHASES: PhaseDefinition[] = [
-  { key: "support", label: "Support Phase", icon: "check" },
+  { key: "supporting", label: "Support Phase", icon: "check" },
   { key: "voting", label: "Voting Active", icon: "voting" },
   { key: "finalized", label: "Finalized", icon: "clock" },
 ];

@@ -21,7 +21,8 @@ export const useSummaryStats = () => {
 
     const total = proposals.length;
     const active = proposals.filter(
-      (proposal) => proposal.status === "support" || proposal.status === "voting"
+      (proposal) =>
+        proposal.status === "supporting" || proposal.status === "voting"
     ).length;
     const finalized = proposals.filter(
       (proposal) => proposal.status === "finalized"

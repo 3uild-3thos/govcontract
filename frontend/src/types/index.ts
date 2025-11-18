@@ -2,6 +2,7 @@ export * from "./governance";
 export * from "./proposals";
 export * from "./voteAccounts";
 export * from "./voteOverrideAccounts";
+export * from "./supportAccounts";
 export * from "./rpcEndpoints";
 export * from "./validator";
 export * from "./stakeAccounts";

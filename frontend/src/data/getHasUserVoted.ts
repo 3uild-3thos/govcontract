@@ -1,4 +1,8 @@
-import { VoteAccountData, VoteOverrideAccountData } from "@/types";
+import {
+  VoteAccountData,
+  VoteOverrideAccountData,
+  SupportAccountData,
+} from "@/types";
 
 /**
  * Checks if a given stake account has created a vote override account for a specific proposal
@@ -24,4 +28,10 @@ export const getUserHasVoted = async (
   voteAccount: VoteAccountData | undefined | null
 ): Promise<boolean> => {
   return voteOverrideAccounts.length > 0 || !!voteAccount;
+};
+
+export const getUserHasSupported = async (
+  supportAccounts: SupportAccountData[]
+): Promise<boolean> => {
+  return supportAccounts.length > 0;
 };

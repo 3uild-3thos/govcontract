@@ -7,7 +7,7 @@ interface Props {
 }
 
 export const PhaseTimeline = ({ currentPhase }: Props) => {
-  const isSupporting = currentPhase === "support";
+  const isSupporting = currentPhase === "supporting";
   const isVoting = currentPhase === "voting";
   const isFinished = currentPhase === "finalized";
 

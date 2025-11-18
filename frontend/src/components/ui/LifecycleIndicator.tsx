@@ -9,16 +9,16 @@ import {
 import type { ProposalStatus } from "@/types";
 import { Circle, Loader } from "lucide-react";
 
-const STAGE_ORDER: ProposalStatus[] = ["support", "voting", "finalized"];
+const STAGE_ORDER: ProposalStatus[] = ["supporting", "voting", "finalized"];
 
 const STAGE_LABEL: Record<ProposalStatus, string> = {
-  support: "Support",
+  supporting: "Supporting",
   voting: "Voting",
   finalized: "Finished",
 };
 
 const STAGE_DESCRIPTION: Record<ProposalStatus, string> = {
-  support:
+  supporting:
     "During this period we take a snapshot of all active validators on Solana to make them eligible for the next vote.",
   voting:
     "Validators vote on active governance proposals. Delegators can override their validator's vote using stake account verification.",

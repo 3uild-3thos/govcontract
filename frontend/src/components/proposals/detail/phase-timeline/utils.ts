@@ -5,7 +5,7 @@ export function resolvePhaseState(
   phaseIndex: number,
   currentPhaseIndex: number
 ): PhaseState {
-  if (currentPhase === "support") {
+  if (currentPhase === "supporting") {
     return "upcoming";
   }
 

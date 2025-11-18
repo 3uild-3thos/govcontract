@@ -15,9 +15,10 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { ProposalDescription } from "../ProposalDescription";
 import { ProposalStatus, WalletRole } from "@/types";
 import { useWalletRole } from "@/hooks";
+import { SupportButton } from "../SupportButton";
 
 const VOTE_STATE_LABEL: Record<ProposalRow["status"], string> = {
-  support: "Not started",
+  supporting: "Not started",
   voting: "In Progress",
   finalized: "Finished",
 };
@@ -57,7 +58,7 @@ function ProposalInfo({ proposal }: { proposal: ProposalRow }) {
 }
 
 function LifecycleStageBar({ stage }: { stage: ProposalStatus }) {
-  const stages: ProposalStatus[] = ["support", "voting", "finalized"];
+  const stages: ProposalStatus[] = ["supporting", "voting", "finalized"];
   const activeIndex = stages.indexOf(stage);
 
   return (
@@ -92,7 +93,6 @@ function VoteActions({
   const isBoth = walletRole === WalletRole.BOTH;
 
   const isVoting = state === "voting";
-  const isSupporting = state === "support";
 
   return (
     <div className="flex flex-col gap-3">
@@ -126,18 +126,11 @@ function VoteActions({
           />
         </>
       )}
-
-      {isSupporting && (isValidator || isBoth) && (
-        <AppButton
-          variant="gradient"
-          text="Support"
-          className="w-full justify-center text-sm font-semibold text-foreground"
-          disabled={disabled}
-          onClick={() => {
-            openModal("support-proposal", { proposalId });
-          }}
-        />
-      )}
+      <SupportButton
+        proposalStatus={state}
+        proposalId={proposalId}
+        disabled={disabled}
+      />
     </div>
   );
 }
@@ -146,7 +139,7 @@ function VotingPanel({ proposal }: { proposal: ProposalRow }) {
   const { connected } = useWallet();
 
   const isVoting = proposal.status === "voting";
-  const isSupporting = proposal.status === "support";
+  const isSupporting = proposal.status === "supporting";
 
   return (
     <aside className="w-full glass-card p-6 lg:w-80 xl:w-80">

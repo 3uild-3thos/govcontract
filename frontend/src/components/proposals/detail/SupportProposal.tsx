@@ -1,51 +1,29 @@
 "use client";
 
-import { AppButton } from "@/components/ui/AppButton";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useModal } from "@/contexts/ModalContext";
-import { useWalletRole } from "@/hooks";
-import { WalletRole } from "@/types";
-import { useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
+import { SupportButton } from "../SupportButton";
+import { ProposalStatus } from "@/types";
 
 interface CastVoteProps {
   proposalPublicKey: PublicKey | undefined;
+  proposalStatus?: ProposalStatus;
   isLoading: boolean;
   disabled?: boolean;
 }
 
 export default function SupportProposal({
   proposalPublicKey,
+  proposalStatus,
   isLoading,
   disabled,
 }: CastVoteProps) {
-  const { openModal } = useModal();
+  const disabledButtons = disabled || isLoading;
 
-  const { connected, publicKey } = useWallet();
-  const { walletRole } = useWalletRole(publicKey?.toBase58());
+  const isSupporting = proposalStatus === "supporting";
 
-  const isValidator = [WalletRole.VALIDATOR, WalletRole.BOTH].includes(
-    walletRole
-  );
-
-  const disabledButtons = disabled || isLoading || !proposalPublicKey;
-
-  const tooltipText =
-    !isValidator && connected
-      ? "You are not authorized to support this proposal, only validators can support proposals"
-      : "Wallet not connected, please connect your wallet to be able to perform these actions";
-
-  const handleSupport = () => {
-    if (proposalPublicKey) {
-      openModal("support-proposal", {
-        proposalId: proposalPublicKey.toBase58(),
-      });
-    }
-  };
+  if (!isSupporting) {
+    return null;
+  }
 
   return (
     <div className="glass-card h-full p-6 md:p-6 lg:p-8">
@@ -59,34 +37,11 @@ export default function SupportProposal({
             </p>
           </div>
 
-          {connected && proposalPublicKey && publicKey && isValidator ? (
-            <AppButton
-              onClick={handleSupport}
-              variant="gradient"
-              text="Support"
-              className="w-full"
-              size="lg"
-              disabled={disabledButtons}
-            />
-          ) : (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span>
-                  <AppButton
-                    onClick={handleSupport}
-                    variant="gradient"
-                    text="Support"
-                    className="w-full"
-                    size="lg"
-                    disabled={true}
-                  />
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                <p className="text-sm text-red-500/80">{tooltipText}</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
+          <SupportButton
+            proposalId={proposalPublicKey?.toBase58()}
+            proposalStatus={proposalStatus}
+            disabled={disabledButtons}
+          />
         </div>
       </div>
     </div>

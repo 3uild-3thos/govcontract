@@ -3,6 +3,7 @@ export * from "./getVoteAccounts";
 export * from "./getHasUserVoted";
 
 export * from "./getVoteOverrideAccounts";
+export * from "./getSupportAccounts";
 export * from "./getWalletStakeAccounts";
 export * from "./getValidatorVoteAccounts";
 export * from "./getValidatorProposalVoteAccount";

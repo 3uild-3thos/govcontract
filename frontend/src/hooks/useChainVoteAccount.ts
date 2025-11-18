@@ -13,7 +13,12 @@ export const useChainVoteAccount = (userPubKey: string | undefined) => {
   return useQuery({
     staleTime: 1000 * 120, // 2 minutes
     enabled,
-    queryKey: ["chain_vote_account", endpoint, userPubKey],
+    queryKey: [
+      "chain_vote_account",
+      endpoint,
+      userPubKey,
+      chainVoteAccounts.length,
+    ],
     queryFn: async (): Promise<ChainVoteAccountData | null> => {
       const chainVoteAccount = chainVoteAccounts.find(
         (voteAccount) => voteAccount.nodePubkey === userPubKey

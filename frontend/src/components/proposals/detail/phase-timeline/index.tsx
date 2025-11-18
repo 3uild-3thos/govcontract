@@ -102,7 +102,7 @@ const PhaseTimelineSkeleton = () => {
         </div>
       </div>
 
-      <PhaseDetail currentPhase="support" isLoading={true} />
+      <PhaseDetail currentPhase="supporting" isLoading={true} />
     </div>
   );
 };

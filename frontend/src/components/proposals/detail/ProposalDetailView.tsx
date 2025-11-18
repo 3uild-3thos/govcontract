@@ -19,7 +19,6 @@ export default function ProposalDetailView({
   isLoading,
 }: ProposalDetailViewProps) {
   const isVoting = proposal?.status === "voting";
-  const isSupporting = proposal?.status === "support";
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -32,12 +31,11 @@ export default function ProposalDetailView({
         {!isLoading && isVoting && (
           <CastVoteWrapper proposal={proposal} isLoading={isLoading} />
         )}
-        {!isLoading && isSupporting && (
-          <SupportProposal
-            proposalPublicKey={proposal?.publicKey}
-            isLoading={isLoading}
-          />
-        )}
+        <SupportProposal
+          proposalStatus={proposal?.status}
+          proposalPublicKey={proposal?.publicKey}
+          isLoading={isLoading}
+        />
       </div>
       <PhaseTimeline proposal={proposal} isLoading={isLoading} />
       <TopVotersTable proposal={proposal} />
