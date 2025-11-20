@@ -173,12 +173,12 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
     event.stopPropagation();
     const buttonText = (event.target as HTMLButtonElement).innerText;
 
-    if (buttonText === "Modify Vote") {
+    if (buttonText === "Modify Vote" && consensusResult) {
       openModal(modifyModalName, {
         proposalId: publicKey.toBase58(),
         consensusResult,
       });
-    } else if (buttonText === "Cast Vote") {
+    } else if (buttonText === "Cast Vote" && consensusResult) {
       openModal(castModalName, {
         proposalId: publicKey.toBase58(),
         consensusResult,

@@ -37,7 +37,7 @@ export const getValidatorProposalVoteAccount = async (
 
   if (voteAccounts.length === 0) {
     console.warn(
-      `No vote account found for validator ${validatorPubkey.toBase58()} and proposal ${proposalPubkey.toBase58()}`
+      `No program vote account found for validator ${validatorPubkey.toBase58()} and proposal ${proposalPubkey.toBase58()}`
     );
     return null;
   }

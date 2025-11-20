@@ -29,16 +29,22 @@ import {
 import { VotingProposalsDropdown } from "../VotingProposalsDropdown";
 import { PublicKey } from "@solana/web3.js";
 
-export interface CastVoteModalDataProps {
-  proposalId?: string;
-  consensusResult?: PublicKey;
-  initialVoteDist?: VoteDistribution;
-}
+export type CastVoteModalDataProps =
+  | {
+      proposalId: string;
+      consensusResult: PublicKey;
+      initialVoteDist?: VoteDistribution;
+    }
+  | {
+      proposalId?: undefined;
+      consensusResult?: undefined;
+      initialVoteDist?: undefined;
+    };
 
-interface CastVoteModalProps extends CastVoteModalDataProps {
+type CastVoteModalProps = {
   isOpen: boolean;
   onClose: () => void;
-}
+} & CastVoteModalDataProps;
 
 export function CastVoteModal({
   proposalId: initialProposalId,
@@ -47,7 +53,10 @@ export function CastVoteModal({
   isOpen,
   onClose,
 }: CastVoteModalProps) {
-  const [proposalId, setProposalId] = React.useState(initialProposalId);
+  const [selectedProposal, setSelectedProposal] = React.useState({
+    id: initialProposalId,
+    consensusResult,
+  });
 
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | undefined>();
@@ -71,11 +80,18 @@ export function CastVoteModal({
 
   React.useEffect(() => {
     if (isOpen) {
-      setProposalId(initialProposalId);
+      setSelectedProposal({ id: initialProposalId, consensusResult });
       resetDistribution();
       setError(undefined);
     }
-  }, [isOpen, initialProposalId, resetDistribution]);
+  }, [isOpen, initialProposalId, resetDistribution, consensusResult]);
+
+  const handleProposalChange = (
+    proposalId: string,
+    consensusResult: PublicKey
+  ) => {
+    setSelectedProposal({ id: proposalId, consensusResult });
+  };
 
   const handleSuccess = () => {
     toast.success("Vote cast successfully");
@@ -85,7 +101,7 @@ export function CastVoteModal({
 
   const handleError = (err: Error) => {
     console.log("error mutating cast vote:", err);
-    toast.error(`Error voting for proposal ${proposalId}`);
+    toast.error(`Error voting for proposal ${initialProposalId}`);
     setError(err instanceof Error ? err.message : "Failed to cast vote");
     setIsLoading(false);
   };
@@ -95,47 +111,63 @@ export function CastVoteModal({
       toast.error("Wallet not connected");
       return;
     }
-    if (!proposalId) {
+    if (!selectedProposal.id) {
       toast.error("No proposal ID provided");
+      return;
+    }
+    if (!selectedProposal.consensusResult) {
+      toast.error("Couldn't obtain consensus result");
       return;
     }
 
     if (walletRole === WalletRole.NONE) {
       toast.error("You are not authorized to vote");
-    } else if (walletRole === WalletRole.VALIDATOR) {
+      return;
+    } else if (
+      walletRole === WalletRole.VALIDATOR ||
+      walletRole === WalletRole.BOTH
+    ) {
       castVote(
         {
           wallet,
-          proposalId,
+          proposalId: selectedProposal.id,
           forVotesBp: voteDistribution.for * 100,
           againstVotesBp: voteDistribution.against * 100,
           abstainVotesBp: voteDistribution.abstain * 100,
-          consensusResult,
+          consensusResult: selectedProposal.consensusResult,
         },
         {
           onSuccess: handleSuccess,
           onError: handleError,
         }
       );
+      return;
     } else if (walletRole === WalletRole.STAKER) {
       toast.error("Staker can only cast an override vote");
+      setError("Staker can only cast an override vote");
+      setIsLoading(false);
       return;
     }
+    setError("Unknown error, unable to cast vote");
+    setIsLoading(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!proposalId || !isValidDistribution || isLoading) return;
+    if (!selectedProposal.id || !isValidDistribution || isLoading) return;
 
     setIsLoading(true);
     setError(undefined);
 
-    console.log("Casting vote:", { proposalId, distribution });
+    console.log("Casting vote:", {
+      proposalId: selectedProposal.id,
+      distribution,
+    });
     handleVote(distribution);
   };
 
   const handleClose = () => {
-    setProposalId("");
+    setSelectedProposal({ id: undefined, consensusResult: undefined });
     resetDistribution();
     setError(undefined);
     onClose();
@@ -168,8 +200,8 @@ export function CastVoteModal({
             >
               {/* Proposal ID Input */}
               <VotingProposalsDropdown
-                value={proposalId}
-                onValueChange={setProposalId}
+                value={selectedProposal.id}
+                onValueChange={handleProposalChange}
                 disabled={!!initialProposalId}
               />
 
@@ -221,7 +253,7 @@ export function CastVoteModal({
           <AppButton
             form="cast-vote-form"
             size="lg"
-            disabled={!proposalId || !isValidDistribution || isLoading}
+            disabled={!selectedProposal.id || !isValidDistribution || isLoading}
             onClick={handleSubmit}
             variant="gradient"
             text={isLoading ? "Casting..." : "Cast Vote"}

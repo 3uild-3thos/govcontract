@@ -9,16 +9,7 @@
   "instructions": [
     {
       "name": "cast_vote",
-      "discriminator": [
-        20,
-        212,
-        15,
-        189,
-        69,
-        180,
-        69,
-        151
-      ],
+      "discriminator": [20, 212, 15, 189, 69, 180, 69, 151],
       "accounts": [
         {
           "name": "operator",
@@ -27,9 +18,6 @@
         {
           "name": "ballot_box",
           "writable": true
-        },
-        {
-          "name": "program_config"
         }
       ],
       "args": [
@@ -45,26 +33,13 @@
     },
     {
       "name": "close_meta_merkle_proof",
-      "discriminator": [
-        248,
-        239,
-        182,
-        146,
-        23,
-        215,
-        172,
-        3
-      ],
+      "discriminator": [248, 239, 182, 146, 23, 215, 172, 3],
       "accounts": [
         {
           "name": "payer",
-          "docs": [
-            "Account to receive the reclaimed rent from StakingRecord"
-          ],
+          "docs": ["Account to receive the reclaimed rent from StakingRecord"],
           "writable": true,
-          "relations": [
-            "meta_merkle_proof"
-          ]
+          "relations": ["meta_merkle_proof"]
         },
         {
           "name": "meta_merkle_proof",
@@ -78,17 +53,64 @@
       "args": []
     },
     {
-      "name": "finalize_ballot",
-      "discriminator": [
-        212,
-        43,
-        85,
-        58,
-        158,
-        34,
-        41,
-        42
+      "name": "create_consensus_result",
+      "discriminator": [21, 90, 183, 65, 163, 107, 168, 89],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "consensus_result",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  67, 111, 110, 115, 101, 110, 115, 117, 115, 82, 101, 115, 117,
+                  108, 116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "snapshot_slot"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
       ],
+      "args": [
+        {
+          "name": "snapshot_slot",
+          "type": "u64"
+        },
+        {
+          "name": "meta_merkle_root",
+          "type": {
+            "array": ["u8", 32]
+          }
+        },
+        {
+          "name": "snapshot_hash",
+          "type": {
+            "array": ["u8", 32]
+          }
+        },
+        {
+          "name": "tie_breaker_consensus",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "finalize_ballot",
+      "discriminator": [212, 43, 85, 58, 158, 34, 41, 42],
       "accounts": [
         {
           "name": "payer",
@@ -106,26 +128,13 @@
               {
                 "kind": "const",
                 "value": [
-                  67,
-                  111,
-                  110,
-                  115,
-                  101,
-                  110,
-                  115,
-                  117,
-                  115,
-                  82,
-                  101,
-                  115,
-                  117,
-                  108,
-                  116
+                  67, 111, 110, 115, 101, 110, 115, 117, 115, 82, 101, 115, 117,
+                  108, 116
                 ]
               },
               {
                 "kind": "account",
-                "path": "ballot_box.ballot_id",
+                "path": "ballot_box.snapshot_slot",
                 "account": "BallotBox"
               }
             ]
@@ -139,17 +148,23 @@
       "args": []
     },
     {
-      "name": "init_ballot_box",
-      "discriminator": [
-        164,
-        20,
-        45,
-        213,
-        67,
-        43,
-        193,
-        212
+      "name": "finalize_proposed_authority",
+      "discriminator": [89, 96, 108, 130, 223, 223, 213, 102],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "program_config",
+          "writable": true
+        }
       ],
+      "args": []
+    },
+    {
+      "name": "init_ballot_box",
+      "discriminator": [164, 20, 45, 213, 67, 43, 193, 212],
       "accounts": [
         {
           "name": "payer",
@@ -157,8 +172,36 @@
           "signer": true
         },
         {
-          "name": "operator",
-          "signer": true
+          "name": "proposal",
+          "docs": [
+            "Verifies that signer is a Proposal PDA from the governance program.",
+            "When `skip-pda-check` feature is enabled, this check is disabled to allow local testing without CPI."
+          ],
+          "signer": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [112, 114, 111, 112, 111, 115, 97, 108]
+              },
+              {
+                "kind": "arg",
+                "path": "proposal_seed"
+              },
+              {
+                "kind": "arg",
+                "path": "spl_vote_account"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                79, 139, 255, 234, 216, 23, 1, 144, 122, 105, 236, 235, 161,
+                220, 75, 80, 111, 167, 231, 208, 4, 240, 180, 181, 58, 174, 189,
+                60, 177, 123, 49, 181
+              ]
+            }
+          }
         },
         {
           "name": "ballot_box",
@@ -167,49 +210,41 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  66,
-                  97,
-                  108,
-                  108,
-                  111,
-                  116,
-                  66,
-                  111,
-                  120
-                ]
+                "value": [66, 97, 108, 108, 111, 116, 66, 111, 120]
               },
               {
-                "kind": "account",
-                "path": "program_config.next_ballot_id",
-                "account": "ProgramConfig"
+                "kind": "arg",
+                "path": "snapshot_slot"
               }
             ]
           }
         },
         {
-          "name": "program_config",
-          "writable": true
+          "name": "program_config"
         },
         {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "snapshot_slot",
+          "type": "u64"
+        },
+        {
+          "name": "proposal_seed",
+          "type": "u64"
+        },
+        {
+          "name": "spl_vote_account",
+          "type": "pubkey"
+        }
+      ]
     },
     {
       "name": "init_meta_merkle_proof",
-      "discriminator": [
-        190,
-        210,
-        132,
-        165,
-        204,
-        88,
-        110,
-        84
-      ],
+      "discriminator": [190, 210, 132, 165, 204, 88, 110, 84],
       "accounts": [
         {
           "name": "payer",
@@ -224,21 +259,8 @@
               {
                 "kind": "const",
                 "value": [
-                  77,
-                  101,
-                  116,
-                  97,
-                  77,
-                  101,
-                  114,
-                  107,
-                  108,
-                  101,
-                  80,
-                  114,
-                  111,
-                  111,
-                  102
+                  77, 101, 116, 97, 77, 101, 114, 107, 108, 101, 80, 114, 111,
+                  111, 102
                 ]
               },
               {
@@ -273,10 +295,7 @@
           "name": "meta_merkle_proof",
           "type": {
             "vec": {
-              "array": [
-                "u8",
-                32
-              ]
+              "array": ["u8", 32]
             }
           }
         },
@@ -288,16 +307,7 @@
     },
     {
       "name": "init_program_config",
-      "discriminator": [
-        185,
-        54,
-        237,
-        229,
-        219,
-        179,
-        109,
-        20
-      ],
+      "discriminator": [185, 54, 237, 229, 219, 179, 109, 20],
       "accounts": [
         {
           "name": "payer",
@@ -316,19 +326,7 @@
               {
                 "kind": "const",
                 "value": [
-                  80,
-                  114,
-                  111,
-                  103,
-                  114,
-                  97,
-                  109,
-                  67,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
+                  80, 114, 111, 103, 114, 97, 109, 67, 111, 110, 102, 105, 103
                 ]
               }
             ]
@@ -343,20 +341,27 @@
     },
     {
       "name": "remove_vote",
-      "discriminator": [
-        32,
-        187,
-        23,
-        3,
-        156,
-        232,
-        55,
-        177
-      ],
+      "discriminator": [32, 187, 23, 3, 156, 232, 55, 177],
       "accounts": [
         {
           "name": "operator",
           "signer": true
+        },
+        {
+          "name": "ballot_box",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "reset_ballot_box",
+      "discriminator": [108, 127, 131, 171, 226, 219, 67, 163],
+      "accounts": [
+        {
+          "name": "tie_breaker_admin",
+          "signer": true,
+          "relations": ["program_config"]
         },
         {
           "name": "ballot_box",
@@ -370,23 +375,12 @@
     },
     {
       "name": "set_tie_breaker",
-      "discriminator": [
-        228,
-        10,
-        240,
-        130,
-        193,
-        58,
-        103,
-        181
-      ],
+      "discriminator": [228, 10, 240, 130, 193, 58, 103, 181],
       "accounts": [
         {
           "name": "tie_breaker_admin",
           "signer": true,
-          "relations": [
-            "program_config"
-          ]
+          "relations": ["program_config"]
         },
         {
           "name": "ballot_box",
@@ -398,30 +392,23 @@
       ],
       "args": [
         {
-          "name": "ballot_index",
-          "type": "u8"
+          "name": "ballot",
+          "type": {
+            "defined": {
+              "name": "Ballot"
+            }
+          }
         }
       ]
     },
     {
       "name": "update_operator_whitelist",
-      "discriminator": [
-        25,
-        65,
-        144,
-        150,
-        200,
-        245,
-        156,
-        92
-      ],
+      "discriminator": [25, 65, 144, 150, 200, 245, 156, 92],
       "accounts": [
         {
           "name": "authority",
           "signer": true,
-          "relations": [
-            "program_config"
-          ]
+          "relations": ["program_config"]
         },
         {
           "name": "program_config",
@@ -449,35 +436,25 @@
     },
     {
       "name": "update_program_config",
-      "discriminator": [
-        214,
-        3,
-        187,
-        98,
-        170,
-        106,
-        33,
-        45
-      ],
+      "discriminator": [214, 3, 187, 98, 170, 106, 33, 45],
       "accounts": [
         {
           "name": "authority",
           "signer": true,
-          "relations": [
-            "program_config"
-          ]
+          "relations": ["program_config"]
         },
         {
           "name": "program_config",
           "writable": true
-        },
-        {
-          "name": "new_authority",
-          "signer": true,
-          "optional": true
         }
       ],
       "args": [
+        {
+          "name": "proposed_authority",
+          "type": {
+            "option": "pubkey"
+          }
+        },
         {
           "name": "min_consensus_threshold_bps",
           "type": {
@@ -500,25 +477,14 @@
     },
     {
       "name": "verify_merkle_proof",
-      "discriminator": [
-        51,
-        191,
-        37,
-        169,
-        74,
-        207,
-        201,
-        102
-      ],
+      "discriminator": [51, 191, 37, 169, 74, 207, 201, 102],
       "accounts": [
         {
           "name": "meta_merkle_proof"
         },
         {
           "name": "consensus_result",
-          "relations": [
-            "meta_merkle_proof"
-          ]
+          "relations": ["meta_merkle_proof"]
         }
       ],
       "args": [
@@ -527,10 +493,7 @@
           "type": {
             "option": {
               "vec": {
-                "array": [
-                  "u8",
-                  32
-                ]
+                "array": ["u8", 32]
               }
             }
           }
@@ -551,55 +514,19 @@
   "accounts": [
     {
       "name": "BallotBox",
-      "discriminator": [
-        155,
-        169,
-        156,
-        8,
-        92,
-        14,
-        24,
-        101
-      ]
+      "discriminator": [155, 169, 156, 8, 92, 14, 24, 101]
     },
     {
       "name": "ConsensusResult",
-      "discriminator": [
-        105,
-        121,
-        122,
-        243,
-        100,
-        58,
-        93,
-        161
-      ]
+      "discriminator": [105, 121, 122, 243, 100, 58, 93, 161]
     },
     {
       "name": "MetaMerkleProof",
-      "discriminator": [
-        130,
-        55,
-        141,
-        26,
-        195,
-        58,
-        18,
-        178
-      ]
+      "discriminator": [130, 55, 141, 26, 195, 58, 18, 178]
     },
     {
       "name": "ProgramConfig",
-      "discriminator": [
-        196,
-        210,
-        90,
-        231,
-        144,
-        149,
-        140,
-        63
-      ]
+      "discriminator": [196, 210, 90, 231, 144, 149, 140, 63]
     }
   ],
   "errors": [
@@ -652,39 +579,57 @@
       "code": 6009,
       "name": "InvalidMerkleProof",
       "msg": "Invalid merkle proof"
+    },
+    {
+      "code": 6010,
+      "name": "VecFull",
+      "msg": "Vector size exceeded"
+    },
+    {
+      "code": 6011,
+      "name": "OverlappingWhitelistEntries",
+      "msg": "Overlapping operators in add and remove lists"
+    },
+    {
+      "code": 6012,
+      "name": "InvalidBallotIndex",
+      "msg": "Invalid ballot index"
+    },
+    {
+      "code": 6013,
+      "name": "InvalidSnapshotSlot",
+      "msg": "Snapshot slot must be greater than current slot"
+    },
+    {
+      "code": 6014,
+      "name": "BallotTalliesNotMaxLength",
+      "msg": "Ballot tallies not at max length"
+    },
+    {
+      "code": 6015,
+      "name": "InvalidProposal",
+      "msg": "Invalid proposal"
     }
   ],
   "types": [
     {
       "name": "Ballot",
-      "docs": [
-        "Inner struct of BallotBox"
-      ],
+      "docs": ["Inner struct of BallotBox"],
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "meta_merkle_root",
-            "docs": [
-              "The merkle root of the meta merkle tree"
-            ],
+            "docs": ["The merkle root of the meta merkle tree"],
             "type": {
-              "array": [
-                "u8",
-                32
-              ]
+              "array": ["u8", 32]
             }
           },
           {
             "name": "snapshot_hash",
-            "docs": [
-              "SHA256 hash of borsh serialized snapshot. Optional."
-            ],
+            "docs": ["SHA256 hash of borsh serialized snapshot. Optional."],
             "type": {
-              "array": [
-                "u8",
-                32
-              ]
+              "array": ["u8", 32]
             }
           }
         ]
@@ -696,38 +641,23 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "ballot_id",
-            "docs": [
-              "ID"
-            ],
-            "type": "u64"
-          },
-          {
             "name": "bump",
-            "docs": [
-              "Bump seed for the PDA"
-            ],
+            "docs": ["Bump seed for the PDA"],
             "type": "u8"
           },
           {
             "name": "epoch",
-            "docs": [
-              "The epoch this ballot box is for"
-            ],
+            "docs": ["The epoch this ballot box is for"],
             "type": "u64"
           },
           {
             "name": "slot_created",
-            "docs": [
-              "Slot when this ballot box was created"
-            ],
+            "docs": ["Slot when this ballot box was created"],
             "type": "u64"
           },
           {
             "name": "slot_consensus_reached",
-            "docs": [
-              "Slot when consensus was reached"
-            ],
+            "docs": ["Slot when consensus was reached"],
             "type": "u64"
           },
           {
@@ -750,9 +680,7 @@
           },
           {
             "name": "operator_votes",
-            "docs": [
-              "Operator votes"
-            ],
+            "docs": ["Operator votes"],
             "type": {
               "vec": {
                 "defined": {
@@ -763,9 +691,7 @@
           },
           {
             "name": "ballot_tallies",
-            "docs": [
-              "Mapping of ballots votes to stake weight"
-            ],
+            "docs": ["Mapping of ballots votes to stake weight"],
             "type": {
               "vec": {
                 "defined": {
@@ -781,30 +707,41 @@
               "if no consensus is reached by then."
             ],
             "type": "i64"
+          },
+          {
+            "name": "snapshot_slot",
+            "docs": ["Slot for which the snapshot is taken"],
+            "type": "u64"
+          },
+          {
+            "name": "voter_list",
+            "docs": ["Snapshot of whitelisted operators at BallotBox creation"],
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "tie_breaker_consensus",
+            "docs": ["Whether consensus was reached via tie breaker"],
+            "type": "bool"
           }
         ]
       }
     },
     {
       "name": "BallotTally",
-      "docs": [
-        "Inner struct of BallotBox"
-      ],
+      "docs": ["Inner struct of BallotBox"],
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "index",
-            "docs": [
-              "Index of the tally within the ballot_tallies"
-            ],
+            "docs": ["Index of the tally within the ballot_tallies"],
             "type": "u8"
           },
           {
             "name": "ballot",
-            "docs": [
-              "The ballot being tallied"
-            ],
+            "docs": ["The ballot being tallied"],
             "type": {
               "defined": {
                 "name": "Ballot"
@@ -827,22 +764,23 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "ballot_id",
-            "docs": [
-              "Ballot ID"
-            ],
+            "name": "snapshot_slot",
+            "docs": ["Snapshot slot used for the ballot box"],
             "type": "u64"
           },
           {
             "name": "ballot",
-            "docs": [
-              "Ballot"
-            ],
+            "docs": ["Ballot"],
             "type": {
               "defined": {
                 "name": "Ballot"
               }
             }
+          },
+          {
+            "name": "tie_breaker_consensus",
+            "docs": ["Whether consensus was reached via tie breaker"],
+            "type": "bool"
           }
         ]
       }
@@ -861,9 +799,7 @@
           },
           {
             "name": "vote_account",
-            "docs": [
-              "Validator's vote account."
-            ],
+            "docs": ["Validator's vote account."],
             "type": "pubkey"
           },
           {
@@ -873,17 +809,12 @@
               "delegated to the current vote account."
             ],
             "type": {
-              "array": [
-                "u8",
-                32
-              ]
+              "array": ["u8", 32]
             }
           },
           {
             "name": "active_stake",
-            "docs": [
-              "Total active delegated stake under this vote account."
-            ],
+            "docs": ["Total active delegated stake under this vote account."],
             "type": "u64"
           }
         ]
@@ -896,23 +827,17 @@
         "fields": [
           {
             "name": "payer",
-            "docs": [
-              "Payer wallet"
-            ],
+            "docs": ["Payer wallet"],
             "type": "pubkey"
           },
           {
             "name": "consensus_result",
-            "docs": [
-              "ConsensusResult proof is created for."
-            ],
+            "docs": ["ConsensusResult proof is created for."],
             "type": "pubkey"
           },
           {
             "name": "meta_merkle_leaf",
-            "docs": [
-              "Meta merkle leaf"
-            ],
+            "docs": ["Meta merkle leaf"],
             "type": {
               "defined": {
                 "name": "MetaMerkleLeaf"
@@ -921,15 +846,10 @@
           },
           {
             "name": "meta_merkle_proof",
-            "docs": [
-              "Meta merkle proof"
-            ],
+            "docs": ["Meta merkle proof"],
             "type": {
               "vec": {
-                "array": [
-                  "u8",
-                  32
-                ]
+                "array": ["u8", 32]
               }
             }
           },
@@ -946,31 +866,23 @@
     },
     {
       "name": "OperatorVote",
-      "docs": [
-        "Inner struct of BallotBox"
-      ],
+      "docs": ["Inner struct of BallotBox"],
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "operator",
-            "docs": [
-              "The operator that cast the vote"
-            ],
+            "docs": ["The operator that cast the vote"],
             "type": "pubkey"
           },
           {
             "name": "slot_voted",
-            "docs": [
-              "The slot the operator voted"
-            ],
+            "docs": ["The slot the operator voted"],
             "type": "u64"
           },
           {
             "name": "ballot_index",
-            "docs": [
-              "The index of the ballot in the ballot_tallies"
-            ],
+            "docs": ["The index of the ballot in the ballot_tallies"],
             "type": "u8"
           }
         ]
@@ -983,15 +895,21 @@
         "fields": [
           {
             "name": "authority",
-            "docs": [
-              "Authority allowed to update the config."
-            ],
+            "docs": ["Authority allowed to update the config."],
             "type": "pubkey"
+          },
+          {
+            "name": "proposed_authority",
+            "docs": ["Authority to be set to upon finalization of proposal."],
+            "type": {
+              "option": "pubkey"
+            }
           },
           {
             "name": "whitelisted_operators",
             "docs": [
-              "Operators whitelisted to participate in voting."
+              "Operators whitelisted to participate in voting.",
+              "A snapshot of this list will be taken at the time of BallotBox creation."
             ],
             "type": {
               "vec": "pubkey"
@@ -1010,13 +928,6 @@
               "Admin allowed to decide the winning ballot if vote expires before consensus."
             ],
             "type": "pubkey"
-          },
-          {
-            "name": "next_ballot_id",
-            "docs": [
-              "ID for next BallotBox"
-            ],
-            "type": "u64"
           },
           {
             "name": "vote_duration",
@@ -1042,16 +953,12 @@
           },
           {
             "name": "stake_account",
-            "docs": [
-              "The stake account address."
-            ],
+            "docs": ["The stake account address."],
             "type": "pubkey"
           },
           {
             "name": "active_stake",
-            "docs": [
-              "Active delegated stake amount."
-            ],
+            "docs": ["Active delegated stake amount."],
             "type": "u64"
           }
         ]
