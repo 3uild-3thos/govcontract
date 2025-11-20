@@ -8,10 +8,12 @@ import {
 } from "./ui";
 import { formatAddress } from "@/lib/governance/formatters";
 import { Loader2 } from "lucide-react";
+import { PublicKey } from "@solana/web3.js";
+import { toast } from "sonner";
 
 interface VotingProposalsDropdownProps {
   value?: string;
-  onValueChange: (value: string) => void;
+  onValueChange: (proposalid: string, consensusResult: PublicKey) => void;
   disabled?: boolean;
 }
 
@@ -25,6 +27,20 @@ export const VotingProposalsDropdown = ({
     finalized: false,
   });
 
+  const handleChange = (value: string) => {
+    if (proposals) {
+      const consensusResult = proposals.find(
+        (p) => p.publicKey.toBase58() === value
+      )?.consensusResult;
+
+      if (consensusResult) {
+        onValueChange(value, consensusResult);
+      } else {
+        toast.error("Couldn't obtain consensus result");
+      }
+    }
+  };
+
   return (
     <div className="space-y-2">
       <label
@@ -35,7 +51,7 @@ export const VotingProposalsDropdown = ({
       </label>
       <Select
         value={value}
-        onValueChange={onValueChange}
+        onValueChange={handleChange}
         disabled={isLoading || disabled}
       >
         <SelectTrigger className="text-white w-full">

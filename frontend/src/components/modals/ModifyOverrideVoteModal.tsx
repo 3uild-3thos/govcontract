@@ -159,8 +159,17 @@ export function ModifyOverrideVoteModal({
       setIsLoading(false);
       return;
     }
+    if (!consensusResult) {
+      toast.error("No Consensus Result provided");
+      setIsLoading(false);
+      return;
+    }
 
-    if (walletRole === WalletRole.NONE || walletRole === WalletRole.VALIDATOR) {
+    if (
+      walletRole === WalletRole.NONE ||
+      walletRole === WalletRole.VALIDATOR ||
+      walletRole === WalletRole.BOTH
+    ) {
       toast.error("You are not authorized to override vote");
     } else if (walletRole === WalletRole.STAKER) {
       if (stakeAccounts === undefined) {
@@ -180,6 +189,7 @@ export function ModifyOverrideVoteModal({
       }
       if (voteAccount === undefined) {
         toast.error("Not able to determine vote account");
+        setIsLoading(false);
         return;
       }
 

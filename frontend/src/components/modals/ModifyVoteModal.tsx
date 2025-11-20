@@ -14,10 +14,17 @@ import { AppButton } from "@/components/ui/AppButton";
 import ErrorMessage from "./shared/ErrorMessage";
 import RequirementItem from "./shared/RequirementItem";
 import { VoteDistributionControls } from "./shared/VoteDistributionControls";
-import { useModifyVote, useVoteDistribution, VoteDistribution } from "@/hooks";
+import {
+  useModifyVote,
+  useVoteDistribution,
+  useWalletRole,
+  VoteDistribution,
+} from "@/hooks";
 import { toast } from "sonner";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
+import { WalletRole } from "@/types";
+import { VotingProposalsDropdown } from "../VotingProposalsDropdown";
 
 export interface ModifyVoteModalDataProps {
   proposalId?: string;
@@ -37,7 +44,11 @@ export function ModifyVoteModal({
   isOpen,
   onClose,
 }: ModifyVoteModalProps) {
-  const [proposalId, setProposalId] = React.useState(initialProposalId);
+  const [selectedProposal, setSelectedProposal] = React.useState({
+    id: initialProposalId,
+    consensusResult,
+  });
+
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | undefined>();
   const {
@@ -51,6 +62,8 @@ export function ModifyVoteModal({
 
   const wallet = useAnchorWallet();
 
+  const { walletRole } = useWalletRole(wallet?.publicKey?.toBase58());
+
   const { mutate: modifyVote } = useModifyVote();
 
   // TODO: MODIFY VOTE
@@ -60,11 +73,18 @@ export function ModifyVoteModal({
 
   React.useEffect(() => {
     if (isOpen) {
-      setProposalId(initialProposalId);
+      setSelectedProposal({ id: initialProposalId, consensusResult });
       resetDistribution();
       setError(undefined);
     }
-  }, [isOpen, initialProposalId, resetDistribution]);
+  }, [isOpen, initialProposalId, resetDistribution, consensusResult]);
+
+  const handleProposalChange = (
+    proposalId: string,
+    consensusResult: PublicKey
+  ) => {
+    setSelectedProposal({ id: proposalId, consensusResult });
+  };
 
   const handleSuccess = () => {
     toast.success("Vote modified successfully");
@@ -74,44 +94,74 @@ export function ModifyVoteModal({
 
   const handleError = (err: Error) => {
     console.log("error mutating cast vote:", err);
-    toast.error(`Error modifying vote for proposal ${proposalId}`);
+    toast.error(`Error modifying vote for proposal ${initialProposalId}`);
     setError(err instanceof Error ? err.message : "Failed to modify vote");
     setIsLoading(false);
   };
 
   const handleModifyVote = (voteDistribution: VoteDistribution) => {
-    if (proposalId) {
+    if (!wallet) {
+      toast.error("Wallet not connected");
+      return;
+    }
+    if (!selectedProposal.id) {
+      toast.error("No proposal ID provided");
+      return;
+    }
+    if (!selectedProposal.consensusResult) {
+      toast.error("Couldn't obtain consensus result");
+      return;
+    }
+
+    if (walletRole === WalletRole.NONE) {
+      toast.error("You are not authorized to vote");
+      return;
+    } else if (
+      walletRole === WalletRole.VALIDATOR ||
+      walletRole === WalletRole.BOTH
+    ) {
       modifyVote(
         {
           wallet,
-          proposalId,
+          proposalId: selectedProposal.id,
           // convert basis points to BN, not %
           forVotesBp: voteDistribution.for * 100,
           againstVotesBp: voteDistribution.against * 100,
           abstainVotesBp: voteDistribution.abstain * 100,
-          consensusResult,
+          consensusResult: selectedProposal.consensusResult,
         },
         {
           onSuccess: handleSuccess,
           onError: handleError,
         }
       );
+      return;
+    } else if (walletRole === WalletRole.STAKER) {
+      toast.error("Staker can only cast an override vote");
+      setError("Staker can only cast an override vote");
+      setIsLoading(false);
+      return;
     }
+    setError("Unknown error, unable to cast vote");
+    setIsLoading(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!proposalId || !isValidDistribution || isLoading) return;
+    if (!selectedProposal.id || !isValidDistribution || isLoading) return;
 
     setIsLoading(true);
     setError(undefined);
 
-    console.log("Modifying vote:", { proposalId, distribution });
+    console.log("Modifying vote:", {
+      proposalId: selectedProposal.id,
+      distribution,
+    });
     handleModifyVote(distribution);
   };
 
   const handleClose = () => {
-    setProposalId("");
+    setSelectedProposal({ id: undefined, consensusResult: undefined });
     resetDistribution();
     setError(undefined);
     onClose();
@@ -143,30 +193,11 @@ export function ModifyVoteModal({
               className="space-y-6"
             >
               {/* Proposal ID Input */}
-              <div className="space-y-2">
-                <label
-                  htmlFor="proposal-id"
-                  className="text-sm font-medium text-white/80"
-                >
-                  Proposal ID
-                </label>
-                <input
-                  id="proposal-id"
-                  type="text"
-                  value={proposalId}
-                  onChange={(e) => setProposalId(e.target.value)}
-                  placeholder="Enter proposal public key"
-                  className={cn(
-                    "input",
-                    "mt-1 w-full rounded-md border border-white/10 bg-white/5 px-3 py-1.5",
-                    "placeholder:text-sm placeholder:text-white/40"
-                  )}
-                  disabled={initialProposalId !== undefined}
-                />
-                <p className="text-xs text-white/60">
-                  Enter the ID of the proposal you previously voted on
-                </p>
-              </div>
+              <VotingProposalsDropdown
+                value={selectedProposal.id}
+                onValueChange={handleProposalChange}
+                disabled={!!initialProposalId}
+              />
 
               <VoteDistributionControls
                 distribution={distribution}
@@ -216,7 +247,7 @@ export function ModifyVoteModal({
             form="modify-vote-form"
             size="lg"
             disabled={
-              !proposalId ||
+              !selectedProposal.id ||
               !isValidDistribution ||
               !hasVoted ||
               isFinalized ||
