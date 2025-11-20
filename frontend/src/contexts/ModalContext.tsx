@@ -7,7 +7,10 @@ import {
   CastVoteModalDataProps,
 } from "@/components/modals/CastVoteModal";
 import { ModifyVoteModal } from "@/components/modals/ModifyVoteModal";
-import { OverrideVoteModal } from "@/components/modals/OverrideVoteModal";
+import {
+  OverrideVoteModal,
+  OverrideVoteModalDataProps,
+} from "@/components/modals/OverrideVoteModal";
 import { SettingsModal } from "@/components/modals/SettingsModal";
 import {
   ComponentType,
@@ -36,18 +39,25 @@ interface ModalDataMap {
   };
   "create-proposal": Record<string, never>;
   "cast-vote": CastVoteModalDataProps;
-  "override-vote": {
-    proposalId?: string;
-    consensusResult?: PublicKey;
-  };
-  "modify-vote": {
-    proposalId?: string;
-    consensusResult?: PublicKey;
-  };
-  "modify-override-vote": {
-    proposalId?: string;
-    consensusResult?: PublicKey;
-  };
+  "override-vote": OverrideVoteModalDataProps;
+  "modify-vote":
+    | {
+        proposalId?: undefined;
+        consensusResult?: undefined;
+      }
+    | {
+        proposalId: string;
+        consensusResult: PublicKey;
+      };
+  "modify-override-vote":
+    | {
+        proposalId?: undefined;
+        consensusResult?: undefined;
+      }
+    | {
+        proposalId: string;
+        consensusResult: PublicKey;
+      };
   settings: Record<string, never>;
 }
 

@@ -16,6 +16,7 @@ import { ProposalDescription } from "../ProposalDescription";
 import { ProposalStatus, WalletRole } from "@/types";
 import { useWalletRole } from "@/hooks";
 import { SupportButton } from "../SupportButton";
+import { PublicKey } from "@solana/web3.js";
 
 const VOTE_STATE_LABEL: Record<ProposalRow["status"], string> = {
   supporting: "Not started",
@@ -78,10 +79,12 @@ function LifecycleStageBar({ stage }: { stage: ProposalStatus }) {
 function VoteActions({
   state,
   proposalId,
+  consensusResult,
   disabled,
 }: {
   state: ProposalStatus;
   proposalId: string;
+  consensusResult: PublicKey;
   disabled?: boolean;
 }) {
   const { openModal } = useModal();
@@ -105,9 +108,12 @@ function VoteActions({
             disabled={disabled}
             onClick={() => {
               if (isValidator || isBoth) {
-                openModal("modify-vote", { proposalId });
+                openModal("modify-vote", { proposalId, consensusResult });
               } else if (isStaker) {
-                openModal("modify-override-vote", { proposalId });
+                openModal("modify-override-vote", {
+                  proposalId,
+                  consensusResult,
+                });
               }
             }}
           />
@@ -118,9 +124,9 @@ function VoteActions({
             disabled={disabled}
             onClick={() => {
               if (isValidator || isBoth) {
-                openModal("cast-vote", { proposalId });
+                openModal("cast-vote", { proposalId, consensusResult });
               } else if (isStaker) {
-                openModal("override-vote", { proposalId });
+                openModal("override-vote", { proposalId, consensusResult });
               }
             }}
           />
@@ -158,10 +164,12 @@ function VotingPanel({ proposal }: { proposal: ProposalRow }) {
       </header>
 
       {connected ? (
-        (isSupporting || isVoting) && (
+        (isSupporting || isVoting) &&
+        proposal.consensusResult && (
           <VoteActions
             state={proposal.status}
             proposalId={proposal.publicKey.toBase58()}
+            consensusResult={proposal.consensusResult}
           />
         )
       ) : (
@@ -173,6 +181,7 @@ function VotingPanel({ proposal }: { proposal: ProposalRow }) {
                   <VoteActions
                     state={proposal.status}
                     proposalId={""}
+                    consensusResult={new PublicKey("")}
                     disabled
                   />
                 ))}

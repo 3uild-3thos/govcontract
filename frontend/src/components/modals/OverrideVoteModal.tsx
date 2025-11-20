@@ -28,13 +28,22 @@ import { PublicKey } from "@solana/web3.js";
 import { VotingProposalsDropdown } from "../VotingProposalsDropdown";
 import { StakeAccountsDropdown } from "../StakeAccountsDropdown";
 
-interface OverrideVoteModalProps {
-  proposalId?: string;
-  consensusResult?: PublicKey;
-  initialVoteDist?: VoteDistribution;
+export type OverrideVoteModalDataProps =
+  | {
+      proposalId: string;
+      consensusResult: PublicKey;
+      initialVoteDist?: VoteDistribution;
+    }
+  | {
+      proposalId?: undefined;
+      consensusResult?: undefined;
+      initialVoteDist?: undefined;
+    };
+
+type OverrideVoteModalProps = {
   isOpen: boolean;
   onClose: () => void;
-}
+} & OverrideVoteModalDataProps;
 
 /**
  * Builds vote override filters for a specific proposal and delegator
@@ -132,7 +141,12 @@ export function OverrideVoteModal({
       return;
     }
     if (!proposalId) {
-      toast.error("No proposal ID provided");
+      toast.error("No Proposal ID provided");
+      setIsLoading(false);
+      return;
+    }
+    if (!consensusResult) {
+      toast.error("No Consensus Result provided");
       setIsLoading(false);
       return;
     }
@@ -197,6 +211,7 @@ export function OverrideVoteModal({
     console.log("Overriding vote:", {
       proposalId,
       stakeAccount: selectedStakeAccount,
+      consensusResult,
       distribution,
     });
     handleVote(distribution);

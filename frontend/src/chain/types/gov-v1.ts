@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/gov_v1.json`.
  */
 export type GovV1 = {
-  address: "F3ZY8uXns4UDorFc9FASojnecMTq5yT5QakrjdocxTLF";
+  address: "DYvhrdFv8PSzta2u2igEoAXR6A6nzUXBnVhy6iNM6F7o";
   metadata: {
     name: "govV1";
     version: "0.1.0";
@@ -24,9 +24,6 @@ export type GovV1 = {
         {
           name: "ballotBox";
           writable: true;
-        },
-        {
-          name: "programConfig";
         }
       ];
       args: [
@@ -60,6 +57,75 @@ export type GovV1 = {
         }
       ];
       args: [];
+    },
+    {
+      name: "createConsensusResult";
+      discriminator: [21, 90, 183, 65, 163, 107, 168, 89];
+      accounts: [
+        {
+          name: "payer";
+          writable: true;
+          signer: true;
+        },
+        {
+          name: "consensusResult";
+          writable: true;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  67,
+                  111,
+                  110,
+                  115,
+                  101,
+                  110,
+                  115,
+                  117,
+                  115,
+                  82,
+                  101,
+                  115,
+                  117,
+                  108,
+                  116
+                ];
+              },
+              {
+                kind: "arg";
+                path: "snapshotSlot";
+              }
+            ];
+          };
+        },
+        {
+          name: "systemProgram";
+          address: "11111111111111111111111111111111";
+        }
+      ];
+      args: [
+        {
+          name: "snapshotSlot";
+          type: "u64";
+        },
+        {
+          name: "metaMerkleRoot";
+          type: {
+            array: ["u8", 32];
+          };
+        },
+        {
+          name: "snapshotHash";
+          type: {
+            array: ["u8", 32];
+          };
+        },
+        {
+          name: "tieBreakerConsensus";
+          type: "bool";
+        }
+      ];
     },
     {
       name: "finalizeBallot";
@@ -100,7 +166,7 @@ export type GovV1 = {
               },
               {
                 kind: "account";
-                path: "ballot_box.ballot_id";
+                path: "ballot_box.snapshot_slot";
                 account: "ballotBox";
               }
             ];
@@ -109,6 +175,21 @@ export type GovV1 = {
         {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
+        }
+      ];
+      args: [];
+    },
+    {
+      name: "finalizeProposedAuthority";
+      discriminator: [89, 96, 108, 130, 223, 223, 213, 102];
+      accounts: [
+        {
+          name: "authority";
+          signer: true;
+        },
+        {
+          name: "programConfig";
+          writable: true;
         }
       ];
       args: [];
@@ -123,8 +204,65 @@ export type GovV1 = {
           signer: true;
         },
         {
-          name: "operator";
+          name: "proposal";
+          docs: [
+            "Verifies that signer is a Proposal PDA from the governance program.",
+            "When `skip-pda-check` feature is enabled, this check is disabled to allow local testing without CPI."
+          ];
           signer: true;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [112, 114, 111, 112, 111, 115, 97, 108];
+              },
+              {
+                kind: "arg";
+                path: "proposalSeed";
+              },
+              {
+                kind: "arg";
+                path: "splVoteAccount";
+              }
+            ];
+            program: {
+              kind: "const";
+              value: [
+                79,
+                139,
+                255,
+                234,
+                216,
+                23,
+                1,
+                144,
+                122,
+                105,
+                236,
+                235,
+                161,
+                220,
+                75,
+                80,
+                111,
+                167,
+                231,
+                208,
+                4,
+                240,
+                180,
+                181,
+                58,
+                174,
+                189,
+                60,
+                177,
+                123,
+                49,
+                181
+              ];
+            };
+          };
         },
         {
           name: "ballotBox";
@@ -136,23 +274,34 @@ export type GovV1 = {
                 value: [66, 97, 108, 108, 111, 116, 66, 111, 120];
               },
               {
-                kind: "account";
-                path: "program_config.next_ballot_id";
-                account: "programConfig";
+                kind: "arg";
+                path: "snapshotSlot";
               }
             ];
           };
         },
         {
           name: "programConfig";
-          writable: true;
         },
         {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
         }
       ];
-      args: [];
+      args: [
+        {
+          name: "snapshotSlot";
+          type: "u64";
+        },
+        {
+          name: "proposalSeed";
+          type: "u64";
+        },
+        {
+          name: "splVoteAccount";
+          type: "pubkey";
+        }
+      ];
     },
     {
       name: "initMetaMerkleProof";
@@ -287,6 +436,22 @@ export type GovV1 = {
         {
           name: "ballotBox";
           writable: true;
+        }
+      ];
+      args: [];
+    },
+    {
+      name: "resetBallotBox";
+      discriminator: [108, 127, 131, 171, 226, 219, 67, 163];
+      accounts: [
+        {
+          name: "tieBreakerAdmin";
+          signer: true;
+          relations: ["programConfig"];
+        },
+        {
+          name: "ballotBox";
+          writable: true;
         },
         {
           name: "programConfig";
@@ -313,8 +478,12 @@ export type GovV1 = {
       ];
       args: [
         {
-          name: "ballotIndex";
-          type: "u8";
+          name: "ballot";
+          type: {
+            defined: {
+              name: "ballot";
+            };
+          };
         }
       ];
     },
@@ -363,14 +532,15 @@ export type GovV1 = {
         {
           name: "programConfig";
           writable: true;
-        },
-        {
-          name: "newAuthority";
-          signer: true;
-          optional: true;
         }
       ];
       args: [
+        {
+          name: "proposedAuthority";
+          type: {
+            option: "pubkey";
+          };
+        },
         {
           name: "minConsensusThresholdBps";
           type: {
@@ -495,6 +665,36 @@ export type GovV1 = {
       code: 6009;
       name: "invalidMerkleProof";
       msg: "Invalid merkle proof";
+    },
+    {
+      code: 6010;
+      name: "vecFull";
+      msg: "Vector size exceeded";
+    },
+    {
+      code: 6011;
+      name: "overlappingWhitelistEntries";
+      msg: "Overlapping operators in add and remove lists";
+    },
+    {
+      code: 6012;
+      name: "invalidBallotIndex";
+      msg: "Invalid ballot index";
+    },
+    {
+      code: 6013;
+      name: "invalidSnapshotSlot";
+      msg: "Snapshot slot must be greater than current slot";
+    },
+    {
+      code: 6014;
+      name: "ballotTalliesNotMaxLength";
+      msg: "Ballot tallies not at max length";
+    },
+    {
+      code: 6015;
+      name: "invalidProposal";
+      msg: "Invalid proposal";
     }
   ];
   types: [
@@ -526,11 +726,6 @@ export type GovV1 = {
       type: {
         kind: "struct";
         fields: [
-          {
-            name: "ballotId";
-            docs: ["ID"];
-            type: "u64";
-          },
           {
             name: "bump";
             docs: ["Bump seed for the PDA"];
@@ -598,6 +793,23 @@ export type GovV1 = {
               "if no consensus is reached by then."
             ];
             type: "i64";
+          },
+          {
+            name: "snapshotSlot";
+            docs: ["Slot for which the snapshot is taken"];
+            type: "u64";
+          },
+          {
+            name: "voterList";
+            docs: ["Snapshot of whitelisted operators at BallotBox creation"];
+            type: {
+              vec: "pubkey";
+            };
+          },
+          {
+            name: "tieBreakerConsensus";
+            docs: ["Whether consensus was reached via tie breaker"];
+            type: "bool";
           }
         ];
       };
@@ -638,8 +850,8 @@ export type GovV1 = {
         kind: "struct";
         fields: [
           {
-            name: "ballotId";
-            docs: ["Ballot ID"];
+            name: "snapshotSlot";
+            docs: ["Snapshot slot used for the ballot box"];
             type: "u64";
           },
           {
@@ -650,6 +862,11 @@ export type GovV1 = {
                 name: "ballot";
               };
             };
+          },
+          {
+            name: "tieBreakerConsensus";
+            docs: ["Whether consensus was reached via tie breaker"];
+            type: "bool";
           }
         ];
       };
@@ -768,8 +985,18 @@ export type GovV1 = {
             type: "pubkey";
           },
           {
+            name: "proposedAuthority";
+            docs: ["Authority to be set to upon finalization of proposal."];
+            type: {
+              option: "pubkey";
+            };
+          },
+          {
             name: "whitelistedOperators";
-            docs: ["Operators whitelisted to participate in voting."];
+            docs: [
+              "Operators whitelisted to participate in voting.",
+              "A snapshot of this list will be taken at the time of BallotBox creation."
+            ];
             type: {
               vec: "pubkey";
             };
@@ -787,11 +1014,6 @@ export type GovV1 = {
               "Admin allowed to decide the winning ballot if vote expires before consensus."
             ];
             type: "pubkey";
-          },
-          {
-            name: "nextBallotId";
-            docs: ["ID for next BallotBox"];
-            type: "u64";
           },
           {
             name: "voteDuration";

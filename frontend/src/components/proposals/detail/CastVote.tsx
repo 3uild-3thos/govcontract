@@ -16,6 +16,7 @@ import { useHasUserVoted, useWalletRole } from "@/hooks";
 
 interface CastVoteProps {
   proposalPublicKey: PublicKey | undefined;
+  consensusResult: PublicKey | undefined;
   isLoading: boolean;
   disabled?: boolean;
 }
@@ -41,7 +42,11 @@ export function CastVoteSkeleton() {
   );
 }
 
-function CastVote({ proposalPublicKey, disabled }: CastVoteProps) {
+function CastVote({
+  proposalPublicKey,
+  consensusResult,
+  disabled,
+}: CastVoteProps) {
   const { openModal } = useModal();
   const { publicKey } = useWallet();
   const { walletRole } = useWalletRole(publicKey?.toBase58());
@@ -60,24 +65,27 @@ function CastVote({ proposalPublicKey, disabled }: CastVoteProps) {
     disabled || !proposalPublicKey || isLoadingHasUserVoted || hasUserVoted;
 
   const handleVoteFor = () => {
-    if (proposalPublicKey) {
+    if (proposalPublicKey && consensusResult) {
       openModal(modalName, {
+        consensusResult,
         proposalId: proposalPublicKey.toBase58(),
         initialVoteDist: { for: 100, abstain: 0, against: 0 },
       });
     }
   };
   const handleVoteAgainst = () => {
-    if (proposalPublicKey) {
+    if (proposalPublicKey && consensusResult) {
       openModal(modalName, {
+        consensusResult,
         proposalId: proposalPublicKey.toBase58(),
         initialVoteDist: { against: 100, for: 0, abstain: 0 },
       });
     }
   };
   const handleVoteAbstain = () => {
-    if (proposalPublicKey) {
+    if (proposalPublicKey && consensusResult) {
       openModal(modalName, {
+        consensusResult,
         proposalId: proposalPublicKey.toBase58(),
         initialVoteDist: { abstain: 100, for: 0, against: 0 },
       });
@@ -146,6 +154,7 @@ export default function CastVoteWrapper({
       {connected && proposal && publicKey ? (
         <CastVote
           proposalPublicKey={proposal.publicKey}
+          consensusResult={proposal.consensusResult}
           isLoading={isLoading}
         />
       ) : (
@@ -154,6 +163,7 @@ export default function CastVoteWrapper({
             <span>
               <CastVote
                 proposalPublicKey={proposal?.publicKey}
+                consensusResult={proposal?.consensusResult}
                 isLoading={isLoading}
                 disabled
               />

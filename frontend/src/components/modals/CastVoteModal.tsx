@@ -29,16 +29,22 @@ import {
 import { VotingProposalsDropdown } from "../VotingProposalsDropdown";
 import { PublicKey } from "@solana/web3.js";
 
-export interface CastVoteModalDataProps {
-  proposalId?: string;
-  consensusResult?: PublicKey;
-  initialVoteDist?: VoteDistribution;
-}
+export type CastVoteModalDataProps =
+  | {
+      proposalId: string;
+      consensusResult: PublicKey;
+      initialVoteDist?: VoteDistribution;
+    }
+  | {
+      proposalId?: undefined;
+      consensusResult?: undefined;
+      initialVoteDist?: undefined;
+    };
 
-interface CastVoteModalProps extends CastVoteModalDataProps {
+type CastVoteModalProps = {
   isOpen: boolean;
   onClose: () => void;
-}
+} & CastVoteModalDataProps;
 
 export function CastVoteModal({
   proposalId: initialProposalId,
