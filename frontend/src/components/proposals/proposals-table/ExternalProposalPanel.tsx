@@ -17,6 +17,7 @@ import { ProposalStatus, WalletRole } from "@/types";
 import { useWalletRole } from "@/hooks";
 import { SupportButton } from "../SupportButton";
 import { PublicKey } from "@solana/web3.js";
+import { toast } from "sonner";
 
 const VOTE_STATE_LABEL: Record<ProposalRow["status"], string> = {
   supporting: "Not started",
@@ -84,7 +85,7 @@ function VoteActions({
 }: {
   state: ProposalStatus;
   proposalId: string;
-  consensusResult: PublicKey;
+  consensusResult?: PublicKey;
   disabled?: boolean;
 }) {
   const { openModal } = useModal();
@@ -105,15 +106,19 @@ function VoteActions({
             variant="outline"
             text="Modify Vote"
             className="w-full justify-center border-white/15 bg-white/10 text-sm font-medium text-white/75 hover:text-white"
-            disabled={disabled}
+            disabled={disabled || consensusResult === undefined}
             onClick={() => {
-              if (isValidator || isBoth) {
-                openModal("modify-vote", { proposalId, consensusResult });
-              } else if (isStaker) {
-                openModal("modify-override-vote", {
-                  proposalId,
-                  consensusResult,
-                });
+              if (consensusResult) {
+                if (isValidator || isBoth) {
+                  openModal("modify-vote", { proposalId, consensusResult });
+                } else if (isStaker) {
+                  openModal("modify-override-vote", {
+                    proposalId,
+                    consensusResult,
+                  });
+                } else {
+                  toast.error("Couldn't obtain consensus result");
+                }
               }
             }}
           />
@@ -121,12 +126,16 @@ function VoteActions({
             variant="gradient"
             text="Cast Vote"
             className="w-full justify-center text-sm font-semibold text-foreground"
-            disabled={disabled}
+            disabled={disabled || consensusResult === undefined}
             onClick={() => {
-              if (isValidator || isBoth) {
-                openModal("cast-vote", { proposalId, consensusResult });
-              } else if (isStaker) {
-                openModal("override-vote", { proposalId, consensusResult });
+              if (consensusResult) {
+                if (isValidator || isBoth) {
+                  openModal("cast-vote", { proposalId, consensusResult });
+                } else if (isStaker) {
+                  openModal("override-vote", { proposalId, consensusResult });
+                }
+              } else {
+                toast.error("Couldn't obtain consensus result");
               }
             }}
           />
@@ -164,8 +173,7 @@ function VotingPanel({ proposal }: { proposal: ProposalRow }) {
       </header>
 
       {connected ? (
-        (isSupporting || isVoting) &&
-        proposal.consensusResult && (
+        (isSupporting || isVoting) && (
           <VoteActions
             state={proposal.status}
             proposalId={proposal.publicKey.toBase58()}
