@@ -116,6 +116,7 @@ pub mod govcontract {
         start_epoch: Option<u64>,
         end_epoch: Option<u64>,
         snapshot_slot: Option<u64>,
+        consensus_result: Option<Option<Pubkey>>,
     ) -> Result<()> {
         ctx.accounts.adjust_timing(
             creation_timestamp,
@@ -123,6 +124,7 @@ pub mod govcontract {
             start_epoch,
             end_epoch,
             snapshot_slot,
+            consensus_result,
         )?;
         Ok(())
     }

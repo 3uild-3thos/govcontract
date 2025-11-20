@@ -22,6 +22,7 @@ impl<'info> AdjustProposalTiming<'info> {
         start_epoch: Option<u64>,
         end_epoch: Option<u64>,
         snapshot_slot: Option<u64>,
+        consensus_result: Option<Option<Pubkey>>,
     ) -> Result<()> {
         let clock = Clock::get()?;
 
@@ -41,7 +42,9 @@ impl<'info> AdjustProposalTiming<'info> {
         if let Some(slot) = snapshot_slot {
             self.proposal.snapshot_slot = slot;
         }
-
+        if let Some(consensus_result_value) = consensus_result {
+            self.proposal.consensus_result = consensus_result_value;
+        }
         emit!(ProposalTimingAdjusted {
             proposal_id: self.proposal.key(),
             author: self.signer.key(),
@@ -50,10 +53,10 @@ impl<'info> AdjustProposalTiming<'info> {
             new_start_epoch: self.proposal.start_epoch,
             new_end_epoch: self.proposal.end_epoch,
             new_snapshot_slot: self.proposal.snapshot_slot,
+            new_consensus_result: self.proposal.consensus_result,
             adjustment_timestamp: clock.unix_timestamp,
         });
 
         Ok(())
     }
 }
-

@@ -115,5 +115,6 @@ pub struct ProposalTimingAdjusted {
     pub new_start_epoch: u64,
     pub new_end_epoch: u64,
     pub new_snapshot_slot: u64,
+    pub new_consensus_result: Option<Pubkey>,
     pub adjustment_timestamp: i64,
 }
