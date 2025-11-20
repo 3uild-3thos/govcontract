@@ -60,6 +60,14 @@
           "type": {
             "option": "u64"
           }
+        },
+        {
+          "name": "consensus_result",
+          "type": {
+            "option": {
+              "option": "pubkey"
+            }
+          }
         }
       ]
     },
@@ -1599,6 +1607,12 @@
           {
             "name": "new_snapshot_slot",
             "type": "u64"
+          },
+          {
+            "name": "new_consensus_result",
+            "type": {
+              "option": "pubkey"
+            }
           },
           {
             "name": "adjustment_timestamp",

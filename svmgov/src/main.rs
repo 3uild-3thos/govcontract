@@ -219,6 +219,10 @@ enum Commands {
         /// Snapshot slot number.
         #[arg(long, help = "Snapshot slot number")]
         snapshot_slot: Option<u64>,
+
+        /// Consensus result PDA pubkey (use "none" to clear).
+        #[arg(long, help = "Consensus result PDA pubkey (use \"none\" to clear)")]
+        consensus_result: Option<Option<String>>,
     },
 
     #[command(
@@ -566,6 +570,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
             start_epoch,
             end_epoch,
             snapshot_slot,
+            consensus_result,
         } => {
             instructions::adjust_proposal_timing(
                 proposal_id.to_string(),
@@ -574,6 +579,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 *start_epoch,
                 *end_epoch,
                 *snapshot_slot,
+                consensus_result.clone(),
                 cli.identity_keypair,
                 cli.rpc_url,
             )
