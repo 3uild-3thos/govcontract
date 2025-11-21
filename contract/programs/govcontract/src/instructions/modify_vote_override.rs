@@ -5,6 +5,7 @@ use anchor_lang::{
         vote::{program as vote_program, state::VoteState},
     },
 };
+use gov_v1::{ConsensusResult, MetaMerkleProof, StakeMerkleLeaf};
 
 use crate::{
     calculate_vote_lamports,
@@ -14,7 +15,6 @@ use crate::{
     merkle_helpers::verify_merkle_proof_cpi,
     state::{Proposal, Vote, VoteOverride, VoteOverrideCache},
 };
-use gov_v1::{ConsensusResult, MetaMerkleProof, StakeMerkleLeaf};
 
 #[derive(Accounts)]
 pub struct ModifyVoteOverride<'info> {
@@ -107,21 +107,14 @@ impl<'info> ModifyVoteOverride<'info> {
             self.meta_merkle_proof.owner == self.snapshot_program.key,
             GovernanceError::MustBeOwnedBySnapshotProgram
         );
+        let consensus_result_data = self.consensus_result.try_borrow_data()?;
+        let consensus_result = ConsensusResult::try_deserialize(&mut &consensus_result_data[..])?;
 
-        require!(
-            self.proposal.consensus_result.is_some(),
-            GovernanceError::ConsensusResultNotSet
-        );
-
-        // unwrap is safe because we checked that the consensus result is set in the previous require
         require_keys_eq!(
             self.proposal.consensus_result.unwrap(),
             self.consensus_result.key(),
             GovernanceError::InvalidConsensusResultPDA
         );
-        let consensus_result_data = self.consensus_result.try_borrow_data()?;
-        let consensus_result = ConsensusResult::try_deserialize(&mut &consensus_result_data[..])?;
-
         require!(
             consensus_result
                 .ballot
@@ -130,7 +123,6 @@ impl<'info> ModifyVoteOverride<'info> {
                 .any(|&x| x != 0),
             GovernanceError::InvalidMerkleRoot
         );
-
         // Deserialize MetaMerkleProof for crosschecking
         let meta_account_data = self.meta_merkle_proof.try_borrow_data()?;
         let meta_merkle_proof = MetaMerkleProof::try_deserialize(&mut &meta_account_data[..])?;
@@ -200,20 +192,6 @@ impl<'info> ModifyVoteOverride<'info> {
         let against_votes_lamports = calculate_vote_lamports!(delegator_stake, against_votes_bp)?;
         let abstain_votes_lamports = calculate_vote_lamports!(delegator_stake, abstain_votes_bp)?;
 
-        // Subtract old delegator's vote from proposal totals
-        self.proposal.sub_vote_lamports(
-            old_for_votes_lamports,
-            old_against_votes_lamports,
-            old_abstain_votes_lamports,
-        )?;
-
-        // Add new delegator's vote to proposal totals
-        self.proposal.add_vote_lamports(
-            for_votes_lamports,
-            against_votes_lamports,
-            abstain_votes_lamports,
-        )?;
-
         // Update the override account with new values
         self.vote_override.for_votes_bp = for_votes_bp;
         self.vote_override.against_votes_bp = against_votes_bp;
@@ -223,14 +201,32 @@ impl<'info> ModifyVoteOverride<'info> {
         self.vote_override.abstain_votes_lamports = abstain_votes_lamports;
         self.vote_override.vote_override_timestamp = clock.unix_timestamp;
 
-        require!(
-            self.validator_vote.owner == &crate::ID
-                && self.validator_vote.data_len() == (8 + Vote::INIT_SPACE),
-            GovernanceError::InvalidVoteAccount
-        );
+        if self.validator_vote.owner == &crate::ID && !self.validator_vote.data_is_empty() {
+            // Subtract old delegator's vote from proposal totals
+            self.proposal.sub_vote_lamports(
+                old_for_votes_lamports,
+                old_against_votes_lamports,
+                old_abstain_votes_lamports,
+            )?;
 
-        // Update vote override cache if it exists
-        if self.vote_override_cache.owner == &crate::ID {
+            // Add new delegator's vote to proposal totals
+            self.proposal.add_vote_lamports(
+                for_votes_lamports,
+                against_votes_lamports,
+                abstain_votes_lamports,
+            )?;
+        } else {
+            require!(
+                self.validator_vote.owner == &crate::ID
+                    && self.validator_vote.data_len() == (ANCHOR_DISCRIMINATOR + Vote::INIT_SPACE),
+                GovernanceError::InvalidVoteAccount
+            );
+
+            require!(
+                self.vote_override_cache.owner == &crate::ID,
+                GovernanceError::InvalidVoteAccount
+            );
+            // Update vote override cache if it exists
             // Use try_deserialize to properly handle discriminator
             let vote_override_cache_result: Result<VoteOverrideCache> =
                 anchor_lang::AccountDeserialize::try_deserialize(
@@ -268,6 +264,7 @@ impl<'info> ModifyVoteOverride<'info> {
                 })?;
             }
         }
+
         // Emit vote override modified event
         emit!(VoteOverrideModified {
             proposal_id: self.proposal.key(),
