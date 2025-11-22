@@ -217,12 +217,6 @@ impl<'info> ModifyVoteOverride<'info> {
             )?;
         } else {
             require!(
-                self.validator_vote.owner == &crate::ID
-                    && self.validator_vote.data_len() == (ANCHOR_DISCRIMINATOR + Vote::INIT_SPACE),
-                GovernanceError::InvalidVoteAccount
-            );
-
-            require!(
                 self.vote_override_cache.owner == &crate::ID,
                 GovernanceError::InvalidVoteAccount
             );
