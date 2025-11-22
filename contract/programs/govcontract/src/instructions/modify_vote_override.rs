@@ -201,7 +201,9 @@ impl<'info> ModifyVoteOverride<'info> {
         self.vote_override.abstain_votes_lamports = abstain_votes_lamports;
         self.vote_override.vote_override_timestamp = clock.unix_timestamp;
 
-        if self.validator_vote.owner == &crate::ID && !self.validator_vote.data_is_empty() {
+        if self.validator_vote.owner == &crate::ID
+            && self.validator_vote.data_len() == (ANCHOR_DISCRIMINATOR + Vote::INIT_SPACE)
+        {
             // Subtract old delegator's vote from proposal totals
             self.proposal.sub_vote_lamports(
                 old_for_votes_lamports,
