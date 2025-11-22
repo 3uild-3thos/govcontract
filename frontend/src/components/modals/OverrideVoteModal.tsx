@@ -78,7 +78,11 @@ export function OverrideVoteModal({
   isOpen,
   onClose,
 }: OverrideVoteModalProps) {
-  const [proposalId, setProposalId] = useState(initialProposalId);
+  const [selectedProposal, setSelectedProposal] = useState({
+    id: initialProposalId,
+    consensusResult,
+  });
+
   const [selectedStakeAccount, setSelectedStakeAccount] = useState<
     string | undefined
   >(undefined);
@@ -99,7 +103,7 @@ export function OverrideVoteModal({
     wallet?.publicKey?.toBase58()
   );
   const voteOverrideFilters = buildVoteOverrideFilters(
-    proposalId,
+    selectedProposal.id,
     wallet?.publicKey ?? null
   );
 
@@ -114,12 +118,19 @@ export function OverrideVoteModal({
 
   useEffect(() => {
     if (isOpen) {
-      setProposalId(initialProposalId);
+      setSelectedProposal({ id: initialProposalId, consensusResult });
       setSelectedStakeAccount(undefined);
       resetDistribution();
       setError(undefined);
     }
-  }, [isOpen, initialProposalId, resetDistribution]);
+  }, [isOpen, initialProposalId, resetDistribution, consensusResult]);
+
+  const handleProposalChange = (
+    proposalId: string,
+    consensusResult: PublicKey
+  ) => {
+    setSelectedProposal({ id: proposalId, consensusResult });
+  };
 
   const handleSuccess = () => {
     toast.success("Vote cast successfully");
@@ -129,7 +140,7 @@ export function OverrideVoteModal({
 
   const handleError = (err: Error) => {
     console.log("error mutating cast vote:", err);
-    toast.error(`Error voting for proposal ${proposalId}`);
+    toast.error(`Error voting for proposal ${initialProposalId}`);
     setError(err instanceof Error ? err.message : "Failed to cast vote");
     setIsLoading(false);
   };
@@ -140,13 +151,13 @@ export function OverrideVoteModal({
       setIsLoading(false);
       return;
     }
-    if (!proposalId) {
+    if (!selectedProposal.id) {
       toast.error("No Proposal ID provided");
       setIsLoading(false);
       return;
     }
-    if (!consensusResult) {
-      toast.error("No Consensus Result provided");
+    if (!selectedProposal.consensusResult) {
+      toast.error("Couldn't obtain consensus result");
       setIsLoading(false);
       return;
     }
@@ -183,13 +194,13 @@ export function OverrideVoteModal({
       castVoteOverride(
         {
           wallet,
-          proposalId,
+          proposalId: selectedProposal.id,
           forVotesBp: voteDistribution.for * 100,
           againstVotesBp: voteDistribution.against * 100,
           abstainVotesBp: voteDistribution.abstain * 100,
           stakeAccount,
           voteAccount,
-          consensusResult,
+          consensusResult: selectedProposal.consensusResult,
         },
         {
           onSuccess: handleSuccess,
@@ -202,7 +213,7 @@ export function OverrideVoteModal({
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (
-      !proposalId ||
+      !selectedProposal.id ||
       !isValidDistribution ||
       !isValidStakeAccount ||
       isLoading
@@ -213,7 +224,7 @@ export function OverrideVoteModal({
     setError(undefined);
 
     console.log("Overriding vote:", {
-      proposalId,
+      proposalId: selectedProposal.id,
       stakeAccount: selectedStakeAccount,
       consensusResult,
       distribution,
@@ -222,7 +233,7 @@ export function OverrideVoteModal({
   };
 
   const handleClose = () => {
-    setProposalId("");
+    setSelectedProposal({ id: undefined, consensusResult: undefined });
     setSelectedStakeAccount("");
     resetDistribution();
     setError(undefined);
@@ -256,8 +267,8 @@ export function OverrideVoteModal({
             >
               {/* Proposal ID Input */}
               <VotingProposalsDropdown
-                value={proposalId}
-                onValueChange={setProposalId}
+                value={selectedProposal.id}
+                onValueChange={handleProposalChange}
                 disabled={!!initialProposalId}
               />
 
@@ -312,7 +323,7 @@ export function OverrideVoteModal({
             form="cast-vote-staker-form"
             size="lg"
             disabled={
-              !proposalId ||
+              !selectedProposal.id ||
               !isValidDistribution ||
               !isValidStakeAccount ||
               isLoading

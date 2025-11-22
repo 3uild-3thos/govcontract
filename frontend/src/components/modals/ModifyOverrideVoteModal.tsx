@@ -67,8 +67,10 @@ export function ModifyOverrideVoteModal({
   isOpen,
   onClose,
 }: OverrideVoteModalProps) {
-  const [proposalId, setProposalId] = useState(initialProposalId);
-
+  const [selectedProposal, setSelectedProposal] = useState({
+    id: initialProposalId,
+    consensusResult,
+  });
   const [selectedStakeAccount, setSelectedStakeAccount] = useState<
     string | undefined
   >(undefined);
@@ -97,7 +99,7 @@ export function ModifyOverrideVoteModal({
   const { walletRole } = useWalletRole(wallet?.publicKey?.toBase58());
 
   const voteOverrideFilters = buildVoteOverrideFilters(
-    proposalId,
+    selectedProposal.id,
     wallet?.publicKey ?? null
   );
 
@@ -128,12 +130,19 @@ export function ModifyOverrideVoteModal({
 
   useEffect(() => {
     if (isOpen) {
-      setProposalId(initialProposalId);
+      setSelectedProposal({ id: initialProposalId, consensusResult });
       setSelectedStakeAccount(undefined);
       resetDistribution();
       setError(undefined);
     }
-  }, [isOpen, initialProposalId, resetDistribution]);
+  }, [isOpen, initialProposalId, resetDistribution, consensusResult]);
+
+  const handleProposalChange = (
+    proposalId: string,
+    consensusResult: PublicKey
+  ) => {
+    setSelectedProposal({ id: proposalId, consensusResult });
+  };
 
   const handleSuccess = () => {
     toast.success("Vote cast successfully");
@@ -143,7 +152,7 @@ export function ModifyOverrideVoteModal({
 
   const handleError = (err: Error) => {
     console.log("error mutating modify vote:", err);
-    toast.error(`Error modifying for proposal ${proposalId}`);
+    toast.error(`Error modifying for proposal ${initialProposalId}`);
     setError(err instanceof Error ? err.message : "Failed to modify vote");
     setIsLoading(false);
   };
@@ -154,13 +163,13 @@ export function ModifyOverrideVoteModal({
       setIsLoading(false);
       return;
     }
-    if (!proposalId) {
+    if (!selectedProposal.id) {
       toast.error("No proposal ID provided");
       setIsLoading(false);
       return;
     }
-    if (!consensusResult) {
-      toast.error("No Consensus Result provided");
+    if (!selectedProposal.consensusResult) {
+      toast.error("Couldn't obtain consensus result");
       setIsLoading(false);
       return;
     }
@@ -196,13 +205,13 @@ export function ModifyOverrideVoteModal({
       modifyVoteOverride(
         {
           wallet,
-          proposalId,
+          proposalId: selectedProposal.id,
           forVotesBp: voteDistribution.for * 100,
           againstVotesBp: voteDistribution.against * 100,
           abstainVotesBp: voteDistribution.abstain * 100,
           stakeAccount: selectedStakeAccount,
           voteAccount,
-          consensusResult,
+          consensusResult: selectedProposal.consensusResult,
         },
         {
           onSuccess: handleSuccess,
@@ -215,7 +224,7 @@ export function ModifyOverrideVoteModal({
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (
-      !proposalId ||
+      !selectedProposal.id ||
       !isValidDistribution ||
       !isValidStakeAccount ||
       isLoading
@@ -226,7 +235,7 @@ export function ModifyOverrideVoteModal({
     setError(undefined);
 
     console.log("Overriding vote:", {
-      proposalId,
+      proposalId: selectedProposal.id,
       selectedStakeAccount,
       distribution,
     });
@@ -234,7 +243,7 @@ export function ModifyOverrideVoteModal({
   };
 
   const handleClose = () => {
-    setProposalId("");
+    setSelectedProposal({ id: undefined, consensusResult: undefined });
     setSelectedStakeAccount("");
     resetDistribution();
     setError(undefined);
@@ -268,8 +277,8 @@ export function ModifyOverrideVoteModal({
             >
               {/* Proposal ID Input */}
               <VotingProposalsDropdown
-                value={proposalId}
-                onValueChange={setProposalId}
+                value={selectedProposal.id}
+                onValueChange={handleProposalChange}
                 disabled={!!initialProposalId}
               />
 
@@ -331,7 +340,7 @@ export function ModifyOverrideVoteModal({
             form="cast-vote-staker-form"
             size="lg"
             disabled={
-              !proposalId ||
+              !selectedProposal.id ||
               !isValidDistribution ||
               !isValidStakeAccount ||
               isLoading

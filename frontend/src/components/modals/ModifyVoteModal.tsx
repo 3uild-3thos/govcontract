@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +23,7 @@ import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { WalletRole } from "@/types";
 import { VotingProposalsDropdown } from "../VotingProposalsDropdown";
+import { FormEvent, useEffect, useState } from "react";
 
 export interface ModifyVoteModalDataProps {
   proposalId?: string;
@@ -43,13 +43,13 @@ export function ModifyVoteModal({
   isOpen,
   onClose,
 }: ModifyVoteModalProps) {
-  const [selectedProposal, setSelectedProposal] = React.useState({
+  const [selectedProposal, setSelectedProposal] = useState({
     id: initialProposalId,
     consensusResult,
   });
 
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | undefined>();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | undefined>();
   const {
     distribution,
     totalPercentage,
@@ -67,10 +67,10 @@ export function ModifyVoteModal({
 
   // TODO: MODIFY VOTE
   // TODO: Requirements state -these would be computed from actual data
-  const [hasVoted] = React.useState(true);
-  const [isFinalized] = React.useState(false);
+  const [hasVoted] = useState(true);
+  const [isFinalized] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
       setSelectedProposal({ id: initialProposalId, consensusResult });
       resetDistribution();
@@ -145,7 +145,7 @@ export function ModifyVoteModal({
     setIsLoading(false);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!selectedProposal.id || !isValidDistribution || isLoading) return;
 
