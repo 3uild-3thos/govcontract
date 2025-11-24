@@ -84,7 +84,7 @@ function VoteActions({
   disabled,
 }: {
   state: ProposalStatus;
-  proposalId: string;
+  proposalId?: string;
   consensusResult?: PublicKey;
   disabled?: boolean;
 }) {
@@ -108,7 +108,7 @@ function VoteActions({
             className="w-full justify-center border-white/15 bg-white/10 text-sm font-medium text-white/75 hover:text-white"
             disabled={disabled || consensusResult === undefined}
             onClick={() => {
-              if (consensusResult) {
+              if (consensusResult && proposalId) {
                 if (isValidator || isBoth) {
                   openModal("modify-vote", { proposalId, consensusResult });
                 } else if (isStaker) {
@@ -128,7 +128,7 @@ function VoteActions({
             className="w-full justify-center text-sm font-semibold text-foreground"
             disabled={disabled || consensusResult === undefined}
             onClick={() => {
-              if (consensusResult) {
+              if (consensusResult && proposalId) {
                 if (isValidator || isBoth) {
                   openModal("cast-vote", { proposalId, consensusResult });
                 } else if (isStaker) {
@@ -152,6 +152,7 @@ function VoteActions({
 
 function VotingPanel({ proposal }: { proposal: ProposalRow }) {
   const { connected } = useWallet();
+  console.log("proposal:", proposal);
 
   const isVoting = proposal.status === "voting";
   const isSupporting = proposal.status === "supporting";
@@ -185,14 +186,7 @@ function VotingPanel({ proposal }: { proposal: ProposalRow }) {
           <TooltipTrigger asChild>
             <span>
               {isSupporting ||
-                (isVoting && (
-                  <VoteActions
-                    state={proposal.status}
-                    proposalId={""}
-                    consensusResult={new PublicKey("")}
-                    disabled
-                  />
-                ))}
+                (isVoting && <VoteActions state={proposal.status} disabled />)}
             </span>
           </TooltipTrigger>
           <TooltipContent side="bottom">
