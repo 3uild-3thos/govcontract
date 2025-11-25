@@ -152,7 +152,6 @@ function VoteActions({
 
 function VotingPanel({ proposal }: { proposal: ProposalRow }) {
   const { connected } = useWallet();
-  console.log("proposal:", proposal);
 
   const isVoting = proposal.status === "voting";
   const isSupporting = proposal.status === "supporting";

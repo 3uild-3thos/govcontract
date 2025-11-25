@@ -64,7 +64,7 @@ export const ProposalDescription = ({ githubUrl }: Props) => {
       )}
       <p
         ref={scrollRef}
-        className="whitespace-pre-wrap text-sm leading-relaxed text-(--basic-color-gray) [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+        className="break-all whitespace-pre-wrap text-sm leading-relaxed text-(--basic-color-gray) [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] text-wrap"
         style={{
           maxHeight: "300px",
           overflowY: "auto",
