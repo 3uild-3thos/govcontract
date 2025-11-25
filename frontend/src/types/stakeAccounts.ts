@@ -5,6 +5,7 @@ export type StakeAccountState =
   | "deactivating"
   | "cooldown";
 export interface StakeAccountData {
+  id: string;
   stakeAccount: string;
   activeStake: number;
   voteAccount: string | undefined;
