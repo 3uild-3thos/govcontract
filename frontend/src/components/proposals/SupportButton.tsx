@@ -5,6 +5,7 @@ import { useWalletRole } from "@/hooks";
 import { ProposalStatus, WalletRole } from "@/types";
 import { useHasUserSupported } from "@/hooks/useHasUserSupported";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { toast } from "sonner";
 
 interface Props {
   proposalId?: string;
@@ -67,11 +68,17 @@ export const SupportButton = ({
     );
   }
 
+  const handleDisabledClick = () => {
+    if (disabled) {
+      toast.error(tooltipText);
+    }
+  };
+
   if (showTooltip) {
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <span>
+          <span onClick={handleDisabledClick}>
             <AppButton
               variant="gradient"
               text="Support"
