@@ -56,7 +56,6 @@ export const VotingProposalsDropdown = ({
       >
         <SelectTrigger className="text-white w-full">
           <div className="flex gap-1 items-center">
-            <span className="text-dao-text-secondary">Proposal:</span>
             {isLoading ? (
               <Loader2 className="size-4 animate-spin text-white/60" />
             ) : (
