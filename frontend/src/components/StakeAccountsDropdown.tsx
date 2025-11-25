@@ -12,6 +12,7 @@ import {
 } from "@/lib/governance/formatters";
 import { Loader2 } from "lucide-react";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
+import { StakeAccountData } from "@/types";
 
 interface VotingProposalsDropdownProps {
   value?: string;
@@ -32,34 +33,53 @@ export const StakeAccountsDropdown = ({
     wallet?.publicKey?.toBase58()
   );
 
+  const isAccountValid = (stakeAcc: StakeAccountData) =>
+    disabledAccounts?.includes(stakeAcc.stakeAccount) ||
+    stakeAcc.activeStake === 0;
+
+  const validStakeAccounts = stakeAccounts?.filter(isAccountValid);
+  const hasNoValidAccounts = !isLoading && validStakeAccounts?.length === 0;
+
   return (
-    <Select
-      value={value}
-      onValueChange={onValueChange}
-      disabled={isLoading || disabled}
-    >
-      <SelectTrigger className="text-white w-full">
-        <div className="flex gap-1 items-center">
-          <span className="text-dao-text-secondary">Stake account:</span>
-          {isLoading ? (
-            <Loader2 className="size-4 animate-spin text-white/60" />
-          ) : (
-            <SelectValue placeholder="-" />
-          )}
-        </div>
-      </SelectTrigger>
-      <SelectContent className="text-white bg-background/40 backdrop-blur">
-        {stakeAccounts?.map((stakeAcc) => (
-          <SelectItem
-            key={stakeAcc.stakeAccount}
-            value={stakeAcc.stakeAccount}
-            disabled={disabledAccounts?.includes(stakeAcc.stakeAccount)}
-          >
-            {formatAddress(stakeAcc.stakeAccount)} -&nbsp;
-            {formatLamportsDisplay(stakeAcc.activeStake).value}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <>
+      <Select
+        value={value}
+        onValueChange={onValueChange}
+        disabled={isLoading || disabled}
+      >
+        <SelectTrigger className="text-white w-full">
+          <div className="flex gap-1 items-center">
+            <span className="text-dao-text-secondary">Stake account:</span>
+            {isLoading ? (
+              <Loader2 className="size-4 animate-spin text-white/60" />
+            ) : (
+              <SelectValue placeholder="-" />
+            )}
+          </div>
+        </SelectTrigger>
+        <SelectContent className="text-white bg-background/40 backdrop-blur">
+          {stakeAccounts?.map((stakeAcc) => (
+            <SelectItem
+              key={stakeAcc.stakeAccount}
+              value={stakeAcc.stakeAccount}
+              disabled={isAccountValid(stakeAcc)}
+            >
+              {formatAddress(stakeAcc.stakeAccount)} -&nbsp;
+              {formatLamportsDisplay(stakeAcc.activeStake).value}
+              {stakeAcc.activeStake === 0 && (
+                <span className="text-white/40">
+                  &nbsp;(Insufficient balance)
+                </span>
+              )}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {hasNoValidAccounts && (
+        <p className="text-xs text-destructive">
+          No stake accounts with balance available to vote
+        </p>
+      )}
+    </>
   );
 };
