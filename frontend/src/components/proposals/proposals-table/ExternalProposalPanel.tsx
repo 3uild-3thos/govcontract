@@ -1,6 +1,5 @@
 "use client";
 
-import type { ProposalRow } from "@/components/proposals/proposals-table/ProposalsTable";
 import Link from "next/link";
 import { AppButton } from "@/components/ui/AppButton";
 import { GitHubIcon } from "@/components/icons/SvgIcons";
@@ -13,19 +12,19 @@ import {
 } from "@/components/ui/tooltip";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { ProposalDescription } from "../ProposalDescription";
-import { ProposalStatus, WalletRole } from "@/types";
+import { ProposalRecord, ProposalStatus, WalletRole } from "@/types";
 import { useWalletRole } from "@/hooks";
 import { SupportButton } from "../SupportButton";
 import { PublicKey } from "@solana/web3.js";
 import { toast } from "sonner";
 
-const VOTE_STATE_LABEL: Record<ProposalRow["status"], string> = {
+const VOTE_STATE_LABEL: Record<ProposalRecord["status"], string> = {
   supporting: "Not started",
   voting: "In Progress",
   finalized: "Finished",
 };
 
-function ProposalInfo({ proposal }: { proposal: ProposalRow }) {
+function ProposalInfo({ proposal }: { proposal: ProposalRecord }) {
   return (
     <div className="flex flex-1 flex-col justify-between gap-6">
       <Link
@@ -150,7 +149,7 @@ function VoteActions({
   );
 }
 
-function VotingPanel({ proposal }: { proposal: ProposalRow }) {
+function VotingPanel({ proposal }: { proposal: ProposalRecord }) {
   const { connected } = useWallet();
 
   const isVoting = proposal.status === "voting";
@@ -202,7 +201,7 @@ function VotingPanel({ proposal }: { proposal: ProposalRow }) {
 
 // Main component
 type ExternalProposalPanelProps = {
-  proposal: ProposalRow;
+  proposal: ProposalRecord;
 };
 
 export default function ExternalProposalPanel({

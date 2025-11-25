@@ -34,11 +34,9 @@ import {
 import { Pagination } from "@/components/ui/AppPagniation";
 import { AppButton } from "@/components/ui/AppButton";
 import ExternalProposalPanel from "./ExternalProposalPanel";
-import { ProposalRecord, ProposalStatus } from "@/types";
+import { ProposalStatus } from "@/types";
 import { useProposals } from "@/hooks";
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
-
-export type ProposalRow = ProposalRecord & { id: string };
 
 const TABLE_COLUMNS = columns;
 
@@ -255,7 +253,10 @@ export default function ProposalsTable({ title }: { title: string }) {
                 return (
                   <>
                     {[...Array(4)].map((_, i) => (
-                      <TableRow key={`skeleton-${i}`} className="animate-pulse">
+                      <TableRow
+                        key={`skeleton-${i}`}
+                        className="animate-pulse hover:bg-transparent"
+                      >
                         {table.getAllColumns().map((col) => (
                           <TableCell
                             key={col.id}

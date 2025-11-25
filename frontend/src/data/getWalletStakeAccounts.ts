@@ -38,7 +38,10 @@ interface RawStakeAccount {
   account: AccountInfo<Buffer | ParsedAccountData>;
 }
 
-export function mapStakeAccountDto(raw: RawStakeAccount): StakeAccountData {
+export function mapStakeAccountDto(
+  raw: RawStakeAccount,
+  index: number
+): StakeAccountData {
   if (!isParsedStakeAccount(raw.account)) {
     throw new Error("Account is not a parsed stake account");
   }
@@ -47,6 +50,7 @@ export function mapStakeAccountDto(raw: RawStakeAccount): StakeAccountData {
   const delegation = parsed.info?.stake?.delegation;
   const activeStake = delegation?.stake ? parseFloat(delegation.stake) : 0;
   return {
+    id: index.toString(),
     voteAccount: delegation?.voter ?? undefined,
     activeStake,
     stakeAccount: raw.pubkey.toBase58(),

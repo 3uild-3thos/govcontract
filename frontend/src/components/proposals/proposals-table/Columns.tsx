@@ -1,12 +1,13 @@
 "use client";
 
-import type { ProposalRow } from "@/components/proposals/proposals-table/ProposalsTable";
+import type {} from "@/components/proposals/proposals-table/ProposalsTable";
 import { ColumnDef } from "@tanstack/react-table";
 import { ChevronDown } from "lucide-react";
 import StatusBadge from "@/components/ui/StatusBadge";
 import LifecycleIndicator from "@/components/ui/LifecycleIndicator";
 import { formatNumber } from "@/helpers";
 import { SortableHeaderButton } from "@/components/SortableHeaderButton";
+import { ProposalRecord } from "@/types";
 
 // function VotingEndsInCell({ votingEndsIn }: { votingEndsIn: string }) {
 //   const mounted = useMounted();
@@ -21,7 +22,7 @@ import { SortableHeaderButton } from "@/components/SortableHeaderButton";
 //   );
 // }
 
-export const columns: ColumnDef<ProposalRow>[] = [
+export const columns: ColumnDef<ProposalRecord>[] = [
   {
     accessorKey: "simd",
     header: "Proposal SIMD",

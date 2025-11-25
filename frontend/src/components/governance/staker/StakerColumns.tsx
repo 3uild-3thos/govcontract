@@ -9,6 +9,7 @@ import {
 } from "@/lib/governance/formatters";
 import { SortableHeaderButton } from "@/components/governance/shared/SortableHeaderButton";
 import { StakeAccountData } from "@/types/stakeAccounts";
+import { ChevronDown } from "lucide-react";
 
 export const columns: ColumnDef<StakeAccountData>[] = [
   {
@@ -74,5 +75,20 @@ export const columns: ColumnDef<StakeAccountData>[] = [
       const state = row.getValue("state") as StakeAccountData["state"];
       return <StakeAccountStatus state={state || "initialized"} />;
     },
+  },
+  {
+    id: "toggle",
+    header: () => null,
+    cell: ({ row }) => (
+      <div className="flex justify-end">
+        <ChevronDown
+          className={`size-4 text-white/60 transition-transform ${
+            row.getIsExpanded() ? "rotate-180" : "rotate-0"
+          }`}
+          aria-hidden
+        />
+      </div>
+    ),
+    size: 56,
   },
 ];
