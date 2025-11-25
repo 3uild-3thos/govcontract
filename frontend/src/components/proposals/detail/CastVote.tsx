@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/tooltip";
 import { ProposalRecord, WalletRole } from "@/types";
 import { useHasUserVoted, useWalletRole } from "@/hooks";
+import { toast } from "sonner";
 
 interface CastVoteProps {
   proposalPublicKey: PublicKey | undefined;
@@ -149,9 +150,19 @@ export default function CastVoteWrapper({
 }) {
   const { connected, publicKey } = useWallet();
 
+  const enabled = connected && proposal && publicKey;
+
+  const tooltipText =
+    "Wallet not connected, please connect your wallet to be able to perform these actions";
+  const handleDisabledClick = () => {
+    if (!enabled) {
+      toast.error(tooltipText);
+    }
+  };
+
   return (
     <>
-      {connected && proposal && publicKey ? (
+      {enabled ? (
         <CastVote
           proposalPublicKey={proposal.publicKey}
           consensusResult={proposal.consensusResult}
@@ -160,7 +171,7 @@ export default function CastVoteWrapper({
       ) : (
         <Tooltip>
           <TooltipTrigger asChild>
-            <span>
+            <span onClick={handleDisabledClick}>
               <CastVote
                 proposalPublicKey={proposal?.publicKey}
                 consensusResult={proposal?.consensusResult}
@@ -170,10 +181,7 @@ export default function CastVoteWrapper({
             </span>
           </TooltipTrigger>
           <TooltipContent side="bottom">
-            <p className="text-sm text-red-500/80">
-              Wallet not connected, please connect your wallet to be able to
-              perform these actions
-            </p>
+            <p className="text-sm text-red-500/80">{tooltipText}</p>
           </TooltipContent>
         </Tooltip>
       )}

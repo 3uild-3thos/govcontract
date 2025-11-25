@@ -1,7 +1,7 @@
 "use client";
 
 import { WalletRole, type ProposalRecord } from "@/types";
-import { Fragment, type MouseEventHandler } from "react";
+import { Fragment, MouseEvent, type MouseEventHandler } from "react";
 import { AppButton } from "@/components/ui/AppButton";
 import { formatNumber } from "@/helpers";
 
@@ -12,6 +12,7 @@ import { ModalType, useModal } from "@/contexts/ModalContext";
 import { motion } from "framer-motion";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletRole } from "@/hooks";
+import { toast } from "sonner";
 
 type ProposalStatus = ProposalRecord["status"];
 interface VotingDetailItem {
@@ -29,6 +30,8 @@ interface ActionButtonsProps {
   showActionButton: boolean;
   actionButtonText: string | null;
   onButtonClick?: MouseEventHandler<HTMLButtonElement>;
+  disabled?: boolean;
+  disabledErrorMessage?: string;
 }
 interface ProposalCardProps {
   proposal: ProposalRecord;
@@ -92,6 +95,8 @@ const ActionButtons = ({
   showActionButton,
   actionButtonText,
   onButtonClick,
+  disabled,
+  disabledErrorMessage,
 }: ActionButtonsProps) => {
   if (!showModifyButton && !showActionButton) {
     return null;
@@ -104,8 +109,18 @@ const ActionButtons = ({
     : `flex ${hasBothButtons ? "flex-row gap-4" : "flex-col gap-2"}`;
   const buttonClassName = isMobile ? "w-full rounded-full" : "rounded-full";
 
+  const handleDisabledClick = (e: MouseEvent) => {
+    console.log("here?");
+    if (disabled && disabledErrorMessage) {
+      console.log("inside?");
+      toast.error(disabledErrorMessage);
+      e.stopPropagation();
+      return;
+    }
+  };
+
   return (
-    <div className={containerClassName}>
+    <div className={containerClassName} onClick={handleDisabledClick}>
       {showModifyButton && (
         <AppButton
           text="Modify Vote"
@@ -113,6 +128,7 @@ const ActionButtons = ({
           size="default"
           className={buttonClassName}
           onClick={onButtonClick}
+          disabled={disabled}
         />
       )}
       {showActionButton && actionButtonText && (
@@ -122,6 +138,7 @@ const ActionButtons = ({
           size="default"
           className={buttonClassName}
           onClick={onButtonClick}
+          disabled={disabled}
         />
       )}
     </div>
@@ -132,7 +149,7 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
   const router = useRouter();
   const { openModal } = useModal();
 
-  const { publicKey: walletPubKey } = useWallet();
+  const { publicKey: walletPubKey, connected } = useWallet();
   const { walletRole } = useWalletRole(walletPubKey?.toBase58());
 
   const {
@@ -173,6 +190,18 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
     event.stopPropagation();
     const buttonText = (event.target as HTMLButtonElement).innerText;
 
+    if (!connected) {
+      toast.error(
+        "Wallet not connected, please connect your wallet to be able to perform these actions"
+      );
+      return;
+    }
+
+    if (walletRole === WalletRole.STAKER && proposal.status === "supporting") {
+      toast.error("Only validators are allowed to support");
+      return;
+    }
+
     if (buttonText === "Modify Vote" && consensusResult) {
       openModal(modifyModalName, {
         proposalId: publicKey.toBase58(),
@@ -187,6 +216,20 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
       openModal("support-proposal", { proposalId: publicKey.toBase58() });
     }
   };
+
+  const disabledActionButtons =
+    !connected ||
+    (walletRole === WalletRole.STAKER && proposal.status === "supporting");
+
+  let disabledErrorMessage = "";
+  if (walletRole === WalletRole.STAKER && proposal.status === "supporting") {
+    disabledErrorMessage = "Only validators are allowed to support";
+  }
+
+  if (!connected) {
+    disabledErrorMessage =
+      "Wallet not connected, please connect your wallet to be able to perform these actions";
+  }
 
   return (
     <motion.div
@@ -210,7 +253,7 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
             <StatusBadge
               status={status}
               showDot={false}
-              className="bg-transparent !justify-end !px-0 !py-0 !min-w-fit"
+              className="bg-transparent justify-end! px-0! py-0! min-w-fit!"
             />
           </div>
           <h4 className="h4 font-medium text-foreground leading-tight line-clamp-3 text-balance">
@@ -226,6 +269,8 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
           showActionButton={showActionButton}
           actionButtonText={actionButtonText}
           onButtonClick={handleButtonClick}
+          disabled={disabledActionButtons}
+          disabledErrorMessage={disabledErrorMessage}
         />
       </div>
 
@@ -248,7 +293,7 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
           <StatusBadge
             status={status}
             showDot={false}
-            className="bg-transparent !justify-end px-0 py-0 !min-w-fit"
+            className="bg-transparent justify-end! px-0 py-0 min-w-fit!"
           />
           <ActionButtons
             layout="tablet"
@@ -256,6 +301,8 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
             showActionButton={showActionButton}
             actionButtonText={actionButtonText}
             onButtonClick={handleButtonClick}
+            disabled={disabledActionButtons}
+            disabledErrorMessage={disabledErrorMessage}
           />
         </div>
       </div>
