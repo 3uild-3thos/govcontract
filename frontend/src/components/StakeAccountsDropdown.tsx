@@ -34,10 +34,11 @@ export const StakeAccountsDropdown = ({
   );
 
   const isAccountValid = (stakeAcc: StakeAccountData) =>
-    disabledAccounts?.includes(stakeAcc.stakeAccount) ||
-    stakeAcc.activeStake === 0;
+    !disabledAccounts?.includes(stakeAcc.stakeAccount) &&
+    stakeAcc.activeStake > 0;
 
   const validStakeAccounts = stakeAccounts?.filter(isAccountValid);
+
   const hasNoValidAccounts = !isLoading && validStakeAccounts?.length === 0;
 
   return (
@@ -62,7 +63,7 @@ export const StakeAccountsDropdown = ({
             <SelectItem
               key={stakeAcc.stakeAccount}
               value={stakeAcc.stakeAccount}
-              disabled={isAccountValid(stakeAcc)}
+              disabled={!isAccountValid(stakeAcc)}
             >
               {formatAddress(stakeAcc.stakeAccount)} -&nbsp;
               {formatLamportsDisplay(stakeAcc.activeStake).value}
@@ -77,7 +78,7 @@ export const StakeAccountsDropdown = ({
       </Select>
       {hasNoValidAccounts && (
         <p className="text-xs text-destructive">
-          No stake accounts with balance available to vote
+          No valid stake accounts available to vote
         </p>
       )}
     </>
