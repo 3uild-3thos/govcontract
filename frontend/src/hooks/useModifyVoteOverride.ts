@@ -3,6 +3,7 @@ import { useEndpoint } from "@/contexts/EndpointContext";
 import { modifyVoteOverrideMutation } from "@/data";
 import { useMutation } from "@tanstack/react-query";
 import { useSnapshotMeta } from "./useSnapshotMeta";
+import { track } from "@vercel/analytics";
 
 export function useModifyVoteOverride() {
   const { endpointUrl: endpoint, endpointType } = useEndpoint();
@@ -19,5 +20,17 @@ export function useModifyVoteOverride() {
         },
         meta?.slot
       ),
+    onMutate: (params) => {
+      track("Modify Vote Override init", { proposalId: params.proposalId });
+    },
+    onSuccess: (_data: unknown, params) => {
+      track("Modify Vote Override success", { proposalId: params.proposalId });
+    },
+    onError: (error: Error, params) => {
+      track("Modify Vote Override error", {
+        proposalId: params.proposalId,
+        error: error.name,
+      });
+    },
   });
 }

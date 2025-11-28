@@ -23,6 +23,8 @@ import {
 import { ModifyOverrideVoteModal } from "@/components/modals/ModifyOverrideVoteModal";
 import { PublicKey } from "@solana/web3.js";
 
+import { track } from "@vercel/analytics";
+
 export type ModalType =
   | "support-proposal"
   | "create-proposal"
@@ -100,6 +102,7 @@ export function ModalProvider({ children }: { children: ReactNode }) {
 
   const openModal = useCallback(
     <T extends ModalType>(type: T, data?: ModalDataMap[T]) => {
+      track("Open Modal", { type, proposalId: data?.proposalId || null });
       setModalState({ type, data });
     },
     []

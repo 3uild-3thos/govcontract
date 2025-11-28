@@ -3,6 +3,7 @@ import { useEndpoint } from "@/contexts/EndpointContext";
 import { castVoteMutation } from "@/data";
 import { useMutation } from "@tanstack/react-query";
 import { useSnapshotMeta } from "./useSnapshotMeta";
+import { track } from "@vercel/analytics";
 
 export function useCastVote() {
   const { endpointUrl: endpoint, endpointType } = useEndpoint();
@@ -19,5 +20,17 @@ export function useCastVote() {
         },
         meta?.slot
       ),
+    onMutate: (params) => {
+      track("Cast Vote init", { proposalId: params.proposalId });
+    },
+    onSuccess: (_data: unknown, params) => {
+      track("Cast Vote success", { proposalId: params.proposalId });
+    },
+    onError: (error: Error, params) => {
+      track("Cast Vote error", {
+        proposalId: params.proposalId,
+        error: error.name,
+      });
+    },
   });
 }
