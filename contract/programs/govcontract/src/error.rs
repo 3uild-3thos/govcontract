@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 #[error_code]
 pub enum GovernanceError {
-    #[msg("Minimum stake required to create proposal is 100k")]
+    #[msg("Insufficient stake to perform this action")]
     NotEnoughStake,
     #[msg("The title of the proposal cannot be empty")]
     TitleEmpty,
@@ -18,15 +18,15 @@ pub enum GovernanceError {
     InvalidProposalId,
     #[msg("Voting on proposal not yet started")]
     VotingNotStarted,
-    #[msg("Proposal closed")]
+    #[msg("Proposal voting period has ended")]
     ProposalClosed,
-    #[msg("Proposal finalized")]
+    #[msg("Proposal has already been finalized")]
     ProposalFinalized,
     #[msg("Vote distribution must add up to 100% in Basis Points")]
     InvalidVoteDistribution,
     #[msg("Voting period not yet ended")]
     VotingPeriodNotEnded,
-    #[msg("Invalid vote account, proposal id mismatch")]
+    #[msg("Invalid vote account")]
     InvalidVoteAccount,
     #[msg("Failed to deserialize node_pubkey from Vote account")]
     FailedDeserializeNodePubkey,
@@ -44,7 +44,7 @@ pub enum GovernanceError {
     InvalidVoteAccountVersion,
     #[msg("Invalid Vote account size")]
     InvalidVoteAccountSize,
-    #[msg("Stake account invalid")]
+    #[msg("Invalid stake account")]
     InvalidStakeAccount,
     #[msg("Invalid stake account state")]
     InvalidStakeState,
@@ -80,10 +80,16 @@ pub enum GovernanceError {
     MerkleRootNotSet,
     #[msg("Support period has expired for this proposal")]
     SupportPeriodExpired,
-    #[msg("Support period not yet started or ended")]
-    SupportPeriodNotStartedOrEnded,
+    #[msg("Not within the support period")]
+    NotInSupportPeriod,
     #[msg("Consensus result has not been set for this proposal")]
     ConsensusResultNotSet,
     #[msg("Unauthorized: caller is not authorized to perform this action")]
     Unauthorized,
+    #[msg("Proposal is not in voting phase")]
+    ProposalNotInVotingPhase,
+    #[msg("Invalid vote override cache")]
+    InvalidVoteOverrideCache,
+    #[msg("Stake account owner mismatch")]
+    StakeAccountOwnerMismatch,
 }

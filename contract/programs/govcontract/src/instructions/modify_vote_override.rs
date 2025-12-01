@@ -138,7 +138,7 @@ impl<'info> ModifyVoteOverride<'info> {
         require_eq!(
             stake_merkle_leaf.voting_wallet,
             self.signer.key(),
-            GovernanceError::InvalidStakeAccount
+            GovernanceError::StakeAccountOwnerMismatch
         );
 
         require_gt!(

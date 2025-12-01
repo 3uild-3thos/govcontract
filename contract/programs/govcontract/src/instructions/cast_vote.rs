@@ -170,7 +170,7 @@ impl<'info> CastVote<'info> {
                     Ok(cache) => cache,
                     Err(_) => {
                         // Account exists but is not a valid VoteOverrideCache - treat as non-existent
-                        return Err(GovernanceError::InvalidVoteAccount.into());
+                        return Err(GovernanceError::InvalidVoteOverrideCache.into());
                     }
                 };
 
