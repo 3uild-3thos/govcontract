@@ -83,8 +83,7 @@ export function SupportPhaseProgress({ proposal }: SupportPhaseProgressProps) {
     [validators]
   );
 
-  const isLoading = false;
-  //   const isLoading = isLoadingValidators || isLoadingSupportAccounts;
+  const isLoading = isLoadingValidators || isLoadingSupportAccounts;
 
   // Calculate time remaining using existing helper
   const timeRemaining = mounted
