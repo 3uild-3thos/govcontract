@@ -187,6 +187,23 @@ enum Commands {
     },
 
     #[command(
+        about = "Adjust the creation epoch of a proposal (author only)",
+        long_about = "This command allows the proposal author to adjust the creation epoch of a proposal. \
+                      Only the proposal author can call this command. The proposal must not be finalized.\n\n\
+                      Example:\n\
+                      $ svmgov --identity-keypair /path/to/key.json adjust-creation-epoch --proposal-id \"123\" --new-creation-epoch 100"
+    )]
+    AdjustCreationEpoch {
+        /// Proposal ID to adjust creation epoch for.
+        #[arg(long, help = "Proposal ID")]
+        proposal_id: String,
+
+        /// New creation epoch value.
+        #[arg(long, help = "New creation epoch")]
+        new_creation_epoch: u64,
+    },
+
+    #[command(
         about = "Display a proposal and it's details",
         long_about = "This command retrieves and displays a governance proposal and it's details from the Solana Validator Governance program. \
                       An optional RPC URL can be provided to connect to the chain; otherwise, a default URL is used.\n\n\
@@ -519,6 +536,18 @@ async fn handle_command(cli: Cli) -> Result<()> {
         Commands::FinalizeProposal { proposal_id } => {
             instructions::finalize_proposal(
                 proposal_id.to_string(),
+                cli.identity_keypair,
+                cli.rpc_url,
+            )
+            .await?;
+        }
+        Commands::AdjustCreationEpoch {
+            proposal_id,
+            new_creation_epoch,
+        } => {
+            instructions::adjust_creation_epoch(
+                proposal_id.to_string(),
+                *new_creation_epoch,
                 cli.identity_keypair,
                 cli.rpc_url,
             )

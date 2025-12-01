@@ -108,4 +108,12 @@ pub mod govcontract {
         ctx.accounts.flush_merkle_root()?;
         Ok(())
     }
+
+    pub fn adjust_creation_epoch(
+        ctx: Context<AdjustCreationEpoch>,
+        new_creation_epoch: u64,
+    ) -> Result<()> {
+        ctx.accounts.adjust_creation_epoch(new_creation_epoch)?;
+        Ok(())
+    }
 }

@@ -8,16 +8,16 @@
   },
   "instructions": [
     {
-      "name": "adjust_proposal_timing",
+      "name": "adjust_creation_epoch",
       "discriminator": [
-        82,
-        66,
-        219,
-        217,
-        123,
-        150,
-        223,
-        224
+        60,
+        112,
+        62,
+        222,
+        49,
+        145,
+        181,
+        116
       ],
       "accounts": [
         {
@@ -32,34 +32,8 @@
       ],
       "args": [
         {
-          "name": "creation_timestamp",
-          "type": {
-            "option": "i64"
-          }
-        },
-        {
-          "name": "creation_epoch",
-          "type": {
-            "option": "u64"
-          }
-        },
-        {
-          "name": "start_epoch",
-          "type": {
-            "option": "u64"
-          }
-        },
-        {
-          "name": "end_epoch",
-          "type": {
-            "option": "u64"
-          }
-        },
-        {
-          "name": "snapshot_slot",
-          "type": {
-            "option": "u64"
-          }
+          "name": "new_creation_epoch",
+          "type": "u64"
         }
       ]
     },
@@ -503,6 +477,35 @@
         },
         {
           "name": "ballot_program"
+        },
+        {
+          "name": "program_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  80,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  67,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "ballot_program"
+            }
+          }
         },
         {
           "name": "system_program",
@@ -989,6 +992,19 @@
   ],
   "events": [
     {
+      "name": "CreationEpochAdjusted",
+      "discriminator": [
+        222,
+        45,
+        234,
+        179,
+        166,
+        43,
+        153,
+        126
+      ]
+    },
+    {
       "name": "MerkleRootFlushed",
       "discriminator": [
         120,
@@ -1038,19 +1054,6 @@
         209,
         67,
         231
-      ]
-    },
-    {
-      "name": "ProposalTimingAdjusted",
-      "discriminator": [
-        151,
-        58,
-        224,
-        49,
-        142,
-        133,
-        182,
-        107
       ]
     },
     {
@@ -1220,7 +1223,7 @@
     {
       "code": 6022,
       "name": "InvalidStakeState",
-      "msg": "Stake account invalid"
+      "msg": "Invalid stake account state"
     },
     {
       "code": 6023,
@@ -1250,7 +1253,7 @@
     {
       "code": 6028,
       "name": "InvalidSnapshotSlot",
-      "msg": "Invalid snapshot slot: snapshot slot must be less past or current slot"
+      "msg": "Invalid snapshot slot: snapshot slot must be past or current slot"
     },
     {
       "code": 6029,
@@ -1264,13 +1267,13 @@
     },
     {
       "code": 6031,
-      "name": "CantDeserializeMMPPDA",
-      "msg": "Can't deserialize MetaMerkleProof PDA"
+      "name": "CannotDeserializeMetaMerkleProofPDA",
+      "msg": "Cannot deserialize MetaMerkleProof PDA"
     },
     {
       "code": 6032,
-      "name": "CantDeserializeConsensusResult",
-      "msg": "Can't deserialize ConsensusResult"
+      "name": "CannotDeserializeConsensusResult",
+      "msg": "Cannot deserialize ConsensusResult"
     },
     {
       "code": 6033,
@@ -1304,16 +1307,49 @@
     },
     {
       "code": 6039,
+      "name": "SupportPeriodNotStartedOrEnded",
+      "msg": "Support period not yet started or ended"
+    },
+    {
+      "code": 6040,
       "name": "ConsensusResultNotSet",
       "msg": "Consensus result has not been set for this proposal"
     },
     {
-      "code": 6040,
+      "code": 6041,
       "name": "Unauthorized",
       "msg": "Unauthorized: caller is not authorized to perform this action"
     }
   ],
   "types": [
+    {
+      "name": "CreationEpochAdjusted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "proposal_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "author",
+            "type": "pubkey"
+          },
+          {
+            "name": "old_creation_epoch",
+            "type": "u64"
+          },
+          {
+            "name": "new_creation_epoch",
+            "type": "u64"
+          },
+          {
+            "name": "adjustment_timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
     {
       "name": "MerkleRootFlushed",
       "type": {
@@ -1563,46 +1599,6 @@
           {
             "name": "snapshot_slot",
             "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "ProposalTimingAdjusted",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "proposal_id",
-            "type": "pubkey"
-          },
-          {
-            "name": "author",
-            "type": "pubkey"
-          },
-          {
-            "name": "new_creation_timestamp",
-            "type": "i64"
-          },
-          {
-            "name": "new_creation_epoch",
-            "type": "u64"
-          },
-          {
-            "name": "new_start_epoch",
-            "type": "u64"
-          },
-          {
-            "name": "new_end_epoch",
-            "type": "u64"
-          },
-          {
-            "name": "new_snapshot_slot",
-            "type": "u64"
-          },
-          {
-            "name": "adjustment_timestamp",
-            "type": "i64"
           }
         ]
       }

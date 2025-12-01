@@ -105,3 +105,12 @@ pub struct MerkleRootFlushed {
     pub new_snapshot_slot: u64,
     pub flush_timestamp: i64,
 }
+
+#[event]
+pub struct CreationEpochAdjusted {
+    pub proposal_id: Pubkey,
+    pub author: Pubkey,
+    pub old_creation_epoch: u64,
+    pub new_creation_epoch: u64,
+    pub adjustment_timestamp: i64,
+}
