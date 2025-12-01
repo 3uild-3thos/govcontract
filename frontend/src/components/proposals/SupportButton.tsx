@@ -29,8 +29,6 @@ export const SupportButton = ({
     walletRole
   );
 
-  console.log("isValidator:", isValidator);
-
   const disabled =
     disabledProps ||
     isLoadingHasUserSupported ||

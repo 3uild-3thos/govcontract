@@ -9,6 +9,7 @@ import {
   useGetValidators,
   useMounted,
   useSupportAccounts,
+  useEpochToDate,
 } from "@/hooks";
 import { NotificationButton } from "./NotificationButton";
 import { PhaseStatusBadge } from "./PhaseStatusBadge";
@@ -28,9 +29,6 @@ const SUPPORT_THRESHOLD_PERCENT = 10;
 /** Mock total number of validators in the network */
 // const MOCK_TOTAL_VALIDATORS = 2300;
 
-/** Mock support phase end date - fixed date to avoid hydration mismatch */
-const MOCK_SUPPORT_ENDS_AT = new Date("2025-12-05T18:00:00Z");
-
 interface SupportPhaseProgressProps {
   proposal: ProposalRecord;
 }
@@ -39,6 +37,13 @@ export function SupportPhaseProgress({ proposal }: SupportPhaseProgressProps) {
   const mounted = useMounted();
   const hasEnded =
     proposal.status === "failed" || proposal.status === "finalized";
+
+  // Calculate target epoch: creationEpoch + 3
+  // 3 epochs for discussion, so end epoch is creationEpoch + 4
+  const targetEpoch = proposal.creationEpoch + 4;
+
+  const { data: supportEndsAt, isLoading: isLoadingEpochDate } =
+    useEpochToDate(targetEpoch);
 
   const supportFilters = buildSupportFilters(
     proposal.publicKey.toBase58(),
@@ -53,6 +58,8 @@ export function SupportPhaseProgress({ proposal }: SupportPhaseProgressProps) {
   const { data: validators, isLoading: isLoadingValidators } =
     useGetValidators();
 
+  // TODO: check if we should use calculated support instead of proposal.clusterSupportLamports
+  // clusterSupportLamports is probably more accurate since its the validators stake at the moment of support
   // For each supportAccount, match with validator to get their stake and sum all stake
   //   const totalSupportedStake = useMemo(() => {
   //     if (!supportAccounts || !validators) return 0;
@@ -79,12 +86,14 @@ export function SupportPhaseProgress({ proposal }: SupportPhaseProgressProps) {
     [validators]
   );
 
-  const isLoading = isLoadingValidators || isLoadingSupportAccounts;
+  const isLoading =
+    isLoadingValidators || isLoadingSupportAccounts || isLoadingEpochDate;
 
   // Calculate time remaining using existing helper
-  const timeRemaining = mounted
-    ? calculateVotingEndsIn(MOCK_SUPPORT_ENDS_AT.toISOString())
-    : null;
+  const timeRemaining =
+    mounted && supportEndsAt
+      ? calculateVotingEndsIn(supportEndsAt.toISOString())
+      : null;
 
   const stats = useMemo(() => {
     // Use proposal's clusterSupportLamports as current support
@@ -151,15 +160,17 @@ export function SupportPhaseProgress({ proposal }: SupportPhaseProgressProps) {
       )} SOL needed!`;
 
   // Format end date with time
-  const formattedEndDate = MOCK_SUPPORT_ENDS_AT.toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "UTC",
-    timeZoneName: "short",
-  });
+  const formattedEndDate = supportEndsAt
+    ? supportEndsAt.toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "UTC",
+        timeZoneName: "short",
+      })
+    : "--";
 
   return (
     <div className="glass-card flex h-full flex-col p-6 md:p-6 lg:p-8">

@@ -1,3 +1,5 @@
+import { Connection } from "@solana/web3.js";
+
 export const getDaysLeft = (futureDate: Date) => {
   const now = new Date();
   const diffMs = futureDate.getTime() - now.getTime(); // convert both to milliseconds
@@ -5,6 +7,71 @@ export const getDaysLeft = (futureDate: Date) => {
 
   return diffDays;
 };
+
+/**
+ * Converts a Solana epoch number to a Date by calculating when that epoch will start
+ * @param epoch - The target epoch number
+ * @param endpoint - The Solana RPC endpoint URL
+ * @returns Promise<Date> - The estimated date when the epoch will start
+ */
+export async function epochToDate(
+  epoch: number,
+  endpoint: string
+): Promise<Date> {
+  // TODO: improve this, we can react-query epoch info/schedule and use that to calculate the date
+  // (caching data and connection for all proposals)
+  const connection = new Connection(endpoint, "confirmed");
+
+  // Get current epoch info
+  const epochInfo = await connection.getEpochInfo();
+  const epochSchedule = await connection.getEpochSchedule();
+
+  // Calculate the target epoch (creationEpoch + 3)
+  const targetEpoch = epoch;
+
+  // If target epoch is in the past or current, use current time
+  if (targetEpoch <= epochInfo.epoch) {
+    // Get the first slot of the target epoch
+    const targetSlot = epochSchedule.getFirstSlotInEpoch(targetEpoch);
+    try {
+      // Try to get block time for that slot
+      const blockTime = await connection.getBlockTime(targetSlot);
+      if (blockTime) {
+        return new Date(blockTime * 1000); // Convert to milliseconds
+      }
+    } catch {
+      console.warn("Failed to get block time for epoch", targetEpoch);
+      // If we can't get block time, estimate based on current time
+      return new Date();
+    }
+  }
+
+  // Get the first slot of the target epoch
+  const targetSlot = epochSchedule.getFirstSlotInEpoch(targetEpoch);
+
+  // Estimate date based on slot time
+  // Average slot time is ~400ms
+  const SLOT_TIME_MS = 400;
+  const slotsUntilTarget = targetSlot - epochInfo.absoluteSlot;
+
+  // Get current block time to anchor our calculation
+  let currentBlockTime: number;
+  try {
+    const blockTime = await connection.getBlockTime(epochInfo.absoluteSlot);
+    currentBlockTime = blockTime ? blockTime * 1000 : Date.now();
+  } catch {
+    console.warn(
+      "Failed to get block time for current epoch",
+      epochInfo.absoluteSlot
+    );
+    currentBlockTime = Date.now();
+  }
+
+  // Calculate estimated time: current block time + (slots until target * slot time)
+  const estimatedTime = currentBlockTime + slotsUntilTarget * SLOT_TIME_MS;
+
+  return new Date(estimatedTime);
+}
 
 export const getHoursLeft = (futureDate: Date) => {
   const now = new Date();

@@ -67,9 +67,9 @@ export function StatCard({
         )}
 
         {secondaryText && (
-          <p className="m-0 text-xs leading-[1.2] text-white/40">
+          <div className="m-0 text-xs leading-[1.2] text-white/40">
             {secondaryText}
-          </p>
+          </div>
         )}
       </div>
     </div>
