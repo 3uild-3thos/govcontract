@@ -93,7 +93,7 @@ export default function ProposalDetailHeader({
         </InfoItem>
 
         <div className="hidden lg:block lg:ml-auto lg:mr-4">
-          <LifecycleIndicator stage={proposal.status || "voting"} />
+          <LifecycleIndicator status={proposal.status} />
         </div>
       </div>
     </div>

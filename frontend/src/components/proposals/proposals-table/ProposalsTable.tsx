@@ -45,8 +45,10 @@ type StatusFilter = "all" | ProposalStatus;
 const STATUS_FILTER_LABELS: Record<StatusFilter, string> = {
   all: "Filter by",
   supporting: "Supporting",
+  discussion: "Discussion",
   voting: "Voting",
   finalized: "Finalized",
+  failed: "Failed",
 };
 
 const filterOptions: StatusFilter[] = Object.keys(

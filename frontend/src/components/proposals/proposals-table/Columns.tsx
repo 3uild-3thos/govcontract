@@ -38,7 +38,7 @@ export const columns: ColumnDef<ProposalRecord>[] = [
     header: ({ column }) => (
       <SortableHeaderButton column={column} label="Lifecycle Stage" />
     ),
-    cell: ({ row }) => <LifecycleIndicator stage={row.original.status} />,
+    cell: ({ row }) => <LifecycleIndicator status={row.original.status} />,
   },
   {
     accessorKey: "quorumPercent",

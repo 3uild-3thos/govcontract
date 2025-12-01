@@ -8,18 +8,27 @@ const STATUS_CLASSNAME: Record<
 > = {
   supporting: {
     default:
-      "bg-[var(--color-dao-status-finalizing)]/5 text-[var(--color-dao-status-finalizing)]",
-    pill: "bg-[var(--color-dao-status-finalizing)]/30 text-[var(--color-dao-status-finalizing)]",
+      "bg-[var(--color-dao-status-supporting)]/5 text-[var(--color-dao-status-supporting)]",
+    pill: "bg-[var(--color-dao-status-supporting)]/30 text-[var(--color-dao-status-supporting)]",
+  },
+  discussion: {
+    default:
+      "bg-[var(--color-dao-status-discussion)]/5 text-[var(--color-dao-status-discussion)]",
+    pill: "bg-[var(--color-dao-status-discussion)]/30 text-[var(--color-dao-status-discussion)]",
   },
   voting: {
     default:
-      "bg-[var(--color-dao-status-active)]/5 text-[var(--color-dao-status-active)]",
-    pill: "bg-[var(--color-dao-status-active)]/30 text-[var(--color-dao-status-active)]",
+      "bg-[var(--color-dao-status-voting)]/5 text-[var(--color-dao-status-voting)]",
+    pill: "bg-[var(--color-dao-status-voting)]/30 text-[var(--color-dao-status-voting)]",
   },
   finalized: {
     default:
       "bg-[var(--color-dao-status-finalized)]/5 text-[var(--color-dao-status-finalized)]",
     pill: "bg-[var(--color-dao-status-finalized)]/30 text-[var(--color-dao-status-finalized)]",
+  },
+  failed: {
+    default: "bg-destructive/5 text-destructive",
+    pill: "bg-destructive/30 text-destructive",
   },
 };
 

@@ -22,44 +22,35 @@
   --color-primary: var(--primary);
 
   /* Design tokens */
-  --color-dao-gradient-glass: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.04) 0%,
-    rgba(255, 255, 255, 0.03) 40%,
-    rgba(255, 255, 255, 0.01) 80%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  --color-dao-gradient-hover: linear-gradient(
-    90deg,
-    rgba(26, 244, 157, 0.1) 0%,
-    rgba(15, 142, 91, 0.1) 100%
-  );
+  --color-dao-gradient-glass: linear-gradient(180deg,
+      rgba(255, 255, 255, 0.04) 0%,
+      rgba(255, 255, 255, 0.03) 40%,
+      rgba(255, 255, 255, 0.01) 80%,
+      rgba(255, 255, 255, 0) 100%);
+  --color-dao-gradient-hover: linear-gradient(90deg,
+      rgba(26, 244, 157, 0.1) 0%,
+      rgba(15, 142, 91, 0.1) 100%);
   --color-dao-gradient-hover-border: rgb(49, 85, 71);
   --color-dao-color-gray: rgb(154, 163, 178);
-  --color-dao-status-active: var(--active);
-  --color-dao-status-finalizing: var(--finalizing);
-  --color-dao-status-finalized: var(--finalized);
-  --color-dao-gradient-vote-for: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(34, 197, 94, 0.2) 25%,
-    rgba(34, 197, 94, 0.6) 60%,
-    rgba(34, 197, 94, 1) 100%
-  );
-  --color-dao-gradient-vote-against: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(239, 68, 68, 0.2) 25%,
-    rgba(239, 68, 68, 0.6) 60%,
-    rgba(239, 68, 68, 1) 100%
-  );
-  --color-dao-gradient-vote-abstain: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(156, 163, 175, 0.2) 25%,
-    rgba(156, 163, 175, 0.6) 60%,
-    rgba(156, 163, 175, 1) 100%
-  );
+  --color-dao-status-supporting: rgb(var(--supporting));
+  --color-dao-status-discussion: rgb(var(--discussion));
+  --color-dao-status-voting: rgb(var(--voting));
+  --color-dao-status-finalized: rgb(var(--finalized));
+  --color-dao-gradient-vote-for: linear-gradient(90deg,
+      transparent 0%,
+      rgba(var(--voting), 0.2) 25%,
+      rgba(var(--voting), 0.6) 60%,
+      rgb(var(--voting)) 100%);
+  --color-dao-gradient-vote-against: linear-gradient(90deg,
+      transparent 0%,
+      rgba(239, 68, 68, 0.2) 25%,
+      rgba(239, 68, 68, 0.6) 60%,
+      rgba(239, 68, 68, 1) 100%);
+  --color-dao-gradient-vote-abstain: linear-gradient(90deg,
+      transparent 0%,
+      rgba(156, 163, 175, 0.2) 25%,
+      rgba(156, 163, 175, 0.6) 60%,
+      rgba(156, 163, 175, 1) 100%);
 }
 
 :root {
@@ -78,16 +69,18 @@
   --border: rgba(255, 255, 255, 0.15);
   --ring: rgb(20, 200, 124);
 
-  /* Status colors */
-  --active: rgb(34, 197, 94);
-  --finalizing: rgb(33, 184, 240);
-  --finalized: rgb(249, 115, 22);
+  /* Status colors (RGB values for use with rgba()) */
+  --supporting: 33, 184, 240;
+  --discussion: 95, 108, 224;
+  --voting: 34, 197, 94;
+  --finalized: 249, 115, 22;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
   html {
     overscroll-behavior: none;
     width: 100%;
@@ -95,23 +88,18 @@
     min-height: -webkit-fill-available;
     height: 100dvh;
   }
+
   body {
     @apply text-foreground;
-    background: radial-gradient(
-        89.1% 103.24% at 27% 37%,
+    background: radial-gradient(89.1% 103.24% at 27% 37%,
         rgba(2, 90, 212, 0.12) 0%,
-        rgba(2, 90, 212, 0) 50%
-      ),
-      radial-gradient(
-        111.72% 137.18% at 97% 21%,
+        rgba(2, 90, 212, 0) 50%),
+      radial-gradient(111.72% 137.18% at 97% 21%,
         rgba(190, 30, 88, 0.07) 0%,
-        rgba(190, 30, 88, 0) 50%
-      ),
-      radial-gradient(
-        140.01% 73.54% at 52% 99%,
+        rgba(190, 30, 88, 0) 50%),
+      radial-gradient(140.01% 73.54% at 52% 99%,
         rgba(253, 58, 78, 0.1) 0%,
-        rgba(253, 58, 78, 0) 50%
-      ),
+        rgba(253, 58, 78, 0) 50%),
       linear-gradient(0deg, #0d0f17 0%, #0d0f17 100%), #0d0f17;
     min-height: 100vh;
     background-attachment: fixed;
@@ -138,21 +126,27 @@
   .h1 {
     @apply text-4xl font-bold text-foreground;
   }
+
   .h2 {
     @apply text-3xl font-semibold text-foreground;
   }
+
   .h3 {
     @apply text-2xl text-foreground;
   }
+
   .h4 {
     @apply text-xl text-foreground;
   }
+
   .h5 {
     @apply text-lg text-foreground;
   }
+
   .p {
     @apply text-base text-foreground;
   }
+
   .small {
     @apply text-sm text-foreground;
   }
@@ -169,12 +163,10 @@
   }
 
   .gradient-text-primary-secondary {
-    background-image: linear-gradient(
-      90deg,
-      var(--primary) 0%,
-      var(--primary) 50%,
-      var(--secondary) 100%
-    );
+    background-image: linear-gradient(90deg,
+        var(--primary) 0%,
+        var(--primary) 50%,
+        var(--secondary) 100%);
     color: transparent;
     background-clip: text;
     -webkit-background-clip: text;
@@ -182,11 +174,9 @@
   }
 
   .hover-gradient-text {
-    background-image: linear-gradient(
-      90deg,
-      var(--primary) 0%,
-      var(--secondary) 100%
-    );
+    background-image: linear-gradient(90deg,
+        var(--primary) 0%,
+        var(--secondary) 100%);
     background-clip: text;
     -webkit-background-clip: text;
     transition: all 0.2s ease;
@@ -295,6 +285,7 @@
   .footer-social-container {
     @apply flex gap-6 items-center justify-center w-full;
   }
+
   .social-link {
     @apply flex items-center justify-center w-6 h-6 text-[var(--color-dao-color-gray)]/50 hover:text-primary transition-colors duration-200;
   }
@@ -329,24 +320,62 @@
     opacity: 0.9;
   }
 
-  /* Unified gradient for active and complete states */
-  .connector-line--active::after,
+  /* Unified gradient for flowing and complete states */
+  .connector-line--flowing::after,
   .connector-line--complete::after {
-    background-image: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0) 0%,
-      rgba(34, 197, 94, 0.4) 30%,
-      rgba(34, 197, 94, 0.85) 100%
-    );
+    background-image: linear-gradient(90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(var(--voting), 0.4) 30%,
+        rgba(var(--voting), 0.85) 100%);
+  }
+
+  /* Static complete state (no animation) */
+  .connector-line--complete:not(.connector-line--animated) {
+    background: rgba(var(--voting), 0.3);
   }
 }
+
 @layer utilities {
   @keyframes connector-flow {
     0% {
       background-position: 0% 50%;
     }
+
     100% {
       background-position: -200% 50%;
     }
+  }
+
+  @keyframes pulse-glow {
+
+    0%,
+    100% {
+      box-shadow: 0 0 20px rgba(20, 200, 124, 0.4);
+    }
+
+    50% {
+      box-shadow: 0 0 30px rgba(20, 200, 124, 0.8);
+    }
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  @keyframes ping-slow {
+    0% {
+      transform: scale(1);
+      opacity: 0.6;
+    }
+
+    75%,
+    100% {
+      transform: scale(1.6);
+      opacity: 0;
+    }
+  }
+
+  .animate-ping-slow {
+    animation: ping-slow 1.25s cubic-bezier(0, 0, 0.2, 1) infinite;
   }
 }

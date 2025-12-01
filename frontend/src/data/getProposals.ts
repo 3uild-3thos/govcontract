@@ -41,6 +41,11 @@ export function mapProposalDto(
   const status = getProposalStatus(raw.voting, raw.finalized);
   const simd = getSimd(raw.description);
 
+  console.log(
+    "raw.clusterSupportLamports string",
+    raw.clusterSupportLamports?.toString()
+  );
+
   return {
     publicKey: rawAccount.publicKey,
     id: index.toString(),
@@ -54,7 +59,7 @@ export function mapProposalDto(
     endEpoch: raw.endEpoch.toNumber(),
     creationTimestamp: raw.creationTimestamp?.toNumber() || 0,
 
-    clusterSupportLamports: BigInt(raw.clusterSupportLamports?.toString() || 0),
+    clusterSupportLamports: raw.clusterSupportLamports?.toNumber() || 0,
     forVotesLamports: raw.forVotesLamports?.toNumber() || 0,
     againstVotesLamports: raw.againstVotesLamports?.toNumber() || 0,
     abstainVotesLamports: raw.abstainVotesLamports?.toNumber() || 0,

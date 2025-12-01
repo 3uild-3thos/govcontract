@@ -7,31 +7,54 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { ProposalStatus } from "@/types";
-import { Circle, Loader } from "lucide-react";
+import { Circle, Loader, X } from "lucide-react";
+import { FAILED_PHASE_DETAIL } from "../proposals/detail/phase-timeline/constants";
 
-const STAGE_ORDER: ProposalStatus[] = ["supporting", "voting", "finalized"];
+const STAGE_ORDER: ProposalStatus[] = [
+  "supporting",
+  "discussion",
+  "voting",
+  "finalized",
+];
 
 const STAGE_LABEL: Record<ProposalStatus, string> = {
   supporting: "Supporting",
+  discussion: "Discussion",
   voting: "Voting",
   finalized: "Finished",
+  failed: "Failed",
 };
 
 const STAGE_DESCRIPTION: Record<ProposalStatus, string> = {
   supporting:
-    "During this period we take a snapshot of all active validators on Solana to make them eligible for the next vote.",
+    "The support phase requires 15% off total validator stake expressing support for the proposal before it can move on to discussion and voting phase.",
+  discussion:
+    "The discussion phase covers the 4-5 epoch period while the NCN is created. Voting begins only after this process completes.",
   voting:
     "Validators vote on active governance proposals. Delegators can override their validator's vote using stake account verification.",
   finalized:
     "Voting period has ended and all votes have been counted. The proposal is finalized and ready for on-chain execution.",
+  failed: FAILED_PHASE_DETAIL.body,
 };
+
+const FAILED_LABEL = "Support Failed";
+const FAILED_DESCRIPTION =
+  "This proposal did not receive enough support to proceed to the discussion phase. The support threshold was not met within the required timeframe.";
 
 type LifecycleIndicatorProps = {
-  stage: ProposalStatus;
+  status: ProposalStatus;
 };
 
-export default function LifecycleIndicator({ stage }: LifecycleIndicatorProps) {
-  const activeIndex = Math.max(STAGE_ORDER.indexOf(stage), 0);
+export default function LifecycleIndicator({
+  status,
+}: LifecycleIndicatorProps) {
+  const isFailed = status === "failed";
+  const isComplete = status === "finalized" || isFailed;
+
+  const activeIndex = isFailed ? 0 : Math.max(STAGE_ORDER.indexOf(status), 0);
+
+  const label = isFailed ? FAILED_LABEL : STAGE_LABEL[status];
+  const description = isFailed ? FAILED_DESCRIPTION : STAGE_DESCRIPTION[status];
 
   const indicators = (
     <div className="flex items-center justify-center gap-2">
@@ -61,17 +84,19 @@ export default function LifecycleIndicator({ stage }: LifecycleIndicatorProps) {
             >
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2">
-                  {stage === "finalized" ? (
+                  {isFailed ? (
+                    <X className="size-4 text-white" />
+                  ) : isComplete ? (
                     <Circle className="size-3 text-white" />
                   ) : (
                     <Loader className="size-4 animate-spin text-white" />
                   )}
                   <p className="mb-1 text-sm font-semibold text-white">
-                    {STAGE_LABEL[stage]}
+                    {label}
                   </p>
                 </div>
                 <p className="text-xs leading-[1.5] text-white whitespace-pre-wrap ">
-                  {STAGE_DESCRIPTION[stage]}
+                  {description}
                 </p>
               </div>
             </TooltipContent>
