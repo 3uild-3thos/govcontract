@@ -37,6 +37,22 @@ interface ProposalCardProps {
   proposal: ProposalRecord;
 }
 
+const getVotingStatusValue = (
+  status: ProposalStatus,
+  votingEndsInText: string | null
+) => {
+  if (status === "finalized" || status === "failed") {
+    return "Ended";
+  }
+  if (!votingEndsInText || votingEndsInText === "-") {
+    return "Not Started Yet";
+  }
+  if (votingEndsInText) {
+    return votingEndsInText;
+  }
+  return "Not Started Yet";
+};
+
 const getActionButtonText = (status: ProposalStatus) => {
   if (status === "voting") {
     return "Cast Vote";
@@ -44,6 +60,10 @@ const getActionButtonText = (status: ProposalStatus) => {
 
   if (status === "supporting") {
     return "Support";
+  }
+
+  if (status === "discussion") {
+    return "View Details";
   }
 
   return null;
@@ -134,7 +154,7 @@ const ActionButtons = ({
       {showActionButton && actionButtonText && (
         <AppButton
           text={actionButtonText}
-          variant="gradient"
+          variant={actionButtonText === "View Details" ? "outline" : "gradient"}
           size="default"
           className={buttonClassName}
           onClick={onButtonClick}
@@ -163,6 +183,7 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
     consensusResult,
   } = proposal;
 
+  const votingStatusValue = getVotingStatusValue(status, endEpoch.toString());
   const actionButtonText = getActionButtonText(status);
   const showActionButton = Boolean(actionButtonText);
   const showModifyButton = shouldShowModifyButton(status);
@@ -170,7 +191,7 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
   const detailItems: VotingDetailItem[] = [
     { label: "Quorum", value: `${quorumPercent}%` },
     { label: "Required", value: `${formatNumber(solRequired)} SOL` },
-    { label: "Voting End", value: `${endEpoch}` },
+    { label: "Voting Ends", value: votingStatusValue },
   ];
 
   const isStaker = walletRole === WalletRole.STAKER;
@@ -201,19 +222,21 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
       toast.error("Only validators are allowed to support");
       return;
     }
-
+    const proposalId = publicKey.toBase58();
     if (buttonText === "Modify Vote" && consensusResult) {
       openModal(modifyModalName, {
-        proposalId: publicKey.toBase58(),
+        proposalId,
         consensusResult,
       });
     } else if (buttonText === "Cast Vote" && consensusResult) {
       openModal(castModalName, {
-        proposalId: publicKey.toBase58(),
+        proposalId,
         consensusResult,
       });
     } else if (buttonText === "Support") {
-      openModal("support-proposal", { proposalId: publicKey.toBase58() });
+      openModal("support-proposal", { proposalId });
+    } else if (buttonText === "View Details") {
+      router.push(`/proposals/${proposalId}`);
     }
   };
 
@@ -248,7 +271,7 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
               <span className="text-xs font-plus-jakarta-sans font-semibold text-dao-color-gray">
                 {simd || "-"}
               </span>
-              <LifecycleIndicator stage={status} />
+              <LifecycleIndicator status={status} />
             </div>
             <StatusBadge
               status={status}
@@ -281,7 +304,7 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
             <span className="text-xs font-plus-jakarta-sans font-semibold text-white/60">
               {simd || "-"}
             </span>
-            <LifecycleIndicator stage={status} />
+            <LifecycleIndicator status={status} />
           </div>
           <h4 className="h4 font-medium text-foreground leading-tight line-clamp-2 text-balance">
             {title}

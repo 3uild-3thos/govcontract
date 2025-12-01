@@ -1,7 +1,12 @@
 import { ProposalAccount } from "@/chain";
 import { PublicKey } from "@solana/web3.js";
 
-export type ProposalStatus = "supporting" | "voting" | "finalized";
+export type ProposalStatus =
+  | "supporting"
+  | "discussion"
+  | "voting"
+  | "finalized"
+  | "failed";
 
 export type ProposalRecord = {
   publicKey: PublicKey;
@@ -20,7 +25,7 @@ export type ProposalRecord = {
   creationTimestamp: number; // Unix timestamp
 
   // Vote Data (in lamports)
-  clusterSupportLamports: bigint;
+  clusterSupportLamports: number;
   forVotesLamports: number;
   againstVotesLamports: number;
   abstainVotesLamports: number;

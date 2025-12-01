@@ -22,6 +22,22 @@ const VOTE_STATE_LABEL: Record<ProposalRecord["status"], string> = {
   supporting: "Not started",
   voting: "In Progress",
   finalized: "Finished",
+  failed: "Failed",
+  discussion: "Discussion",
+};
+
+const getVoteStateLabel = (proposal: ProposalRecord): string => {
+  if (proposal.status === "failed") {
+    return "Ended";
+  }
+  return VOTE_STATE_LABEL[proposal.vote.state];
+};
+
+const getHeaderLabel = (proposal: ProposalRecord): string => {
+  if (proposal.status === "failed") {
+    return "Stage";
+  }
+  return proposal.status === "finalized" ? "Vote" : "Stage";
 };
 
 function ProposalInfo({ proposal }: { proposal: ProposalRecord }) {
@@ -59,7 +75,12 @@ function ProposalInfo({ proposal }: { proposal: ProposalRecord }) {
 }
 
 function LifecycleStageBar({ stage }: { stage: ProposalStatus }) {
-  const stages: ProposalStatus[] = ["supporting", "voting", "finalized"];
+  const stages: ProposalStatus[] = [
+    "supporting",
+    "discussion",
+    "voting",
+    "finalized",
+  ];
   const activeIndex = stages.indexOf(stage);
 
   return (
@@ -149,21 +170,43 @@ function VoteActions({
   );
 }
 
+function DiscussionMessage({ proposalId }: { proposalId: string }) {
+  return (
+    <div className="space-y-3">
+      <p className="text-sm leading-relaxed text-white/70">
+        This proposal is in the discussion phase.
+        <br />
+        No actions are available at this time.
+      </p>
+      <AppButton
+        asChild
+        variant="outline"
+        className="w-full justify-center border-white/15 bg-white/10 text-sm font-medium text-white/75 hover:text-white"
+      >
+        <Link href={`/proposals/${proposalId.toLowerCase()}`}>
+          View Details
+        </Link>
+      </AppButton>
+    </div>
+  );
+}
+
 function VotingPanel({ proposal }: { proposal: ProposalRecord }) {
   const { connected } = useWallet();
 
   const isVoting = proposal.status === "voting";
   const isSupporting = proposal.status === "supporting";
+  const isDiscussion = proposal.status === "discussion";
 
   return (
     <aside className="w-full glass-card p-6 lg:w-80 xl:w-80">
       <header className="mb-6">
         <span className="block text-[11px] uppercase tracking-[0.24em] text-white/45 mb-3">
-          {proposal.status === "finalized" ? "Vote" : "Stage"}
+          {getHeaderLabel(proposal)}
         </span>
         <div className="flex items-center justify-between gap-4">
           <span className="text-lg font-semibold text-white">
-            {VOTE_STATE_LABEL[proposal.vote.state]}
+            {getVoteStateLabel(proposal)}
           </span>
           <div className="w-20">
             <LifecycleStageBar stage={proposal.status} />
@@ -172,13 +215,18 @@ function VotingPanel({ proposal }: { proposal: ProposalRecord }) {
       </header>
 
       {connected ? (
-        (isSupporting || isVoting) && (
-          <VoteActions
-            state={proposal.status}
-            proposalId={proposal.publicKey.toBase58()}
-            consensusResult={proposal.consensusResult}
-          />
-        )
+        <>
+          {isDiscussion && (
+            <DiscussionMessage proposalId={proposal.publicKey.toBase58()} />
+          )}
+          {(isSupporting || isVoting) && (
+            <VoteActions
+              state={proposal.status}
+              proposalId={proposal.publicKey.toBase58()}
+              consensusResult={proposal.consensusResult}
+            />
+          )}
+        </>
       ) : (
         <Tooltip>
           <TooltipTrigger asChild>

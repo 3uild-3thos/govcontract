@@ -167,13 +167,8 @@ export function ModifyVoteModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={() => {}}>
-      <DialogContent
-        className="app-modal-content"
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
-        showCloseButton={false}
-      >
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className="app-modal-content" showCloseButton={false}>
         <div className="app-modal-scroll-region">
           <div className="app-modal-body">
             {/* Mobile handle bar */}

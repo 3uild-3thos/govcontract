@@ -45,6 +45,8 @@ export * from "./useWalletStakeAccounts";
 
 export * from "./useVoterWalletSummary";
 
+export * from "./useEpochToDate";
+
 // DEPRECATED
 export * from "./DEPRECATED/useGetValidatorsBubbleChart";
 export * from "./DEPRECATED/useGetValidatorsTable";

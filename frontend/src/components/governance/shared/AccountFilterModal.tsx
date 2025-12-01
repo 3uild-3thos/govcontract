@@ -51,13 +51,8 @@ export function AccountFilterModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={() => {}}>
-      <DialogContent
-        className="app-modal-content"
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
-        showCloseButton={false}
-      >
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="app-modal-content" showCloseButton={false}>
         <div className="app-modal-scroll-region">
           <div className="app-modal-body">
             {/* Mobile handle bar */}
@@ -83,7 +78,7 @@ export function AccountFilterModal({
                       className={cn(
                         "w-full text-white/60 mt-2",
                         "bg-white/5 border-white/10",
-                        "focus:ring-1 focus:ring-white/20",
+                        "focus:ring-1 focus:ring-white/20"
                       )}
                     >
                       <SelectValue placeholder={filter.placeholder} />
