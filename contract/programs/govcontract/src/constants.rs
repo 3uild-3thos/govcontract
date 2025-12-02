@@ -16,6 +16,12 @@ pub const CLUSTER_SUPPORT_MULTIPLIER: u128 = 100;
 
 pub const CLUSTER_STAKE_MULTIPLIER: u128 = 5;
 
-pub const DISCUSSION_EPOCHS: u64 = 4;
+// Number of full epochs reserved for discussion between support and snapshot.
+// Example (creation at epoch 800):
+// - Support: 801
+// - Discussion: 802, 803, 804  => 3 epochs
+// - Snapshot: 805
+// - Voting: 806, 807, 808
+pub const DISCUSSION_EPOCHS: u64 = 3;
 pub const VOTING_EPOCHS: u64 = 3;
 pub const SNAPSHOT_EPOCH_EXTENSION: u64 = 1;
