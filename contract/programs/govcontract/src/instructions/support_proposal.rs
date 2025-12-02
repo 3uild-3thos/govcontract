@@ -145,6 +145,7 @@ impl<'info> SupportProposal<'info> {
             false
         };
 
+        self.proposal.reload()?;
         emit!(ProposalSupported {
             proposal_id: self.proposal.key(),
             supporter: self.signer.key(),
