@@ -26,11 +26,11 @@ declare_program!(govcontract);
     version,
     about = "A simple CLI to help creating and voting on validator governance proposals.",
     long_about = "svmgov is a command-line tool for interacting with the Solana Validator Governance program. \
-                    It allows users to create proposals, support proposals, cast votes, tally votes, and list proposals and votes.\n\n\
+                    It allows users to create proposals, support proposals, cast votes, tally votes, and view proposals and votes.\n\n\
                     Environment variables can be used for global options: SVMGOV_KEY for --identity-keypair and SVMGOV_RPC for --rpc-url. \
                     Flags override env vars if both are provided.\n\n\
                     To get started, use one of the subcommands below. For example, to list all proposals:\n\
-                    $ svmgov --rpc-url https://api.mainnet-beta.solana.com list-proposals\n\n\
+                    $ svmgov --rpc-url https://api.mainnet-beta.solana.com proposal \"6MX2RaV2vfTGv6c7zCmRAod2E6MdAgR6be2Vb3NsMxPW\"\n\n\
                     For more information on each subcommand, use --help, e.g., `svmgov create-proposal --help`."
 )]
 struct Cli {
@@ -187,45 +187,15 @@ enum Commands {
     },
 
     #[command(
-        about = "Display a proposal and it's details",
-        long_about = "This command retrieves and displays a governance proposal and it's details from the Solana Validator Governance program. \
+        about = "Display a proposal and its details",
+        long_about = "This command retrieves and displays a governance proposal and its details from the Solana Validator Governance program. \
                       An optional RPC URL can be provided to connect to the chain; otherwise, a default URL is used.\n\n\
                       Examples:\n\
-                      $ svmgov --rpc-url https://api.mainnet-beta.solana.com get-proposal --proposal-id \"123\""
+                      $ svmgov --rpc-url https://api.mainnet-beta.solana.com proposal \"6MX2RaV2vfTGv6c7zCmRAod2E6MdAgR6be2Vb3NsMxPW\""
     )]
-    GetProposal {
-        /// Proposal id to display.
-        #[arg(long, help = "Proposal ID")]
+    Proposal {
+        /// Proposal ID to display
         proposal_id: String,
-    },
-
-    #[command(
-        about = "List all governance proposals. Use the get-proposal command for individual proposal details",
-        long_about = "This command retrieves and displays a list of all governance proposals from the Solana Validator Governance program. \
-                      You can optionally filter proposals by their status (e.g., 'active') using the --status flag. \
-                      Use --limit to restrict the number of proposals listed (default: 0, meaning no limit). \
-                      Use --json to output in JSON format (default: false). \
-                      An optional RPC URL can be provided to connect to the chain; otherwise, a default URL is used.\n\n\
-                      Examples:\n\
-                      $ svmgov --rpc-url https://api.mainnet-beta.solana.com list-proposals\n\
-                      $ svmgov -r https://api.mainnet-beta.solana.com list-proposals --status \"active\" --limit 5 --json true"
-    )]
-    ListProposals {
-        /// Filter on status of the proposals <active>.
-        #[arg(long, help = "Status of proposal")]
-        status: Option<String>,
-
-        /// Limit the number of proposals listed
-        #[arg(
-            long,
-            help = "Limit the number of proposals listed",
-            default_value_t = 0
-        )]
-        limit: usize,
-
-        /// Output in JSON format
-        #[arg(long, help = "Output in JSON format", default_value_t = false)]
-        json: bool,
     },
 
     #[command(
@@ -304,10 +274,6 @@ enum Commands {
         )]
         abstain_votes: u64,
 
-        /// Operator API endpoint (optional, uses env var by default)
-        #[arg(long, help = "Operator API endpoint for snapshot data")]
-        operator_api: Option<String>,
-
         /// Optional specific stake account to use for override
         #[arg(
             long,
@@ -366,10 +332,6 @@ enum Commands {
             help = "Basis points for 'Abstain' (must sum to 10,000 with other votes)"
         )]
         abstain_votes: u64,
-
-        /// Operator API endpoint (optional, uses env var by default)
-        #[arg(long, help = "Operator API endpoint for snapshot data")]
-        operator_api: Option<String>,
 
         /// Stake account to use for override modification
         #[arg(
@@ -524,15 +486,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
             )
             .await?;
         }
-        Commands::ListProposals {
-            status,
-            limit,
-            json,
-        } => {
-            commands::list_proposals(cli.rpc_url.clone(), status.clone(), Some(*limit), *json)
-                .await?;
-        }
-        Commands::GetProposal { proposal_id } => {
+        Commands::Proposal { proposal_id } => {
             commands::get_proposal(cli.rpc_url.clone(), proposal_id).await?;
         }
         Commands::ListVotes {
@@ -558,7 +512,6 @@ async fn handle_command(cli: Cli) -> Result<()> {
             for_votes,
             against_votes,
             abstain_votes,
-            operator_api,
             stake_account,
             network,
             staker_keypair,
@@ -571,7 +524,6 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 *abstain_votes,
                 staker_keypair.clone(),
                 cli.rpc_url,
-                operator_api.clone(),
                 stake_account.clone(),
                 vote_account.clone(),
                 network.clone(),
@@ -583,7 +535,6 @@ async fn handle_command(cli: Cli) -> Result<()> {
             for_votes,
             against_votes,
             abstain_votes,
-            operator_api,
             stake_account,
             network,
             staker_keypair,
@@ -596,7 +547,6 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 *abstain_votes,
                 staker_keypair.clone(),
                 cli.rpc_url,
-                operator_api.clone(),
                 stake_account.clone(),
                 vote_account.clone(),
                 network.clone(),

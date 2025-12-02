@@ -32,5 +32,6 @@ toml = "0.8"
 dirs = "5.0"
 inquire = "0.7"
 base64 = "0.22.1"
+comfy-table = "7.1"
 [dev-dependencies]
 tempfile = "3.0"

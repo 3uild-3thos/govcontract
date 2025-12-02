@@ -30,7 +30,6 @@ pub async fn modify_vote_override(
     abstain_votes: u64,
     staker_keypair: String,
     rpc_url: Option<String>,
-    _operator_api: Option<String>,
     stake_account_override: String,
     vote_account: String,
     network: String,

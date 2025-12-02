@@ -6,7 +6,6 @@ use gov_v1::{ConsensusResult, MetaMerkleLeaf, MetaMerkleProof, StakeMerkleLeaf};
 use log::info;
 use serde::{Deserialize, Serialize};
 
-use crate::constants::*;
 
 /// Summary endpoint response structure (/voter/:voting_wallet)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -75,7 +74,7 @@ pub async fn get_voter_summary(
     wallet: &Pubkey,
     snapshot_slot: Option<u64>,
 ) -> Result<VoterSummaryResponse> {
-    let base_url = get_api_base_url();
+    let base_url = get_api_base_url()?;
     let mut url = format!("{}/voter/{}", base_url, wallet);
 
     if let Some(slot) = snapshot_slot {
@@ -104,7 +103,7 @@ pub async fn get_vote_account_proof(
     snapshot_slot: u64,
     network: &str,
 ) -> Result<VoteAccountProofResponse> {
-    let base_url = get_api_base_url();
+    let base_url = get_api_base_url()?;
     let url = format!(
         "{}/proof/vote_account/{}?slot={}&network={}",
         base_url, vote_account, snapshot_slot, network
@@ -132,7 +131,7 @@ pub async fn get_stake_account_proof(
     snapshot_slot: u64,
     network: &str,
 ) -> Result<StakeAccountProofResponse> {
-    let base_url = get_api_base_url();
+    let base_url = get_api_base_url()?;
     let url = format!(
         "{}/proof/stake_account/{}?network={}&slot={}",
         base_url, stake_account, network, snapshot_slot
@@ -152,23 +151,18 @@ pub async fn get_stake_account_proof(
     Ok(proof)
 }
 
-/// Get the base API URL from config, environment, or default
-fn get_api_base_url() -> String {
-    dotenv::dotenv().ok();
+/// Get the base API URL from config
+fn get_api_base_url() -> anyhow::Result<String> {
+    let config = crate::config::Config::load()?;
 
-    // Check config first
-    if let Ok(config) = crate::config::Config::load() {
-        if let Some(url) = config.operator_api_url {
-            info!("API base URL (from config): {}", url);
-            return url;
-        }
+    if config.operator_api_url.is_empty() {
+        anyhow::bail!(
+            "operator-api-url is not set. Please run: svmgov config set operator-api-url <URL>"
+        );
     }
 
-    // Fall back to environment variable or default
-    let url = std::env::var(SVMGOV_OPERATOR_URL_ENV)
-        .unwrap_or_else(|_| DEFAULT_OPERATOR_API_URL.to_string());
-    info!("API base URL: {}", url);
-    url
+    info!("API base URL (from config): {}", config.operator_api_url);
+    Ok(config.operator_api_url)
 }
 
 /// Convert API MetaMerkleLeafData to gov_v1 MetaMerkleLeaf
