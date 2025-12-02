@@ -45,40 +45,47 @@ function getSimdCode(fileName: string) {
 
 async function fetchProposalFromGitHub({
   queryKey,
-}: QueryFunctionContext<[string, string]>): Promise<SimdData> {
-  const [, githubUrl] = queryKey;
-  const fileName = getFileNameFromGithubUrl(githubUrl);
-  const simdCode = getSimdCode(fileName);
+}: QueryFunctionContext<[string, string]>): Promise<SimdData | null> {
+  try {
+    const [, githubUrl] = queryKey;
+    const fileName = getFileNameFromGithubUrl(githubUrl);
+    const simdCode = getSimdCode(fileName);
 
-  const url = `https://raw.githubusercontent.com/solana-foundation/solana-improvement-documents/main/proposals/${fileName}`;
-  const res = await fetch(url);
-  if (!res.ok)
-    throw new Error(`Failed to fetch SIMD ${simdCode}: ${res.statusText}`);
-  const text = await res.text();
+    const url = `https://raw.githubusercontent.com/solana-foundation/solana-improvement-documents/main/proposals/${fileName}`;
+    const res = await fetch(url);
+    if (!res.ok)
+      throw new Error(`Failed to fetch SIMD ${simdCode}: ${res.statusText}`);
+    const text = await res.text();
 
-  // Extract SIMD
-  const frontmatterMatch = text.match(/^---([\s\S]*?)---/);
-  let simd = simdCode;
-  if (frontmatterMatch) {
-    const yaml = frontmatterMatch[1];
-    const simdMatch = yaml.match(/simd:\s*['"]?(\d+)['"]?/);
-    if (simdMatch) simd = simdMatch[1];
+    // Extract SIMD
+    const frontmatterMatch = text.match(/^---([\s\S]*?)---/);
+    let simd = simdCode;
+    if (frontmatterMatch) {
+      const yaml = frontmatterMatch[1];
+      const simdMatch = yaml.match(/simd:\s*['"]?(\d+)['"]?/);
+      if (simdMatch) simd = simdMatch[1];
+    }
+
+    // Extract summary
+    const summaryMatch = text.match(
+      /##\s*Summary\s*\n([\s\S]*?)(?=\n##\s|\n#\s|$)/i
+    );
+    const summary = summaryMatch ? summaryMatch[1].trim() : "";
+
+    const data = { simd, summary, fetchedAt: Date.now() };
+
+    // Update cache
+    const cache = loadCache();
+    cache[simd] = data;
+    saveCache(cache);
+
+    return data;
+  } catch (error) {
+    // ignore error since there is nothing we can do in case githubUrl is invalid
+    // we simply show no descriptions nor simd code for these cases
+    console.warn("error fetching proposal from GitHub:", error);
+    return null;
   }
-
-  // Extract summary
-  const summaryMatch = text.match(
-    /##\s*Summary\s*\n([\s\S]*?)(?=\n##\s|\n#\s|$)/i
-  );
-  const summary = summaryMatch ? summaryMatch[1].trim() : "";
-
-  const data = { simd, summary, fetchedAt: Date.now() };
-
-  // Update cache
-  const cache = loadCache();
-  cache[simd] = data;
-  saveCache(cache);
-
-  return data;
 }
 
 export function useProposalSimdDescription(githubUrl: string) {

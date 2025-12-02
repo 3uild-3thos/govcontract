@@ -6,7 +6,9 @@ export const env = createEnv({
    * Specify your server-side environment variables schema here. This way you can ensure the app
    * isn't built with invalid env vars.
    */
-  server: {},
+  server: {
+    SENTRY_AUTH_TOKEN: z.string(),
+  },
 
   /**
    * Specify your client-side environment variables schema here. This way you can ensure the app
@@ -23,6 +25,7 @@ export const env = createEnv({
    */
   runtimeEnv: {
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
+    SENTRY_AUTH_TOKEN: process.env.SENTRY_AUTH_TOKEN,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

@@ -140,7 +140,7 @@ export function OverrideVoteModal({
   };
 
   const handleError = (err: Error) => {
-    console.log("error mutating cast vote:", err);
+    console.log("error mutating override vote:", err);
     captureException(err);
     toast.error(`Error voting for proposal ${initialProposalId}`);
     setError(err instanceof Error ? err.message : "Failed to cast vote");
