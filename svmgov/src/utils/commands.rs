@@ -1,21 +1,14 @@
 use std::{str::FromStr, sync::Arc};
 
-use anchor_client::{
-    solana_client::rpc_filter::{Memcmp, MemcmpEncodedBytes, RpcFilterType},
-    solana_sdk::signature::Keypair,
-};
+use anchor_client::solana_sdk::signature::Keypair;
 
 use anchor_lang::prelude::Pubkey;
 use anyhow::{Result, anyhow};
 use comfy_table::modifiers::UTF8_ROUND_CORNERS;
 use comfy_table::{Cell, Table, presets::UTF8_FULL};
 use log::info;
-use serde_json::{Value, json};
 
-use crate::{
-    anchor_client_setup, create_spinner,
-    govcontract::accounts::{Proposal, Vote},
-};
+use crate::{anchor_client_setup, govcontract::accounts::Proposal};
 
 /// Detect terminal width using various methods
 fn detect_terminal_width() -> Option<u16> {
@@ -56,76 +49,6 @@ fn detect_terminal_width() -> Option<u16> {
     }
 
     None
-}
-
-pub async fn list_votes(
-    rpc_url: Option<String>,
-    proposal_id: &String,
-    verbose: bool,
-    limit: Option<usize>,
-    json_output: bool,
-) -> Result<()> {
-    // Parse the proposal ID into a Pubkey
-    let proposal_pubkey = Pubkey::from_str(proposal_id)
-        .map_err(|_| anyhow!("Invalid proposal ID: {}", proposal_id))?;
-    // Create a mock Payer
-    let mock_payer = Arc::new(Keypair::new());
-
-    // Create the Anchor client
-    let program = anchor_client_setup(rpc_url, mock_payer)?;
-
-    // Rpc filter to get Vote accounts for this proposal
-    let filter = vec![RpcFilterType::Memcmp(Memcmp::new(
-        40,
-        MemcmpEncodedBytes::Bytes(proposal_pubkey.to_bytes().to_vec()),
-    ))];
-
-    // Create a spinner for progress indication
-    let spinner = create_spinner("Getting all vote accounts...");
-
-    let mut votes = program.accounts::<Vote>(filter).await?;
-
-    // Stop the spinner
-    spinner.finish_with_message("Vote accounts collected.");
-
-    if votes.is_empty() {
-        println!("No votes found for proposal {}.", proposal_id);
-        return Ok(());
-    }
-
-    if let Some(lim) = limit {
-        votes.truncate(lim);
-    }
-
-    if json_output {
-        let json_votes: Vec<Value> = votes
-            .iter()
-            .map(|(pubkey, vote)| {
-                json!({
-                    "pubkey": pubkey.to_string(),
-                    "validator": vote.validator.to_string(),
-                    "proposal": vote.proposal.to_string(),
-                    "for_votes_bp": vote.for_votes_bp,
-                    "against_votes_bp": vote.against_votes_bp,
-                    "abstain_votes_bp": vote.abstain_votes_bp,
-                    "vote_timestamp": vote.vote_timestamp,
-                    "bump": vote.bump,
-                })
-            })
-            .collect();
-        let json_out = serde_json::to_string_pretty(&json_votes)?;
-        println!("{}", json_out);
-    } else if verbose {
-        for vote in votes {
-            println!("Vote for proposal {}: \n{}", proposal_id, vote.1);
-        }
-    } else {
-        for vote in votes {
-            println!("Vote for proposal {}: {}", proposal_id, vote.0);
-        }
-    }
-
-    Ok(())
 }
 
 pub async fn get_proposal(rpc_url: Option<String>, proposal_id: &String) -> Result<()> {

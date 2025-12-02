@@ -23,8 +23,5 @@ export default {
   'list-proposals': {
     title: 'List Proposals',
   },
-  'list-votes': {
-    title: 'List Votes',
-  },
 };
 

@@ -199,34 +199,6 @@ enum Commands {
     },
 
     #[command(
-        about = "List all votes for a specified proposal",
-        long_about = "This command retrieves and displays all votes cast on a specified governance proposal. \
-                      It requires the proposal ID, and use the --verbose flag for detailed output. \
-                      Use --limit to restrict the number of votes listed (default: 0, meaning no limit). \
-                      Use --json to output in JSON format (default: false). \
-                      An optional RPC URL can be provided to connect to the chain; otherwise, a default URL is used.\n\n\
-                      Examples:\n\
-                      $ svmgov --rpc-url https://api.mainnet-beta.solana.com list-votes --proposal-id \"123\"\n\
-                      $ svmgov -r https://api.mainnet-beta.solana.com list-votes --proposal-id \"123\" --verbose true --limit 10 --json true"
-    )]
-    ListVotes {
-        /// Proposal id to get votes for.
-        #[arg(long, help = "Proposal ID")]
-        proposal_id: String,
-        /// Verbose vote list
-        #[arg(long, help = "List votes verbose", default_value_t = false)]
-        verbose: bool,
-
-        /// Limit the number of votes listed
-        #[arg(long, help = "Limit the number of votes listed", default_value_t = 0)]
-        limit: usize,
-
-        /// Output in JSON format
-        #[arg(long, help = "Output in JSON format", default_value_t = false)]
-        json: bool,
-    },
-
-    #[command(
         about = "Initialize the proposal index pda",
         long_about = "This command allows anyone to initialize the proposal index pda which will follow proposal creation \
                       An optional RPC URL can be provided to connect to the chain.\n\n\
@@ -488,21 +460,6 @@ async fn handle_command(cli: Cli) -> Result<()> {
         }
         Commands::Proposal { proposal_id } => {
             commands::get_proposal(cli.rpc_url.clone(), proposal_id).await?;
-        }
-        Commands::ListVotes {
-            proposal_id,
-            verbose,
-            limit,
-            json,
-        } => {
-            commands::list_votes(
-                cli.rpc_url.clone(),
-                proposal_id,
-                *verbose,
-                Some(*limit),
-                *json,
-            )
-            .await?;
         }
         Commands::InitIndex {} => {
             instructions::initialize_index(cli.identity_keypair, cli.rpc_url).await?;
