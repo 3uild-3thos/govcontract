@@ -28,6 +28,7 @@ import {
 } from "@/lib/governance/formatters";
 import { VotingProposalsDropdown } from "../VotingProposalsDropdown";
 import { PublicKey } from "@solana/web3.js";
+import { captureException } from "@sentry/nextjs";
 
 export type CastVoteModalDataProps =
   | {
@@ -101,6 +102,7 @@ export function CastVoteModal({
 
   const handleError = (err: Error) => {
     console.log("error mutating cast vote:", err);
+    captureException(err);
     toast.error(`Error voting for proposal ${initialProposalId}`);
     setError(err instanceof Error ? err.message : "Failed to cast vote");
     setIsLoading(false);

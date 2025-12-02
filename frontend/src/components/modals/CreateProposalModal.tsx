@@ -15,6 +15,7 @@ import ErrorMessage from "./shared/ErrorMessage";
 import { toast } from "sonner";
 import { useCreateProposal } from "@/hooks";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
+import { captureException } from "@sentry/nextjs";
 
 interface CreateProposalModalProps {
   isOpen: boolean;
@@ -58,6 +59,7 @@ export function CreateProposalModal({
 
   const handleError = (err: Error) => {
     console.log("error creating proposal:", err);
+    captureException(err);
     setError(err instanceof Error ? err.message : "Failed to create proposal");
     setIsLoading(false);
   };

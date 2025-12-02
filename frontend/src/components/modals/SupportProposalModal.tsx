@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { formatAddress } from "@/lib/governance/formatters";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import { useSupportProposal } from "@/hooks";
+import { captureException } from "@sentry/nextjs";
 
 interface SupportProposalModalProps {
   proposalId?: string;
@@ -63,6 +64,7 @@ export function SupportProposalModal({
 
   const handleError = (err: Error) => {
     console.log("error mutating support proposal:", err);
+    captureException(err);
     toast.error(`Error supporting proposalId ${proposalId}`);
     setError(err instanceof Error ? err.message : "Failed to support proposal");
     setIsLoading(false);
