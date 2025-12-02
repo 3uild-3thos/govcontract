@@ -24,6 +24,7 @@ import { PublicKey } from "@solana/web3.js";
 import { WalletRole } from "@/types";
 import { VotingProposalsDropdown } from "../VotingProposalsDropdown";
 import { FormEvent, useEffect, useState } from "react";
+import { captureException } from "@sentry/nextjs";
 
 export interface ModifyVoteModalDataProps {
   proposalId?: string;
@@ -93,6 +94,7 @@ export function ModifyVoteModal({
 
   const handleError = (err: Error) => {
     console.log("error mutating cast vote:", err);
+    captureException(err);
     toast.error(`Error modifying vote for proposal ${initialProposalId}`);
     setError(err instanceof Error ? err.message : "Failed to modify vote");
     setIsLoading(false);

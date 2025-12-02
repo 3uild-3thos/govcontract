@@ -27,6 +27,7 @@ import { GetVoteOverrideFilters } from "@/data";
 import { PublicKey } from "@solana/web3.js";
 import { StakeAccountsDropdown } from "../StakeAccountsDropdown";
 import { VotingProposalsDropdown } from "../VotingProposalsDropdown";
+import { captureException } from "@sentry/nextjs";
 
 interface OverrideVoteModalProps {
   proposalId?: string;
@@ -152,6 +153,7 @@ export function ModifyOverrideVoteModal({
 
   const handleError = (err: Error) => {
     console.log("error mutating modify vote:", err);
+    captureException(err);
     toast.error(`Error modifying for proposal ${initialProposalId}`);
     setError(err instanceof Error ? err.message : "Failed to modify vote");
     setIsLoading(false);
