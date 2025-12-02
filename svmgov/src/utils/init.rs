@@ -13,12 +13,9 @@ pub async fn run_init() -> Result<()> {
 
     // Ask user type
     let user_type_options = vec!["Validator", "Staker"];
-    let user_type_choice = Select::new(
-        "Are you a validator or staker?",
-        user_type_options.clone(),
-    )
-    .prompt()
-    .map_err(|e| anyhow!("Failed to get user input: {}", e))?;
+    let user_type_choice = Select::new("Are you a validator or staker?", user_type_options.clone())
+        .prompt()
+        .map_err(|e| anyhow!("Failed to get user input: {}", e))?;
 
     let user_type = if user_type_choice == "Validator" {
         UserType::Validator
@@ -30,14 +27,42 @@ pub async fn run_init() -> Result<()> {
 
     // Handle validator setup
     if user_type == UserType::Validator {
-        let identity_path = Text::new("Enter the path to your validator identity keypair:")
+        let default_path = config.identity_keypair_path.clone().unwrap_or_else(|| {
+            dirs::home_dir()
+                .map(|h| {
+                    h.join(".config")
+                        .join("solana")
+                        .join("id.json")
+                        .to_string_lossy()
+                        .to_string()
+                })
+                .unwrap_or_else(|| "~/.config/solana/id.json".to_string())
+        });
+
+        let prompt_msg = format!(
+            "Enter the path to your validator identity keypair (default: {}):",
+            default_path
+        );
+        let identity_path_input = Text::new(&prompt_msg)
             .with_help_message("Path to the JSON keypair file")
             .prompt()
             .map_err(|e| anyhow!("Failed to get input: {}", e))?;
 
+        let identity_path = if identity_path_input.trim().is_empty() {
+            default_path
+        } else {
+            identity_path_input
+        };
+
         let path = Path::new(&identity_path);
         if !path.exists() {
-            return Err(anyhow!("The specified keypair file does not exist: {}", identity_path));
+            println!(
+                "Warning: The specified keypair file does not exist: {}",
+                identity_path
+            );
+            println!(
+                "You may need to create it or update the path later using 'svmgov config set identity-keypair <path>'"
+            );
         }
 
         config.identity_keypair_path = Some(identity_path);
@@ -45,16 +70,25 @@ pub async fn run_init() -> Result<()> {
         // Handle staker setup
         let default_path = config.staker_keypair_path.clone().unwrap_or_else(|| {
             dirs::home_dir()
-                .map(|h| h.join(".config").join("solana").join("id.json").to_string_lossy().to_string())
+                .map(|h| {
+                    h.join(".config")
+                        .join("solana")
+                        .join("id.json")
+                        .to_string_lossy()
+                        .to_string()
+                })
                 .unwrap_or_else(|| "~/.config/solana/id.json".to_string())
         });
 
-        let prompt_msg = format!("Enter the path to your staker keypair (default: {}):", default_path);
+        let prompt_msg = format!(
+            "Enter the path to your staker keypair (default: {}):",
+            default_path
+        );
         let staker_path_input = Text::new(&prompt_msg)
             .with_help_message("Path to the JSON keypair file")
             .prompt()
             .map_err(|e| anyhow!("Failed to get input: {}", e))?;
-        
+
         let staker_path = if staker_path_input.trim().is_empty() {
             default_path
         } else {
@@ -63,8 +97,13 @@ pub async fn run_init() -> Result<()> {
 
         let path = Path::new(&staker_path);
         if !path.exists() {
-            println!("Warning: The specified keypair file does not exist: {}", staker_path);
-            println!("You may need to create it or update the path later using 'svmgov config set staker-keypair <path>'");
+            println!(
+                "Warning: The specified keypair file does not exist: {}",
+                staker_path
+            );
+            println!(
+                "You may need to create it or update the path later using 'svmgov config set staker-keypair <path>'"
+            );
         }
 
         config.staker_keypair_path = Some(staker_path);
@@ -97,4 +136,3 @@ pub async fn run_init() -> Result<()> {
 
     Ok(())
 }
-

@@ -1,6 +1,6 @@
 # Step-by-Step Guide for Using svmgov on Testnet
 
-This guide provides detailed instructions for compiling, deploying, and testing the Solana Validator Governance program (`contract`) on testnet using the Anchor CLI for deployment and the `svmgov` CLI for all interactions and verification. The repository is at https://github.com/3uild-3thos/govcontract.git. It assumes Rust and Anchor are installed, and focuses on compiling the contract in the `contract` directory, deploying it to testnet, generating the IDL with the program address, and then building the CLI in the `svmgov` directory. The IDL is copied to the CLI’s `idls` directory for the Anchor client crate. All CLI commands output a Solana Explorer link for transaction verification. Proposal and vote accounts are verified using `get-proposal`, `list-proposals`, and `list-votes --verbose`. The `list-proposals` command returns only pubkeys, so `get-proposal` is used to verify proposal values.
+This guide provides detailed instructions for compiling, deploying, and testing the Solana Validator Governance program (`contract`) on testnet using the Anchor CLI for deployment and the `svmgov` CLI for all interactions and verification. The repository is at https://github.com/3uild-3thos/govcontract.git. It assumes Rust and Anchor are installed, and focuses on compiling the contract in the `contract` directory, deploying it to testnet, generating the IDL with the program address, and then building the CLI in the `svmgov` directory. The IDL is copied to the CLI’s `idls` directory for the Anchor client crate. All CLI commands output a Solana Explorer link for transaction verification. Proposal and vote accounts are verified using `proposal` and `get-proposal`. The `list-proposals` command returns only pubkeys, so `get-proposal` is used to verify proposal values.
 
 ## Prerequisites
 
@@ -72,7 +72,7 @@ This guide provides detailed instructions for compiling, deploying, and testing 
    ```
 
    - **Output**: The CLI binary is created at `./target/release/svmgov`.
-   - **Verify**: Run `./target/release/svmgov --help` to confirm the CLI displays available subcommands (`create-proposal`, `support-proposal`, `cast-vote`, `modify-vote`, `tally-votes`, `get-proposal`, `list-proposals`, `list-votes`).
+   - **Verify**: Run `./target/release/svmgov --help` to confirm the CLI displays available subcommands (`create-proposal`, `support-proposal`, `cast-vote`, `modify-vote`, `tally-votes`, `proposal`, `list-proposals`).
    - **Note**: The CLI uses the IDL in `idls/govcontract.json`, which includes the deployed program address, ensuring compatibility with the testnet deployment.
 
 ## Step 4: Create a Proposal
@@ -173,21 +173,9 @@ This guide provides detailed instructions for compiling, deploying, and testing 
    - **Output**: Logs a Solana Explorer link (e.g., `info: Vote cast successfully. https://explorer.solana.com/tx/<signature>`).
    - **Verify**:
      - Open the Solana Explorer link to confirm the transaction succeeded.
-     - List votes to verify the vote account and deserialized data:
-       ```bash
-       ./target/release/svmgov --rpc-url https://api.testnet.solana.com list-votes --proposal-id <PROPOSAL_PDA> --verbose true 
-       ```
-       - **Output**: Displays the vote account PDA and details (e.g., `validator`, `for_votes_bp: 6000`, `against_votes_bp: 3000`, `abstain_votes_bp: 1000`, `vote_timestamp`).
-       - **Expected State** (from `Vote` struct in `govcontract.json`):
-         - `validator`: Your signer pubkey.
-         - `proposal`: Proposal PDA.
-         - `for_votes_bp`: 6000.
-         - `against_votes_bp`: 3000.
-         - `abstain_votes_bp`: 1000.
-         - `vote_timestamp`: Current timestamp.
      - Refetch the proposal to check for updates:
        ```bash
-       ./target/release/svmgov get-proposal --proposal-id <PROPOSAL_PDA> --rpc-url https://api.testnet.solana.com
+       ./target/release/svmgov proposal <PROPOSAL_PDA> --rpc-url https://api.testnet.solana.com
        ```
        - **Expected Change**: `for_votes_bp`, `against_votes_bp`, and `abstain_votes_bp` may reflect the new vote, depending on program logic for vote aggregation.
 

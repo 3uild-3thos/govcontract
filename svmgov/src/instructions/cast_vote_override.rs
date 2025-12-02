@@ -8,7 +8,10 @@ use log::info;
 
 use crate::{
     constants::*,
-    govcontract::{accounts::Proposal, client::{accounts, args}},
+    govcontract::{
+        accounts::Proposal,
+        client::{accounts, args},
+    },
     utils::{
         api_helpers::{
             self, convert_merkle_proof_strings, convert_stake_merkle_leaf_data_to_idl_type,
@@ -28,7 +31,6 @@ pub async fn cast_vote_override(
     abstain_votes: u64,
     staker_keypair: String,
     rpc_url: Option<String>,
-    _operator_api: Option<String>,
     stake_account_override: String,
     vote_account: String,
     network: String,
@@ -66,7 +68,8 @@ pub async fn cast_vote_override(
         get_stake_account_proof(&stake_account_str, snapshot_slot, &network).await?;
 
     // Generate meta_merkle_proof_pda using the consensus_result from proposal
-    let meta_merkle_proof_pda = api_helpers::generate_meta_merkle_proof_pda(&consensus_result_pda, &vote_account_pubkey)?;
+    let meta_merkle_proof_pda =
+        api_helpers::generate_meta_merkle_proof_pda(&consensus_result_pda, &vote_account_pubkey)?;
 
     let validator_vote_pda = derive_vote_pda(&proposal_pubkey, &vote_account_pubkey, &program.id());
     let vote_override_pda = derive_vote_override_pda(

@@ -5,7 +5,10 @@ use anyhow::{Result, anyhow};
 use dirs::home_dir;
 use serde::{Deserialize, Serialize};
 
-use crate::constants::{DEFAULT_MAINNET_RPC_URL, DEFAULT_TESTNET_RPC_URL};
+use crate::constants::{
+    DEFAULT_DEVNET_PROGRAM_ID, DEFAULT_MAINNET_PROGRAM_ID, DEFAULT_MAINNET_RPC_URL,
+    DEFAULT_TESTNET_PROGRAM_ID, DEFAULT_TESTNET_RPC_URL,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum UserType {
@@ -29,7 +32,9 @@ pub struct Config {
     pub staker_keypair_path: Option<String>,
     pub network: String,
     pub rpc_url: Option<String>,
-    pub operator_api_url: Option<String>,
+    pub operator_api_url: String,
+    #[serde(default)]
+    pub program_id: Option<String>,
 }
 
 impl Default for Config {
@@ -40,7 +45,8 @@ impl Default for Config {
             staker_keypair_path: Some(default_staker_keypair_path()),
             network: "mainnet".to_string(),
             rpc_url: None,
-            operator_api_url: None,
+            operator_api_url: String::new(),
+            program_id: None,
         }
     }
 }
@@ -69,17 +75,27 @@ impl Config {
 
     pub fn load() -> Result<Config> {
         let config_path = Self::config_file_path()?;
-        
+
         if !config_path.exists() {
             return Ok(Config::default());
         }
 
-        let content = fs::read_to_string(&config_path)
-            .map_err(|e| anyhow!("Failed to read config file {}: {}", config_path.display(), e))?;
-        
-        let config: Config = toml::from_str(&content)
-            .map_err(|e| anyhow!("Failed to parse config file {}: {}", config_path.display(), e))?;
-        
+        let content = fs::read_to_string(&config_path).map_err(|e| {
+            anyhow!(
+                "Failed to read config file {}: {}",
+                config_path.display(),
+                e
+            )
+        })?;
+
+        let config: Config = toml::from_str(&content).map_err(|e| {
+            anyhow!(
+                "Failed to parse config file {}: {}",
+                config_path.display(),
+                e
+            )
+        })?;
+
         Ok(config)
     }
 
@@ -89,23 +105,33 @@ impl Config {
 
         // Create config directory if it doesn't exist
         if !config_dir.exists() {
-            fs::create_dir_all(&config_dir)
-                .map_err(|e| anyhow!("Failed to create config directory {}: {}", config_dir.display(), e))?;
+            fs::create_dir_all(&config_dir).map_err(|e| {
+                anyhow!(
+                    "Failed to create config directory {}: {}",
+                    config_dir.display(),
+                    e
+                )
+            })?;
         }
 
         let toml_string = toml::to_string_pretty(self)
             .map_err(|e| anyhow!("Failed to serialize config: {}", e))?;
-        
-        fs::write(&config_path, toml_string)
-            .map_err(|e| anyhow!("Failed to write config file {}: {}", config_path.display(), e))?;
-        
+
+        fs::write(&config_path, toml_string).map_err(|e| {
+            anyhow!(
+                "Failed to write config file {}: {}",
+                config_path.display(),
+                e
+            )
+        })?;
+
         Ok(())
     }
 
     pub fn get_rpc_url(&self) -> String {
-        self.rpc_url.clone().unwrap_or_else(|| {
-            get_default_rpc_url(&self.network)
-        })
+        self.rpc_url
+            .clone()
+            .unwrap_or_else(|| get_default_rpc_url(&self.network))
     }
 
     pub fn get_identity_keypair_path(&self) -> Option<String> {
@@ -125,3 +151,11 @@ pub fn get_default_rpc_url(network: &str) -> String {
     }
 }
 
+pub fn get_default_program_id(network: &str) -> String {
+    match network.to_lowercase().as_str() {
+        "mainnet" => DEFAULT_MAINNET_PROGRAM_ID.to_string(),
+        "testnet" => DEFAULT_TESTNET_PROGRAM_ID.to_string(),
+        "devnet" => DEFAULT_DEVNET_PROGRAM_ID.to_string(),
+        _ => DEFAULT_MAINNET_PROGRAM_ID.to_string(),
+    }
+}

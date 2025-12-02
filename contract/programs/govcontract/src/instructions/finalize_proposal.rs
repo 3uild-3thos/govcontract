@@ -16,7 +16,7 @@ impl<'info> FinalizeProposal<'info> {
     pub fn finalize_proposal(&mut self) -> Result<()> {
         require!(
             self.proposal.voting == true && self.proposal.finalized == false,
-            GovernanceError::ProposalClosed
+            GovernanceError::ProposalNotInVotingPhase
         );
         let clock = Clock::get()?;
         require!(

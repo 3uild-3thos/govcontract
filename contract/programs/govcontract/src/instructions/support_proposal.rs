@@ -69,7 +69,7 @@ impl<'info> SupportProposal<'info> {
 
         require!(
             clock.epoch == self.proposal.creation_epoch + MAX_SUPPORT_EPOCHS,
-            GovernanceError::SupportPeriodNotStartedOrEnded
+            GovernanceError::NotInSupportPeriod
         );
 
         // assuming this returns in lamports
