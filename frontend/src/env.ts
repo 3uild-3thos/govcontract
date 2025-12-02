@@ -7,6 +7,7 @@ export const env = createEnv({
    * isn't built with invalid env vars.
    */
   server: {
+    // needed so it uploads source maps to Sentry
     SENTRY_AUTH_TOKEN: z.string(),
   },
 
