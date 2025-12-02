@@ -6,12 +6,13 @@ import { PublicKey } from "@solana/web3.js";
 export const getValidatorProposalVoteAccount = async (
   endpoint: string,
   proposalPublicKey: string | undefined,
-  voteAccount: ValidatorVoteAccountData | undefined
+  voteAccount: ValidatorVoteAccountData | undefined | null
 ): Promise<VoteAccountData | null> => {
   if (proposalPublicKey === undefined)
     throw new Error("Proposal public key is not loaded");
 
-  if (voteAccount === undefined) throw new Error("No vote account found");
+  if (voteAccount === undefined || voteAccount === null)
+    throw new Error("No vote account found");
 
   const program = createProgramWitDummyWallet(endpoint);
   const proposalPubkey = new PublicKey(proposalPublicKey);

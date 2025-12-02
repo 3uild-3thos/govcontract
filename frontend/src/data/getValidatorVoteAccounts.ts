@@ -18,9 +18,10 @@ export const getValidatorVoteAccounts = async (
   );
 
   if (!validatorVoteAccount) {
-    throw new Error(
+    console.warn(
       `No SPL vote account found for validator identity ${validatorPubkey}`
     );
+    return null;
   }
 
   return mapValidatorVoteAccountDto(validatorVoteAccount);

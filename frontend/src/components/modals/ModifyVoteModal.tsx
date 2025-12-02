@@ -93,7 +93,7 @@ export function ModifyVoteModal({
   };
 
   const handleError = (err: Error) => {
-    console.log("error mutating cast vote:", err);
+    console.log("error mutating modify vote:", err);
     captureException(err);
     toast.error(`Error modifying vote for proposal ${initialProposalId}`);
     setError(err instanceof Error ? err.message : "Failed to modify vote");
