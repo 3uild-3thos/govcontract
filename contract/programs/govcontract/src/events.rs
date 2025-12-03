@@ -6,9 +6,6 @@ pub struct ProposalCreated {
     pub author: Pubkey,
     pub title: String,
     pub description: String,
-    pub start_epoch: u64,
-    pub end_epoch: u64,
-    pub snapshot_slot: u64,
     pub creation_timestamp: i64,
 }
 

@@ -121,9 +121,6 @@ impl<'info> CreateProposal<'info> {
             author: self.signer.key(),
             title: self.proposal.title.clone(),
             description: self.proposal.description.clone(),
-            start_epoch: self.proposal.start_epoch,
-            end_epoch: self.proposal.end_epoch,
-            snapshot_slot: self.proposal.snapshot_slot,
             creation_timestamp: self.proposal.creation_timestamp,
         });
 
