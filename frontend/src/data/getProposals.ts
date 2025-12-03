@@ -2,20 +2,44 @@ import { createProgramWitDummyWallet } from "@/chain";
 import { getSimd } from "@/hooks";
 import { getProposalStatus } from "@/lib/proposals";
 import type { ProposalRecord, RawProposalAccount } from "@/types";
+import { EpochInfo, VoteAccountInfo } from "@solana/web3.js";
+
+export interface RawVoteAccountsData {
+  current: VoteAccountInfo[];
+  delinquent: VoteAccountInfo[];
+}
 
 export const getProposals = async (
   endpoint: string,
-  filters?: {
-    voting?: boolean;
-    finalized?: boolean;
-  }
+  filters:
+    | {
+        voting?: boolean;
+        finalized?: boolean;
+      }
+    | undefined,
+  epochInfo: EpochInfo,
+  voteAccountsData: RawVoteAccountsData
 ): Promise<ProposalRecord[]> => {
   const program = createProgramWitDummyWallet(endpoint);
 
-  // TODO: implement pagination
+  // Fetch proposals
   const proposalAccs = await program.account.proposal.all();
+  console.log("voteAccountsData:", voteAccountsData);
+  // Calculate total staked lamports from all vote accounts
+  const allVotes = [
+    ...voteAccountsData.current,
+    // ...voteAccountsData.delinquent,
+  ];
+  const totalStakedLamports = allVotes.reduce(
+    (sum, vote) => sum + (vote.activatedStake || 0),
+    0
+  );
 
-  let data = proposalAccs.map(mapProposalDto);
+  const currentEpoch = epochInfo.epoch;
+
+  let data = proposalAccs.map((acc, index) =>
+    mapProposalDto(acc, index, currentEpoch, totalStakedLamports)
+  );
 
   if (filters) {
     if (filters.voting !== undefined) {
@@ -35,10 +59,26 @@ export const getProposals = async (
 
 export function mapProposalDto(
   rawAccount: RawProposalAccount,
-  index: number
+  index: number,
+  currentEpoch: number,
+  totalStakedLamports: number
 ): ProposalRecord {
   const raw = rawAccount.account;
-  const status = getProposalStatus(raw.voting, raw.finalized);
+  const creationEpoch = raw.creationEpoch.toNumber();
+  const clusterSupportLamports = raw.clusterSupportLamports?.toNumber() || 0;
+  const consensusResult = rawAccount.account.consensusResult || undefined;
+  const finalized = raw.finalized;
+
+  const status = getProposalStatus({
+    creationEpoch,
+    currentEpoch,
+    clusterSupportLamports,
+    totalStakedLamports,
+    consensusResult,
+    finalized,
+    voting: raw.voting,
+  });
+
   const simd = getSimd(raw.description);
 
   console.log(
@@ -54,12 +94,12 @@ export function mapProposalDto(
     description: raw.description,
     author: raw.author.toBase58(),
 
-    creationEpoch: raw.creationEpoch.toNumber(),
+    creationEpoch,
     startEpoch: raw.startEpoch.toNumber(),
     endEpoch: raw.endEpoch.toNumber(),
     creationTimestamp: raw.creationTimestamp?.toNumber() || 0,
 
-    clusterSupportLamports: raw.clusterSupportLamports?.toNumber() || 0,
+    clusterSupportLamports,
     forVotesLamports: raw.forVotesLamports?.toNumber() || 0,
     againstVotesLamports: raw.againstVotesLamports?.toNumber() || 0,
     abstainVotesLamports: raw.abstainVotesLamports?.toNumber() || 0,
@@ -71,9 +111,9 @@ export function mapProposalDto(
 
     status,
     voting: raw.voting,
-    finalized: raw.finalized,
+    finalized,
 
-    consensusResult: rawAccount.account.consensusResult || undefined,
+    consensusResult,
 
     proposalBump: raw.proposalBump,
     index: raw.index,

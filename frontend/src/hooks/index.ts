@@ -24,6 +24,7 @@ export * from "./useVoteAccountsWithValidators";
 export * from "./useProposalVotes";
 
 export * from "./useChainVoteAccounts";
+export * from "./useRawVoteAccounts";
 
 export * from "./useHasUserVoted";
 

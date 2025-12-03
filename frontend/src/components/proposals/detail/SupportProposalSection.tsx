@@ -1,8 +1,8 @@
 import { ProposalStatus } from "@/types";
 import { SupportButton } from "../SupportButton";
 import { AppButton } from "@/components/ui/AppButton";
-import { Link } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 interface SupportProposalProps {
   proposalId?: string;

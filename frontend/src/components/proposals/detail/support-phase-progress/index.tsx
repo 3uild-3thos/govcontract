@@ -21,7 +21,7 @@ import { StatBadge, StatCard } from "./StatCard";
 // ============================================================================
 
 /** Support threshold as percentage of total staked SOL (e.g., 10 = 10%) */
-const SUPPORT_THRESHOLD_PERCENT = 10;
+export const SUPPORT_THRESHOLD_PERCENT = 10;
 
 /** Mock total active staked SOL across the network (in lamports) */
 // const MOCK_TOTAL_STAKED_LAMPORTS = 316_010_000 * LAMPORTS_PER_SOL; // 316.01M SOL
