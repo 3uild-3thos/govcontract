@@ -58,28 +58,6 @@ export function SupportPhaseProgress({ proposal }: SupportPhaseProgressProps) {
   const { data: validators, isLoading: isLoadingValidators } =
     useGetValidators();
 
-  // TODO: check if we should use calculated support instead of proposal.clusterSupportLamports
-  // clusterSupportLamports is probably more accurate since its the validators stake at the moment of support
-  // For each supportAccount, match with validator to get their stake and sum all stake
-  //   const totalSupportedStake = useMemo(() => {
-  //     if (!supportAccounts || !validators) return 0;
-  //     // Create a map for quick lookup of validator by publicKey (base58 string)
-  //     const validatorMap = new Map(
-  //       validators.map((v) => [v.vote_identity, v.activated_stake])
-  //     );
-  //     // Each supportAccount.validator is a PublicKey object or string
-  //     return supportAccounts.reduce((sum, supportAccount) => {
-  //       // supportAccount.validator could be a PublicKey or string
-  //       const validatorKey =
-  //         typeof supportAccount.validator === "string"
-  //           ? supportAccount.validator
-  //           : supportAccount.validator?.toBase58?.();
-  //       if (!validatorKey) return sum;
-  //       const stake = validatorMap.get(validatorKey) || 0;
-  //       return sum + stake;
-  //     }, 0);
-  //   }, [supportAccounts, validators]);
-
   const numOfValidators = useMemo(() => validators?.length || 0, [validators]);
   const validatorsStake = useMemo(
     () => validators?.reduce((acc, curr) => acc + curr.activated_stake, 0) || 0,
