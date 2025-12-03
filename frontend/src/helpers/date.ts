@@ -1,4 +1,4 @@
-import { Connection } from "@solana/web3.js";
+import { Connection, EpochInfo, EpochSchedule } from "@solana/web3.js";
 
 export const getDaysLeft = (futureDate: Date) => {
   const now = new Date();
@@ -11,20 +11,18 @@ export const getDaysLeft = (futureDate: Date) => {
 /**
  * Converts a Solana epoch number to a Date by calculating when that epoch will start
  * @param epoch - The target epoch number
- * @param endpoint - The Solana RPC endpoint URL
+ * @param epochInfo - The current epoch info from Solana
+ * @param epochSchedule - The epoch schedule from Solana
+ * @param endpoint - The Solana RPC endpoint URL (used for getBlockTime calls)
  * @returns Promise<Date> - The estimated date when the epoch will start
  */
 export async function epochToDate(
   epoch: number,
+  epochInfo: EpochInfo,
+  epochSchedule: EpochSchedule,
   endpoint: string
 ): Promise<Date> {
-  // TODO: improve this, we can react-query epoch info/schedule and use that to calculate the date
-  // (caching data and connection for all proposals)
   const connection = new Connection(endpoint, "confirmed");
-
-  // Get current epoch info
-  const epochInfo = await connection.getEpochInfo();
-  const epochSchedule = await connection.getEpochSchedule();
 
   // Calculate the target epoch (creationEpoch + 3)
   const targetEpoch = epoch;

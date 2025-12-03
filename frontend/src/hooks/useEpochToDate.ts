@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEndpoint } from "@/contexts/EndpointContext";
 import { epochToDate } from "@/helpers/date";
+import { useEpochInfo } from "./useEpochInfo";
 
 /**
  * Hook to convert a Solana epoch number to a Date
@@ -9,14 +10,20 @@ import { epochToDate } from "@/helpers/date";
  */
 export function useEpochToDate(epoch: number | undefined) {
   const { endpointUrl } = useEndpoint();
+  const { data: epochData, isLoading: isLoadingEpochInfo } = useEpochInfo();
 
   return useQuery({
-    queryKey: ["epochToDate", epoch, endpointUrl],
+    queryKey: ["epochToDate", epoch, endpointUrl, epochData?.epochInfo.epoch],
     queryFn: async () => {
-      if (epoch === undefined) return null;
-      return epochToDate(epoch, endpointUrl);
+      if (epoch === undefined || !epochData) return null;
+      return epochToDate(
+        epoch,
+        epochData.epochInfo,
+        epochData.epochSchedule,
+        endpointUrl
+      );
     },
-    enabled: epoch !== undefined,
+    enabled: epoch !== undefined && !isLoadingEpochInfo && !!epochData,
     staleTime: 5 * 60 * 1000, // 5 minutes - epoch info doesn't change frequently
     refetchOnWindowFocus: false,
   });
