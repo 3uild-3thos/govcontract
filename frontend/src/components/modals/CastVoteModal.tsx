@@ -14,6 +14,7 @@ import ErrorMessage from "./shared/ErrorMessage";
 import { VoteDistributionControls } from "./shared/VoteDistributionControls";
 import {
   useCastVote,
+  useHasUserVoted,
   useValidatorVotingPower,
   useVoteDistribution,
   useWalletRole,
@@ -29,6 +30,7 @@ import {
 import { VotingProposalsDropdown } from "../VotingProposalsDropdown";
 import { PublicKey } from "@solana/web3.js";
 import { captureException } from "@sentry/nextjs";
+import RequirementItem from "./shared/RequirementItem";
 
 export type CastVoteModalDataProps =
   | {
@@ -76,6 +78,9 @@ export function CastVoteModal({
 
   const { votingPower, isLoading: isLoadingVotingPower } =
     useValidatorVotingPower(wallet?.publicKey?.toBase58());
+
+  const { data: hasVoted = false, isLoading: isLoadingHasVoted } =
+    useHasUserVoted(selectedProposal.id);
 
   const { mutate: castVote } = useCastVote();
 
@@ -233,6 +238,21 @@ export function CastVoteModal({
                 invalidTotalMessage="Total must equal 100%"
                 className="space-y-3"
               />
+
+              {/* Requirements */}
+              <div className="space-y-3">
+                <h3 className="text-xs font-medium uppercase tracking-wide text-white/80 sm:text-sm">
+                  Requirements:
+                </h3>
+                <div className="space-y-2">
+                  <RequirementItem
+                    met={!hasVoted}
+                    text="You haven't voted on this proposal yet"
+                    isLoading={isLoadingHasVoted}
+                  />
+                </div>
+              </div>
+
               {/* Error Message */}
               {error && <ErrorMessage error={error} />}
             </form>
@@ -250,7 +270,13 @@ export function CastVoteModal({
           <AppButton
             form="cast-vote-form"
             size="lg"
-            disabled={!selectedProposal.id || !isValidDistribution || isLoading}
+            disabled={
+              !selectedProposal.id ||
+              !isValidDistribution ||
+              hasVoted ||
+              isLoading ||
+              isLoadingHasVoted
+            }
             onClick={handleSubmit}
             variant="gradient"
             text={isLoading ? "Casting..." : "Cast Vote"}

@@ -16,6 +16,7 @@ import {
   useModifyVote,
   useVoteDistribution,
   useWalletRole,
+  useHasValidatorVoted,
   VoteDistribution,
 } from "@/hooks";
 import { toast } from "sonner";
@@ -66,9 +67,9 @@ export function ModifyVoteModal({
 
   const { mutate: modifyVote } = useModifyVote();
 
-  // TODO: MODIFY VOTE
-  // TODO: Requirements state -these would be computed from actual data
-  const [hasVoted] = useState(true);
+  const { data: hasVoted = true, isPending: isLoadingHasVoted } =
+    useHasValidatorVoted(selectedProposal.id);
+
   const [isFinalized] = useState(false);
 
   useEffect(() => {
@@ -213,6 +214,7 @@ export function ModifyVoteModal({
                   <RequirementItem
                     met={hasVoted}
                     text="You must have already voted on this proposal"
+                    isLoading={isLoadingHasVoted}
                   />
                   <RequirementItem
                     met={!isFinalized}
@@ -247,7 +249,8 @@ export function ModifyVoteModal({
               !isValidDistribution ||
               !hasVoted ||
               isFinalized ||
-              isLoading
+              isLoading ||
+              isLoadingHasVoted
             }
             onClick={handleSubmit}
             variant="gradient"

@@ -1,23 +1,25 @@
 import { createProgramWitDummyWallet, VoteAccount } from "@/chain";
-import { ValidatorVoteAccountData, VoteAccountData } from "@/types";
+import { VoteAccountData } from "@/types";
 
 import { PublicKey } from "@solana/web3.js";
 
+/**
+ * Fetches a validator's vote account for a specific proposal
+ */
 export const getValidatorProposalVoteAccount = async (
   endpoint: string,
   proposalPublicKey: string | undefined,
-  voteAccount: ValidatorVoteAccountData | undefined | null
+  validatorPublicKey: string | undefined
 ): Promise<VoteAccountData | null> => {
   if (proposalPublicKey === undefined)
     throw new Error("Proposal public key is not loaded");
 
-  if (voteAccount === undefined || voteAccount === null)
-    throw new Error("No vote account found");
+  if (validatorPublicKey === undefined)
+    throw new Error("Validator public key is required");
 
   const program = createProgramWitDummyWallet(endpoint);
   const proposalPubkey = new PublicKey(proposalPublicKey);
-
-  const validatorPubkey = new PublicKey(voteAccount.nodePubkey);
+  const validatorPubkey = new PublicKey(validatorPublicKey);
 
   // Filter by validator (offset 8) and proposal (offset 40)
   // Vote account structure: 8 bytes discriminator + 32 bytes validator + 32 bytes proposal + ...
