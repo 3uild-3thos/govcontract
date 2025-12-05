@@ -20,6 +20,7 @@ export * from "./useCreateProposal";
 export * from "./useSupportProposal";
 
 export * from "./useGetValidators";
+export * from "./useValidatorsTotalStakedLamports";
 export * from "./useVoteAccountsWithValidators";
 export * from "./useProposalVotes";
 
@@ -30,8 +31,6 @@ export * from "./useHasValidatorVoted";
 
 export * from "./useStakerVotingPower";
 export * from "./useValidatorVotingPower";
-
-export * from "./useProposalVoteBreakdown";
 
 // proposal simd and description hooks
 export * from "./useProposalSimd";

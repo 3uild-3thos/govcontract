@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import type { ProposalRecord } from "@/types";
 import { CircleCheck, CircleX } from "lucide-react";
 import VoteItem, { VoteItemSkeleton } from "./VoteItem";
@@ -8,7 +9,7 @@ import {
   formatLamportsDisplay,
   formatPercentage,
 } from "@/lib/governance/formatters";
-import { useHasUserVoted, useProposalVoteBreakdown } from "@/hooks";
+import { useHasUserVoted, useValidatorsTotalStakedLamports } from "@/hooks";
 
 interface VoteBreakdownWrapperProps {
   proposal: ProposalRecord | undefined;
@@ -32,16 +33,34 @@ const VoteBreakdown = ({
   proposal,
   isLoading: isLoadingParent,
 }: VoteBreakdownProps) => {
-  const { data: votes, isLoading: isLoadingProposalVotes } =
-    useProposalVoteBreakdown(proposal?.publicKey);
-
   const { data: hasUserVoted = false, isLoading: isLoadingHasUserVoted } =
     useHasUserVoted(proposal?.publicKey?.toBase58());
 
-  const isLoading =
-    isLoadingParent || isLoadingProposalVotes || isLoadingHasUserVoted;
+  const { totalStakedLamports, isLoading: isLoadingTotalStake } =
+    useValidatorsTotalStakedLamports();
 
-  if (!votes && !isLoadingProposalVotes) return <div>No vote breakdown</div>;
+  const votePercentages = useMemo(() => {
+    if (!proposal || !totalStakedLamports || totalStakedLamports === 0) {
+      return {
+        forVotesPercentage: 0,
+        againstVotesPercentage: 0,
+        abstainVotesPercentage: 0,
+      };
+    }
+
+    return {
+      forVotesPercentage:
+        (proposal.forVotesLamports / totalStakedLamports) * 100,
+      againstVotesPercentage:
+        (proposal.againstVotesLamports / totalStakedLamports) * 100,
+      abstainVotesPercentage:
+        (proposal.abstainVotesLamports / totalStakedLamports) * 100,
+    };
+  }, [proposal, totalStakedLamports]);
+
+  const isLoading =
+    isLoadingParent || isLoadingHasUserVoted || isLoadingTotalStake;
+
   if (!proposal && !isLoadingParent) return <div>No proposal info</div>;
 
   return (
@@ -49,14 +68,14 @@ const VoteBreakdown = ({
       <div className="flex flex-1 flex-col items-center gap-4 sm:gap-4 md:flex-col lg:flex-row md:items-stretch">
         {/* Quorum Donut Chart */}
         <div className="flex flex-1 items-center justify-center">
-          {isLoading || !votes || !proposal ? (
+          {isLoading || !proposal ? (
             <QuorumDonutSkeleton />
           ) : (
             <QuorumDonut
-              forLamports={votes.forStake}
-              againstLamports={votes.againstStake}
-              abstainLamports={votes.abstainStake}
-              totalLamports={votes.totalStake}
+              forLamports={proposal.forVotesLamports}
+              againstLamports={proposal.againstVotesLamports}
+              abstainLamports={proposal.abstainVotesLamports}
+              totalLamports={totalStakedLamports}
               quorumPercentage={proposal.quorumPercent / 100}
             />
           )}
@@ -73,7 +92,7 @@ const VoteBreakdown = ({
             </p>
           </div>
           <div className="flex-1 space-y-2 md:space-y-3 lg:space-y-4 mt-1 lg:mt-0">
-            {isLoading || votes === undefined ? (
+            {isLoading || proposal === undefined ? (
               <>
                 <VoteItemSkeleton label="For" color="bg-primary" />
                 <VoteItemSkeleton label="Against" color="bg-destructive" />
@@ -83,20 +102,32 @@ const VoteBreakdown = ({
               <>
                 <VoteItem
                   label="For"
-                  amount={formatLamportsDisplay(votes.forStake).value}
-                  percentage={formatPercentage(votes.forVotesPercentage)}
+                  amount={
+                    formatLamportsDisplay(proposal.forVotesLamports).value
+                  }
+                  percentage={formatPercentage(
+                    votePercentages.forVotesPercentage
+                  )}
                   color="bg-primary"
                 />
                 <VoteItem
                   label="Against"
-                  amount={formatLamportsDisplay(votes.againstStake).value}
-                  percentage={formatPercentage(votes.againstVotesPercentage)}
+                  amount={
+                    formatLamportsDisplay(proposal.againstVotesLamports).value
+                  }
+                  percentage={formatPercentage(
+                    votePercentages.againstVotesPercentage
+                  )}
                   color="bg-destructive"
                 />
                 <VoteItem
                   label="Abstain"
-                  amount={formatLamportsDisplay(votes.abstainStake).value}
-                  percentage={formatPercentage(votes.abstainVotesPercentage)}
+                  amount={
+                    formatLamportsDisplay(proposal.abstainVotesLamports).value
+                  }
+                  percentage={formatPercentage(
+                    votePercentages.abstainVotesPercentage
+                  )}
                   color="bg-white/30"
                 />
               </>
