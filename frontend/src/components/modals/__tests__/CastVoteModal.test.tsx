@@ -120,7 +120,7 @@ describe("CastVoteModal - Loading State for hasVoted", () => {
     render(<CastVoteModal {...defaultProps} />, { wrapper: createWrapper() });
 
     const requirementText = screen.getByText(
-      "You must not have already voted on this proposal"
+      "You haven't voted on this proposal yet"
     );
     expect(requirementText).toBeInTheDocument();
 
@@ -144,7 +144,7 @@ describe("CastVoteModal - Loading State for hasVoted", () => {
     // if other conditions are met. However, in practice, we might want to disable it.
     // For now, we'll test that the loading state is shown in RequirementItem
     const requirementText = screen.getByText(
-      "You must not have already voted on this proposal"
+      "You haven't voted on this proposal yet"
     );
     expect(requirementText).toBeInTheDocument();
 
@@ -163,7 +163,7 @@ describe("CastVoteModal - Loading State for hasVoted", () => {
 
     await waitFor(() => {
       const requirementText = screen.getByText(
-        "You must not have already voted on this proposal"
+        "You haven't voted on this proposal yet"
       );
       expect(requirementText).toBeInTheDocument();
 
@@ -186,7 +186,7 @@ describe("CastVoteModal - Loading State for hasVoted", () => {
 
     await waitFor(() => {
       const requirementText = screen.getByText(
-        "You must not have already voted on this proposal"
+        "You haven't voted on this proposal yet"
       );
       expect(requirementText).toBeInTheDocument();
 
@@ -241,7 +241,7 @@ describe("CastVoteModal - Loading State for hasVoted", () => {
 
     // Check loading state
     let requirementText = screen.getByText(
-      "You must not have already voted on this proposal"
+      "You haven't voted on this proposal yet"
     );
     let loadingIndicator = requirementText
       .closest("div")
@@ -259,7 +259,7 @@ describe("CastVoteModal - Loading State for hasVoted", () => {
 
     await waitFor(() => {
       requirementText = screen.getByText(
-        "You must not have already voted on this proposal"
+        "You haven't voted on this proposal yet"
       );
       loadingIndicator = requirementText
         .closest("div")

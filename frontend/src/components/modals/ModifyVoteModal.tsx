@@ -249,7 +249,8 @@ export function ModifyVoteModal({
               !isValidDistribution ||
               !hasVoted ||
               isFinalized ||
-              isLoading
+              isLoading ||
+              isLoadingHasVoted
             }
             onClick={handleSubmit}
             variant="gradient"

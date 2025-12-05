@@ -247,7 +247,7 @@ export function CastVoteModal({
                 <div className="space-y-2">
                   <RequirementItem
                     met={!hasVoted}
-                    text="You must not have already voted on this proposal"
+                    text="You haven't voted on this proposal yet"
                     isLoading={isLoadingHasVoted}
                   />
                 </div>
@@ -274,7 +274,8 @@ export function CastVoteModal({
               !selectedProposal.id ||
               !isValidDistribution ||
               hasVoted ||
-              isLoading
+              isLoading ||
+              isLoadingHasVoted
             }
             onClick={handleSubmit}
             variant="gradient"
