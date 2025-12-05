@@ -7,7 +7,9 @@ const findProposalByPubKey = (
   proposalPublicKey: string
 ) =>
   proposals.find(
-    (proposal) => proposal.publicKey.toBase58() === proposalPublicKey
+    (proposal) =>
+      proposal.publicKey.toBase58().toLowerCase() ===
+      proposalPublicKey.toLowerCase()
   );
 
 export const useProposalDetails = (proposalPublicKey: string) => {

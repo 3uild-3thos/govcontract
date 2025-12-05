@@ -66,7 +66,6 @@ export const useHasUserVoted = (
   const { data: voteAccount, isLoading: isLoadingVoteAccount } =
     useValidatorProposalVoteAccount(
       proposalPublicKey,
-      publicKey?.toBase58(),
       fetchVoteAccountsEnabled
     );
 

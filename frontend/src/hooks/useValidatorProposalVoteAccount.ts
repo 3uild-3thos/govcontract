@@ -1,32 +1,33 @@
 import { useEndpoint } from "@/contexts/EndpointContext";
 import { getValidatorProposalVoteAccount } from "@/data/getValidatorProposalVoteAccount";
 import { GET_VALIDATOR_PROPOSAL_VOTE_ACCOUNTS } from "@/helpers";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { useQuery } from "@tanstack/react-query";
-import { useValidatorVoteAccounts } from "./useValidatorVoteAccounts";
 
 export const useValidatorProposalVoteAccount = (
   proposalId: string | undefined,
-  userPubKey: string | undefined,
   enabled = true
 ) => {
   const { endpointUrl: endpoint } = useEndpoint();
 
-  const { data: voteAccount, isFetched: isFetchedVoteAccounts } =
-    useValidatorVoteAccounts(userPubKey, enabled);
+  const { publicKey, connected } = useWallet();
 
-  const queryEnabled = enabled && isFetchedVoteAccounts && !!voteAccount;
+  const enabledQuery = connected && !!publicKey && !!proposalId && enabled;
 
   return useQuery({
     queryKey: [
       GET_VALIDATOR_PROPOSAL_VOTE_ACCOUNTS,
       endpoint,
       proposalId,
-      userPubKey,
-      voteAccount,
+      publicKey?.toBase58(),
     ],
-    enabled: queryEnabled,
+    enabled: enabledQuery,
     staleTime: 1000 * 120, // 2 minutes
     queryFn: () =>
-      getValidatorProposalVoteAccount(endpoint, proposalId, voteAccount),
+      getValidatorProposalVoteAccount(
+        endpoint,
+        proposalId,
+        publicKey?.toBase58()
+      ),
   });
 };
