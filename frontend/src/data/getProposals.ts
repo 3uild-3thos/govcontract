@@ -81,11 +81,6 @@ export function mapProposalDto(
 
   const simd = getSimd(raw.description);
 
-  console.log(
-    "raw.clusterSupportLamports string",
-    raw.clusterSupportLamports?.toString()
-  );
-
   return {
     publicKey: rawAccount.publicKey,
     id: index.toString(),

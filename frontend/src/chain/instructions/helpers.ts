@@ -150,29 +150,17 @@ export function createProgramWitDummyWallet(endpoint?: string) {
   return program;
 }
 
-// TODO: temporary, until CORS issue with api.solgov.online is fixed, and until it has HTTPS
-// Helper function to build the API URL (use proxy in browser, direct URL on server)
-export function buildSolgovUrl(endpoint: string): string {
-  // Use Next.js API proxy when running in browser to avoid CORS
-  // if (typeof window !== "undefined") {
-  //   // Browser: use proxy with path parameter
-  //   return `/api/solgov?path=${encodeURIComponent(endpoint)}`;
-  // }
-  // Server-side: use direct URL
-  // return `https://api.solgov.online/${endpoint}`;
-  // return `http://84.32.100.123:8000/${endpoint}`;
-  return `/api/solgov?path=${encodeURIComponent(endpoint)}`;
-}
+const DEFAULT_NCN_API_URL = "http://84.32.100.123:8000";
 
 // API helpers using the solgov.online service
 export async function getVoteAccountProof(
   voteAccount: string,
   network: string,
-  slot: number
+  slot: number,
+  ncnApiUrl?: string
 ): Promise<VoteAccountProofResponse> {
-  const url = buildSolgovUrl(
-    `proof/vote_account/${voteAccount}?network=${network}&slot=${slot}`
-  );
+  const baseUrl = ncnApiUrl || DEFAULT_NCN_API_URL;
+  const url = `${baseUrl}/proof/vote_account/${voteAccount}?network=${network}&slot=${slot}`;
   const response = await fetch(url);
 
   if (!response.ok) {
@@ -185,11 +173,11 @@ export async function getVoteAccountProof(
 export async function getStakeAccountProof(
   stakeAccount: string,
   network: string,
-  slot: number
+  slot: number,
+  ncnApiUrl?: string
 ): Promise<StakeAccountProofResponse> {
-  const url = buildSolgovUrl(
-    `proof/stake_account/${stakeAccount}?network=${network}&slot=${slot}`
-  );
+  const baseUrl = ncnApiUrl || DEFAULT_NCN_API_URL;
+  const url = `${baseUrl}/proof/stake_account/${stakeAccount}?network=${network}&slot=${slot}`;
   const response = await fetch(url);
 
   if (!response.ok) {
