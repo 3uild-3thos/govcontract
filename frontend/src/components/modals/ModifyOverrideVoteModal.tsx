@@ -344,7 +344,7 @@ export function ModifyOverrideVoteModal({
             }
             onClick={handleSubmit}
             variant="gradient"
-            text={isLoading ? "Casting..." : "Cast Vote"}
+            text={isLoading ? "Modifying..." : "Modify Vote"}
           />
         </DialogFooter>
       </DialogContent>
