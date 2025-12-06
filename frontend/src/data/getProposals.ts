@@ -41,11 +41,6 @@ export function mapProposalDto(
   const status = getProposalStatus(raw.voting, raw.finalized);
   const simd = getSimd(raw.description);
 
-  console.log(
-    "raw.clusterSupportLamports string",
-    raw.clusterSupportLamports?.toString()
-  );
-
   return {
     publicKey: rawAccount.publicKey,
     id: index.toString(),

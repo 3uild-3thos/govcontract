@@ -1,16 +1,18 @@
-import { buildSolgovUrl, VoterSummaryResponse } from "@/chain";
+import { VoterSummaryResponse } from "@/chain";
 import { RPCEndpoint } from "@/types";
+
+const DEFAULT_NCN_API_URL = "http://84.32.100.123:8000";
 
 export const getVoterWalletSummary = async (
   network: RPCEndpoint,
   walletAddress: string | undefined,
-  slot: number
+  slot: number,
+  ncnApiUrl?: string
 ): Promise<VoterSummaryResponse> => {
   if (walletAddress === undefined) throw new Error("Wallet not connected");
 
-  const url = buildSolgovUrl(
-    `voter/${walletAddress}?network=${network}&slot=${slot}`
-  );
+  const baseUrl = ncnApiUrl || DEFAULT_NCN_API_URL;
+  const url = `${baseUrl}/voter/${walletAddress}?network=${network}&slot=${slot}`;
   const response = await fetch(url);
 
   if (!response.ok) {
