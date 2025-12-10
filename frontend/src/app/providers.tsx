@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-query";
 import AppWalletProvider from "../components/AppWalletProvider";
 import { EndpointProvider } from "../contexts/EndpointContext";
-import { ProgramIdProvider } from "../contexts/ProgramIdContext";
+import { NcnApiProvider } from "../contexts/NcnApiContext";
 import { captureException } from "@sentry/nextjs";
 
 export const queryClient = new QueryClient({
@@ -26,9 +26,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <EndpointProvider>
-        <ProgramIdProvider>
+        <NcnApiProvider>
           <AppWalletProvider>{children}</AppWalletProvider>
-        </ProgramIdProvider>
+        </NcnApiProvider>
       </EndpointProvider>
     </QueryClientProvider>
   );
