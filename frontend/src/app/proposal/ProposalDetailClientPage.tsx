@@ -1,12 +1,15 @@
 "use client";
 
-import { notFound, useParams } from "next/navigation";
+import { notFound, useSearchParams } from "next/navigation";
 import ProposalDetailView from "@/components/proposals/detail/ProposalDetailView";
 import { useProposalDetails } from "@/hooks";
+import { PROPOSAL_PK_QUERY_PARAM } from "@/helpers/proposalPage";
 
-const ProposalDetailsPage = () => {
-  const params = useParams<{ proposalPublicKey: string }>();
-  const { proposalPublicKey } = params;
+export const ProposalDetailClientPage = () => {
+  const searchParams = useSearchParams();
+  const proposalPublicKey = searchParams.get(PROPOSAL_PK_QUERY_PARAM);
+
+  if (!proposalPublicKey) notFound();
 
   const {
     data: proposalData,
@@ -24,5 +27,3 @@ const ProposalDetailsPage = () => {
     </main>
   );
 };
-
-export default ProposalDetailsPage;

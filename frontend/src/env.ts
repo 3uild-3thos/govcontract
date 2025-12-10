@@ -8,7 +8,7 @@ export const env = createEnv({
    */
   server: {
     // needed so it uploads source maps to Sentry
-    SENTRY_AUTH_TOKEN: z.string(),
+    SENTRY_AUTH_TOKEN: z.string().optional(),
   },
 
   /**
@@ -17,7 +17,7 @@ export const env = createEnv({
    * `NEXT_PUBLIC_`.
    */
   client: {
-    NEXT_PUBLIC_SENTRY_DSN: z.string(),
+    NEXT_PUBLIC_SENTRY_DSN: z.string().optional(),
   },
 
   /**

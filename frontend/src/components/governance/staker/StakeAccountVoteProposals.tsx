@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { CopyableAddress } from "@/components/governance/shared/CopyableAddress";
 import { formatLamportsDisplay } from "@/lib/governance/formatters";
 import Link from "next/link";
+import { getProposalDetailPagePath } from "@/helpers/proposalPage";
 
 interface StakeAccountVoteProposalsProps {
   stakeAccount: StakeAccountData;
@@ -82,7 +83,9 @@ export function StakeAccountVoteProposals({
               {/* Proposal Title */}
               <div className="flex items-start justify-between">
                 <Link
-                  href={`/proposals/${voteProposal.proposal.publicKey.toBase58()}`}
+                  href={getProposalDetailPagePath(
+                    voteProposal.proposal.publicKey.toBase58()
+                  )}
                   className="space-y-3 block"
                 >
                   <h3 className="h3 whitespace-pre-wrap text-lg font-semibold tracking-tight text-white sm:text-xl hover-gradient-text transition-all duration-200">
