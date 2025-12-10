@@ -1,6 +1,5 @@
 export * from "./ui";
 export * from "./icons";
-export * from "./ProposalDetails";
 export * from "./LiveProposal";
 export * from "./LiveResults";
 export * from "./CurrentPhase";
