@@ -1,18 +1,19 @@
 import { PhaseTimeline } from "./ui";
 import { CurrentPhaseLoadingSkeleton } from "./CurrentPhaseLoadingSkeleton";
-import { getProposalStatus } from "@/lib/proposals";
+import type { ProposalStatus } from "@/types";
 
-export const CurrentPhase = () => {
-  const data = undefined;
+interface CurrentPhaseProps {
+  status?: ProposalStatus;
+}
+
+export const CurrentPhase = ({ status }: CurrentPhaseProps = {}) => {
   const isLoading = false;
 
-  if (isLoading || !data) {
+  if (isLoading || !status) {
     return <CurrentPhaseLoadingSkeleton />;
   }
 
-  const { voting, finalized } = data;
-
-  const currentPhase = getProposalStatus(voting, finalized);
+  const currentPhase = status;
 
   return (
     <div className="grid md:grid-cols-12 gap-14">

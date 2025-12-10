@@ -1,7 +1,7 @@
 import { Clock, VoteIcon } from "lucide-react";
 import { Cell, Pill, RealmsLink } from "./ui";
 import { getDaysLeft, getHoursLeft } from "@/helpers";
-import { getProposalStatus } from "@/lib/proposals";
+import type { ProposalStatus } from "@/types";
 
 interface Props {
   title: string;
@@ -11,8 +11,7 @@ interface Props {
   currentEpoch: number | undefined;
   requiredQuorum: number;
   currentQuorumPct: number;
-  voting: boolean;
-  finalized: boolean;
+  status: ProposalStatus;
 }
 
 export const LiveProposal = ({
@@ -23,13 +22,12 @@ export const LiveProposal = ({
   currentEpoch,
   requiredQuorum,
   currentQuorumPct,
-  voting,
-  finalized,
+  status,
 }: Props) => {
   const timeRemaining = endDate ? getHoursLeft(endDate) : "-";
   const daysLeft = endDate ? getDaysLeft(endDate) : "-";
 
-  const currentPhase = getProposalStatus(voting, finalized);
+  const currentPhase = status;
 
   return (
     <div>

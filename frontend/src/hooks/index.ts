@@ -25,6 +25,7 @@ export * from "./useVoteAccountsWithValidators";
 export * from "./useProposalVotes";
 
 export * from "./useChainVoteAccounts";
+export * from "./useRawVoteAccounts";
 
 export * from "./useHasUserVoted";
 export * from "./useHasValidatorVoted";
@@ -46,6 +47,7 @@ export * from "./useWalletStakeAccounts";
 export * from "./useVoterWalletSummary";
 
 export * from "./useEpochToDate";
+export * from "./useEpochInfo";
 
 // DEPRECATED
 export * from "./DEPRECATED/useGetValidatorsBubbleChart";

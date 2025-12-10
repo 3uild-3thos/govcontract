@@ -17,7 +17,7 @@ const ProposalDetailsPage = () => {
   if (!proposalData && isFetched) {
     notFound();
   }
-
+  console.log("proposalData", proposalData);
   return (
     <main className="space-y-8 py-8">
       <ProposalDetailView proposal={proposalData} isLoading={isLoading} />
