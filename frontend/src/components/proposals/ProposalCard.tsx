@@ -13,6 +13,7 @@ import { motion } from "framer-motion";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletRole } from "@/hooks";
 import { toast } from "sonner";
+import { getProposalDetailPagePath } from "@/helpers/proposalPage";
 
 type ProposalStatus = ProposalRecord["status"];
 interface VotingDetailItem {
@@ -204,7 +205,7 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
   }
 
   const handleCardClick = () => {
-    router.push(`/proposals/${publicKey.toBase58()}`);
+    router.push(getProposalDetailPagePath(publicKey.toBase58()));
   };
 
   const handleButtonClick: MouseEventHandler<HTMLButtonElement> = (event) => {
@@ -236,7 +237,7 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
     } else if (buttonText === "Support") {
       openModal("support-proposal", { proposalId });
     } else if (buttonText === "View Details") {
-      router.push(`/proposals/${proposalId}`);
+      router.push(getProposalDetailPagePath(proposalId));
     }
   };
 

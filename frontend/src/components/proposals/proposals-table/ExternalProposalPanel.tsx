@@ -17,6 +17,7 @@ import { useWalletRole } from "@/hooks";
 import { SupportButton } from "../SupportButton";
 import { PublicKey } from "@solana/web3.js";
 import { toast } from "sonner";
+import { getProposalDetailPagePath } from "@/helpers/proposalPage";
 
 const VOTE_STATE_LABEL: Record<ProposalRecord["status"], string> = {
   supporting: "Not started",
@@ -44,7 +45,7 @@ function ProposalInfo({ proposal }: { proposal: ProposalRecord }) {
   return (
     <div className="flex flex-1 flex-col justify-between gap-6">
       <Link
-        href={`/proposals/${proposal.publicKey.toBase58()}`}
+        href={getProposalDetailPagePath(proposal.publicKey.toBase58())}
         className="space-y-3 block"
       >
         <h3 className="h3 whitespace-pre-wrap text-lg font-semibold tracking-tight text-white sm:text-xl hover-gradient-text transition-all duration-200">
@@ -183,7 +184,7 @@ function DiscussionMessage({ proposalId }: { proposalId: string }) {
         variant="outline"
         className="w-full justify-center border-white/15 bg-white/10 text-sm font-medium text-white/75 hover:text-white"
       >
-        <Link href={`/proposals/${proposalId.toLowerCase()}`}>
+        <Link href={getProposalDetailPagePath(proposalId.toLowerCase())}>
           View Details
         </Link>
       </AppButton>
