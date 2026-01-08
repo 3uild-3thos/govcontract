@@ -36,7 +36,7 @@ yarn --version
 # Expected: 1.22+ or 4.x (depending on setup)
 ```
 
-### Step 1.2: Update Next.js Configuration
+### Step 1.2: Check Next.js Configuration (ignore)
 
 `next.config.js` (example):
 
@@ -93,6 +93,8 @@ SENTRY_AUTH_TOKEN=your_sentry_auth_token
 ```
 
 Reference file for Cloudflare (`.env.cloudflare`, not committed):
+
+To be set in Cloudflare Pages UI
 
 ```env
 # To be set in Cloudflare Pages UI
@@ -239,7 +241,7 @@ Save/deploy all rules.
 
 Domain → **Security → DDoS**:
 
-- Sensitivity: **High** (financial/crypto context).
+- Sensitivity: **High** (adjust as needed).
 
 ### Step 3.4: Rate Limiting (Optional)
 
@@ -247,7 +249,6 @@ Domain → **Security → Rate Limiting**:
 
 Example:
 
-- Path: `/api/*` (if you expose client-side APIs)
 - Threshold: `100` requests / `10 seconds`
 - Action: `Block` or `Challenge`.
 
@@ -430,7 +431,7 @@ yarn warm:cdn
 
 ---
 
-## Final Testing Checklist (Updated: no Git phase, yarn, Sentry optional)
+## Final Testing Checklist
 
 ### ✅ Pre-Deployment
 
@@ -496,30 +497,6 @@ yarn install --frozen-lockfile && yarn build
 
 - [ ] iOS and Android: app loads, wallet connect works, layout responsive.
 - [ ] Chrome, Firefox, Safari, Edge: no layout or JS issues.
-
----
-
-## Post-Deployment Sign-Off
-
-### Sign-Off Criteria
-
-**All checklist items must be ✅ to proceed to production**
-
-**Deployment Team Lead**: **\*\***\_\_\_**\*\***  
-**Date**: **\*\***\_\_\_**\*\***
-
-**Client/Product Owner**: **\*\***\_\_\_**\*\***  
-**Date**: **\*\***\_\_\_**\*\***
-
-**Notes**:
-
-```
-_________________________________________________________________________
-
-_________________________________________________________________________
-
-_________________________________________________________________________
-```
 
 ---
 
