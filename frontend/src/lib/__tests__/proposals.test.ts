@@ -308,16 +308,13 @@ describe("getProposalStatus", () => {
   // Iterate over test suites to create describe blocks and tests
   testSuites.forEach(({ describe: describeTitle, testCases }) => {
     describe(describeTitle, () => {
-      testCases.forEach(({ description, params, expected, note }) => {
+      testCases.forEach(({ description, params, expected,  }) => {
         it(description, () => {
           const result = getProposalStatus({
             ...baseParams,
             ...params,
           });
           expect(result).toBe(expected);
-          if (note) {
-            // Note is just for documentation, not part of the test
-          }
         });
       });
     });
@@ -345,7 +342,7 @@ describe("getProposalStatus", () => {
         },
       ];
 
-      testCases.forEach(({ description, params, expected }) => {
+      testCases.forEach(({  params, expected }) => {
         expect(
           getProposalStatus({
             ...baseParams,
@@ -375,7 +372,7 @@ describe("getProposalStatus", () => {
         },
       ];
 
-      testCases.forEach(({ description, params, expected }) => {
+      testCases.forEach(({  params, expected }) => {
         expect(
           getProposalStatus({
             ...baseParams,
@@ -406,7 +403,7 @@ describe("getProposalStatus", () => {
         },
       ];
 
-      testCases.forEach(({ description, params, expected }) => {
+      testCases.forEach(({  params, expected }) => {
         expect(
           getProposalStatus({
             ...baseParams,
@@ -447,7 +444,7 @@ describe("getProposalStatus", () => {
         },
       ];
 
-      testCases.forEach(({ description, params, expected }) => {
+      testCases.forEach(({  params, expected }) => {
         expect(
           getProposalStatus({
             ...baseParams,

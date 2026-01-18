@@ -5,7 +5,6 @@ import { ColumnDef } from "@tanstack/react-table";
 import { ChevronDown } from "lucide-react";
 import StatusBadge from "@/components/ui/StatusBadge";
 import LifecycleIndicator from "@/components/ui/LifecycleIndicator";
-import { formatNumber } from "@/helpers";
 import { SortableHeaderButton } from "@/components/SortableHeaderButton";
 import { ProposalRecord } from "@/types";
 

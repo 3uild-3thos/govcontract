@@ -3,7 +3,6 @@
 import { WalletRole, type ProposalRecord } from "@/types";
 import { Fragment, MouseEvent, type MouseEventHandler } from "react";
 import { AppButton } from "@/components/ui/AppButton";
-import { formatNumber } from "@/helpers";
 
 import LifecycleIndicator from "@/components/ui/LifecycleIndicator";
 import StatusBadge from "@/components/ui/StatusBadge";
