@@ -24,314 +24,437 @@ describe("getProposalStatus", () => {
     voting: false,
   };
 
-  describe("finalized proposals", () => {
-    it("should return 'finalized' when finalized is true, regardless of other params", () => {
-      const params: GetProposalStatusParams = {
-        ...baseParams,
-        currentEpoch: 900,
-        clusterSupportLamports: 0,
-        finalized: true,
-        voting: false,
-      };
+  const testSuites = [
+    {
+      describe: "finalized proposals",
+      testCases: [
+        {
+          description: "should return 'finalized' when finalized is true, regardless of other params",
+          params: {
+            currentEpoch: 900,
+            clusterSupportLamports: 0,
+            finalized: true,
+            voting: false,
+          },
+          expected: "finalized" as const,
+        },
+        {
+          description: "should return 'finalized' even if voting flag is true",
+          params: {
+            currentEpoch: 900,
+            clusterSupportLamports: 0,
+            finalized: true,
+            voting: true,
+          },
+          expected: "finalized" as const,
+        },
+      ],
+    },
+    {
+      describe: "during support phase",
+      testCases: [
+        {
+          description: "should return 'supporting' when currentEpoch equals support start epoch (creationEpoch)",
+          params: {
+            currentEpoch: creationEpoch, // epoch 800, support phase starts
+            clusterSupportLamports: 0,
+          },
+          expected: "supporting" as const,
+        },
+        {
+          description: "should return 'supporting' during support phase (epoch 801)",
+          params: {
+            currentEpoch: creationEpoch + 1, // epoch 801, still in support phase
+            clusterSupportLamports: 0,
+          },
+          expected: "supporting" as const,
+        },
+      ],
+    },
+    {
+      describe: "at support end epoch (threshold check)",
+      testCases: [
+        {
+          description: "should return 'failed' when threshold is not met at support end epoch",
+          params: {
+            currentEpoch: creationEpoch + 2, // epoch 802
+            clusterSupportLamports: requiredThresholdLamports - 1, // Just below threshold
+          },
+          expected: "failed" as const,
+        },
+        {
+          description: "should return 'discussion' when threshold is met at support end epoch",
+          params: {
+            currentEpoch: creationEpoch + 2, // epoch 802
+            clusterSupportLamports: requiredThresholdLamports, // Exactly at threshold
+          },
+          expected: "discussion" as const,
+        },
+        {
+          description: "should return 'discussion' when threshold is exceeded at support end epoch",
+          params: {
+            currentEpoch: creationEpoch + 2, // epoch 802
+            clusterSupportLamports: requiredThresholdLamports + 1_000_000, // Above threshold
+          },
+          expected: "discussion" as const,
+        },
+      ],
+    },
+    {
+      describe: "during discussion phase",
+      testCases: [
+        {
+          description: "should return 'discussion' at discussion start epoch (epoch 802) when threshold was met",
+          params: {
+            currentEpoch: creationEpoch + 2, // epoch 802 - threshold check returns discussion if met
+            clusterSupportLamports: requiredThresholdLamports, // Threshold met
+          },
+          expected: "discussion" as const,
+        },
+        {
+          description: "should return 'discussion' during middle of discussion phase (epoch 803)",
+          params: {
+            currentEpoch: creationEpoch + 3, // epoch 803
+            clusterSupportLamports: requiredThresholdLamports, // Threshold was met
+            voting: true, // Threshold was met, so voting flag should be true
+          },
+          expected: "discussion" as const,
+        },
+        {
+          description: "should return 'discussion' at discussion end epoch (epoch 804)",
+          params: {
+            currentEpoch: creationEpoch + 4, // epoch 804
+            clusterSupportLamports: requiredThresholdLamports, // Threshold was met
+            voting: true, // Threshold was met, so voting flag should be true
+          },
+          expected: "discussion" as const,
+        },
+        {
+          description: "should return 'failed' during discussion phase (epoch 803) if threshold was not met (voting flag is false)",
+          params: {
+            currentEpoch: creationEpoch + 3, // epoch 803 - in discussion phase range
+            clusterSupportLamports: requiredThresholdLamports - 1, // Threshold not met
+            voting: false, // On-chain flag indicates threshold was not met
+          },
+          expected: "failed" as const,
+        },
+        {
+          description: "should return 'failed' during discussion phase (epoch 804) if threshold was not met (voting flag is false)",
+          params: {
+            currentEpoch: creationEpoch + 4, // epoch 804 - in discussion phase range
+            clusterSupportLamports: requiredThresholdLamports - 1, // Threshold not met
+            voting: false, // On-chain flag indicates threshold was not met
+          },
+          expected: "failed" as const,
+        },
+      ],
+    },
+    {
+      describe: "snapshot phase",
+      testCases: [
+        {
+          description: "should return 'discussion' at snapshot epoch (epoch 805) when threshold was met",
+          params: {
+            currentEpoch: creationEpoch + 5, // epoch 805
+            clusterSupportLamports: requiredThresholdLamports,
+            voting: true, // Threshold was met
+          },
+          expected: "discussion" as const,
+        },
+      ],
+    },
+    {
+      describe: "past discussion phase - using voting flag",
+      testCases: [
+        {
+          description: "should return 'failed' when voting flag is false after discussion phase (support threshold was not met)",
+          params: {
+            currentEpoch: creationEpoch + 6, // epoch 806
+            clusterSupportLamports: requiredThresholdLamports - 1, // Threshold not met
+            voting: false, // On-chain flag indicates threshold was not met
+          },
+          expected: "failed" as const,
+        },
+        {
+          description: "should return 'failed' when voting flag is false at epoch 807 (support threshold was not met)",
+          params: {
+            currentEpoch: creationEpoch + 7,
+            clusterSupportLamports: requiredThresholdLamports - 1, // Threshold not met
+            voting: false, // On-chain flag indicates threshold was not met
+          },
+          expected: "failed" as const,
+        },
+        {
+          description: "should return 'failed' when voting flag is false at snapshot epoch (epoch 805) if threshold was not met",
+          params: {
+            currentEpoch: creationEpoch + 5, // epoch 805
+            clusterSupportLamports: requiredThresholdLamports - 1, // Threshold not met
+            voting: false, // On-chain flag indicates threshold was not met
+          },
+          expected: "failed" as const,
+        },
+      ],
+    },
+    {
+      describe: "voting phase - with consensusResult",
+      testCases: [
+        {
+          description: "should return 'voting' when voting flag is true, consensusResult exists, and at voting start epoch",
+          params: {
+            currentEpoch: creationEpoch + 6, // epoch 806
+            clusterSupportLamports: requiredThresholdLamports,
+            consensusResult: mockConsensusResult,
+            voting: true,
+          },
+          expected: "voting" as const,
+        },
+        {
+          description: "should return 'voting' when voting flag is true, consensusResult exists, and past voting start epoch",
+          params: {
+            currentEpoch: creationEpoch + 10, // epoch 810
+            clusterSupportLamports: requiredThresholdLamports,
+            consensusResult: mockConsensusResult,
+            voting: true,
+          },
+          expected: "voting" as const,
+        },
+      ],
+    },
+    {
+      describe: "voting phase - without consensusResult (snapshot not ready)",
+      testCases: [
+        {
+          description: "should return 'discussion' when voting flag is true but consensusResult is undefined at voting start epoch",
+          params: {
+            currentEpoch: creationEpoch + 6, // epoch 806
+            clusterSupportLamports: requiredThresholdLamports,
+            consensusResult: undefined,
+            voting: true,
+          },
+          expected: "discussion" as const,
+        },
+        {
+          description: "should return 'discussion' when voting flag is true but consensusResult is undefined past voting start epoch",
+          params: {
+            currentEpoch: creationEpoch + 10,
+            clusterSupportLamports: requiredThresholdLamports,
+            consensusResult: undefined,
+            voting: true,
+          },
+          expected: "discussion" as const,
+        },
+      ],
+    },
+    {
+      describe: "edge cases",
+      testCases: [
+        {
+          description: "should handle zero total staked lamports",
+          params: {
+            currentEpoch: creationEpoch + 2, // epoch 802
+            totalStakedLamports: 0,
+            clusterSupportLamports: 0,
+          },
+          expected: "discussion" as const,
+          note: "With zero total stake, threshold is 0, so any support should pass",
+        },
+        {
+          description: "should handle very large epoch numbers",
+          params: {
+            currentEpoch: creationEpoch + 1000,
+            clusterSupportLamports: requiredThresholdLamports,
+            consensusResult: mockConsensusResult,
+            voting: true, // Threshold was met
+          },
+          expected: "voting" as const,
+        },
+        {
+          description: "should return 'supporting' as fallback for epoch 801 (during support phase)",
+          params: {
+            currentEpoch: creationEpoch + 1, // epoch 801
+            clusterSupportLamports: requiredThresholdLamports,
+            voting: false,
+          },
+          expected: "supporting" as const,
+          note: "Epoch 801 is during support phase, falls through to fallback",
+        },
+      ],
+    },
+    {
+      describe: "threshold calculation",
+      testCases: [
+        {
+          description: "should correctly calculate threshold as 10% of total staked - just below threshold",
+          params: {
+            currentEpoch: creationEpoch + 2,
+            totalStakedLamports: 1_000_000_000, // 1M SOL
+            clusterSupportLamports: 100_000_000 - 1, // Just below 10% = 100k SOL
+          },
+          expected: "failed" as const,
+        },
+        {
+          description: "should correctly calculate threshold as 10% of total staked - exactly at threshold",
+          params: {
+            currentEpoch: creationEpoch + 2,
+            totalStakedLamports: 1_000_000_000, // 1M SOL
+            clusterSupportLamports: 100_000_000, // Exactly 10% = 100k SOL
+          },
+          expected: "discussion" as const,
+        },
+      ],
+    },
+  ];
 
-      expect(getProposalStatus(params)).toBe("finalized");
-    });
-
-    it("should return 'finalized' even if voting flag is true", () => {
-      const params: GetProposalStatusParams = {
-        ...baseParams,
-        currentEpoch: 900,
-        clusterSupportLamports: 0,
-        finalized: true,
-        voting: true,
-      };
-
-      expect(getProposalStatus(params)).toBe("finalized");
+  // Iterate over test suites to create describe blocks and tests
+  testSuites.forEach(({ describe: describeTitle, testCases }) => {
+    describe(describeTitle, () => {
+      testCases.forEach(({ description, params, expected, note }) => {
+        it(description, () => {
+          const result = getProposalStatus({
+            ...baseParams,
+            ...params,
+          });
+          expect(result).toBe(expected);
+          if (note) {
+            // Note is just for documentation, not part of the test
+          }
+        });
+      });
     });
   });
 
-  describe("before support phase", () => {
-    it("should return 'supporting' when currentEpoch is before support start", () => {
-      const params: GetProposalStatusParams = {
-        ...baseParams,
-        currentEpoch: creationEpoch, // epoch 800, support starts at 801
-        clusterSupportLamports: 0,
-      };
-
-      expect(getProposalStatus(params)).toBe("supporting");
-    });
-
-    it("should return 'supporting' when currentEpoch is less than creationEpoch + 1", () => {
-      const params: GetProposalStatusParams = {
-        ...baseParams,
-        currentEpoch: creationEpoch - 1,
-        clusterSupportLamports: 0,
-      };
-
-      expect(getProposalStatus(params)).toBe("supporting");
-    });
-  });
-
-  describe("during support phase", () => {
-    it("should return 'supporting' when currentEpoch equals support start epoch", () => {
-      const params: GetProposalStatusParams = {
-        ...baseParams,
-        currentEpoch: creationEpoch + 1, // epoch 801
-        clusterSupportLamports: 0,
-      };
-
-      expect(getProposalStatus(params)).toBe("supporting");
-    });
-  });
-
-  describe("at support end epoch (threshold check)", () => {
-    it("should return 'failed' when threshold is not met at support end epoch", () => {
-      const params: GetProposalStatusParams = {
-        ...baseParams,
-        currentEpoch: creationEpoch + 2, // epoch 802
-        clusterSupportLamports: requiredThresholdLamports - 1, // Just below threshold
-      };
-
-      expect(getProposalStatus(params)).toBe("failed");
-    });
-
-    it("should return 'discussion' when threshold is met at support end epoch", () => {
-      const params: GetProposalStatusParams = {
-        ...baseParams,
-        currentEpoch: creationEpoch + 2, // epoch 802
-        clusterSupportLamports: requiredThresholdLamports, // Exactly at threshold
-      };
-
-      expect(getProposalStatus(params)).toBe("discussion");
-    });
-
-    it("should return 'discussion' when threshold is exceeded at support end epoch", () => {
-      const params: GetProposalStatusParams = {
-        ...baseParams,
-        currentEpoch: creationEpoch + 2, // epoch 802
-        clusterSupportLamports: requiredThresholdLamports + 1_000_000, // Above threshold
-      };
-
-      expect(getProposalStatus(params)).toBe("discussion");
-    });
-  });
-
-  describe("during discussion phase", () => {
-    it("should return 'discussion' at discussion start epoch (epoch 802)", () => {
-      const params: GetProposalStatusParams = {
-        ...baseParams,
-        currentEpoch: creationEpoch + 2, // epoch 802
-        clusterSupportLamports: requiredThresholdLamports, // Threshold met
-      };
-
-      expect(getProposalStatus(params)).toBe("discussion");
-    });
-
-    it("should return 'discussion' during middle of discussion phase (epoch 803)", () => {
-      const params: GetProposalStatusParams = {
-        ...baseParams,
-        currentEpoch: creationEpoch + 3, // epoch 803
-        clusterSupportLamports: requiredThresholdLamports,
-      };
-
-      expect(getProposalStatus(params)).toBe("discussion");
-    });
-
-    it("should return 'discussion' at discussion end epoch (epoch 804)", () => {
-      const params: GetProposalStatusParams = {
-        ...baseParams,
-        currentEpoch: creationEpoch + 4, // epoch 804
-        clusterSupportLamports: requiredThresholdLamports,
-      };
-
-      expect(getProposalStatus(params)).toBe("discussion");
-    });
-  });
-
-  describe("snapshot phase", () => {
-    it("should return 'discussion' at snapshot epoch (epoch 805)", () => {
-      const params: GetProposalStatusParams = {
-        ...baseParams,
-        currentEpoch: creationEpoch + 5, // epoch 805
-        clusterSupportLamports: requiredThresholdLamports,
-        voting: true, // Threshold was met
-      };
-
-      expect(getProposalStatus(params)).toBe("discussion");
-    });
-  });
-
-  describe("past discussion phase - using voting flag", () => {
-    it("should return 'failed' when voting flag is false after discussion phase", () => {
-      const params: GetProposalStatusParams = {
-        ...baseParams,
-        currentEpoch: creationEpoch + 6, // epoch 806
-        clusterSupportLamports: 0, // Threshold not met
-        voting: false, // On-chain flag indicates not voting
-      };
-
-      expect(getProposalStatus(params)).toBe("failed");
-    });
-
-    it("should return 'failed' when voting flag is false at epoch 807", () => {
-      const params: GetProposalStatusParams = {
-        ...baseParams,
-        currentEpoch: creationEpoch + 7,
-        clusterSupportLamports: 0,
-        voting: false,
-      };
-
-      expect(getProposalStatus(params)).toBe("failed");
-    });
-  });
-
-  describe("voting phase - with consensusResult", () => {
-    it("should return 'voting' when voting flag is true, consensusResult exists, and at voting start epoch", () => {
-      const params: GetProposalStatusParams = {
-        ...baseParams,
-        currentEpoch: creationEpoch + 6, // epoch 806
-        clusterSupportLamports: requiredThresholdLamports,
-        consensusResult: mockConsensusResult,
-        voting: true,
-      };
-
-      expect(getProposalStatus(params)).toBe("voting");
-    });
-
-    it("should return 'voting' when voting flag is true, consensusResult exists, and past voting start epoch", () => {
-      const params: GetProposalStatusParams = {
-        ...baseParams,
-        currentEpoch: creationEpoch + 10, // epoch 810
-        clusterSupportLamports: requiredThresholdLamports,
-        consensusResult: mockConsensusResult,
-        voting: true,
-      };
-
-      expect(getProposalStatus(params)).toBe("voting");
-    });
-  });
-
-  describe("voting phase - without consensusResult (snapshot not ready)", () => {
-    it("should return 'discussion' when voting flag is true but consensusResult is undefined at voting start epoch", () => {
-      const params: GetProposalStatusParams = {
-        ...baseParams,
-        currentEpoch: creationEpoch + 6, // epoch 806
-        clusterSupportLamports: requiredThresholdLamports,
-        consensusResult: undefined,
-        voting: true,
-      };
-
-      expect(getProposalStatus(params)).toBe("discussion");
-    });
-
-    it("should return 'discussion' when voting flag is true but consensusResult is undefined past voting start epoch", () => {
-      const params: GetProposalStatusParams = {
-        ...baseParams,
-        currentEpoch: creationEpoch + 10,
-        clusterSupportLamports: requiredThresholdLamports,
-        consensusResult: undefined,
-        voting: true,
-      };
-
-      expect(getProposalStatus(params)).toBe("discussion");
-    });
-  });
-
-  describe("edge cases", () => {
-    it("should handle zero total staked lamports", () => {
-      const params: GetProposalStatusParams = {
-        ...baseParams,
-        currentEpoch: creationEpoch + 2, // epoch 802
-        totalStakedLamports: 0,
-        clusterSupportLamports: 0,
-      };
-
-      // With zero total stake, threshold is 0, so any support should pass
-      expect(getProposalStatus(params)).toBe("discussion");
-    });
-
-    it("should handle very large epoch numbers", () => {
-      const params: GetProposalStatusParams = {
-        ...baseParams,
-        currentEpoch: creationEpoch + 1000,
-        clusterSupportLamports: requiredThresholdLamports,
-        consensusResult: mockConsensusResult,
-        voting: true,
-      };
-
-      expect(getProposalStatus(params)).toBe("voting");
-    });
-
-    it("should return 'supporting' as fallback for unexpected epoch ranges", () => {
-      // Test a realistic edge case at support start epoch
-      const params: GetProposalStatusParams = {
-        ...baseParams,
-        currentEpoch: creationEpoch + 1,
-        clusterSupportLamports: requiredThresholdLamports,
-        voting: false,
-      };
-
-      expect(getProposalStatus(params)).toBe("supporting");
-    });
-  });
-
-  describe("threshold calculation", () => {
-    it("should correctly calculate threshold as 10% of total staked", () => {
-      const testTotalStaked = 1_000_000_000; // 1M SOL
-      const expectedThreshold = 100_000_000; // 10% = 100k SOL
-
-      const paramsJustBelow: GetProposalStatusParams = {
-        ...baseParams,
-        currentEpoch: creationEpoch + 2,
-        totalStakedLamports: testTotalStaked,
-        clusterSupportLamports: expectedThreshold - 1,
-      };
-
-      const paramsJustAbove: GetProposalStatusParams = {
-        ...baseParams,
-        currentEpoch: creationEpoch + 2,
-        totalStakedLamports: testTotalStaked,
-        clusterSupportLamports: expectedThreshold,
-      };
-
-      expect(getProposalStatus(paramsJustBelow)).toBe("failed");
-      expect(getProposalStatus(paramsJustAbove)).toBe("discussion");
-    });
-  });
-
+  // Phase transitions tests (these need multiple assertions per test)
   describe("phase transitions", () => {
     it("should transition correctly from supporting to discussion when threshold is met", () => {
-      const supportPhase: GetProposalStatusParams = {
-        ...baseParams,
-        currentEpoch: creationEpoch + 1,
-        clusterSupportLamports: requiredThresholdLamports,
-      };
+      const testCases = [
+        {
+          description: "support phase",
+          params: {
+            currentEpoch: creationEpoch, // epoch 800 - support phase
+            clusterSupportLamports: requiredThresholdLamports,
+          },
+          expected: "supporting" as const,
+        },
+        {
+          description: "threshold check",
+          params: {
+            currentEpoch: creationEpoch + 2, // epoch 802 - threshold check
+            clusterSupportLamports: requiredThresholdLamports,
+          },
+          expected: "discussion" as const,
+        },
+      ];
 
-      const thresholdCheck: GetProposalStatusParams = {
-        ...baseParams,
-        currentEpoch: creationEpoch + 2,
-        clusterSupportLamports: requiredThresholdLamports,
-      };
-
-      expect(getProposalStatus(supportPhase)).toBe("supporting");
-      expect(getProposalStatus(thresholdCheck)).toBe("discussion");
+      testCases.forEach(({ description, params, expected }) => {
+        expect(
+          getProposalStatus({
+            ...baseParams,
+            ...params,
+          })
+        ).toBe(expected);
+      });
     });
 
     it("should transition correctly from supporting to failed when threshold is not met", () => {
-      const supportPhase: GetProposalStatusParams = {
-        ...baseParams,
-        currentEpoch: creationEpoch + 1,
-        clusterSupportLamports: requiredThresholdLamports - 1,
-      };
+      const testCases = [
+        {
+          description: "support phase",
+          params: {
+            currentEpoch: creationEpoch, // epoch 800 - support phase
+            clusterSupportLamports: requiredThresholdLamports - 1,
+          },
+          expected: "supporting" as const,
+        },
+        {
+          description: "threshold check",
+          params: {
+            currentEpoch: creationEpoch + 2, // epoch 802 - threshold check
+            clusterSupportLamports: requiredThresholdLamports - 1,
+          },
+          expected: "failed" as const,
+        },
+      ];
 
-      const thresholdCheck: GetProposalStatusParams = {
-        ...baseParams,
-        currentEpoch: creationEpoch + 2,
-        clusterSupportLamports: requiredThresholdLamports - 1,
-      };
+      testCases.forEach(({ description, params, expected }) => {
+        expect(
+          getProposalStatus({
+            ...baseParams,
+            ...params,
+          })
+        ).toBe(expected);
+      });
+    });
 
-      expect(getProposalStatus(supportPhase)).toBe("supporting");
-      expect(getProposalStatus(thresholdCheck)).toBe("failed");
+    it("should remain failed after support phase ends if threshold was not met", () => {
+      const testCases = [
+        {
+          description: "threshold check",
+          params: {
+            currentEpoch: creationEpoch + 2, // epoch 802 - threshold check
+            clusterSupportLamports: requiredThresholdLamports - 1,
+          },
+          expected: "failed" as const,
+        },
+        {
+          description: "after support phase",
+          params: {
+            currentEpoch: creationEpoch + 6, // epoch 806 - past discussion phase
+            clusterSupportLamports: requiredThresholdLamports - 1,
+            voting: false, // Threshold was not met
+          },
+          expected: "failed" as const,
+        },
+      ];
+
+      testCases.forEach(({ description, params, expected }) => {
+        expect(
+          getProposalStatus({
+            ...baseParams,
+            ...params,
+          })
+        ).toBe(expected);
+      });
+    });
+
+    it("should progress to discussion and voting when threshold was met", () => {
+      const testCases = [
+        {
+          description: "threshold check",
+          params: {
+            currentEpoch: creationEpoch + 2, // epoch 802 - threshold check
+            clusterSupportLamports: requiredThresholdLamports,
+          },
+          expected: "discussion" as const,
+        },
+        {
+          description: "discussion phase",
+          params: {
+            currentEpoch: creationEpoch + 3, // epoch 803 - discussion phase
+            clusterSupportLamports: requiredThresholdLamports,
+            voting: true, // Threshold was met
+          },
+          expected: "discussion" as const,
+        },
+        {
+          description: "voting phase",
+          params: {
+            currentEpoch: creationEpoch + 6, // epoch 806 - voting phase
+            clusterSupportLamports: requiredThresholdLamports,
+            consensusResult: mockConsensusResult,
+            voting: true, // Threshold was met
+          },
+          expected: "voting" as const,
+        },
+      ];
+
+      testCases.forEach(({ description, params, expected }) => {
+        expect(
+          getProposalStatus({
+            ...baseParams,
+            ...params,
+          })
+        ).toBe(expected);
+      });
     });
   });
 });

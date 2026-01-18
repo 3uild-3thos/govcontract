@@ -33,7 +33,6 @@ export type ProposalRecord = {
 
   // Requirements & Metrics
   quorumPercent: number; // Required quorum (e.g., 80)
-  solRequired: number; // In SOL (not lamports)
   proposerStakeWeightBp: number; // Basis points
 
   // Status

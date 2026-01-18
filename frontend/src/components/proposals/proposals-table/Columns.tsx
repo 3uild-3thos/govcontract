@@ -50,15 +50,6 @@ export const columns: ColumnDef<ProposalRecord>[] = [
     ),
   },
   {
-    accessorKey: "solRequired",
-    header: "SOL Required",
-    cell: ({ getValue }) => (
-      <span className="text-sm font-medium text-white/60">
-        {formatNumber(getValue<number>())}
-      </span>
-    ),
-  },
-  {
     accessorKey: "startEpoch",
     header: ({ column }) => (
       <SortableHeaderButton column={column} label="Voting Start" />

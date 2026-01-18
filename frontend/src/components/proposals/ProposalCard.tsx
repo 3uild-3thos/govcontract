@@ -176,7 +176,6 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
   const {
     status,
     quorumPercent,
-    solRequired,
     title,
     simd,
     publicKey,
@@ -191,7 +190,6 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
 
   const detailItems: VotingDetailItem[] = [
     { label: "Quorum", value: `${quorumPercent}%` },
-    { label: "Required", value: `${formatNumber(solRequired)} SOL` },
     { label: "Voting Ends", value: votingStatusValue },
   ];
 

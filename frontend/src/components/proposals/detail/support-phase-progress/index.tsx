@@ -279,7 +279,7 @@ export function SupportPhaseProgress({ proposal }: SupportPhaseProgressProps) {
                 isLoading ? (
                   <div className="my-1 w-14 h-6 animate-pulse bg-white/10 rounded-full" />
                 ) : (
-                  `${stats.participationPercent.toFixed(1)}%`
+                  `${stats.participationPercent.toFixed(1) || 0}%`
                 )
               }
               badge={
