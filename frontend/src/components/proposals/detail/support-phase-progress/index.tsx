@@ -15,6 +15,7 @@ import { NotificationButton } from "./NotificationButton";
 import { PhaseStatusBadge } from "./PhaseStatusBadge";
 import { SupportDonut } from "./SupportDonut";
 import { StatBadge, StatCard } from "./StatCard";
+import { SUPPORT_EPOCHS } from "@/lib/proposals";
 
 // ============================================================================
 // Configuration - These will be replaced with real data later
@@ -38,9 +39,8 @@ export function SupportPhaseProgress({ proposal }: SupportPhaseProgressProps) {
   const hasEnded =
     proposal.status === "failed" || proposal.status === "finalized";
 
-  // Calculate target epoch: creationEpoch + 3
-  // 3 epochs for discussion, so end epoch is creationEpoch + 4
-  const targetEpoch = proposal.creationEpoch + 4;
+  // Calculate target epoch: creationEpoch + SUPPORT_EPOCHS
+  const targetEpoch = proposal.creationEpoch + SUPPORT_EPOCHS;
 
   const { data: supportEndsAt, isLoading: isLoadingEpochDate } =
     useEpochToDate(targetEpoch);

@@ -12,6 +12,11 @@ export interface GetProposalStatusParams {
   voting: boolean;
 }
 
+export const SUPPORT_EPOCHS = 2;
+export const DISCUSSION_EPOCHS = 2;
+export const SNAPSHOT_EPOCHS = 1;
+export const VOTING_EPOCHS = 1;
+
 /**
  * Determines proposal status based on epoch-based rules:
  *
@@ -46,11 +51,11 @@ export const getProposalStatus = ({
   }
 
   const supportStartEpoch = creationEpoch; // epoch 800 for creationEpoch 800
-  const supportEndEpoch = creationEpoch + 2; // epoch 802 for creationEpoch 800 (threshold check)
-  const discussionStartEpoch = creationEpoch + 2; // epoch 802 for creationEpoch 800
-  const discussionEndEpoch = creationEpoch + 4; // epoch 804 for creationEpoch 800
-  const snapshotEpoch = creationEpoch + 5; // epoch 805 for creationEpoch 800
-  const votingStartEpoch = creationEpoch + 6; // epoch 806 for creationEpoch 800
+  const supportEndEpoch = creationEpoch + SUPPORT_EPOCHS; // epoch 802 for creationEpoch 800 (threshold check)
+  const discussionStartEpoch = creationEpoch + SUPPORT_EPOCHS; // epoch 802 for creationEpoch 800
+  const discussionEndEpoch = creationEpoch + SUPPORT_EPOCHS + DISCUSSION_EPOCHS; // epoch 804 for creationEpoch 800
+  const snapshotEpoch = creationEpoch + SUPPORT_EPOCHS + DISCUSSION_EPOCHS + SNAPSHOT_EPOCHS; // epoch 805 for creationEpoch 800
+  const votingStartEpoch = creationEpoch + SUPPORT_EPOCHS + DISCUSSION_EPOCHS + SNAPSHOT_EPOCHS + VOTING_EPOCHS; // epoch 806 for creationEpoch 800
 
   // Before support phase starts
   if (currentEpoch < supportStartEpoch) {
