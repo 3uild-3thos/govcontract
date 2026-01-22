@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import { getProposalDetailPagePath } from "@/helpers/proposalPage";
 
 const VOTE_STATE_LABEL: Record<ProposalRecord["status"], string> = {
-  supporting: "Not started",
+  supporting: "Supporting",
   voting: "In Progress",
   finalized: "Finished",
   failed: "Failed",
