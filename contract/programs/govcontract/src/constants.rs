@@ -3,7 +3,7 @@ pub const MAX_TITLE_LENGTH: usize = 50;
 pub const MAX_DESCRIPTION_LENGTH: usize = 250;
 
 // Voting limits
-pub const MAX_SUPPORT_EPOCHS: u64 = 1; // Maximum 1 epochs for support phase
+pub const MAX_SUPPORT_EPOCHS: u64 = 0; // Maximum 1 epochs for support phase
 
 pub const BASIS_POINTS_MAX: u64 = 10_000;
 
