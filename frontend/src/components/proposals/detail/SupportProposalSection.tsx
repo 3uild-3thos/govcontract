@@ -3,6 +3,7 @@ import { SupportButton } from "../SupportButton";
 import { AppButton } from "@/components/ui/AppButton";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { SUPPORT_THRESHOLD_PERCENT } from "./support-phase-progress";
 
 interface SupportProposalProps {
   proposalId?: string;
@@ -17,7 +18,7 @@ const VARIANT_CONFIG = {
   supporting: {
     title: "Support this proposal",
     message:
-      "The support phase requires 15% off total validator stake expressing support for the proposal before it can move on to discussion and voting phase",
+      `The support phase requires ${SUPPORT_THRESHOLD_PERCENT}% off total validator stake expressing support for the proposal before it can move on to discussion and voting phase`,
     showSupportButton: true,
     showCheckOtherButton: false,
   },

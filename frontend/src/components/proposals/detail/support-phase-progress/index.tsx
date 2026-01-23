@@ -21,8 +21,8 @@ import { SUPPORT_EPOCHS } from "@/lib/proposals";
 // Configuration - These will be replaced with real data later
 // ============================================================================
 
-/** Support threshold as percentage of total staked SOL (e.g., 10 = 10%) */
-export const SUPPORT_THRESHOLD_PERCENT = 10;
+/** Support threshold as percentage of total staked SOL (e.g., 15 = 15%) */
+export const SUPPORT_THRESHOLD_PERCENT = 15;
 
 /** Mock total active staked SOL across the network (in lamports) */
 // const MOCK_TOTAL_STAKED_LAMPORTS = 316_010_000 * LAMPORTS_PER_SOL; // 316.01M SOL

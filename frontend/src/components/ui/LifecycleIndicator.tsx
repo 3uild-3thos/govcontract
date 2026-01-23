@@ -9,6 +9,7 @@ import {
 import type { ProposalStatus } from "@/types";
 import { Circle, Loader, X } from "lucide-react";
 import { FAILED_PHASE_DETAIL } from "../proposals/detail/phase-timeline/constants";
+import { SUPPORT_THRESHOLD_PERCENT } from "../proposals/detail/support-phase-progress";
 
 const STAGE_ORDER: ProposalStatus[] = [
   "supporting",
@@ -27,7 +28,7 @@ const STAGE_LABEL: Record<ProposalStatus, string> = {
 
 const STAGE_DESCRIPTION: Record<ProposalStatus, string> = {
   supporting:
-    "The support phase requires 15% off total validator stake expressing support for the proposal before it can move on to discussion and voting phase.",
+    `The support phase requires ${SUPPORT_THRESHOLD_PERCENT}% off total validator stake expressing support for the proposal before it can move on to discussion and voting phase.`,
   discussion:
     "The discussion phase covers the 4-5 epoch period while the NCN is created. Voting begins only after this process completes.",
   voting:

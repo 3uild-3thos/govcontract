@@ -23,7 +23,7 @@ export const VOTING_EPOCHS = 1;
  * Example with creationEpoch = 800:
  * - Epoch 800: "supporting" (before support phase)
  * - Epoch 801: "supporting" (support phase active - time between epoch 800 ending and 802 starting)
- * - Epoch 802: Check 10% threshold at start of epoch
+ * - Epoch 802: Check 15% threshold at start of epoch
  *   - If NOT met: "failed"
  *   - If met: "discussion" (discussion phase starts)
  * - Epochs 802-804: "discussion" (discussion phase - from start of 802 to end of 804/start of 805)
