@@ -22,7 +22,9 @@ import { SUPPORT_EPOCHS } from "@/lib/proposals";
 // ============================================================================
 
 /** Support threshold as percentage of total staked SOL (e.g., 15 = 15%) */
-export const SUPPORT_THRESHOLD_PERCENT = 15;
+
+// TODO: testnet is 10%, mainnet is 15% - create a getter depending on the endpoint type
+export const SUPPORT_THRESHOLD_PERCENT = 10;
 
 /** Mock total active staked SOL across the network (in lamports) */
 // const MOCK_TOTAL_STAKED_LAMPORTS = 316_010_000 * LAMPORTS_PER_SOL; // 316.01M SOL
@@ -47,7 +49,7 @@ export function SupportPhaseProgress({ proposal }: SupportPhaseProgressProps) {
 
   const supportFilters = buildSupportFilters(
     proposal.publicKey.toBase58(),
-    null
+    null,
   );
 
   const fetchSupportAccountsEnabled = supportFilters.length > 0; // at least one filter is required
@@ -61,7 +63,7 @@ export function SupportPhaseProgress({ proposal }: SupportPhaseProgressProps) {
   const numOfValidators = useMemo(() => validators?.length || 0, [validators]);
   const validatorsStake = useMemo(
     () => validators?.reduce((acc, curr) => acc + curr.activated_stake, 0) || 0,
-    [validators]
+    [validators],
   );
 
   const isLoading =
@@ -98,7 +100,7 @@ export function SupportPhaseProgress({ proposal }: SupportPhaseProgressProps) {
     // Remaining SOL needed (0 if threshold met)
     const remainingLamports = Math.max(
       0,
-      requiredThresholdLamports - currentSupportLamports
+      requiredThresholdLamports - currentSupportLamports,
     );
 
     // Is threshold met?
@@ -134,7 +136,7 @@ export function SupportPhaseProgress({ proposal }: SupportPhaseProgressProps) {
   const bannerMessage = stats.isThresholdMet
     ? "Support threshold reached! Proposal advancing to next phase."
     : `This proposal is nearing its support threshold. Only ${formatSOL(
-        stats.remainingLamports
+        stats.remainingLamports,
       )} SOL needed!`;
 
   // Format end date with time
@@ -296,7 +298,7 @@ export function SupportPhaseProgress({ proposal }: SupportPhaseProgressProps) {
                   <div className="my-1 w-20 h-2 animate-pulse bg-white/10 rounded-full" />
                 ) : (
                   `${formatSOL(
-                    stats.avgStakePerValidator
+                    stats.avgStakePerValidator,
                   )} SOL avg per validator`
                 )
               }
