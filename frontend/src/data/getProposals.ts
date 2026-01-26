@@ -18,7 +18,7 @@ export const getProposals = async (
       }
     | undefined,
   epochInfo: EpochInfo,
-  voteAccountsData: RawVoteAccountsData
+  voteAccountsData: RawVoteAccountsData,
 ): Promise<ProposalRecord[]> => {
   const program = createProgramWitDummyWallet(endpoint);
 
@@ -32,13 +32,13 @@ export const getProposals = async (
   ];
   const totalStakedLamports = allVotes.reduce(
     (sum, vote) => sum + (vote.activatedStake || 0),
-    0
+    0,
   );
 
   const currentEpoch = epochInfo.epoch;
 
   let data = proposalAccs.map((acc, index) =>
-    mapProposalDto(acc, index, currentEpoch, totalStakedLamports)
+    mapProposalDto(acc, index, currentEpoch, totalStakedLamports),
   );
 
   if (filters) {
@@ -47,7 +47,7 @@ export const getProposals = async (
     }
     if (filters.finalized !== undefined) {
       data = data.filter(
-        (proposal) => proposal.finalized === filters.finalized
+        (proposal) => proposal.finalized === filters.finalized,
       );
     }
   }
@@ -61,11 +61,11 @@ export function mapProposalDto(
   rawAccount: RawProposalAccount,
   index: number,
   currentEpoch: number,
-  totalStakedLamports: number
+  totalStakedLamports: number,
 ): ProposalRecord {
   const raw = rawAccount.account;
   const creationEpoch = raw.creationEpoch.toNumber();
-  const clusterSupportLamports = raw.clusterSupportLamports?.toNumber() || 0;
+  const clusterSupportLamports = +raw.clusterSupportLamports?.toString() || 0;
   const consensusResult = rawAccount.account.consensusResult || undefined;
   const finalized = raw.finalized;
 
