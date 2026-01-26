@@ -9,7 +9,7 @@ export const useProposals = (filters?: {
   voting?: boolean;
   finalized?: boolean;
 }) => {
-  const { endpointUrl: endpoint } = useEndpoint();
+  const { endpointUrl: endpoint, endpointType } = useEndpoint();
   const { data: epochData, isLoading: isLoadingEpochInfo } = useEpochInfo();
   const { data: voteAccountsData, isLoading: isLoadingVoteAccounts } =
     useRawVoteAccounts();
@@ -33,7 +33,8 @@ export const useProposals = (filters?: {
         endpoint,
         filters,
         epochData.epochInfo,
-        voteAccountsData
+        voteAccountsData,
+        endpointType
       );
     },
     enabled: !!epochData && !!voteAccountsData,

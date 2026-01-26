@@ -11,11 +11,12 @@ import {
   useSupportAccounts,
   useEpochToDate,
 } from "@/hooks";
+import { useEndpoint } from "@/contexts/EndpointContext";
+import { getEpochConstants } from "@/lib/proposals";
 import { NotificationButton } from "./NotificationButton";
 import { PhaseStatusBadge } from "./PhaseStatusBadge";
 import { SupportDonut } from "./SupportDonut";
 import { StatBadge, StatCard } from "./StatCard";
-import { SUPPORT_EPOCHS } from "@/lib/proposals";
 
 // ============================================================================
 // Configuration - These will be replaced with real data later
@@ -38,11 +39,13 @@ interface SupportPhaseProgressProps {
 
 export function SupportPhaseProgress({ proposal }: SupportPhaseProgressProps) {
   const mounted = useMounted();
+  const { endpointType } = useEndpoint();
+  const epochs = getEpochConstants(endpointType);
   const hasEnded =
     proposal.status === "failed" || proposal.status === "finalized";
 
   // Calculate target epoch: creationEpoch + SUPPORT_EPOCHS
-  const targetEpoch = proposal.creationEpoch + SUPPORT_EPOCHS;
+  const targetEpoch = proposal.creationEpoch + epochs.SUPPORT_EPOCHS;
 
   const { data: supportEndsAt, isLoading: isLoadingEpochDate } =
     useEpochToDate(targetEpoch);

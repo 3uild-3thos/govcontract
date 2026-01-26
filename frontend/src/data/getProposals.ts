@@ -2,6 +2,7 @@ import { createProgramWitDummyWallet } from "@/chain";
 import { getSimd } from "@/hooks";
 import { getProposalStatus } from "@/lib/proposals";
 import type { ProposalRecord, RawProposalAccount } from "@/types";
+import type { RPCEndpoint } from "@/types";
 import { EpochInfo, VoteAccountInfo } from "@solana/web3.js";
 
 export interface RawVoteAccountsData {
@@ -19,6 +20,7 @@ export const getProposals = async (
     | undefined,
   epochInfo: EpochInfo,
   voteAccountsData: RawVoteAccountsData,
+  endpointType?: RPCEndpoint,
 ): Promise<ProposalRecord[]> => {
   const program = createProgramWitDummyWallet(endpoint);
 
@@ -38,7 +40,7 @@ export const getProposals = async (
   const currentEpoch = epochInfo.epoch;
 
   let data = proposalAccs.map((acc, index) =>
-    mapProposalDto(acc, index, currentEpoch, totalStakedLamports),
+    mapProposalDto(acc, index, currentEpoch, totalStakedLamports, endpointType),
   );
 
   if (filters) {
@@ -62,21 +64,26 @@ export function mapProposalDto(
   index: number,
   currentEpoch: number,
   totalStakedLamports: number,
+  endpointType?: RPCEndpoint,
 ): ProposalRecord {
   const raw = rawAccount.account;
   const creationEpoch = raw.creationEpoch.toNumber();
+  const startEpoch = raw.startEpoch.toNumber();
+
   const clusterSupportLamports = +raw.clusterSupportLamports?.toString() || 0;
   const consensusResult = rawAccount.account.consensusResult || undefined;
   const finalized = raw.finalized;
 
   const status = getProposalStatus({
     creationEpoch,
+    startEpoch,
     currentEpoch,
     clusterSupportLamports,
     totalStakedLamports,
     consensusResult,
     finalized,
     voting: raw.voting,
+    endpointType,
   });
 
   const simd = getSimd(raw.description);
@@ -90,7 +97,7 @@ export function mapProposalDto(
     author: raw.author.toBase58(),
 
     creationEpoch,
-    startEpoch: raw.startEpoch.toNumber(),
+    startEpoch,
     endEpoch: raw.endEpoch.toNumber(),
     creationTimestamp: raw.creationTimestamp?.toNumber() || 0,
 
