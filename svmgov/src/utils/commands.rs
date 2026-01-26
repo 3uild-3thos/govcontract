@@ -89,6 +89,7 @@ fn print_proposal_detail(proposal_id: &str, proposal: &Proposal) {
     let against_sol = proposal.against_votes_lamports as f64 / 1_000_000_000.0;
     let abstain_sol = proposal.abstain_votes_lamports as f64 / 1_000_000_000.0;
     let cluster_support_sol = proposal.cluster_support_lamports as f64 / 1_000_000_000.0;
+    println!("{:?}", proposal.cluster_support_lamports);
     let proposer_stake_bp = proposal.proposer_stake_weight_bp as f64 / 100.0;
 
     let status = if proposal.finalized {
