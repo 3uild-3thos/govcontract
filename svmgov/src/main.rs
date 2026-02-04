@@ -199,6 +199,30 @@ enum Commands {
     },
 
     #[command(
+        about = "List all proposals",
+        long_about = "This command retrieves and displays all governance proposals from the Solana Validator Governance program. \
+                      An optional RPC URL can be provided to connect to the chain; otherwise, a default URL is used.\n\n\
+                      Examples:\n\
+                      $ svmgov list-proposals\n\
+                      $ svmgov list-proposals --status active\n\
+                      $ svmgov list-proposals --limit 5 --json true\n\
+                      $ svmgov --rpc-url https://api.mainnet-beta.solana.com list-proposals"
+    )]
+    ListProposals {
+        /// Filter proposals by status: active (voting), finalized, or support
+        #[arg(long, help = "Filter by status: active, finalized, or support")]
+        status: Option<String>,
+
+        /// Limit the number of proposals to display
+        #[arg(long, help = "Limit the number of proposals to display")]
+        limit: Option<usize>,
+
+        /// Output results in JSON format
+        #[arg(long, help = "Output results in JSON format (use --json or --json true)", num_args = 0..=1, default_missing_value = "true")]
+        json: Option<String>,
+    },
+
+    #[command(
         about = "Initialize the proposal index pda",
         long_about = "This command allows anyone to initialize the proposal index pda which will follow proposal creation \
                       An optional RPC URL can be provided to connect to the chain.\n\n\
@@ -460,6 +484,20 @@ async fn handle_command(cli: Cli) -> Result<()> {
         }
         Commands::Proposal { proposal_id } => {
             commands::get_proposal(cli.rpc_url.clone(), proposal_id).await?;
+        }
+        Commands::ListProposals {
+            status,
+            limit,
+            json,
+        } => {
+            let json_bool = json.as_ref().map(|s| s.parse::<bool>().unwrap_or(true)).unwrap_or(false);
+            commands::list_proposals(
+                cli.rpc_url.clone(),
+                status.clone(),
+                *limit,
+                json_bool,
+            )
+            .await?;
         }
         Commands::InitIndex {} => {
             instructions::initialize_index(cli.identity_keypair, cli.rpc_url).await?;
