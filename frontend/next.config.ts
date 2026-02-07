@@ -1,5 +1,6 @@
 import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -7,13 +8,11 @@ const nextConfig: NextConfig = {
   // Critical for Cloudflare Pages deployment
   output: "export",
 
-  // Optional: Strict build checks
-  eslint: {
-    ignoreDuringBuilds: false,
-  },
-
   // Optimize for edge
   compress: true,
+  turbopack: {
+    root: path.join(__dirname, "."),
+  },
 };
 
 export default withSentryConfig(nextConfig, {
@@ -39,12 +38,11 @@ export default withSentryConfig(nextConfig, {
   // side errors will fail.
   // tunnelRoute: "/monitoring",
 
-  // Automatically tree-shake Sentry logger statements to reduce bundle size
-  disableLogger: true,
-
-  // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
-  // See the following for more information:
-  // https://docs.sentry.io/product/crons/
-  // https://vercel.com/docs/cron-jobs
-  automaticVercelMonitors: true,
+  // Automatically tree-shake Sentry logger statements to reduce bundle size (replaces deprecated disableLogger)
+  webpack: {
+    treeshake: { removeDebugLogging: true },
+    // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
+    // See: https://docs.sentry.io/product/crons/ and https://vercel.com/docs/cron-jobs
+    automaticVercelMonitors: true,
+  },
 });
