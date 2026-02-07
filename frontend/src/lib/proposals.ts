@@ -103,14 +103,15 @@ export const getProposalStatus = ({
   // Threshold check happens at creationEpoch + SUPPORT_EPOCHS + 1
   // (support phase is epochs [creationEpoch, creationEpoch + SUPPORT_EPOCHS], threshold check at creationEpoch + SUPPORT_EPOCHS + 1)
   const supportEndEpoch = creationEpoch + epochs.SUPPORT_EPOCHS + 1; // epoch 802 for creationEpoch 800 (threshold check)
-  
+
   // When voting === true, startEpoch is when voting phase will start (in the future)
   // Before startEpoch, the proposal is in discussion phase
   // When voting === false, calculate phases based on creationEpoch
   const phaseBaseEpoch = creationEpoch + epochs.SUPPORT_EPOCHS + 1; // epoch 802 for creationEpoch 800
   const discussionStartEpoch = phaseBaseEpoch; // epoch 802 for creationEpoch 800
   const discussionEndEpoch = phaseBaseEpoch + epochs.DISCUSSION_EPOCHS; // epoch 804 for creationEpoch 800
-  const snapshotEpoch = phaseBaseEpoch + epochs.DISCUSSION_EPOCHS + epochs.SNAPSHOT_EPOCHS; // epoch 805 for creationEpoch 800
+  const snapshotEpoch =
+    phaseBaseEpoch + epochs.DISCUSSION_EPOCHS + epochs.SNAPSHOT_EPOCHS; // epoch 805 for creationEpoch 800
   // When voting === false, voting starts right after snapshot phase
   // When voting === true, use startEpoch directly as the voting start epoch
   const votingStartEpoch = voting ? startEpoch : snapshotEpoch + 1; // epoch 806 for creationEpoch 800 (or startEpoch if voting = true)
@@ -152,8 +153,7 @@ export const getProposalStatus = ({
   if (currentEpoch === supportEndEpoch) {
     const requiredThresholdLamports =
       totalStakedLamports * (SUPPORT_THRESHOLD_PERCENT / 100);
-    const isThresholdMet =
-      clusterSupportLamports >= requiredThresholdLamports;
+    const isThresholdMet = clusterSupportLamports >= requiredThresholdLamports;
 
     if (!isThresholdMet) {
       return "failed";

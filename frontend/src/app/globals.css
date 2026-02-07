@@ -379,3 +379,36 @@
     animation: ping-slow 1.25s cubic-bezier(0, 0, 0.2, 1) infinite;
   }
 }
+
+@layer utilities {
+
+  /* Notification tooltip auto-show then fade out */
+  @keyframes notification-auto-show {
+    0% {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+
+    15% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    75% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    100% {
+      opacity: 0;
+      transform: translateY(-2px);
+      pointer-events: none;
+    }
+  }
+
+  .animate-notification-auto-show {
+    animation: notification-auto-show 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation-delay: 0.3s;
+    opacity: 0;
+  }
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { CircleCheck, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +16,7 @@ export function NotificationButton({
   message,
 }: NotificationButtonProps) {
   const [showMessage, setShowMessage] = useState(false);
+  const hasInteracted = useRef(false);
 
   // Auto-hide after 3 seconds
   useEffect(() => {
@@ -27,19 +28,30 @@ export function NotificationButton({
     }
   }, [showMessage]);
 
+  const handleClick = () => {
+    hasInteracted.current = true;
+    setShowMessage((prev) => !prev);
+  };
+
   if (!isVisible) return null;
+
+  const tooltipClasses = cn(
+    "absolute bottom-full z-10 mb-2 w-64 rounded-xl p-3 text-sm shadow-lg",
+    "right-0 sm:left-0 sm:right-auto",
+    "bg-white/5 backdrop-blur-xl border border-white/10 text-white/80",
+  );
 
   return (
     <div className="relative">
       <button
         type="button"
-        onClick={() => setShowMessage(!showMessage)}
+        onClick={handleClick}
         className={cn(
           "flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-300",
           isThresholdMet
             ? "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30"
             : "bg-purple-500/20 text-purple-400 hover:bg-purple-500/30",
-          "animate-in fade-in slide-in-from-right-4 duration-500"
+          "animate-in fade-in slide-in-from-right-4 duration-500",
         )}
       >
         {isThresholdMet ? (
@@ -52,13 +64,19 @@ export function NotificationButton({
         </span>
       </button>
 
+      {/* Auto-show on first render, hidden once user interacts */}
+      {!hasInteracted.current && (
+        <div className={cn(tooltipClasses, "animate-notification-auto-show")}>
+          {message}
+        </div>
+      )}
+
+      {/* Manual toggle */}
       {showMessage && (
         <div
           className={cn(
-            "absolute bottom-full z-10 mb-2 w-64 rounded-xl p-3 text-sm shadow-lg",
-            "right-0 sm:left-0 sm:right-auto",
+            tooltipClasses,
             "animate-in fade-in slide-in-from-bottom-2 duration-200",
-            "bg-white/5 backdrop-blur-xl border border-white/10 text-white/80"
           )}
         >
           {message}
