@@ -8,7 +8,7 @@ import { PublicKey } from "@solana/web3.js";
  */
 export const getProposalVotes = async (
   proposalPublicKey: PublicKey,
-  endpoint: string
+  endpoint: string,
 ): Promise<Array<OldVoteAccountData & { voter: PublicKey }>> => {
   const program = createProgramWitDummyWallet(endpoint);
 
@@ -41,7 +41,7 @@ export const getProposalVotes = async (
  * Maps raw on-chain vote account to internal type.
  */
 function mapVoteAccountDto(
-  rawAccount: RawVoteAccountDataAccount
+  rawAccount: RawVoteAccountDataAccount,
 ): OldVoteAccountData {
   const raw = rawAccount.account;
 
@@ -49,7 +49,7 @@ function mapVoteAccountDto(
     voteAccount: rawAccount.publicKey,
     proposal: raw.proposal,
     // validator data
-    activeStake: raw.stake?.toNumber() || 0,
+    activeStake: raw.stake ? +raw.stake.toString() : 0,
     identity: raw.validator,
     commission: 0,
     lastVote: 0,

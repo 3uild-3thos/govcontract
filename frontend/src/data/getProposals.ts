@@ -102,9 +102,15 @@ export function mapProposalDto(
     creationTimestamp: raw.creationTimestamp?.toNumber() || 0,
 
     clusterSupportLamports,
-    forVotesLamports: raw.forVotesLamports?.toNumber() || 0,
-    againstVotesLamports: raw.againstVotesLamports?.toNumber() || 0,
-    abstainVotesLamports: raw.abstainVotesLamports?.toNumber() || 0,
+    forVotesLamports: raw.forVotesLamports
+      ? +raw.forVotesLamports.toString()
+      : 0,
+    againstVotesLamports: raw.againstVotesLamports
+      ? +raw.againstVotesLamports.toString()
+      : 0,
+    abstainVotesLamports: raw.abstainVotesLamports
+      ? +raw.abstainVotesLamports.toString()
+      : 0,
     voteCount: raw.voteCount,
 
     quorumPercent: 60, // TODO ?
