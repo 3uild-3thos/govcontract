@@ -49,7 +49,7 @@ export const useVoteAccountsWithValidators = () => {
 
       for (const vote of votes) {
         const validator = validators.find(
-          (v) => vote.identity?.toBase58() === v.vote_identity
+          (v) => vote.identity?.toBase58() === v.vote_identity,
         );
         const votePk = vote.voteAccount.toBase58();
         if (validator) {

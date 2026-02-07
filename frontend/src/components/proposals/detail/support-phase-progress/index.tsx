@@ -2,12 +2,10 @@
 
 import { useMemo } from "react";
 import { formatSOL } from "@/lib/governance/formatters";
-import { calculateVotingEndsIn } from "@/helpers";
 import { ProposalRecord } from "@/types";
 import {
   buildSupportFilters,
   useGetValidators,
-  useMounted,
   useSupportAccounts,
   useEpochToDate,
 } from "@/hooks";
@@ -17,6 +15,7 @@ import { NotificationButton } from "./NotificationButton";
 import { PhaseStatusBadge } from "./PhaseStatusBadge";
 import { SupportDonut } from "./SupportDonut";
 import { StatBadge, StatCard } from "./StatCard";
+import { TimeRemainingCarousel } from "./TimeRemainingCarousel";
 
 // ============================================================================
 // Configuration - These will be replaced with real data later
@@ -38,7 +37,6 @@ interface SupportPhaseProgressProps {
 }
 
 export function SupportPhaseProgress({ proposal }: SupportPhaseProgressProps) {
-  const mounted = useMounted();
   const { endpointType } = useEndpoint();
   const epochs = getEpochConstants(endpointType);
   const hasEnded =
@@ -49,6 +47,9 @@ export function SupportPhaseProgress({ proposal }: SupportPhaseProgressProps) {
 
   const { data: supportEndsAt, isLoading: isLoadingEpochDate } =
     useEpochToDate(targetEpoch);
+
+  const { data: discussionEndsAt, isLoading: isLoadingDiscussionEpochDate } =
+    useEpochToDate(targetEpoch + epochs.DISCUSSION_EPOCHS);
 
   const supportFilters = buildSupportFilters(
     proposal.publicKey.toBase58(),
@@ -70,13 +71,10 @@ export function SupportPhaseProgress({ proposal }: SupportPhaseProgressProps) {
   );
 
   const isLoading =
-    isLoadingValidators || isLoadingSupportAccounts || isLoadingEpochDate;
-
-  // Calculate time remaining using existing helper
-  const timeRemaining =
-    mounted && supportEndsAt
-      ? calculateVotingEndsIn(supportEndsAt.toISOString())
-      : null;
+    isLoadingValidators ||
+    isLoadingSupportAccounts ||
+    isLoadingEpochDate ||
+    isLoadingDiscussionEpochDate;
 
   const stats = useMemo(() => {
     // Use proposal's clusterSupportLamports as current support
@@ -141,19 +139,6 @@ export function SupportPhaseProgress({ proposal }: SupportPhaseProgressProps) {
     : `This proposal is nearing its support threshold. Only ${formatSOL(
         stats.remainingLamports,
       )} SOL needed!`;
-
-  // Format end date with time
-  const formattedEndDate = supportEndsAt
-    ? supportEndsAt.toLocaleString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        timeZone: "UTC",
-        timeZoneName: "short",
-      })
-    : "--";
 
   return (
     <div className="glass-card flex h-full flex-col p-6 md:p-6 lg:p-8">
@@ -254,27 +239,12 @@ export function SupportPhaseProgress({ proposal }: SupportPhaseProgressProps) {
               }
             />
 
-            {/* Time Remaining */}
-            <StatCard
-              label={hasEnded ? "Support Phase" : "Time Remaining"}
-              value={
-                isLoading ? (
-                  <div className="my-1 w-18 h-6 animate-pulse bg-white/10 rounded-full" />
-                ) : hasEnded ? (
-                  "Ended"
-                ) : (
-                  timeRemaining || "--"
-                )
-              }
-              secondaryText={
-                isLoading ? (
-                  <div className="my-1 w-20 h-2 animate-pulse bg-white/10 rounded-full" />
-                ) : hasEnded ? (
-                  `Ended ${formattedEndDate}`
-                ) : (
-                  `Ends ${formattedEndDate}`
-                )
-              }
+            {/* Time Remaining Carousel */}
+            <TimeRemainingCarousel
+              lifecycleStage={proposal.status}
+              supportToDiscussionEnd={supportEndsAt || new Date()}
+              discussionToVotingEnd={discussionEndsAt || new Date()}
+              hasEnded={hasEnded}
             />
 
             {/* Validator Participation */}

@@ -5,7 +5,7 @@ import { OldVoteAccountData, RawVoteAccountDataAccount } from "@/types";
  * @deprecated cant fetch ALL vote accounts at once.
  */
 export const getVoteAccounts = async (
-  endpoint: string
+  endpoint: string,
 ): Promise<OldVoteAccountData[]> => {
   const program = createProgramWitDummyWallet(endpoint);
 
@@ -13,7 +13,7 @@ export const getVoteAccounts = async (
   // fetch vote accounts for a specific proposals or stake account owner only
   //  (stake account owner to be added to contract, revisit this method once contract is updated)
   const voteAccs = await program.account.vote.all();
-  console.log("voteAccs:", voteAccs);
+
   return voteAccs.map(mapVoteAccountDto);
 };
 
@@ -21,7 +21,7 @@ export const getVoteAccounts = async (
  * Maps raw on-chain vote account to internal type.
  */
 export function mapVoteAccountDto(
-  rawAccount: RawVoteAccountDataAccount
+  rawAccount: RawVoteAccountDataAccount,
 ): OldVoteAccountData {
   const raw = rawAccount.account;
 
@@ -29,7 +29,7 @@ export function mapVoteAccountDto(
     voteAccount: rawAccount.publicKey,
     proposal: raw.proposal,
     // validator data
-    activeStake: raw.stake?.toNumber() || 0,
+    activeStake: raw.stake ? +raw.stake.toString() : 0,
     identity: raw.validator,
     commission: 0,
     lastVote: 0,
