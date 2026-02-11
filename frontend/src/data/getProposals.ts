@@ -69,7 +69,7 @@ export function mapProposalDto(
   const raw = rawAccount.account;
   const creationEpoch = raw.creationEpoch.toNumber();
   const startEpoch = raw.startEpoch.toNumber();
-
+  const endEpoch = raw.endEpoch.toNumber();
   const clusterSupportLamports = +raw.clusterSupportLamports?.toString() || 0;
   const consensusResult = rawAccount.account.consensusResult || undefined;
   const finalized = raw.finalized;
@@ -77,6 +77,7 @@ export function mapProposalDto(
   const status = getProposalStatus({
     creationEpoch,
     startEpoch,
+    endEpoch,
     currentEpoch,
     clusterSupportLamports,
     totalStakedLamports,
@@ -98,7 +99,7 @@ export function mapProposalDto(
 
     creationEpoch,
     startEpoch,
-    endEpoch: raw.endEpoch.toNumber(),
+    endEpoch,
     creationTimestamp: raw.creationTimestamp?.toNumber() || 0,
 
     clusterSupportLamports,

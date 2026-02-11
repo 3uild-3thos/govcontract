@@ -22,11 +22,11 @@ export const PHASE_DETAILS: Record<ProposalStatus, PhaseDetail> = {
   },
   discussion: {
     title: "Current: Discussion Phase",
-    body: "This proposal is currently in the discussion phase. It will conclude in 4 days. Once the discussion phase is complete, the proposal will move into the voting phase.",
+    body: "This proposal is currently in the discussion phase. Once the discussion phase is complete, the proposal will move into the voting phase.",
   },
   voting: {
     title: "Current: Voting Phase",
-    body: "This proposal is currently in the voting phase. It will conclude in 4 days. If the quorum is met and the 'For' votes are in the majority, the proposal will be queued for execution.",
+    body: "This proposal is currently in the voting phase. If the quorum is met and the 'For' votes are in the majority, the proposal will be queued for execution.",
   },
   finalized: {
     title: "Current: Finalized",

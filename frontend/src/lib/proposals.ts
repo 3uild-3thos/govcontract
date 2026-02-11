@@ -6,6 +6,7 @@ import { PublicKey } from "@solana/web3.js";
 export interface GetProposalStatusParams {
   creationEpoch: number;
   startEpoch: number;
+  endEpoch: number;
   currentEpoch: number;
   clusterSupportLamports: number;
   totalStakedLamports: number;
@@ -82,6 +83,7 @@ export function getEpochConstants(
 export const getProposalStatus = ({
   creationEpoch,
   startEpoch,
+  endEpoch,
   currentEpoch,
   clusterSupportLamports,
   totalStakedLamports,
@@ -92,6 +94,17 @@ export const getProposalStatus = ({
 }: GetProposalStatusParams): ProposalStatus => {
   // If finalized, always return finalized
   if (finalized) {
+    return "finalized";
+  }
+
+  // Voting ends when currentEpoch >= endEpoch (inclusive)
+  // If voting has ended but not finalized, check if proposal failed first
+  // If voting === false, proposal failed (didn't get enough support) - show failed even if past endEpoch
+  if (currentEpoch >= endEpoch) {
+    if (!voting) {
+      return "failed";
+    }
+    // If voting === true, return "finalized" since it's eligible for finalization
     return "finalized";
   }
 
@@ -124,13 +137,14 @@ export const getProposalStatus = ({
   // When voting === true, use startEpoch to determine phase
   // startEpoch is when voting phase will start (in the future)
   // If currentEpoch < startEpoch, proposal is in discussion phase
-  // If currentEpoch >= startEpoch, proposal is in voting phase (if consensusResult exists)
+  // If currentEpoch >= startEpoch and currentEpoch < endEpoch, proposal is in voting phase (if consensusResult exists)
   if (voting) {
     if (currentEpoch < votingStartEpoch) {
       // Before voting starts, proposal is in discussion phase
       return "discussion";
     }
-    // At or past voting start epoch
+    // At or past voting start epoch, but before end epoch
+    // Note: endEpoch check is already done above, so we know currentEpoch < endEpoch here
     if (consensusResult) {
       return "voting";
     }
