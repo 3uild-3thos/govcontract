@@ -1,8 +1,11 @@
 use std::{str::FromStr, sync::Arc};
 
+use anchor_client::solana_client::rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig};
+use anchor_client::solana_client::rpc_filter::{Memcmp, RpcFilterType};
+use anchor_client::solana_sdk::commitment_config::CommitmentConfig;
 use anchor_client::solana_sdk::signature::Keypair;
 
-use anchor_lang::{prelude::Pubkey, AccountDeserialize};
+use anchor_lang::{prelude::Pubkey, AccountDeserialize, Discriminator};
 use anyhow::{Result, anyhow};
 use comfy_table::modifiers::UTF8_ROUND_CORNERS;
 use comfy_table::{Cell, Table, presets::UTF8_FULL};
@@ -61,14 +64,21 @@ pub async fn get_proposal(rpc_url: Option<String>, proposal_id: &String) -> Resu
     // Create the Anchor client
     let program = anchor_client_setup(rpc_url, mock_payer)?;
 
+    let rpc = program.rpc();
+    let current_epoch = rpc
+        .get_epoch_info()
+        .await
+        .map_err(|e| anyhow!("Failed to fetch epoch info: {}", e))?
+        .epoch;
+
     let proposal_acc = program.account::<Proposal>(proposal_pubkey).await?;
 
-    print_proposal_detail(proposal_id, &proposal_acc);
+    print_proposal_detail(proposal_id, &proposal_acc, current_epoch);
 
     Ok(())
 }
 
-fn print_proposal_detail(proposal_id: &str, proposal: &Proposal) {
+fn print_proposal_detail(proposal_id: &str, proposal: &Proposal, current_epoch: u64) {
     let mut table = Table::new();
     table
         .load_preset(UTF8_FULL)
@@ -94,6 +104,8 @@ fn print_proposal_detail(proposal_id: &str, proposal: &Proposal) {
 
     let status = if proposal.finalized {
         "Finalized"
+    } else if current_epoch >= proposal.end_epoch {
+        "Ended"
     } else if proposal.voting {
         "Voting"
     } else {
@@ -201,9 +213,11 @@ struct ProposalOutput {
     creation_timestamp: i64,
 }
 
-fn get_proposal_status(proposal: &Proposal) -> &'static str {
+fn get_proposal_status(proposal: &Proposal, current_epoch: u64) -> &'static str {
     if proposal.finalized {
         "finalized"
+    } else if current_epoch >= proposal.end_epoch {
+        "ended"
     } else if proposal.voting {
         "active"
     } else {
@@ -227,34 +241,43 @@ pub async fn list_proposals(
     let rpc = program.rpc();
     let program_id = program.id();
 
-    // Fetch all program accounts
-    let accounts = rpc
-        .get_program_accounts(&program_id)
+    // Fetch current epoch to determine ended proposals
+    let current_epoch = rpc
+        .get_epoch_info()
         .await
-        .map_err(|e| anyhow!("Failed to fetch program accounts: {}", e))?;
+        .map_err(|e| anyhow!("Failed to fetch epoch info: {}", e))?
+        .epoch;
 
-    // Filter and deserialize Proposal accounts
-    // Proposal discriminator from IDL: [26, 94, 189, 187, 116, 136, 53, 33]
-    let proposal_discriminator: [u8; 8] = [26, 94, 189, 187, 116, 136, 53, 33];
+    // Use memcmp filter on the Proposal account discriminator
+    let config = RpcProgramAccountsConfig {
+        filters: Some(vec![RpcFilterType::Memcmp(Memcmp::new_raw_bytes(
+            0,
+            Proposal::DISCRIMINATOR.to_vec(),
+        ))]),
+        account_config: RpcAccountInfoConfig {
+            commitment: Some(CommitmentConfig::confirmed()),
+            ..Default::default()
+        },
+        ..Default::default()
+    };
 
-    let mut proposals = Vec::new();
-    for (pubkey, account) in accounts {
-        // Check if account data starts with Proposal discriminator
-        if account.data.len() >= 8 {
-            let account_discriminator = &account.data[..8];
-            if account_discriminator == proposal_discriminator.as_ref() {
-                // Deserialize the Proposal account
-                match Proposal::try_deserialize(&mut account.data.as_slice()) {
-                    Ok(proposal) => {
-                        proposals.push((pubkey, proposal));
-                    }
-                    Err(e) => {
-                        log::warn!("Failed to deserialize proposal account {}: {}", pubkey, e);
-                    }
+    let accounts = rpc
+        .get_program_accounts_with_config(&program_id, config)
+        .await
+        .map_err(|e| anyhow!("Failed to fetch proposal accounts: {}", e))?;
+
+    let mut proposals: Vec<(Pubkey, Proposal)> = accounts
+        .into_iter()
+        .filter_map(|(pubkey, account)| {
+            match Proposal::try_deserialize(&mut account.data.as_slice()) {
+                Ok(proposal) => Some((pubkey, proposal)),
+                Err(e) => {
+                    log::warn!("Failed to deserialize proposal account {}: {}", pubkey, e);
+                    None
                 }
             }
-        }
-    }
+        })
+        .collect();
 
     if proposals.is_empty() {
         if json_output {
@@ -266,15 +289,13 @@ pub async fn list_proposals(
     }
 
     // Sort by creation timestamp (most recent first)
-    proposals.sort_by(|a, b| {
-        b.1.creation_timestamp.cmp(&a.1.creation_timestamp)
-    });
+    proposals.sort_by(|a, b| b.1.creation_timestamp.cmp(&a.1.creation_timestamp));
 
     // Filter by status if provided
     if let Some(status) = status_filter {
         let status_lower = status.to_lowercase();
         proposals.retain(|(_, proposal)| {
-            let proposal_status = get_proposal_status(proposal);
+            let proposal_status = get_proposal_status(proposal, current_epoch);
             proposal_status == status_lower.as_str()
         });
     }
@@ -302,7 +323,7 @@ pub async fn list_proposals(
                 title: proposal.title.clone(),
                 description: proposal.description.clone(),
                 author: proposal.author.to_string(),
-                status: get_proposal_status(proposal).to_string(),
+                status: get_proposal_status(proposal, current_epoch).to_string(),
                 index: proposal.index,
                 creation_epoch: proposal.creation_epoch,
                 start_epoch: proposal.start_epoch,
@@ -321,18 +342,18 @@ pub async fn list_proposals(
             .collect();
         println!("{}", serde_json::to_string_pretty(&json_proposals)?);
     } else {
-        print_proposals_table(&proposals);
+        print_proposals_table(&proposals, current_epoch);
     }
 
     Ok(())
 }
 
-fn print_proposals_table(proposals: &[(Pubkey, Proposal)]) {
+fn print_proposals_table(proposals: &[(Pubkey, Proposal)], current_epoch: u64) {
     let mut table = Table::new();
     table
         .load_preset(UTF8_FULL)
         .apply_modifier(UTF8_ROUND_CORNERS);
-    
+
     // Use a wider terminal width to accommodate full IDs without wrapping
     let terminal_width = detect_terminal_width().unwrap_or(200);
     table.set_width(terminal_width);
@@ -347,6 +368,8 @@ fn print_proposals_table(proposals: &[(Pubkey, Proposal)]) {
     for (pubkey, proposal) in proposals {
         let status = if proposal.finalized {
             "Finalized"
+        } else if current_epoch >= proposal.end_epoch {
+            "Ended"
         } else if proposal.voting {
             "Voting"
         } else {

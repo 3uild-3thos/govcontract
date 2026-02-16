@@ -24,7 +24,7 @@ Command-line interface for validator governance interactions.
 - Proposal finalization
 - List proposals and votes
 
-[CLI Documentation](./svmgov/readme.md)
+[CLI Documentation](./docs/src/content/index.mdx)
 
 ### Frontend
 Web interface for monitoring governance proposals.
