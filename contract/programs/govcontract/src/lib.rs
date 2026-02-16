@@ -11,7 +11,7 @@ use instructions::*;
 
 use gov_v1::StakeMerkleLeaf;
 
-declare_id!("EKwRPoyRactBV2z2XhUSVU1YbZuyTVq4kU5U5dM2JyZY");
+declare_id!("94rLyg6fBA231a9UUoKrVH3nuXqNY7nnqyMkDrd55Ydu");
 
 #[program]
 pub mod govcontract {
