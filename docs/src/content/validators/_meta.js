@@ -17,8 +17,8 @@ export default {
   'finalize-proposal': {
     title: 'Finalize Proposal',
   },
-  'get-proposal': {
-    title: 'Get Proposal',
+  proposal: {
+    title: 'Proposal',
   },
   'list-proposals': {
     title: 'List Proposals',

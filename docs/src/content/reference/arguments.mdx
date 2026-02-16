@@ -20,6 +20,15 @@ You can set these environment variables instead of using flags:
 
 Flags override environment variables if both are provided.
 
+### Resolution order (flags vs env vs config)
+
+svmgov resolves values in this order:
+
+- **Explicit flags** (e.g. `--rpc-url`, `--identity-keypair`)
+- **Environment variables** (`SVMGOV_RPC`, `SVMGOV_KEY`)
+- **Config file** (`~/.svmgov/config.toml`, set via `svmgov init` / `svmgov config`)
+- **Built-in defaults**
+
 ## Common Argument Types
 
 ### Basis Points
@@ -79,17 +88,14 @@ Paths to JSON keypair files. These files contain the private key needed to sign 
 | Name | Type | Required | Default | Description |
 |------|------|----------|---------|-------------|
 | `--status` | String | No | - | Filter by status (e.g., `active`) |
-| `--limit` | usize | No | `0` | Limit results (0 = no limit) |
-| `--json` | bool | No | `false` | Output in JSON format |
+| `--limit` | usize | No | - | Limit results (if omitted, no limit) |
+| `--json` | bool | No | `false` | Output in JSON format (supports `--json` or `--json true`) |
 
-### List Votes
+### Proposal
 
-| Name | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| `--proposal-id` | String | Yes | - | Proposal ID (PDA) |
-| `--verbose` | bool | No | `false` | Show detailed vote information |
-| `--limit` | usize | No | `0` | Limit results (0 = no limit) |
-| `--json` | bool | No | `false` | Output in JSON format |
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `<PROPOSAL_ID>` | String | Yes | Proposal ID (PDA, base58) |
 
 ## Staker Commands Arguments
 
@@ -105,7 +111,19 @@ Paths to JSON keypair files. These files contain the private key needed to sign 
 | `--network` | String | Yes | - | Network for merkle proofs |
 | `--staker-keypair` | String | Yes | - | Staker keypair path for signing |
 | `--vote-account` | String | Yes | - | Validator vote account pubkey (base58) |
-| `--operator-api` | String | No | Env var | Operator API endpoint for snapshot data |
+| (no flag) | - | - | - | Operator API URL is read from config key `operator-api-url` (required) |
+
+## Configuration keys (`svmgov config`)
+
+Keys you can view/set with `svmgov config get|set`:
+
+- `network`
+- `rpc-url`
+- `operator-api-url` (required for commands that fetch snapshot/proof data)
+- `program-id`
+- `identity-keypair` (validators)
+- `staker-keypair` (stakers)
+- `user-type` (read-only via `get` / shown in `show`)
 
 ## Related Smart Contract References
 

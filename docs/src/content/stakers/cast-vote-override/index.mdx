@@ -4,7 +4,7 @@ Override a validator's vote as a delegator using stake account verification.
 
 ## Description
 
-This command allows a delegator to override their validator's vote on a proposal. The CLI fetches snapshot data from the operator API and submits the override vote. You can either let the CLI auto-select the first stake account from your voter summary, or explicitly specify a stake account.
+This command allows a delegator to override their validator's vote on a proposal. The CLI fetches snapshot/proof data from the operator API (configured via `operator-api-url`) and submits the override vote.
 
 ## Arguments
 
@@ -18,7 +18,6 @@ This command allows a delegator to override their validator's vote on a proposal
 | `--network` | String | Yes | - | Network for fetching merkle proofs (e.g., `mainnet`, `testnet`) |
 | `--staker-keypair` | String | Yes | - | Staker keypair for signing the transaction |
 | `--vote-account` | String | Yes | - | Vote account pubkey (base58) for the validator |
-| `--operator-api` | String | No | Env var | Operator API endpoint for snapshot data |
 
 ## Global Arguments
 
@@ -26,7 +25,7 @@ This command allows a delegator to override their validator's vote on a proposal
 |------|----------|---------|-------------|
 | `--rpc-url`, `-r` | String | No | `SVMGOV_RPC` env var | Custom RPC URL |
 
-> Using config: With `~/.svmgov/config.toml`, the RPC URL and `operator-api-url` can be set globally. Only pass `--operator-api` to override the configured default.
+> Using config: With `~/.svmgov/config.toml`, the RPC URL and `operator-api-url` can be set globally.
 
 ## Requirements
 
@@ -48,18 +47,6 @@ svmgov cast-vote-override \
   --network mainnet \
   --staker-keypair /path/to/staker_key.json \
   --vote-account "VoteAccountPubkey..."
-
-# Override operator API (explicit override)
-svmgov cast-vote-override \
-  --proposal-id "ABC123..." \
-  --for-votes 7000 \
-  --against-votes 2000 \
-  --abstain-votes 1000 \
-  --stake-account "StakeAccountPubkey..." \
-  --network mainnet \
-  --staker-keypair /path/to/staker_key.json \
-  --vote-account "VoteAccountPubkey..." \
-  --operator-api https://api.example.com
 
 # Without config (explicit RPC)
 svmgov cast-vote-override \
