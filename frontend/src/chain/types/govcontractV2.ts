@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/govcontract.json`.
  */
 export type Govcontract = {
-  address: '6MX2RaV2vfTGv6c7zCmRAod2E6MdAgR6be2Vb3NsMxPW';
+  address: '94rLyg6fBA231a9UUoKrVH3nuXqNY7nnqyMkDrd55Ydu';
   metadata: {
     name: 'govcontract';
     version: '0.1.0';

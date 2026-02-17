@@ -8,8 +8,8 @@ pub const DEFAULT_TESTNET_RPC_URL: &str = "https://api.testnet.solana.com";
 
 // Network-specific default program IDs
 // Note: These are the governance program IDs. Update when mainnet is deployed.
-pub const DEFAULT_MAINNET_PROGRAM_ID: &str = "6MX2RaV2vfTGv6c7zCmRAod2E6MdAgR6be2Vb3NsMxPW"; // Using testnet ID until mainnet is deployed
-pub const DEFAULT_TESTNET_PROGRAM_ID: &str = "6MX2RaV2vfTGv6c7zCmRAod2E6MdAgR6be2Vb3NsMxPW";
+pub const DEFAULT_MAINNET_PROGRAM_ID: &str = "94rLyg6fBA231a9UUoKrVH3nuXqNY7nnqyMkDrd55Ydu"; // Using testnet ID until mainnet is deployed
+pub const DEFAULT_TESTNET_PROGRAM_ID: &str = "94rLyg6fBA231a9UUoKrVH3nuXqNY7nnqyMkDrd55Ydu";
 pub const DEFAULT_DEVNET_PROGRAM_ID: &str = "GoVpHPV3EY89hwKJjfw19jTdgMsGKG4UFSE2SfJqTuhc";
 
 // Voting constants

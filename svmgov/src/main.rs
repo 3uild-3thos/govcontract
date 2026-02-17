@@ -30,7 +30,7 @@ declare_program!(govcontract);
                     Environment variables can be used for global options: SVMGOV_KEY for --identity-keypair and SVMGOV_RPC for --rpc-url. \
                     Flags override env vars if both are provided.\n\n\
                     To get started, use one of the subcommands below. For example, to list all proposals:\n\
-                    $ svmgov --rpc-url https://api.mainnet-beta.solana.com proposal \"6MX2RaV2vfTGv6c7zCmRAod2E6MdAgR6be2Vb3NsMxPW\"\n\n\
+                    $ svmgov --rpc-url https://api.mainnet-beta.solana.com proposal \"94rLyg6fBA231a9UUoKrVH3nuXqNY7nnqyMkDrd55Ydu\"\n\n\
                     For more information on each subcommand, use --help, e.g., `svmgov create-proposal --help`."
 )]
 struct Cli {
@@ -191,7 +191,7 @@ enum Commands {
         long_about = "This command retrieves and displays a governance proposal and its details from the Solana Validator Governance program. \
                       An optional RPC URL can be provided to connect to the chain; otherwise, a default URL is used.\n\n\
                       Examples:\n\
-                      $ svmgov --rpc-url https://api.mainnet-beta.solana.com proposal \"6MX2RaV2vfTGv6c7zCmRAod2E6MdAgR6be2Vb3NsMxPW\""
+                      $ svmgov --rpc-url https://api.mainnet-beta.solana.com proposal \"94rLyg6fBA231a9UUoKrVH3nuXqNY7nnqyMkDrd55Ydu\""
     )]
     Proposal {
         /// Proposal ID to display
