@@ -16,7 +16,7 @@ const EndpointContext = createContext<EndpointContextType | undefined>(
 );
 
 export const RPC_URLS: Record<Exclude<RPCEndpoint, "custom">, string> = {
-  mainnet: "https://api.mainnet-beta.solana.com",
+  mainnet: "https://mainnet.helius-rpc.com/?api-key=ac44fe86-9c23-4a5f-ad2c-8ca78a4a7bdb",
   testnet: "https://api.testnet.solana.com",
   devnet: "https://api.devnet.solana.com",
 };
