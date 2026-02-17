@@ -42,10 +42,10 @@ export function getEpochConstants(
 ): EpochConstants {
   if (endpointType === "mainnet") {
     return {
-      SUPPORT_EPOCHS: 1,
-      DISCUSSION_EPOCHS: 6,
+      SUPPORT_EPOCHS: 0,
+      DISCUSSION_EPOCHS: 0,
       SNAPSHOT_EPOCHS: 1,
-      VOTING_EPOCHS: 4,
+      VOTING_EPOCHS: 3,
     };
   }
 
