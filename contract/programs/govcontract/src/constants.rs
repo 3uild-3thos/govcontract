@@ -13,7 +13,7 @@ pub const ANCHOR_DISCRIMINATOR: usize = 8;
 pub const MIN_PROPOSAL_STAKE_LAMPORTS: u64 = 100_000 * 1_000_000_000;
 
 // Minimum stake needed on support based on current stake
-pub const CLUSTER_SUPPORT_PCT_MIN: u64 = 2;
+pub const CLUSTER_SUPPORT_PCT_MIN: u64 = 1;
 // Number of full epochs reserved for discussion between support and snapshot.
 // Example (creation at epoch 800):
 // - Support: 801
