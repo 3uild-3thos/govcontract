@@ -1,5 +1,6 @@
 use std::{str::FromStr, sync::Arc};
 
+use anchor_client::solana_account_decoder::UiAccountEncoding;
 use anchor_client::solana_client::rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig};
 use anchor_client::solana_client::rpc_filter::{Memcmp, RpcFilterType};
 use anchor_client::solana_sdk::commitment_config::CommitmentConfig;
@@ -102,15 +103,7 @@ fn print_proposal_detail(proposal_id: &str, proposal: &Proposal, current_epoch: 
     println!("{:?}", proposal.cluster_support_lamports);
     let proposer_stake_bp = proposal.proposer_stake_weight_bp as f64 / 100.0;
 
-    let status = if proposal.finalized {
-        "Finalized"
-    } else if current_epoch >= proposal.end_epoch {
-        "Ended"
-    } else if proposal.voting {
-        "Voting"
-    } else {
-        "Support Period"
-    };
+    let status = get_proposal_status(proposal, current_epoch);
 
     table.add_row(vec![Cell::new("Proposal ID"), Cell::new(proposal_id)]);
     table.add_row(vec![Cell::new("Title"), Cell::new(&proposal.title)]);
@@ -216,7 +209,7 @@ struct ProposalOutput {
 fn get_proposal_status(proposal: &Proposal, current_epoch: u64) -> &'static str {
     if proposal.finalized {
         "finalized"
-    } else if current_epoch >= proposal.end_epoch {
+    } else if current_epoch >= proposal.end_epoch && current_epoch > proposal.start_epoch && proposal.start_epoch != 0 && proposal.end_epoch != 0 {
         "ended"
     } else if proposal.voting {
         "active"
@@ -255,7 +248,7 @@ pub async fn list_proposals(
             Proposal::DISCRIMINATOR.to_vec(),
         ))]),
         account_config: RpcAccountInfoConfig {
-            commitment: Some(CommitmentConfig::confirmed()),
+            encoding:Some(UiAccountEncoding::Base64),
             ..Default::default()
         },
         ..Default::default()
@@ -366,16 +359,7 @@ fn print_proposals_table(proposals: &[(Pubkey, Proposal)], current_epoch: u64) {
     }
 
     for (pubkey, proposal) in proposals {
-        let status = if proposal.finalized {
-            "Finalized"
-        } else if current_epoch >= proposal.end_epoch {
-            "Ended"
-        } else if proposal.voting {
-            "Voting"
-        } else {
-            "Support"
-        };
-
+        let status = get_proposal_status(proposal, current_epoch);
         // Truncate title if too long
         let title = if proposal.title.len() > 40 {
             format!("{}...", &proposal.title[..37])
