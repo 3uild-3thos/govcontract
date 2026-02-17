@@ -1,6 +1,6 @@
 // Default RPC endpoints
 pub const DEFAULT_RPC_URL: &str = "https://mainnet.helius-rpc.com/?api-key=ac44fe86-9c23-4a5f-ad2c-8ca78a4a7bdb";
-pub const DEFAULT_WSS_URL: &str = "wss://api.mainnet-beta.solana.com";
+pub const DEFAULT_WSS_URL: &str = "wss://mainnet.helius-rpc.com/?api-key=ac44fe86-9c23-4a5f-ad2c-8ca78a4a7bdb";
 
 // Network-specific default RPC URLs
 pub const DEFAULT_MAINNET_RPC_URL: &str = "https://mainnet.helius-rpc.com/?api-key=ac44fe86-9c23-4a5f-ad2c-8ca78a4a7bdb";
