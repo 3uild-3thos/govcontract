@@ -26,7 +26,7 @@ export const getProposals = async (
 
   // Fetch proposals
   const proposalAccs = await program.account.proposal.all();
-  console.log("proposalAccs", proposalAccs);
+
   // Calculate total staked lamports from all vote accounts
   const allVotes = [
     ...voteAccountsData.current,
@@ -72,6 +72,7 @@ export function mapProposalDto(
   const endEpoch = raw.endEpoch.toNumber();
   const clusterSupportLamports = +raw.clusterSupportLamports?.toString() || 0;
   const consensusResult = rawAccount.account.consensusResult || undefined;
+  const snapshotSlot = rawAccount.account.snapshotSlot.toNumber();
   const finalized = raw.finalized;
 
   const status = getProposalStatus({
@@ -84,6 +85,7 @@ export function mapProposalDto(
     consensusResult,
     finalized,
     voting: raw.voting,
+    snapshotSlot,
     endpointType,
   });
 
