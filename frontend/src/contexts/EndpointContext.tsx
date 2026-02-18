@@ -12,16 +12,17 @@ interface EndpointContextType {
 }
 
 const EndpointContext = createContext<EndpointContextType | undefined>(
-  undefined
+  undefined,
 );
 
 export const RPC_URLS: Record<Exclude<RPCEndpoint, "custom">, string> = {
-  mainnet: "https://mainnet.helius-rpc.com/?api-key=ac44fe86-9c23-4a5f-ad2c-8ca78a4a7bdb",
+  mainnet:
+    "https://mainnet.helius-rpc.com/?api-key=ac44fe86-9c23-4a5f-ad2c-8ca78a4a7bdb",
   testnet: "https://api.testnet.solana.com",
   devnet: "https://api.devnet.solana.com",
 };
 
-const DEFAULT_TYPE: RPCEndpoint = "testnet";
+const DEFAULT_TYPE: RPCEndpoint = "mainnet";
 const DEFAULT_URL = RPC_URLS[DEFAULT_TYPE];
 
 const STORAGE_KEY = "solana-rpc-endpoint";
@@ -52,7 +53,7 @@ export function EndpointProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
 
   const setEndpointData = (type: RPCEndpoint, customUrl?: string) => {
-    const url = type === "custom" ? customUrl ?? "" : RPC_URLS[type];
+    const url = type === "custom" ? (customUrl ?? "") : RPC_URLS[type];
     setEndpoint({
       endpointType: type,
       endpointUrl: url,
