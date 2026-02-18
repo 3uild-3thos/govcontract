@@ -26,7 +26,7 @@ export const getProposals = async (
 
   // Fetch proposals
   const proposalAccs = await program.account.proposal.all();
-
+  console.log("proposalAccs", proposalAccs);
   // Calculate total staked lamports from all vote accounts
   const allVotes = [
     ...voteAccountsData.current,

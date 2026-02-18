@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/gov_v1.json`.
  */
 export type GovV1 = {
-  address: "DYvhrdFv8PSzta2u2igEoAXR6A6nzUXBnVhy6iNM6F7o";
+  address: "4vJ96uaNf8nZT1vHUyo857CBxs4rEY2Qjaqorn8VM52f";
   metadata: {
     name: "govV1";
     version: "0.1.0";
@@ -24,7 +24,7 @@ export type GovV1 = {
         {
           name: "ballotBox";
           writable: true;
-        }
+        },
       ];
       args: [
         {
@@ -34,7 +34,7 @@ export type GovV1 = {
               name: "ballot";
             };
           };
-        }
+        },
       ];
     },
     {
@@ -54,7 +54,7 @@ export type GovV1 = {
         {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
-        }
+        },
       ];
       args: [];
     },
@@ -89,20 +89,20 @@ export type GovV1 = {
                   115,
                   117,
                   108,
-                  116
+                  116,
                 ];
               },
               {
                 kind: "arg";
                 path: "snapshotSlot";
-              }
+              },
             ];
           };
         },
         {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
-        }
+        },
       ];
       args: [
         {
@@ -124,7 +124,7 @@ export type GovV1 = {
         {
           name: "tieBreakerConsensus";
           type: "bool";
-        }
+        },
       ];
     },
     {
@@ -161,21 +161,21 @@ export type GovV1 = {
                   115,
                   117,
                   108,
-                  116
+                  116,
                 ];
               },
               {
                 kind: "account";
                 path: "ballot_box.snapshot_slot";
                 account: "ballotBox";
-              }
+              },
             ];
           };
         },
         {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
-        }
+        },
       ];
       args: [];
     },
@@ -190,7 +190,7 @@ export type GovV1 = {
         {
           name: "programConfig";
           writable: true;
-        }
+        },
       ];
       args: [];
     },
@@ -207,7 +207,7 @@ export type GovV1 = {
           name: "proposal";
           docs: [
             "Verifies that signer is a Proposal PDA from the governance program.",
-            "When `skip-pda-check` feature is enabled, this check is disabled to allow local testing without CPI."
+            "When `skip-pda-check` feature is enabled, this check is disabled to allow local testing without CPI.",
           ];
           signer: true;
           pda: {
@@ -223,7 +223,7 @@ export type GovV1 = {
               {
                 kind: "arg";
                 path: "splVoteAccount";
-              }
+              },
             ];
             program: {
               kind: "const";
@@ -259,7 +259,7 @@ export type GovV1 = {
                 177,
                 123,
                 49,
-                181
+                181,
               ];
             };
           };
@@ -276,7 +276,7 @@ export type GovV1 = {
               {
                 kind: "arg";
                 path: "snapshotSlot";
-              }
+              },
             ];
           };
         },
@@ -286,7 +286,7 @@ export type GovV1 = {
         {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
-        }
+        },
       ];
       args: [
         {
@@ -300,7 +300,7 @@ export type GovV1 = {
         {
           name: "splVoteAccount";
           type: "pubkey";
-        }
+        },
       ];
     },
     {
@@ -334,7 +334,7 @@ export type GovV1 = {
                   114,
                   111,
                   111,
-                  102
+                  102,
                 ];
               },
               {
@@ -344,7 +344,7 @@ export type GovV1 = {
               {
                 kind: "arg";
                 path: "meta_merkle_leaf.vote_account";
-              }
+              },
             ];
           };
         },
@@ -354,7 +354,7 @@ export type GovV1 = {
         {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
-        }
+        },
       ];
       args: [
         {
@@ -376,7 +376,7 @@ export type GovV1 = {
         {
           name: "closeTimestamp";
           type: "i64";
-        }
+        },
       ];
     },
     {
@@ -412,16 +412,16 @@ export type GovV1 = {
                   110,
                   102,
                   105,
-                  103
+                  103,
                 ];
-              }
+              },
             ];
           };
         },
         {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
-        }
+        },
       ];
       args: [];
     },
@@ -436,7 +436,7 @@ export type GovV1 = {
         {
           name: "ballotBox";
           writable: true;
-        }
+        },
       ];
       args: [];
     },
@@ -455,7 +455,7 @@ export type GovV1 = {
         },
         {
           name: "programConfig";
-        }
+        },
       ];
       args: [];
     },
@@ -474,7 +474,7 @@ export type GovV1 = {
         },
         {
           name: "programConfig";
-        }
+        },
       ];
       args: [
         {
@@ -484,7 +484,7 @@ export type GovV1 = {
               name: "ballot";
             };
           };
-        }
+        },
       ];
     },
     {
@@ -499,7 +499,7 @@ export type GovV1 = {
         {
           name: "programConfig";
           writable: true;
-        }
+        },
       ];
       args: [
         {
@@ -517,7 +517,7 @@ export type GovV1 = {
               vec: "pubkey";
             };
           };
-        }
+        },
       ];
     },
     {
@@ -532,7 +532,7 @@ export type GovV1 = {
         {
           name: "programConfig";
           writable: true;
-        }
+        },
       ];
       args: [
         {
@@ -558,7 +558,7 @@ export type GovV1 = {
           type: {
             option: "i64";
           };
-        }
+        },
       ];
     },
     {
@@ -571,7 +571,7 @@ export type GovV1 = {
         {
           name: "consensusResult";
           relations: ["metaMerkleProof"];
-        }
+        },
       ];
       args: [
         {
@@ -593,9 +593,9 @@ export type GovV1 = {
               };
             };
           };
-        }
+        },
       ];
-    }
+    },
   ];
   accounts: [
     {
@@ -613,7 +613,7 @@ export type GovV1 = {
     {
       name: "programConfig";
       discriminator: [196, 210, 90, 231, 144, 149, 140, 63];
-    }
+    },
   ];
   errors: [
     {
@@ -695,7 +695,7 @@ export type GovV1 = {
       code: 6015;
       name: "invalidProposal";
       msg: "Invalid proposal";
-    }
+    },
   ];
   types: [
     {
@@ -717,7 +717,7 @@ export type GovV1 = {
             type: {
               array: ["u8", 32];
             };
-          }
+          },
         ];
       };
     },
@@ -749,14 +749,14 @@ export type GovV1 = {
           {
             name: "minConsensusThresholdBps";
             docs: [
-              "Min. percentage of votes required to finalize for this ballot box."
+              "Min. percentage of votes required to finalize for this ballot box.",
             ];
             type: "u16";
           },
           {
             name: "winningBallot";
             docs: [
-              "The ballot that got at least min_consensus_threshold of votes"
+              "The ballot that got at least min_consensus_threshold of votes",
             ];
             type: {
               defined: {
@@ -790,7 +790,7 @@ export type GovV1 = {
             name: "voteExpiryTimestamp";
             docs: [
               "Timestamp when voting ends. Tie breaker admin will decide the results",
-              "if no consensus is reached by then."
+              "if no consensus is reached by then.",
             ];
             type: "i64";
           },
@@ -810,7 +810,7 @@ export type GovV1 = {
             name: "tieBreakerConsensus";
             docs: ["Whether consensus was reached via tie breaker"];
             type: "bool";
-          }
+          },
         ];
       };
     },
@@ -837,10 +837,10 @@ export type GovV1 = {
           {
             name: "tally";
             docs: [
-              "The number of votes for this ballot. Each vote is equally weighted."
+              "The number of votes for this ballot. Each vote is equally weighted.",
             ];
             type: "u8";
-          }
+          },
         ];
       };
     },
@@ -867,7 +867,7 @@ export type GovV1 = {
             name: "tieBreakerConsensus";
             docs: ["Whether consensus was reached via tie breaker"];
             type: "bool";
-          }
+          },
         ];
       };
     },
@@ -879,7 +879,7 @@ export type GovV1 = {
           {
             name: "votingWallet";
             docs: [
-              "Wallet designated for governance voting for the vote account."
+              "Wallet designated for governance voting for the vote account.",
             ];
             type: "pubkey";
           },
@@ -892,7 +892,7 @@ export type GovV1 = {
             name: "stakeMerkleRoot";
             docs: [
               "Root hash of the StakeMerkleTree, representing all active stake accounts",
-              "delegated to the current vote account."
+              "delegated to the current vote account.",
             ];
             type: {
               array: ["u8", 32];
@@ -902,7 +902,7 @@ export type GovV1 = {
             name: "activeStake";
             docs: ["Total active delegated stake under this vote account."];
             type: "u64";
-          }
+          },
         ];
       };
     },
@@ -943,10 +943,10 @@ export type GovV1 = {
             name: "closeTimestamp";
             docs: [
               "Timestamp after which MetaMerkleProof can be closed permissionlessly.",
-              "This is selected by the payer but our recommendation is to set to vote expiry time."
+              "This is selected by the payer but our recommendation is to set to vote expiry time.",
             ];
             type: "i64";
-          }
+          },
         ];
       };
     },
@@ -970,7 +970,7 @@ export type GovV1 = {
             name: "ballotIndex";
             docs: ["The index of the ballot in the ballot_tallies"];
             type: "u8";
-          }
+          },
         ];
       };
     },
@@ -995,7 +995,7 @@ export type GovV1 = {
             name: "whitelistedOperators";
             docs: [
               "Operators whitelisted to participate in voting.",
-              "A snapshot of this list will be taken at the time of BallotBox creation."
+              "A snapshot of this list will be taken at the time of BallotBox creation.",
             ];
             type: {
               vec: "pubkey";
@@ -1004,14 +1004,14 @@ export type GovV1 = {
           {
             name: "minConsensusThresholdBps";
             docs: [
-              "Min. percentage of votes required to finalize a ballot. Used during BallotBox creation."
+              "Min. percentage of votes required to finalize a ballot. Used during BallotBox creation.",
             ];
             type: "u16";
           },
           {
             name: "tieBreakerAdmin";
             docs: [
-              "Admin allowed to decide the winning ballot if vote expires before consensus."
+              "Admin allowed to decide the winning ballot if vote expires before consensus.",
             ];
             type: "pubkey";
           },
@@ -1019,7 +1019,7 @@ export type GovV1 = {
             name: "voteDuration";
             docs: ["Duration for which ballot box will be opened for voting."];
             type: "i64";
-          }
+          },
         ];
       };
     },
@@ -1031,7 +1031,7 @@ export type GovV1 = {
           {
             name: "votingWallet";
             docs: [
-              "Wallet designated for governance voting for the stake account."
+              "Wallet designated for governance voting for the stake account.",
             ];
             type: "pubkey";
           },
@@ -1044,9 +1044,9 @@ export type GovV1 = {
             name: "activeStake";
             docs: ["Active delegated stake amount."];
             type: "u64";
-          }
+          },
         ];
       };
-    }
+    },
   ];
 };
