@@ -95,7 +95,7 @@ export function SupportPhaseProgress({ proposal }: SupportPhaseProgressProps) {
     // Support as percent of total staked
     const supportPercentOfTotal =
       totalStakedLamports > 0
-        ? (currentSupportLamports / totalStakedLamports) * 100
+        ? (currentSupportLamports / totalStakedLamports) * 1000
         : 0;
 
     // Remaining SOL needed (0 if threshold met)
