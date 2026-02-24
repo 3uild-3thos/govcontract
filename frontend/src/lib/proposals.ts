@@ -13,7 +13,6 @@ export interface GetProposalStatusParams {
   consensusResult: PublicKey | undefined;
   finalized: boolean;
   voting: boolean;
-  snapshotSlot: number;
   endpointType?: RPCEndpoint;
 }
 
@@ -91,11 +90,8 @@ export const getProposalStatus = ({
   consensusResult,
   finalized,
   voting,
-  snapshotSlot,
   endpointType = "testnet",
 }: GetProposalStatusParams): ProposalStatus => {
-  if (snapshotSlot === 0) return "supporting";
-
   // If finalized, always return finalized
   if (finalized) {
     return "finalized";
@@ -104,7 +100,7 @@ export const getProposalStatus = ({
   // Voting ends when currentEpoch >= endEpoch (inclusive)
   // If voting has ended but not finalized, check if proposal failed first
   // If voting === false, proposal failed (didn't get enough support) - show failed even if past endEpoch
-  if (currentEpoch >= endEpoch) {
+  if (currentEpoch >= endEpoch && endEpoch !== 0) {
     if (!voting) {
       return "failed";
     }
@@ -114,7 +110,7 @@ export const getProposalStatus = ({
 
   // Get epoch constants based on endpoint type
   const epochs = getEpochConstants(endpointType);
-  debugger;
+
   // Support phase always uses creationEpoch
   const supportStartEpoch = creationEpoch; // epoch 800 for creationEpoch 800
   // Threshold check happens at creationEpoch + SUPPORT_EPOCHS + 1
