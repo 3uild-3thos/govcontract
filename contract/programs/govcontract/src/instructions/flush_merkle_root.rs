@@ -1,7 +1,7 @@
 use anchor_lang::{prelude::*, solana_program::vote};
 
 use crate::{
-    constants::*, error::GovernanceError, events::MerkleRootFlushed, state::Proposal,
+    error::GovernanceError, events::MerkleRootFlushed, state::{GlobalConfig, Proposal},
     utils::get_epoch_slot_range,
 };
 
@@ -35,6 +35,11 @@ pub struct FlushMerkleRoot<'info> {
         constraint = program_config.owner == &gov_v1::ID @ ProgramError::InvalidAccountOwner,
     )]
     pub program_config: UncheckedAccount<'info>,
+    #[account(
+        seeds = [b"global_config"],
+        bump = global_config.bump,
+    )]
+    pub global_config: Account<'info, GlobalConfig>,
     pub system_program: Program<'info, System>,
 }
 
@@ -54,14 +59,14 @@ impl<'info> FlushMerkleRoot<'info> {
 
         // Recalculate snapshot_slot based on current epoch
         // Using the same logic as in support_proposal
-        let target_epoch = clock.epoch + SNAPSHOT_EPOCH_EXTENSION;
+        let target_epoch = clock.epoch + self.global_config.snapshot_epoch_extension;
         let (start_slot, _) = get_epoch_slot_range(target_epoch);
         // 1000 slots into snapshot
         let snapshot_slot = start_slot + 1000;
         self.proposal.snapshot_slot = snapshot_slot;
         // start voting 1 epoch after snapshot
         self.proposal.start_epoch = target_epoch + 1;
-        self.proposal.end_epoch = target_epoch + 1 + VOTING_EPOCHS;
+        self.proposal.end_epoch = target_epoch + 1 + self.global_config.voting_epochs;
 
         // Calculate new consensus_result PDA based on new snapshot_slot
         let (consensus_result_pda, _) = Pubkey::find_program_address(

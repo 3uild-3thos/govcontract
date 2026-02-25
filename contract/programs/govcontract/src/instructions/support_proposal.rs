@@ -7,10 +7,10 @@ use anchor_lang::{
 };
 
 use crate::{
-    constants::*,
+    constants::ANCHOR_DISCRIMINATOR,
     error::GovernanceError,
     events::ProposalSupported,
-    state::{Proposal, Support},
+    state::{GlobalConfig, Proposal, Support},
     utils::get_epoch_slot_range,
 };
 
@@ -53,6 +53,11 @@ pub struct SupportProposal<'info> {
         constraint = program_config.owner == &gov_v1::ID @ ProgramError::InvalidAccountOwner,
     )]
     pub program_config: UncheckedAccount<'info>,
+    #[account(
+        seeds = [b"global_config"],
+        bump = global_config.bump,
+    )]
+    pub global_config: Account<'info, GlobalConfig>,
 
     pub system_program: Program<'info, System>,
 }
@@ -68,7 +73,7 @@ impl<'info> SupportProposal<'info> {
         );
 
         require!(
-            clock.epoch == self.proposal.creation_epoch + MAX_SUPPORT_EPOCHS,
+            clock.epoch == self.proposal.creation_epoch + self.global_config.max_support_epochs,
             GovernanceError::NotInSupportPeriod
         );
 
@@ -93,10 +98,11 @@ impl<'info> SupportProposal<'info> {
 
         let cluster_stake = get_epoch_total_stake();
 
-        let cluster_min_stake = cluster_stake
-            .checked_mul(CLUSTER_SUPPORT_PCT_MIN)
-            .and_then(|v| v.checked_div(100))
-            .ok_or(GovernanceError::ArithmeticOverflow)?;
+        let cluster_min_stake = (cluster_stake as u128)
+            .checked_mul(self.global_config.cluster_support_pct_min_bps as u128)
+            .and_then(|v| v.checked_div(10_000))
+            .ok_or(GovernanceError::ArithmeticOverflow)
+            .map(|result| result as u64)?;
 
         let mut current_voting_emit = proposal_account.voting;
         let mut snapshot_slot = 0;
@@ -104,14 +110,14 @@ impl<'info> SupportProposal<'info> {
             // this is for emit checks
             current_voting_emit = true;
             let (start_slot, _) =
-                get_epoch_slot_range(clock.epoch + DISCUSSION_EPOCHS + SNAPSHOT_EPOCH_EXTENSION);
+                get_epoch_slot_range(clock.epoch + self.global_config.discussion_epochs + self.global_config.snapshot_epoch_extension);
             snapshot_slot = start_slot + 1000;
             // start voting 1 epoch after snapshot
             // checking in any vote or others is start_epoch <= current_epoch < end_epoch
             proposal_account.start_epoch =
-                clock.epoch + DISCUSSION_EPOCHS + SNAPSHOT_EPOCH_EXTENSION + 1;
+                clock.epoch + self.global_config.discussion_epochs + self.global_config.snapshot_epoch_extension + 1;
             proposal_account.end_epoch =
-                clock.epoch + DISCUSSION_EPOCHS + SNAPSHOT_EPOCH_EXTENSION + 1 + VOTING_EPOCHS;
+                clock.epoch + self.global_config.discussion_epochs + self.global_config.snapshot_epoch_extension + 1 + self.global_config.voting_epochs;
             proposal_account.snapshot_slot = snapshot_slot; // 1000 slots into snapshot
 
             let (consensus_result_pda, _) = Pubkey::find_program_address(

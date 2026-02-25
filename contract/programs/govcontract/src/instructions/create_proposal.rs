@@ -9,11 +9,11 @@ use anchor_lang::{
 };
 
 use crate::{
-    constants::*,
+    constants::ANCHOR_DISCRIMINATOR,
     error::GovernanceError,
     events::ProposalCreated,
     stake_weight_bp,
-    state::{Proposal, ProposalIndex},
+    state::{GlobalConfig, Proposal, ProposalIndex},
     utils::is_valid_github_link,
 };
 
@@ -42,6 +42,11 @@ pub struct CreateProposal<'info> {
         constraint = spl_vote_account.data_len() == VoteState::size_of() @ GovernanceError::InvalidVoteAccountSize
     )]
     pub spl_vote_account: UncheckedAccount<'info>,
+    #[account(
+        seeds = [b"global_config"],
+        bump = global_config.bump,
+    )]
+    pub global_config: Account<'info, GlobalConfig>,
 
     pub system_program: Program<'info, System>,
 }
@@ -58,12 +63,12 @@ impl<'info> CreateProposal<'info> {
         require!(!title.is_empty(), GovernanceError::TitleEmpty);
 
         require!(
-            title.len() <= MAX_TITLE_LENGTH,
+            title.len() <= self.global_config.max_title_length as usize,
             GovernanceError::TitleTooLong
         );
         require!(!description.is_empty(), GovernanceError::DescriptionEmpty);
         require!(
-            description.len() <= MAX_DESCRIPTION_LENGTH,
+            description.len() <= self.global_config.max_description_length as usize,
             GovernanceError::DescriptionTooLong
         );
         require!(
@@ -93,7 +98,7 @@ impl<'info> CreateProposal<'info> {
         let proposer_stake_weight_bp = stake_weight_bp!(proposer_stake, cluster_stake)?;
 
         require!(
-            proposer_stake >= MIN_PROPOSAL_STAKE_LAMPORTS,
+            proposer_stake >= self.global_config.min_proposal_stake_lamports,
             GovernanceError::NotEnoughStake
         );
 

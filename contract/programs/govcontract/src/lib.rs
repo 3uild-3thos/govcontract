@@ -17,6 +17,56 @@ declare_id!("EKwRPoyRactBV2z2XhUSVU1YbZuyTVq4kU5U5dM2JyZY");
 pub mod govcontract {
     use super::*;
 
+    pub fn initialize_config(
+        ctx: Context<InitializeConfig>,
+        max_title_length: u16,
+        max_description_length: u16,
+        max_support_epochs: u64,
+        min_proposal_stake_lamports: u64,
+        cluster_support_pct_min_bps: u64,
+        discussion_epochs: u64,
+        voting_epochs: u64,
+        snapshot_epoch_extension: u64,
+    ) -> Result<()> {
+        ctx.accounts.initialize_config(
+            max_title_length,
+            max_description_length,
+            max_support_epochs,
+            min_proposal_stake_lamports,
+            cluster_support_pct_min_bps,
+            discussion_epochs,
+            voting_epochs,
+            snapshot_epoch_extension,
+            &ctx.bumps,
+        )?;
+        Ok(())
+    }
+
+    pub fn update_config(
+        ctx: Context<UpdateConfig>,
+        max_title_length: Option<u16>,
+        max_description_length: Option<u16>,
+        max_support_epochs: Option<u64>,
+        
+        min_proposal_stake_lamports: Option<u64>,
+        cluster_support_pct_min_bps: Option<u64>,
+        discussion_epochs: Option<u64>,
+        voting_epochs: Option<u64>,
+        snapshot_epoch_extension: Option<u64>,
+    ) -> Result<()> {
+        ctx.accounts.update_config(
+            max_title_length,
+            max_description_length,
+            max_support_epochs,
+            min_proposal_stake_lamports,
+            cluster_support_pct_min_bps,
+            discussion_epochs,
+            voting_epochs,
+            snapshot_epoch_extension,
+        )?;
+        Ok(())
+    }
+
     pub fn initialize_index(ctx: Context<InitializedIndex>) -> Result<()> {
         ctx.accounts.init_index(&ctx.bumps)?;
         Ok(())
