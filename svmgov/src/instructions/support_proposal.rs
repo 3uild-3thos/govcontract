@@ -42,6 +42,7 @@ pub async fn support_proposal(
         pda
     };
 
+    println!("Ballot Account {:?}", ballot_box_pda);
     let program_config_pda = derive_program_config_pda(&SNAPSHOT_PROGRAM_ID);
 
     let support_proposal_ixs = program
