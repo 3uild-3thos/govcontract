@@ -92,4 +92,6 @@ pub enum GovernanceError {
     InvalidVoteOverrideCache,
     #[msg("Stake account owner mismatch")]
     StakeAccountOwnerMismatch,
+    #[msg("Unauthorized: only the admin can perform this action")]
+    UnauthorizedAdmin,
 }

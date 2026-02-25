@@ -6,9 +6,9 @@ use anchor_lang::prelude::*;
 pub struct Proposal {
     /// The public key of the validator who created this proposal
     pub author: Pubkey,
-    #[max_len(MAX_TITLE_LENGTH)]
+    #[max_len(MAX_TITLE_ACCOUNT_SIZE)]
     pub title: String,
-    #[max_len(MAX_DESCRIPTION_LENGTH)]
+    #[max_len(MAX_DESC_ACCOUNT_SIZE)]
     pub description: String,
     pub creation_epoch: u64,
     pub start_epoch: u64,

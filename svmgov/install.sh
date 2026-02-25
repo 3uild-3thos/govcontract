@@ -12,13 +12,44 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
 
-echo "Installing svmgov CLI..."
+echo "Reinstalling svmgov CLI..."
 
 # Check if cargo is installed
 if ! command -v cargo &> /dev/null; then
     echo -e "${RED}Error: cargo is not installed. Please install Rust first.${NC}"
     echo "Visit https://rustup.rs/ to install Rust."
     exit 1
+fi
+
+# Determine installation directory (check where existing binary is or use default)
+if [ -f "/usr/local/bin/svmgov" ]; then
+    INSTALL_DIR="/usr/local/bin"
+elif [ -f "$HOME/.local/bin/svmgov" ]; then
+    INSTALL_DIR="$HOME/.local/bin"
+elif [ -w "/usr/local/bin" ]; then
+    INSTALL_DIR="/usr/local/bin"
+else
+    INSTALL_DIR="$HOME/.local/bin"
+fi
+
+# Remove existing svmgov binary
+echo -e "${YELLOW}Removing existing svmgov binary...${NC}"
+if [ -f "/usr/local/bin/svmgov" ]; then
+    rm -f "/usr/local/bin/svmgov" 2>/dev/null || sudo rm -f "/usr/local/bin/svmgov"
+    echo "  Removed /usr/local/bin/svmgov"
+fi
+if [ -f "$HOME/.local/bin/svmgov" ]; then
+    rm -f "$HOME/.local/bin/svmgov"
+    echo "  Removed $HOME/.local/bin/svmgov"
+fi
+
+# Clean target directory
+echo -e "${YELLOW}Cleaning target directory...${NC}"
+if [ -d "$SCRIPT_DIR/target" ]; then
+    rm -rf "$SCRIPT_DIR/target"
+    echo "  Removed $SCRIPT_DIR/target"
+else
+    echo "  No target directory to clean"
 fi
 
 # Build release binary
@@ -33,15 +64,6 @@ BINARY_PATH="$SCRIPT_DIR/target/release/svmgov"
 if [ ! -f "$BINARY_PATH" ]; then
     echo -e "${RED}Error: Binary not found at $BINARY_PATH${NC}"
     exit 1
-fi
-
-# Determine installation directory
-if [ -w "/usr/local/bin" ]; then
-    INSTALL_DIR="/usr/local/bin"
-    USE_SUDO=false
-else
-    INSTALL_DIR="$HOME/.local/bin"
-    USE_SUDO=false
 fi
 
 # Create install directory if it doesn't exist
@@ -104,42 +126,18 @@ if [ -n "$CONFIG_FILE" ]; then
 fi
 
 echo ""
-echo -e "${GREEN}✓ Installation complete!${NC}"
-echo ""
-echo "Next steps:"
-echo "  1. Reload your shell configuration:"
-if [ "$SHELL_NAME" = "bash" ]; then
-    echo "     source $CONFIG_FILE"
-elif [ "$SHELL_NAME" = "zsh" ]; then
-    echo "     source $CONFIG_FILE"
-elif [ "$SHELL_NAME" = "fish" ]; then
-    echo "     (or restart your terminal)"
-fi
-echo ""
-echo "  2. Verify installation:"
-echo "     svmgov --version"
-echo ""
-echo "  3. Initialize configuration (optional):"
-echo "     svmgov init"
+echo -e "${GREEN}✓ Reinstallation complete!${NC}"
 echo ""
 
-# Check if --skip-init flag is passed
-SKIP_INIT=false
-for arg in "$@"; do
-    if [ "$arg" = "--skip-init" ]; then
-        SKIP_INIT=true
-        break
-    fi
-done
-
-# Run init if not skipped and binary is accessible
-if [ "$SKIP_INIT" = false ]; then
-    if command -v svmgov &> /dev/null || [ -f "$INSTALL_DIR/svmgov" ]; then
-        echo -e "${YELLOW}Would you like to run 'svmgov init' now? (y/n)${NC}"
-        read -r response
-        if [[ "$response" =~ ^[Yy]$ ]]; then
-            "$INSTALL_DIR/svmgov" init || echo -e "${YELLOW}Note: You can run 'svmgov init' later${NC}"
-        fi
-    fi
+# Check if config exists
+CONFIG_PATH="$HOME/.svmgov/config.toml"
+if [ -f "$CONFIG_PATH" ]; then
+    echo -e "${GREEN}✓ Existing config preserved at $CONFIG_PATH${NC}"
+else
+    echo -e "${YELLOW}No existing config found. Run 'svmgov init' to create one.${NC}"
 fi
 
+echo ""
+echo "Verify installation:"
+echo "  svmgov --version"
+echo ""

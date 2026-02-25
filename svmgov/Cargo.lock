@@ -1867,8 +1867,8 @@ checksum = "07e28edb80900c19c28f1072f2e8aeca7fa06b23cd4169cefe1af5aa3260783f"
 
 [[package]]
 name = "gov-v1"
-version = "0.1.0"
-source = "git+https://github.com/dhruvsol/gov-v1-testnet?branch=signer-check#3f92046b48c173313f9eb80d409161fac57494f7"
+version = "1.0.0"
+source = "git+https://github.com/dhruvsol/gov-v1-testnet?branch=update-3.0-testnet#22e3034727e3d17833407cf932bb8c0e6bd07ed4"
 dependencies = [
  "anchor-lang",
 ]

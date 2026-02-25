@@ -66,7 +66,7 @@ svmgov also supports environment variables for global options:
 - `SVMGOV_KEY` - Path to identity keypair (equivalent to `--identity-keypair`)
 - `SVMGOV_RPC` - RPC URL (equivalent to `--rpc-url`)
 
-Flags override config file values, which override environment variables.
+svmgov resolves values in this order: **explicit flags > environment variables > config file > built-in defaults**.
 
 ## Documentation Structure
 
@@ -188,7 +188,7 @@ svmgov cast-vote-override \
 
 **Notes:**
 
-- The CLI merges sources in this order: explicit flags > config file > environment variables > built-in defaults.
+- The CLI merges sources in this order: explicit flags > environment variables > config file > built-in defaults.
 - `svmgov config set` supports keys: `network`, `rpc-url`, `operator-api-url`, `identity-keypair`, `staker-keypair`.
 - The `operator-api-url` is **required** and must be set before using commands that fetch stake/proof data.
 
