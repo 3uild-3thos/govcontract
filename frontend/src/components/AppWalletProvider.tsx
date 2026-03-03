@@ -9,6 +9,10 @@ import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 // import { UnsafeBurnerWalletAdapter } from "@solana/wallet-adapter-wallets";
 import { useEndpoint } from "@/contexts/EndpointContext";
 
+// Ensure the same Wallet Standard instance is used so extensions (e.g. SquadsX) are detected.
+// See: https://docs.squads.so/main/squadsx-beta-development/guides/overcoming-integration-obstacles/not-using-wallet-standard-adapter
+import "@solana/wallet-standard";
+
 // Default styles that can be overridden by your app
 import "@solana/wallet-adapter-react-ui/styles.css";
 
